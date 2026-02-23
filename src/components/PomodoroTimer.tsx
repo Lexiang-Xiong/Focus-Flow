@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Square, SkipForward, Coffee, Brain, Timer } from 'lucide-react';
+import { Play, Pause, Square, SkipForward, Coffee, Brain, Timer, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
@@ -45,6 +45,7 @@ export function PomodoroTimer({
   // 编辑状态
   const [isEditing, setIsEditing] = useState(false);
   const [editMinutes, setEditMinutes] = useState('');
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // 进入编辑模式
@@ -112,6 +113,43 @@ export function PomodoroTimer({
     }
   };
 
+  // 收缩状态下的紧凑视图
+  if (isCollapsed) {
+    return (
+      <div className={`timer-collapsed bg-gradient-to-r ${getModeColor()}`}>
+        <button
+          className="timer-collapse-btn"
+          onClick={() => setIsCollapsed(false)}
+          title="展开"
+        >
+          <ChevronUp size={14} />
+        </button>
+        <div className="timer-collapsed-content">
+          {getModeIcon()}
+          <span className="timer-collapsed-time">{formattedTime}</span>
+        </div>
+        <div className="timer-collapsed-controls">
+          {isRunning ? (
+            <button className="timer-collapsed-btn" onClick={onPause} title="暂停">
+              <Pause size={16} />
+            </button>
+          ) : mode !== 'idle' ? (
+            <button className="timer-collapsed-btn" onClick={onResume} title="继续">
+              <Play size={16} />
+            </button>
+          ) : (
+            <button className="timer-collapsed-btn" onClick={onStart} title="开始">
+              <Play size={16} />
+            </button>
+          )}
+          <button className="timer-collapsed-btn" onClick={onStop} title="重置">
+            <Square size={16} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`timer-container bg-gradient-to-br ${getModeColor()}`}>
       {/* Header */}
@@ -120,13 +158,22 @@ export function PomodoroTimer({
           {getModeIcon()}
           <span className={`mode-text mode-${mode}`}>{getModeText()}</span>
         </div>
-        <div className="session-count">
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className={`session-dot ${i < completedSessions % 4 ? 'active' : ''}`}
-            />
-          ))}
+        <div className="timer-header-actions">
+          <button
+            className="timer-collapse-toggle"
+            onClick={() => setIsCollapsed(true)}
+            title="收缩"
+          >
+            <ChevronDown size={14} />
+          </button>
+          <div className="session-count">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className={`session-dot ${i < completedSessions % 4 ? 'active' : ''}`}
+              />
+            ))}
+          </div>
         </div>
       </div>
 

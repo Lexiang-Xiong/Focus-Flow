@@ -14,7 +14,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, CheckCircle2, Circle, Trash2 } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Trash2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -56,6 +56,7 @@ export function TaskList({
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [selectedPriority, setSelectedPriority] = useState<TaskPriority>('medium');
   const [showCompleted, setShowCompleted] = useState(false);
+  const [isAddingTask, setIsAddingTask] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const sensors = useSensors(
@@ -135,44 +136,71 @@ export function TaskList({
       </div>
 
       {/* Add Task */}
-      <div className="add-task-container">
-        <div className="priority-selector">
-          {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
-            <button
-              key={p}
-              className={`priority-btn ${selectedPriority === p ? 'active' : ''} priority-${p}`}
-              onClick={() => setSelectedPriority(p)}
+      {isAddingTask ? (
+        <div className="add-task-container">
+          <div className="priority-selector">
+            {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
+              <button
+                key={p}
+                className={`priority-btn ${selectedPriority === p ? 'active' : ''} priority-${p}`}
+                onClick={() => setSelectedPriority(p)}
+              >
+                <div className={`priority-dot ${p}`} />
+              </button>
+            ))}
+          </div>
+          <div className="add-task-inputs">
+            <Input
+              ref={inputRef}
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="任务标题..."
+              className="add-task-title-input"
+            />
+            <Input
+              value={newTaskDescription}
+              onChange={(e) => setNewTaskDescription(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="描述（可选，Shift+Enter 换行）..."
+              className="add-task-desc-input"
+            />
+          </div>
+          <div className="add-task-actions">
+            <Button
+              size="icon"
+              className="add-task-btn"
+              onClick={() => {
+                handleAddTask();
+                setIsAddingTask(false);
+              }}
+              disabled={!newTaskTitle.trim()}
             >
-              <div className={`priority-dot ${p}`} />
-            </button>
-          ))}
+              <Plus size={18} />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="cancel-task-btn"
+              onClick={() => {
+                setIsAddingTask(false);
+                setNewTaskTitle('');
+                setNewTaskDescription('');
+              }}
+            >
+              <ChevronDown size={18} />
+            </Button>
+          </div>
         </div>
-        <div className="add-task-inputs">
-          <Input
-            ref={inputRef}
-            value={newTaskTitle}
-            onChange={(e) => setNewTaskTitle(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="任务标题..."
-            className="add-task-title-input"
-          />
-          <Input
-            value={newTaskDescription}
-            onChange={(e) => setNewTaskDescription(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="描述（可选，Shift+Enter 换行）..."
-            className="add-task-desc-input"
-          />
-        </div>
-        <Button
-          size="icon"
-          className="add-task-btn"
-          onClick={handleAddTask}
-          disabled={!newTaskTitle.trim()}
+      ) : (
+        <button
+          className="add-task-collapsed"
+          onClick={() => setIsAddingTask(true)}
         >
-          <Plus size={18} />
-        </Button>
-      </div>
+          <Plus size={16} />
+          <span>添加任务</span>
+        </button>
+      )}
 
       {/* Task List */}
       <ScrollArea className="task-scroll-area">

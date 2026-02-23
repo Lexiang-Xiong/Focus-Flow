@@ -170,7 +170,7 @@ function App() {
   }, [timer.mode, tasks]);
 
   // 窗口尺寸常量
-  const NORMAL_SIZE = { width: 340, height: 500 };
+  const NORMAL_SIZE = { width: 750, height: 650 };
   const COLLAPSED_SIZE = { width: 280, height: 80 };
 
   const handleToggleCollapse = useCallback(async () => {

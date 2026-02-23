@@ -327,6 +327,101 @@
   border-radius: 8px;
 }
 
+/* Timer Collapse Toggle */
+.timer-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timer-collapse-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timer-collapse-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Timer Collapsed View */
+.timer-collapsed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 52px;
+}
+
+.timer-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timer-collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.timer-collapsed-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.timer-collapsed-time {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-collapsed-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.timer-collapsed-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timer-collapsed-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 /* Zone Manager */
 .zone-manager {
   height: 100%;
@@ -831,6 +926,51 @@
 .add-task-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.add-task-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.cancel-task-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.cancel-task-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.add-task-collapsed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: calc(100% - 16px);
+}
+
+.add-task-collapsed:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
 }
 
 /* Task Scroll Area */
@@ -1886,7 +2026,7 @@
 
 .reset-btn {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(32, 32, 32, 0.5);
 }
 
 .reset-btn:hover {

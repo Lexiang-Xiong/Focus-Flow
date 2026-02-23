@@ -67,6 +67,19 @@ export function TaskItem({
     setIsEditing(false);
   };
 
+  // 处理编辑区域失去焦点 - 使用 setTimeout 延迟判断，给用户切换输入框的时间
+  const handleBlur = () => {
+    // 延迟检查，确保用户不是切换到另一个输入框
+    setTimeout(() => {
+      // 检查当前是否仍然有焦点在任何输入框上
+      const activeElement = document.activeElement;
+      const isFocusInsideForm = activeElement?.closest('.task-edit-form');
+      if (!isFocusInsideForm) {
+        handleSave();
+      }
+    }, 0);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSave();
@@ -78,11 +91,17 @@ export function TaskItem({
   };
 
   const handleClick = () => {
-    onSelect?.(task.id);
+    // 编辑模式下不触发任务选择
+    if (!isEditing) {
+      onSelect?.(task.id);
+    }
   };
 
   const handleDoubleClick = () => {
-    onToggleExpanded(task.id);
+    // 编辑模式下不触发展开/收缩
+    if (!isEditing) {
+      onToggleExpanded(task.id);
+    }
   };
 
   const handleResetWorkTime = (e: React.MouseEvent) => {
@@ -146,7 +165,7 @@ export function TaskItem({
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               onKeyDown={handleKeyDown}
-              onBlur={handleSave}
+              onBlur={handleBlur}
               placeholder="任务标题"
               className="task-edit-input"
             />
@@ -154,7 +173,7 @@ export function TaskItem({
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
               onKeyDown={handleKeyDown}
-              onBlur={handleSave}
+              onBlur={handleBlur}
               placeholder="任务描述（可选）"
               className="task-edit-input description"
             />
@@ -166,7 +185,10 @@ export function TaskItem({
               {task.description && (
                 <button
                   className="task-expand-btn"
-                  onClick={() => onToggleExpanded(task.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleExpanded(task.id);
+                  }}
                 >
                   {task.expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
