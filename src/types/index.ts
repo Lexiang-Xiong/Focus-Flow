@@ -1,5 +1,20 @@
 export type TaskPriority = 'low' | 'medium' | 'high';
+export type TaskUrgency = 'low' | 'medium' | 'high' | 'urgent';
 export type TimerMode = 'work' | 'break' | 'longBreak' | 'idle';
+export type GlobalViewSortMode = 'zone' | 'priority' | 'urgency' | 'weighted';
+
+export interface SortConfig {
+  mode: GlobalViewSortMode;
+  priorityWeight: number;
+  urgencyWeight: number;
+}
+
+// 内部剪贴板数据类型
+export interface ClipboardData {
+  type: 'task' | 'zone';
+  data: Task | { zone: Zone; tasks: Task[] };
+  timestamp: number;
+}
 
 export interface Task {
   id: string;
@@ -8,6 +23,7 @@ export interface Task {
   description: string;
   completed: boolean;
   priority: TaskPriority;
+  urgency: TaskUrgency;
   order: number;
   createdAt: number;
   completedAt?: number;
@@ -79,6 +95,7 @@ export interface AppState {
     soundEnabled: boolean;
     collapsed: boolean;
     collapsePosition: { x: number; y: number };
+    globalViewSort: SortConfig;
   };
 }
 
@@ -161,6 +178,11 @@ export const DEFAULT_SETTINGS = {
   soundEnabled: true,
   collapsed: false,
   collapsePosition: { x: 100, y: 100 },
+  globalViewSort: {
+    mode: 'zone' as GlobalViewSortMode,
+    priorityWeight: 0.4,
+    urgencyWeight: 0.6,
+  },
 };
 
 // 格式化时间为可读字符串

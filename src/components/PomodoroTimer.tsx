@@ -48,6 +48,27 @@ export function PomodoroTimer({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // 鼠标进入时展开
+  const handleMouseEnter = () => {
+    if (isCollapsed) {
+      setIsCollapsed(false);
+    }
+  };
+
+  // 鼠标离开时收起（仅在不运行时收起）
+  const handleMouseLeave = () => {
+    // 如果正在编辑时间，取消编辑
+    if (isEditing) {
+      setIsEditing(false);
+      setEditMinutes('');
+    }
+
+    // 收起计时器（仅在不运行时）
+    if (!isRunning && !isCollapsed) {
+      setIsCollapsed(true);
+    }
+  };
+
   // 进入编辑模式
   const handleTimeClick = () => {
     if (isRunning || !onUpdateTime) return;
@@ -113,37 +134,44 @@ export function PomodoroTimer({
     }
   };
 
-  // 收缩状态下的紧凑视图
+  // 收缩状态下的紧凑视图 - 控制按钮独立侧边栏
   if (isCollapsed) {
     return (
-      <div className={`timer-collapsed bg-gradient-to-r ${getModeColor()}`}>
-        <button
-          className="timer-collapse-btn"
-          onClick={() => setIsCollapsed(false)}
-          title="展开"
+      <div className="timer-collapsed-wrapper">
+        {/* 主计时区域 - 鼠标进入时展开 */}
+        <div
+          className={`timer-collapsed-main bg-gradient-to-r ${getModeColor()}`}
+          onMouseEnter={handleMouseEnter}
         >
-          <ChevronUp size={14} />
-        </button>
-        <div className="timer-collapsed-content">
-          {getModeIcon()}
-          <span className="timer-collapsed-time">{formattedTime}</span>
+          <button
+            className="timer-collapse-btn"
+            onClick={() => setIsCollapsed(false)}
+            title="展开"
+          >
+            <ChevronUp size={14} />
+          </button>
+          <div className="timer-collapsed-content">
+            {getModeIcon()}
+            <span className="timer-collapsed-time">{formattedTime}</span>
+          </div>
         </div>
-        <div className="timer-collapsed-controls">
+        {/* 控制按钮区域 - 固定显示，不触发展开 */}
+        <div className={`timer-collapsed-controls bg-gradient-to-r ${getModeColor()}`}>
           {isRunning ? (
-            <button className="timer-collapsed-btn" onClick={onPause} title="暂停">
-              <Pause size={16} />
+            <button className="timer-collapsed-btn primary" onClick={onPause} title="暂停">
+              <Pause size={20} />
             </button>
           ) : mode !== 'idle' ? (
-            <button className="timer-collapsed-btn" onClick={onResume} title="继续">
-              <Play size={16} />
+            <button className="timer-collapsed-btn primary" onClick={onResume} title="继续">
+              <Play size={20} />
             </button>
           ) : (
-            <button className="timer-collapsed-btn" onClick={onStart} title="开始">
-              <Play size={16} />
+            <button className="timer-collapsed-btn primary" onClick={onStart} title="开始">
+              <Play size={20} />
             </button>
           )}
           <button className="timer-collapsed-btn" onClick={onStop} title="重置">
-            <Square size={16} />
+            <Square size={20} />
           </button>
         </div>
       </div>
@@ -151,7 +179,11 @@ export function PomodoroTimer({
   }
 
   return (
-    <div className={`timer-container bg-gradient-to-br ${getModeColor()}`}>
+    <div
+      className={`timer-container bg-gradient-to-br ${getModeColor()}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       {/* Header */}
       <div className="timer-header">
         <div className="mode-indicator">

@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { ArrowLeft, Settings, Clock, Volume2, RotateCcw } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Settings, Clock, Volume2, RotateCcw, Flag, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
-import type { AppState, TimerMode } from '@/types';
+import type { AppState, TimerMode, GlobalViewSortMode } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
 
 interface SettingsPanelProps {
@@ -23,38 +23,94 @@ export function SettingsPanel({
   const [workMinutes, setWorkMinutes] = useState(Math.floor(settings.workDuration / 60));
   const [breakMinutes, setBreakMinutes] = useState(Math.floor(settings.breakDuration / 60));
   const [longBreakMinutes, setLongBreakMinutes] = useState(Math.floor(settings.longBreakDuration / 60));
+  const [priorityWeight, setPriorityWeight] = useState(settings.globalViewSort.priorityWeight * 100);
+  const [urgencyWeight, setUrgencyWeight] = useState(settings.globalViewSort.urgencyWeight * 100);
+
+  // 同步外部 settings 变化到本地状态
+  useEffect(() => {
+    setWorkMinutes(Math.floor(settings.workDuration / 60));
+  }, [settings.workDuration]);
+
+  useEffect(() => {
+    setBreakMinutes(Math.floor(settings.breakDuration / 60));
+  }, [settings.breakDuration]);
+
+  useEffect(() => {
+    setLongBreakMinutes(Math.floor(settings.longBreakDuration / 60));
+  }, [settings.longBreakDuration]);
 
   const handleWorkDurationChange = (value: number[]) => {
     const minutes = value[0];
     setWorkMinutes(minutes);
     onUpdateSettings({ workDuration: minutes * 60 });
-    onPreviewMode?.('work');
   };
 
   const handleBreakDurationChange = (value: number[]) => {
     const minutes = value[0];
     setBreakMinutes(minutes);
     onUpdateSettings({ breakDuration: minutes * 60 });
-    onPreviewMode?.('break');
   };
 
   const handleLongBreakDurationChange = (value: number[]) => {
     const minutes = value[0];
     setLongBreakMinutes(minutes);
     onUpdateSettings({ longBreakDuration: minutes * 60 });
+  };
+
+  // 预览模式 - 只在完成拖动后触发
+  const handleWorkDurationCommit = () => {
+    onPreviewMode?.('work');
+  };
+
+  const handleBreakDurationCommit = () => {
+    onPreviewMode?.('break');
+  };
+
+  const handleLongBreakDurationCommit = () => {
     onPreviewMode?.('longBreak');
+  };
+
+  const handlePriorityWeightChange = (value: number[]) => {
+    const weight = value[0];
+    setPriorityWeight(weight);
+    const newUrgencyWeight = 100 - weight;
+    setUrgencyWeight(newUrgencyWeight);
+    onUpdateSettings({
+      globalViewSort: {
+        mode: settings.globalViewSort.mode as GlobalViewSortMode,
+        priorityWeight: weight / 100,
+        urgencyWeight: newUrgencyWeight / 100,
+      },
+    });
+  };
+
+  const handleUrgencyWeightChange = (value: number[]) => {
+    const weight = value[0];
+    setUrgencyWeight(weight);
+    const newPriorityWeight = 100 - weight;
+    setPriorityWeight(newPriorityWeight);
+    onUpdateSettings({
+      globalViewSort: {
+        mode: settings.globalViewSort.mode as GlobalViewSortMode,
+        priorityWeight: newPriorityWeight / 100,
+        urgencyWeight: weight / 100,
+      },
+    });
   };
 
   const handleReset = () => {
     setWorkMinutes(25);
     setBreakMinutes(5);
     setLongBreakMinutes(15);
+    setPriorityWeight(DEFAULT_SETTINGS.globalViewSort.priorityWeight * 100);
+    setUrgencyWeight(DEFAULT_SETTINGS.globalViewSort.urgencyWeight * 100);
     onUpdateSettings({
       workDuration: DEFAULT_SETTINGS.workDuration,
       breakDuration: DEFAULT_SETTINGS.breakDuration,
       longBreakDuration: DEFAULT_SETTINGS.longBreakDuration,
       autoStartBreak: DEFAULT_SETTINGS.autoStartBreak,
       soundEnabled: DEFAULT_SETTINGS.soundEnabled,
+      globalViewSort: DEFAULT_SETTINGS.globalViewSort,
     });
   };
 
@@ -104,6 +160,7 @@ export function SettingsPanel({
             <Slider
               value={[workMinutes]}
               onValueChange={handleWorkDurationChange}
+              onValueCommit={handleWorkDurationCommit}
               min={1}
               max={120}
               step={1}
@@ -130,6 +187,7 @@ export function SettingsPanel({
             <Slider
               value={[breakMinutes]}
               onValueChange={handleBreakDurationChange}
+              onValueCommit={handleBreakDurationCommit}
               min={1}
               max={60}
               step={1}
@@ -156,9 +214,55 @@ export function SettingsPanel({
             <Slider
               value={[longBreakMinutes]}
               onValueChange={handleLongBreakDurationChange}
+              onValueCommit={handleLongBreakDurationCommit}
               min={1}
               max={90}
               step={1}
+              className="setting-slider mt-2"
+            />
+          </div>
+        </div>
+
+        {/* Weighted Sort Settings */}
+        <div className="settings-section">
+          <h3 className="settings-section-title">
+            <Flag size={14} className="mr-2" />
+            加权排序设置
+          </h3>
+          <p className="settings-section-desc">
+            在全局视图使用加权排序时，优先级和紧急度的权重比例
+          </p>
+
+          {/* Priority Weight */}
+          <div className="setting-item">
+            <div className="setting-label">
+              <Flag size={14} className="mr-2 text-red-400" />
+              <span>优先级权重</span>
+              <span className="setting-value">{priorityWeight}%</span>
+            </div>
+            <Slider
+              value={[priorityWeight]}
+              onValueChange={handlePriorityWeightChange}
+              min={0}
+              max={100}
+              step={10}
+              className="setting-slider mt-2"
+            />
+          </div>
+
+          {/* Urgency Weight */}
+          <div className="setting-item">
+            <div className="setting-label">
+              <Zap size={14} className="mr-2 text-orange-400" />
+              <span>紧急度权重</span>
+              <span className="setting-value">{urgencyWeight}%</span>
+            </div>
+            <Slider
+              value={[urgencyWeight]}
+              onValueChange={handleUrgencyWeightChange}
+              min={0}
+              max={100}
+              step={10}
               className="setting-slider mt-2"
             />
           </div>

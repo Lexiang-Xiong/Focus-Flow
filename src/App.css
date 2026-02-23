@@ -354,7 +354,13 @@
 }
 
 /* Timer Collapsed View */
-.timer-collapsed {
+.timer-collapsed-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.timer-collapsed-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -362,6 +368,16 @@
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   min-height: 52px;
+  flex: 1;
+}
+
+.timer-collapsed-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .timer-collapse-btn {
@@ -398,19 +414,13 @@
   font-variant-numeric: tabular-nums;
 }
 
-.timer-collapsed-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
 .timer-collapsed-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.1);
   border: none;
   color: white;
@@ -420,6 +430,14 @@
 
 .timer-collapsed-btn:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+.timer-collapsed-btn.primary {
+  background: rgba(59, 130, 246, 0.5);
+}
+
+.timer-collapsed-btn.primary:hover {
+  background: rgba(59, 130, 246, 0.7);
 }
 
 /* Zone Manager */
@@ -830,6 +848,12 @@
   display: flex;
   gap: 4px;
   min-width: 0;
+}
+
+.priority-urgency-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .priority-btn {
@@ -2030,7 +2054,7 @@
 }
 
 .reset-btn:hover {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(4, 4, 138, 0.8);
 }
 
 /* ============================================
@@ -2392,4 +2416,159 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
+}
+
+/* ===== Urgency Selector Styles ===== */
+.urgency-selector {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}
+
+.urgency-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.urgency-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.urgency-btn.active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.urgency-btn.urgency-urgent.active { color: #dc2626; }
+.urgency-btn.urgency-high.active { color: #f97316; }
+.urgency-btn.urgency-medium.active { color: #eab308; }
+.urgency-btn.urgency-low.active { color: #22c55e; }
+
+/* ===== Urgency in TaskItem ===== */
+.task-urgency {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 10px;
+  transition: all 0.2s ease;
+}
+
+.task-urgency:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.urgency-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 50;
+  min-width: 80px;
+  padding: 4px;
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.urgency-option {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.15s ease;
+}
+
+.urgency-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.urgency-option.selected {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ===== Sort Mode Selector ===== */
+.sort-mode-selector {
+  margin-left: auto;
+}
+
+.sort-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sort-select-trigger:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sort-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== Task Group (for non-zone sorting) ===== */
+.task-group {
+  margin-bottom: 8px;
+}
+
+.group-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  border-left: 3px solid;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.group-count {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* ===== Settings Section Description ===== */
+.settings-section-desc {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 12px;
+}
+
+.setting-value {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
 }

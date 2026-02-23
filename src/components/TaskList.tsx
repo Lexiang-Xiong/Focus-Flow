@@ -14,12 +14,12 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, CheckCircle2, Circle, Trash2, ChevronDown } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Trash2, ChevronDown, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TaskItem } from './TaskItem';
-import type { Task, TaskPriority, Zone } from '@/types';
+import type { Task, TaskPriority, TaskUrgency, Zone } from '@/types';
 
 interface TaskListProps {
   zone: Zone | null;
@@ -27,7 +27,7 @@ interface TaskListProps {
   tasks: Task[];
   activeTaskId: string | null;
   isTimerRunning: boolean;
-  onAddTask: (zoneId: string, title: string, description: string, priority?: TaskPriority) => void;
+  onAddTask: (zoneId: string, title: string, description: string, priority?: TaskPriority, urgency?: TaskUrgency) => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
   onUpdateTask: (id: string, updates: Partial<Omit<Task, 'id'>>) => void;
@@ -55,6 +55,7 @@ export function TaskList({
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [selectedPriority, setSelectedPriority] = useState<TaskPriority>('medium');
+  const [selectedUrgency, setSelectedUrgency] = useState<TaskUrgency>('low');
   const [showCompleted, setShowCompleted] = useState(false);
   const [isAddingTask, setIsAddingTask] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -71,7 +72,7 @@ export function TaskList({
 
   const handleAddTask = () => {
     if (newTaskTitle.trim() && zone) {
-      onAddTask(zone.id, newTaskTitle.trim(), newTaskDescription.trim(), selectedPriority);
+      onAddTask(zone.id, newTaskTitle.trim(), newTaskDescription.trim(), selectedPriority, selectedUrgency);
       setNewTaskTitle('');
       setNewTaskDescription('');
       inputRef.current?.focus();
@@ -138,16 +139,29 @@ export function TaskList({
       {/* Add Task */}
       {isAddingTask ? (
         <div className="add-task-container">
-          <div className="priority-selector">
-            {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
-              <button
-                key={p}
-                className={`priority-btn ${selectedPriority === p ? 'active' : ''} priority-${p}`}
-                onClick={() => setSelectedPriority(p)}
-              >
-                <div className={`priority-dot ${p}`} />
-              </button>
-            ))}
+          <div className="priority-urgency-row">
+            <div className="priority-selector">
+              {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
+                <button
+                  key={p}
+                  className={`priority-btn ${selectedPriority === p ? 'active' : ''} priority-${p}`}
+                  onClick={() => setSelectedPriority(p)}
+                >
+                  <div className={`priority-dot ${p}`} />
+                </button>
+              ))}
+            </div>
+            <div className="urgency-selector">
+              {(['urgent', 'high', 'medium', 'low'] as TaskUrgency[]).map((u) => (
+                <button
+                  key={u}
+                  className={`urgency-btn ${selectedUrgency === u ? 'active' : ''} urgency-${u}`}
+                  onClick={() => setSelectedUrgency(u)}
+                >
+                  <Zap size={10} />
+                </button>
+              ))}
+            </div>
           </div>
           <div className="add-task-inputs">
             <Input

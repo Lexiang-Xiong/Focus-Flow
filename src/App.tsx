@@ -12,6 +12,7 @@ import { useStorage } from '@/hooks/useStorage';
 import { useZones } from '@/hooks/useZones';
 import { useTasks } from '@/hooks/useTasks';
 import { useTimer } from '@/hooks/useTimer';
+import { useClipboard } from '@/hooks/useClipboard';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import type { TimerMode } from '@/types';
@@ -122,6 +123,16 @@ function App() {
     onTick: handleTimerTick,
   });
 
+  // 剪贴板功能
+  const {
+    copyTask,
+    copyZone,
+    pasteTask,
+    pasteZone,
+    hasTask,
+    hasZone,
+  } = useClipboard();
+
   // 同步timerRef（在timer声明之后）
   useEffect(() => {
     timerRef.current = { isRunning: timer.isRunning, mode: timer.mode };
@@ -148,6 +159,62 @@ function App() {
       }
     }
   }, [data.settings.workDuration, data.settings.breakDuration, data.settings.longBreakDuration]);
+
+  // 键盘快捷键监听（Ctrl+C / Ctrl+V）
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 忽略在输入框中的快捷键
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // 获取当前选中的工作区
+      const currentZone = getZoneById(data.activeZoneId || '') || null;
+
+      // Ctrl+C - 复制
+      if (e.ctrlKey && e.key === 'c') {
+        // 优先复制任务（如果选中了任务）
+        if (activeTaskId) {
+          const task = tasks.find(t => t.id === activeTaskId);
+          if (task) {
+            copyTask(task);
+            toast.success('任务已复制');
+            return;
+          }
+        }
+        // 否则复制工作区
+        if (currentZone) {
+          const zoneTasks = tasks.filter(t => t.zoneId === currentZone.id);
+          if (zoneTasks.length > 0) {
+            copyZone(currentZone, zoneTasks);
+            toast.success(`工作区 "${currentZone.name}" 已复制`);
+          }
+        }
+      }
+
+      // Ctrl+V - 粘贴
+      if (e.ctrlKey && e.key === 'v') {
+        // 优先粘贴工作区
+        if (hasZone && currentZone) {
+          const result = pasteZone(zones);
+          if (result) {
+            updateZones([...zones, result.zone]);
+            updateTasks([...tasks, ...result.tasks]);
+            toast.success(`已粘贴工作区 "${result.zone.name}"`);
+          }
+        } else if (hasTask && currentZone) {
+          const newTask = pasteTask(currentZone.id);
+          if (newTask) {
+            updateTasks([...tasks, newTask]);
+            toast.success('任务已粘贴');
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTaskId, tasks, zones, getZoneById, data.activeZoneId, copyTask, copyZone, pasteTask, pasteZone, hasTask, hasZone, updateZones, updateTasks]);
 
   const handleStartTimer = useCallback(() => {
     const incompleteTasksList = tasks.filter((t) => !t.completed);
@@ -353,6 +420,7 @@ function App() {
                     tasks={tasks}
                     activeTaskId={activeTaskId}
                     isTimerRunning={timer.isRunning}
+                    sortConfig={data.settings.globalViewSort}
                     onBack={() => {
                       setCurrentView('zones');
                       if (zones.length > 0) {
@@ -365,6 +433,7 @@ function App() {
                     onToggleExpanded={toggleExpanded}
                     onReorderTasks={reorderTasks}
                     onSelectTask={handleSelectTask}
+                    onSortConfigChange={(config) => updateSettings({ globalViewSort: config })}
                   />
                 ) : (
                   <TaskList

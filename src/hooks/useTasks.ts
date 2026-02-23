@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import type { Task, TaskPriority } from '@/types';
+import type { Task, TaskPriority, TaskUrgency } from '@/types';
 
 export function useTasks(tasks: Task[], onUpdateTasks: (tasks: Task[]) => void) {
   // Get all tasks sorted
@@ -29,11 +29,12 @@ export function useTasks(tasks: Task[], onUpdateTasks: (tasks: Task[]) => void) 
     zoneId: string,
     title: string,
     description: string = '',
-    priority: TaskPriority = 'medium'
+    priority: TaskPriority = 'medium',
+    urgency: TaskUrgency = 'low'
   ) => {
     const zoneTasks = getTasksByZone(zoneId);
     const maxOrder = zoneTasks.length > 0 ? Math.max(...zoneTasks.map((t) => t.order)) : -1;
-    
+
     const newTask: Task = {
       id: `task-${Date.now()}`,
       zoneId,
@@ -41,6 +42,7 @@ export function useTasks(tasks: Task[], onUpdateTasks: (tasks: Task[]) => void) 
       description: description.trim(),
       completed: false,
       priority,
+      urgency,
       order: maxOrder + 1,
       createdAt: Date.now(),
       expanded: false,
@@ -93,6 +95,15 @@ export function useTasks(tasks: Task[], onUpdateTasks: (tasks: Task[]) => void) 
     );
   }, [tasks, onUpdateTasks]);
 
+  // Set task urgency
+  const setTaskUrgency = useCallback((id: string, urgency: TaskUrgency) => {
+    onUpdateTasks(
+      tasks.map((task) =>
+        task.id === id ? { ...task, urgency } : task
+      )
+    );
+  }, [tasks, onUpdateTasks]);
+
   // Move task to different zone
   const moveTaskToZone = useCallback((taskId: string, newZoneId: string) => {
     const targetZoneTasks = getTasksByZone(newZoneId);
@@ -126,12 +137,14 @@ export function useTasks(tasks: Task[], onUpdateTasks: (tasks: Task[]) => void) 
     const completed = tasks.filter((t) => t.completed).length;
     const pending = total - completed;
     const highPriority = tasks.filter((t) => t.priority === 'high' && !t.completed).length;
-    
+    const urgent = tasks.filter((t) => t.urgency === 'urgent' && !t.completed).length;
+
     return {
       total,
       completed,
       pending,
       highPriority,
+      urgent,
       completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
     };
   }, [tasks]);
@@ -162,6 +175,7 @@ export function useTasks(tasks: Task[], onUpdateTasks: (tasks: Task[]) => void) 
     updateTask,
     toggleExpanded,
     setTaskPriority,
+    setTaskUrgency,
     moveTaskToZone,
     reorderTasks,
     clearCompleted,

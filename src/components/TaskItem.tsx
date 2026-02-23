@@ -1,10 +1,10 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Check, Trash2, Edit2, GripVertical, ChevronDown, ChevronUp, Flag, RotateCcw, Clock } from 'lucide-react';
+import { Check, Trash2, Edit2, GripVertical, ChevronDown, ChevronUp, Flag, RotateCcw, Clock, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState, useRef, useEffect } from 'react';
-import type { Task, TaskPriority } from '@/types';
+import type { Task, TaskPriority, TaskUrgency } from '@/types';
 import { formatDuration } from '@/types';
 
 interface TaskItemProps {
@@ -34,6 +34,7 @@ export function TaskItem({
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDescription, setEditDescription] = useState(task.description);
   const [showPriorityMenu, setShowPriorityMenu] = useState(false);
+  const [showUrgencyMenu, setShowUrgencyMenu] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -131,6 +132,32 @@ export function TaskItem({
     }
   };
 
+  const getUrgencyColor = (urgency: TaskUrgency) => {
+    switch (urgency) {
+      case 'urgent':
+        return '#dc2626';
+      case 'high':
+        return '#f97316';
+      case 'medium':
+        return '#eab308';
+      case 'low':
+        return '#22c55e';
+    }
+  };
+
+  const getUrgencyLabel = (urgency: TaskUrgency) => {
+    switch (urgency) {
+      case 'urgent':
+        return '急';
+      case 'high':
+        return '高';
+      case 'medium':
+        return '中';
+      case 'low':
+        return '低';
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -214,8 +241,37 @@ export function TaskItem({
         )}
       </div>
 
-      {/* Priority */}
+      {/* Priority and Urgency */}
       <div className="task-priority-wrapper">
+        {/* Urgency */}
+        <button
+          className="task-urgency"
+          style={{ color: getUrgencyColor(task.urgency) }}
+          onClick={() => setShowUrgencyMenu(!showUrgencyMenu)}
+        >
+          <Zap size={12} />
+          <span>{getUrgencyLabel(task.urgency)}</span>
+        </button>
+        {showUrgencyMenu && (
+          <div className="urgency-menu">
+            {(['urgent', 'high', 'medium', 'low'] as TaskUrgency[]).map((u) => (
+              <button
+                key={u}
+                className={`urgency-option ${task.urgency === u ? 'selected' : ''}`}
+                style={{ color: getUrgencyColor(u) }}
+                onClick={() => {
+                  onUpdate(task.id, { urgency: u });
+                  setShowUrgencyMenu(false);
+                }}
+              >
+                <Zap size={10} />
+                <span>{getUrgencyLabel(u)}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Priority */}
         <button
           className="task-priority"
           style={{ color: getPriorityColor(task.priority) }}
