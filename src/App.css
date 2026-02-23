@@ -18,9 +18,17 @@
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.4),
     0 2px 8px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+.float-window-progress {
+  width: 100%;
+  height: 2px;
+  flex-shrink: 0;
+  margin-top: auto;
 }
 
 /* Title Bar */
@@ -89,7 +97,7 @@
 .content-area {
   height: 100%;       /* 核心修复：强制填满 ResizablePanel 的高度 */
   width: 100%;        /* 确保宽度也填满 */
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   min-width: 0;       /* 顺带修复：允许横向收缩，解决不能往右拖的问题 */
@@ -358,6 +366,20 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-wrap: wrap;
+}
+
+.timer-collapsed-progress {
+  width: 100%;
+  padding: 0 4px;
+  margin-top: 4px;
+  height: 2px;
+}
+
+.timer-bottom-line {
+  width: 100%;
+  height: 2px;
+  border-radius: 1px;
 }
 
 .timer-collapsed-main {
@@ -397,6 +419,25 @@
 .timer-collapse-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   color: white;
+}
+
+.timer-auto-expand-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 4px;
+}
+
+.timer-auto-expand-toggle:hover {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .timer-collapsed-content {
@@ -1035,6 +1076,14 @@
   margin-top: 8px;
 }
 
+/* Task Tree Item - Container for task with potential subtasks */
+.task-tree-item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
 /* Task Item */
 .task-item {
   display: flex;
@@ -1045,11 +1094,19 @@
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid transparent;
   transition: all 0.2s ease;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .task-item:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Subtask indentation - margin handled by TaskList padding-left */
+.task-item.subtask {
+  margin-left: 0;
 }
 
 .task-item.completed {
@@ -1079,6 +1136,122 @@
 
 .task-drag-handle:active {
   cursor: grabbing;
+}
+
+/* Subtask Buttons */
+.subtask-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.subtask-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Subtask buttons container - vertical stack */
+.subtask-buttons-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.add-subtask-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.add-subtask-btn:hover {
+  background: rgba(34, 197, 94, 0.2);
+  color: rgba(34, 197, 94, 0.8);
+}
+
+/* Subtask form */
+.subtask-add-form {
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  margin: 4px 0;
+}
+
+.subtask-add-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.subtask-input {
+  flex: 1;
+  height: 28px;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.subtask-input:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.subtask-priority-select,
+.subtask-urgency-select {
+  display: flex;
+  gap: 2px;
+}
+
+.subtask-add-btn,
+.subtask-cancel-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.subtask-add-btn {
+  background: rgba(34, 197, 94, 0.3);
+  border: none;
+  color: white;
+}
+
+.subtask-add-btn:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.5);
+}
+
+.subtask-add-btn:disabled {
+  opacity: 0.3;
+}
+
+.subtask-cancel-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.subtask-cancel-btn:hover {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .task-zone-indicator {

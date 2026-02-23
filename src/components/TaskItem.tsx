@@ -1,6 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Check, Trash2, Edit2, GripVertical, ChevronDown, ChevronUp, Flag, RotateCcw, Clock, Zap } from 'lucide-react';
+import { Check, Trash2, Edit2, GripVertical, ChevronDown, ChevronUp, ChevronRight, Flag, RotateCcw, Clock, Zap, Plus } from 'lucide-react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState, useRef, useEffect } from 'react';
@@ -16,7 +17,13 @@ interface TaskItemProps {
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: Partial<Omit<Task, 'id'>>) => void;
   onToggleExpanded: (id: string) => void;
+  onToggleSubtasksCollapsed?: (id: string) => void;
+  onAddSubtask?: (parentId: string) => void;
+  onZoomIn?: (id: string) => void;
   onSelect?: (id: string) => void;
+  hasChildren?: boolean;
+  depth?: number;
+  isDraggable?: boolean;
 }
 
 export function TaskItem({
@@ -28,7 +35,13 @@ export function TaskItem({
   onDelete,
   onUpdate,
   onToggleExpanded,
+  onToggleSubtasksCollapsed,
+  onAddSubtask,
+  onZoomIn,
   onSelect,
+  hasChildren = false,
+  depth = 0,
+  isDraggable = true,
 }: TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
@@ -44,7 +57,7 @@ export function TaskItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id });
+  } = useSortable({ id: task.id, disabled: !isDraggable });
 
   useEffect(() => {
     if (isEditing && titleInputRef.current) {
@@ -52,9 +65,10 @@ export function TaskItem({
     }
   }, [isEditing]);
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
+  const style: React.CSSProperties = {
+    // 只有可拖拽时才应用 transform，避免子任务缩进被覆盖
+    transform: isDraggable ? CSS.Transform.toString(transform) : undefined,
+    transition: isDraggable ? transition : undefined,
     opacity: isDragging ? 0.5 : 1,
   };
 
@@ -91,14 +105,29 @@ export function TaskItem({
     }
   };
 
-  const handleClick = () => {
-    // 编辑模式下不触发任务选择
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggle(task.id);
+  };
+
+  const handleTitleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // 标题点击只触发进入下级，不触发选择
+    if (onZoomIn) {
+      onZoomIn(task.id);
+    }
+  };
+
+  const handleContentClick = (e: React.MouseEvent) => {
+    // 点击任务内容区域（非按钮部分）才触发选择
+    e.stopPropagation();
     if (!isEditing) {
       onSelect?.(task.id);
     }
   };
 
-  const handleDoubleClick = () => {
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     // 编辑模式下不触发展开/收缩
     if (!isEditing) {
       onToggleExpanded(task.id);
@@ -162,12 +191,24 @@ export function TaskItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`task-item ${task.completed ? 'completed' : ''} ${isActive ? 'active' : ''} ${isTimerRunning && isActive ? 'working' : ''}`}
+      className={`task-item ${task.completed ? 'completed' : ''} ${isActive ? 'active' : ''} ${isTimerRunning && isActive ? 'working' : ''} ${depth > 0 ? 'subtask' : ''}`}
+      onClick={(e) => {
+        // 点击任务项的空白区域时触发选择
+        if (!isEditing) {
+          onSelect?.(task.id);
+        }
+      }}
     >
       {/* Drag Handle */}
-      <div className="task-drag-handle" {...attributes} {...listeners}>
-        <GripVertical size={14} className="text-white/30" />
-      </div>
+      {isDraggable ? (
+        <div className="task-drag-handle" {...attributes} {...listeners}>
+          <GripVertical size={14} className="text-white/30" />
+        </div>
+      ) : (
+        <div className="task-drag-handle invisible">
+          <GripVertical size={14} />
+        </div>
+      )}
 
       {/* Zone Color Indicator */}
       <div
@@ -178,13 +219,42 @@ export function TaskItem({
       {/* Checkbox */}
       <button
         className={`task-checkbox ${task.completed ? 'checked' : ''}`}
-        onClick={() => onToggle(task.id)}
+        onClick={handleCheckboxClick}
       >
         {task.completed && <Check size={12} />}
       </button>
 
+      {/* Subtask Buttons Container - vertically stacked */}
+      <div className="subtask-buttons-container">
+        {/* Add Subtask Button */}
+        <button
+          className="add-subtask-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddSubtask?.(task.id);
+          }}
+          title="添加子任务"
+        >
+          <Plus size={12} />
+        </button>
+
+        {/* Subtask Toggle Button */}
+        {hasChildren && (
+          <button
+            className="subtask-toggle-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSubtasksCollapsed?.(task.id);
+            }}
+            title={task.isCollapsed ? '展开子任务' : '收起子任务'}
+          >
+            {task.isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+          </button>
+        )}
+      </div>
+
       {/* Task Content */}
-      <div className="task-content-wrapper" onClick={handleClick} onDoubleClick={handleDoubleClick}>
+      <div className="task-content-wrapper" onClick={handleContentClick} onDoubleClick={handleDoubleClick}>
         {isEditing ? (
           <div className="task-edit-form">
             <Input
@@ -208,7 +278,13 @@ export function TaskItem({
         ) : (
           <div className="task-content">
             <div className="task-header-row">
-              <span className="task-title">{task.title}</span>
+              <span
+                className={`task-title ${onZoomIn ? 'cursor-pointer hover:text-blue-400 hover:underline' : ''}`}
+                onClick={handleTitleClick}
+                title={onZoomIn ? "点击进入该任务视图" : undefined}
+              >
+                {task.title}
+              </span>
               {task.description && (
                 <button
                   className="task-expand-btn"
@@ -247,7 +323,10 @@ export function TaskItem({
         <button
           className="task-urgency"
           style={{ color: getUrgencyColor(task.urgency) }}
-          onClick={() => setShowUrgencyMenu(!showUrgencyMenu)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowUrgencyMenu(!showUrgencyMenu);
+          }}
         >
           <Zap size={12} />
           <span>{getUrgencyLabel(task.urgency)}</span>
@@ -259,7 +338,8 @@ export function TaskItem({
                 key={u}
                 className={`urgency-option ${task.urgency === u ? 'selected' : ''}`}
                 style={{ color: getUrgencyColor(u) }}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   onUpdate(task.id, { urgency: u });
                   setShowUrgencyMenu(false);
                 }}
@@ -275,7 +355,10 @@ export function TaskItem({
         <button
           className="task-priority"
           style={{ color: getPriorityColor(task.priority) }}
-          onClick={() => setShowPriorityMenu(!showPriorityMenu)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowPriorityMenu(!showPriorityMenu);
+          }}
         >
           <Flag size={12} />
           <span>{getPriorityLabel(task.priority)}</span>
@@ -287,7 +370,8 @@ export function TaskItem({
                 key={p}
                 className={`priority-option ${task.priority === p ? 'selected' : ''}`}
                 style={{ color: getPriorityColor(p) }}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   onUpdate(task.id, { priority: p });
                   setShowPriorityMenu(false);
                 }}
@@ -306,7 +390,10 @@ export function TaskItem({
           size="icon"
           variant="ghost"
           className="task-action-btn"
-          onClick={() => setIsEditing(true)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsEditing(true);
+          }}
         >
           <Edit2 size={12} />
         </Button>
@@ -314,7 +401,10 @@ export function TaskItem({
           size="icon"
           variant="ghost"
           className="task-action-btn delete"
-          onClick={() => onDelete(task.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(task.id);
+          }}
         >
           <Trash2 size={12} />
         </Button>

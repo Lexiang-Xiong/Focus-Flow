@@ -9,6 +9,7 @@ exclude_patterns:
 - '*.tmp'
 - '*.bak'
 - '*.swp'
+- '*.ico'
 - '**/__pycache__/*'
 - '**/.git/*'
 - '**/.pytest_cache/*'

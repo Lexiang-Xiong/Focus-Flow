@@ -45,27 +45,18 @@ export function PomodoroTimer({
   // 编辑状态
   const [isEditing, setIsEditing] = useState(false);
   const [editMinutes, setEditMinutes] = useState('');
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // 默认收起状态
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // 鼠标进入时展开
-  const handleMouseEnter = () => {
-    if (isCollapsed) {
-      setIsCollapsed(false);
-    }
-  };
+  // 鼠标进入时不做任何操作（取消自动展开）
+  const handleMouseEnter = () => {};
 
-  // 鼠标离开时收起（仅在不运行时收起）
+  // 鼠标离开时只处理编辑状态的取消（取消自动收起）
   const handleMouseLeave = () => {
-    // 如果正在编辑时间，取消编辑
     if (isEditing) {
       setIsEditing(false);
       setEditMinutes('');
-    }
-
-    // 收起计时器（仅在不运行时）
-    if (!isRunning && !isCollapsed) {
-      setIsCollapsed(true);
     }
   };
 
@@ -134,14 +125,27 @@ export function PomodoroTimer({
     }
   };
 
+  // 获取进度条颜色（亮色）
+  const getProgressColor = () => {
+    switch (mode) {
+      case 'work':
+        return '#60a5fa'; // blue-400
+      case 'break':
+        return '#4ade80'; // green-400
+      case 'longBreak':
+        return '#c084fc'; // purple-400
+      default:
+        return '#d1d5db'; // gray-300
+    }
+  };
+
   // 收缩状态下的紧凑视图 - 控制按钮独立侧边栏
   if (isCollapsed) {
     return (
       <div className="timer-collapsed-wrapper">
-        {/* 主计时区域 - 鼠标进入时展开 */}
+        {/* 主计时区域 */}
         <div
           className={`timer-collapsed-main bg-gradient-to-r ${getModeColor()}`}
-          onMouseEnter={handleMouseEnter}
         >
           <button
             className="timer-collapse-btn"
@@ -150,12 +154,39 @@ export function PomodoroTimer({
           >
             <ChevronUp size={14} />
           </button>
-          <div className="timer-collapsed-content">
-            {getModeIcon()}
-            <span className="timer-collapsed-time">{formattedTime}</span>
+          {/* 时间显示区域 - 支持点击修改时间 */}
+          <div className="timer-collapsed-content" onClick={handleTimeClick}>
+            {isEditing ? (
+              <div className="flex items-center gap-1">
+                <Input
+                  ref={inputRef}
+                  type="number"
+                  value={editMinutes}
+                  onChange={(e) => setEditMinutes(e.target.value)}
+                  onBlur={handleTimeSubmit}
+                  onKeyDown={(e) => e.key === 'Enter' && handleTimeSubmit()}
+                  className="w-14 h-6 text-sm font-bold text-center bg-black/20 border-white/20 text-white"
+                  min={1}
+                  max={120}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <span className="text-xs text-white/50">min</span>
+              </div>
+            ) : (
+              <>
+                {getModeIcon()}
+                <span
+                  className={`timer-collapsed-time ${!isRunning ? 'cursor-pointer' : ''}`}
+                  style={isRunning ? { color: getProgressColor() } : undefined}
+                  title={isRunning ? "计时中无法修改" : "点击修改时间"}
+                >
+                  {formattedTime}
+                </span>
+              </>
+            )}
           </div>
         </div>
-        {/* 控制按钮区域 - 固定显示，不触发展开 */}
+        {/* 控制按钮区域 */}
         <div className={`timer-collapsed-controls bg-gradient-to-r ${getModeColor()}`}>
           {isRunning ? (
             <button className="timer-collapsed-btn primary" onClick={onPause} title="暂停">
@@ -173,6 +204,10 @@ export function PomodoroTimer({
           <button className="timer-collapsed-btn" onClick={onStop} title="重置">
             <Square size={20} />
           </button>
+        </div>
+        {/* 进度条 */}
+        <div className="timer-collapsed-progress">
+          <Progress value={progress} className="timer-progress" style={{ backgroundColor: getProgressColor() }} />
         </div>
       </div>
     );
@@ -229,6 +264,7 @@ export function PomodoroTimer({
         ) : (
           <span
             className={`time-text ${isRunning ? 'running' : ''} ${!isRunning ? 'cursor-pointer hover:scale-105' : ''}`}
+            style={isRunning ? { color: getProgressColor() } : undefined}
             onClick={handleTimeClick}
             title={isRunning ? "计时中无法修改" : "点击修改时间"}
           >
@@ -272,6 +308,7 @@ export function PomodoroTimer({
         <Progress
           value={progress}
           className="timer-progress"
+          style={{ backgroundColor: getProgressColor() }}
         />
       </div>
 

@@ -19,6 +19,8 @@ export interface ClipboardData {
 export interface Task {
   id: string;
   zoneId: string;
+  parentId: string | null;  // 父任务ID，null表示顶级任务
+  isCollapsed: boolean;      // 是否折叠子任务
   title: string;
   description: string;
   completed: boolean;
@@ -105,6 +107,7 @@ export interface TimerState {
   isRunning: boolean;
   currentTaskId: string | null;
   currentSessionStartTime?: number; // 当前专注会话开始时间
+  pausedTimeRemaining?: number;     // 暂停时的剩余时间（秒）
 }
 
 // Predefined templates

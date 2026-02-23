@@ -67,6 +67,7 @@ function App() {
     deleteTask,
     updateTask,
     toggleExpanded,
+    toggleSubtasksCollapsed,
     reorderTasks,
     clearCompleted,
     stats,
@@ -311,6 +312,7 @@ function App() {
           formattedTime={timer.formattedTime}
           activeTaskId={activeTaskId}
           taskTitle={activeTask?.title || '未选择任务'}
+          progress={timer.progress}
           onStart={() => timer.start('work', activeTaskId)}
           onPause={timer.pause}
           onResume={timer.resume}
@@ -326,7 +328,9 @@ function App() {
 
   return (
     <>
-      <FloatWindow onCollapse={handleToggleCollapse}>
+      <FloatWindow
+        onCollapse={handleToggleCollapse}
+      >
         <div className="app-container">
           {/* Timer Section */}
           <PomodoroTimer
@@ -431,6 +435,7 @@ function App() {
                     onDeleteTask={deleteTask}
                     onUpdateTask={updateTask}
                     onToggleExpanded={toggleExpanded}
+                    onToggleSubtasksCollapsed={toggleSubtasksCollapsed}
                     onReorderTasks={reorderTasks}
                     onSelectTask={handleSelectTask}
                     onSortConfigChange={(config) => updateSettings({ globalViewSort: config })}
@@ -447,6 +452,7 @@ function App() {
                     onDeleteTask={deleteTask}
                     onUpdateTask={updateTask}
                     onToggleExpanded={toggleExpanded}
+                    onToggleSubtasksCollapsed={toggleSubtasksCollapsed}
                     onReorderTasks={reorderTasks}
                     onSelectTask={handleSelectTask}
                     onClearCompleted={clearCompleted}

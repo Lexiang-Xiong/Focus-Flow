@@ -7,11 +7,26 @@ interface CollapseButtonProps {
   formattedTime: string;
   activeTaskId: string | null;
   taskTitle: string;
+  progress: number;
   onStart: () => void;
   onPause: () => void;
   onResume?: () => void;
   onExpand: () => void;
 }
+
+// 获取进度条颜色
+const getProgressColor = (mode: string): string => {
+  switch (mode) {
+    case 'work':
+      return '#60a5fa'; // blue-400
+    case 'break':
+      return '#4ade80'; // green-400
+    case 'longBreak':
+      return '#c084fc'; // purple-400
+    default:
+      return '#d1d5db'; // gray-300
+  }
+};
 
 export function CollapseButton({
   pendingTasks,
@@ -20,6 +35,7 @@ export function CollapseButton({
   formattedTime,
   activeTaskId: _activeTaskId,
   taskTitle,
+  progress,
   onStart,
   onPause,
   onResume,
@@ -113,6 +129,27 @@ export function CollapseButton({
         >
           <ChevronUp size={16} />
         </button>
+      </div>
+
+      {/* 底部进度条 */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '2px',
+          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        }}
+      >
+        <div
+          style={{
+            height: '100%',
+            width: `${progress}%`,
+            backgroundColor: getProgressColor(timerMode),
+            transition: 'width 0.3s ease, background-color 0.3s ease',
+          }}
+        />
       </div>
     </div>
   );

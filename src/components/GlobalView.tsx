@@ -14,7 +14,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { ArrowLeft, CheckCircle2, Globe, ArrowUpDown, Zap, Flag } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Globe, ArrowUpDown, Zap, Flag, ChevronDown, ChevronRight, ArrowUp, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -38,6 +38,8 @@ interface GlobalViewProps {
   onDeleteTask: (id: string) => void;
   onUpdateTask: (id: string, updates: Partial<Omit<Task, 'id'>>) => void;
   onToggleExpanded: (id: string) => void;
+  onToggleSubtasksCollapsed?: (id: string) => void;
+  onAddSubtask?: (parentId: string, title: string, priority: TaskPriority, urgency: TaskUrgency) => void;
   onReorderTasks: (zoneId: string, tasks: Task[]) => void;
   onSelectTask: (id: string) => void;
   onSortConfigChange: (config: SortConfig) => void;
@@ -54,11 +56,14 @@ export function GlobalView({
   onDeleteTask,
   onUpdateTask,
   onToggleExpanded,
+  onToggleSubtasksCollapsed,
+  onAddSubtask,
   onReorderTasks,
   onSelectTask,
   onSortConfigChange,
 }: GlobalViewProps) {
   const [showCompleted, setShowCompleted] = useState(false);
+  const [viewDepth, setViewDepth] = useState(1); // For sorting modes: how many levels to expand
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -79,20 +84,58 @@ export function GlobalView({
     return normalizedPriority * pWeight + normalizedUrgency * uWeight;
   };
 
-  // Get all incomplete tasks sorted based on sortConfig
-  const incompleteTasks = useMemo(() => {
-    const filtered = tasks.filter((t) => !t.completed);
+  // Get root tasks (no parent or undefined parent - for backward compatibility)
+  const rootTasks = useMemo(() => {
+    return tasks.filter((t) => (t.parentId === null || t.parentId === undefined) && !t.completed);
+  }, [tasks]);
 
-    return [...filtered].sort((a, b) => {
+  // Get child tasks for a parent
+  const getChildTasks = (parentId: string): Task[] => {
+    return tasks.filter((t) => t.parentId === parentId).sort((a, b) => a.order - b.order);
+  };
+
+  // Check if task has children
+  const hasChildren = (taskId: string): boolean => {
+    return tasks.some((t) => t.parentId === taskId);
+  };
+
+  // Get max depth of task tree
+  const getMaxDepth = (taskId: string): number => {
+    const children = getChildTasks(taskId);
+    if (children.length === 0) return 0;
+    let maxChildDepth = 0;
+    children.forEach((child) => {
+      maxChildDepth = Math.max(maxChildDepth, getMaxDepth(child.id));
+    });
+    return 1 + maxChildDepth;
+  };
+
+  const maxTreeDepth = useMemo(() => {
+    let max = 0;
+    rootTasks.forEach((task) => {
+      max = Math.max(max, getMaxDepth(task.id));
+    });
+    return max;
+  }, [rootTasks, tasks]);
+
+  // For zone mode: show tree structure
+  const zoneModeTasks = useMemo(() => {
+    return rootTasks.sort((a, b) => {
+      const zoneA = zones.find((z) => z.id === a.zoneId);
+      const zoneB = zones.find((z) => z.id === b.zoneId);
+      if (zoneA?.order !== zoneB?.order) {
+        return (zoneA?.order || 0) - (zoneB?.order || 0);
+      }
+      return a.order - b.order;
+    });
+  }, [rootTasks, zones]);
+
+  // For sorting modes: only root tasks participate in sorting
+  const sortedRootTasks = useMemo(() => {
+    if (sortConfig.mode === 'zone') return zoneModeTasks;
+
+    return [...rootTasks].sort((a, b) => {
       switch (sortConfig.mode) {
-        case 'zone': {
-          const zoneA = zones.find((z) => z.id === a.zoneId);
-          const zoneB = zones.find((z) => z.id === b.zoneId);
-          if (zoneA?.order !== zoneB?.order) {
-            return (zoneA?.order || 0) - (zoneB?.order || 0);
-          }
-          return a.order - b.order;
-        }
         case 'priority':
           return priorityOrder[a.priority] - priorityOrder[b.priority];
         case 'urgency':
@@ -103,19 +146,31 @@ export function GlobalView({
           return 0;
       }
     });
-  }, [tasks, sortConfig, zones]);
+  }, [rootTasks, sortConfig, zoneModeTasks]);
 
-  const completedTasks = tasks.filter((t) => t.completed);
-
-  // Group tasks for non-zone sorting modes
+  // Group tasks for all sorting modes
   const taskGroups = useMemo(() => {
-    if (sortConfig.mode === 'zone') return null;
+    const groups: { title: string; color: string; tasks: Task[]; zoneId?: string }[] = [];
 
-    const groups: { title: string; color: string; tasks: Task[] }[] = [];
+    // Zone mode: create groups by zone
+    if (sortConfig.mode === 'zone') {
+      zones.forEach((zone) => {
+        const zoneTasks = sortedRootTasks.filter((t) => t.zoneId === zone.id);
+        if (zoneTasks.length > 0) {
+          groups.push({
+            title: zone.name,
+            color: zone.color,
+            tasks: zoneTasks,
+            zoneId: zone.id,
+          });
+        }
+      });
+      return groups;
+    }
 
     if (sortConfig.mode === 'priority') {
       const priorityGroups: Record<TaskPriority, Task[]> = { high: [], medium: [], low: [] };
-      incompleteTasks.forEach((t) => priorityGroups[t.priority].push(t));
+      sortedRootTasks.forEach((t) => priorityGroups[t.priority].push(t));
 
       const priorityLabels: Record<TaskPriority, { title: string; color: string }> = {
         high: { title: '高优先级', color: '#ef4444' },
@@ -134,7 +189,7 @@ export function GlobalView({
       });
     } else if (sortConfig.mode === 'urgency') {
       const urgencyGroups: Record<TaskUrgency, Task[]> = { urgent: [], high: [], medium: [], low: [] };
-      incompleteTasks.forEach((t) => urgencyGroups[t.urgency].push(t));
+      sortedRootTasks.forEach((t) => urgencyGroups[t.urgency].push(t));
 
       const urgencyLabels: Record<TaskUrgency, { title: string; color: string }> = {
         urgent: { title: '紧急', color: '#dc2626' },
@@ -160,7 +215,7 @@ export function GlobalView({
         { title: '低优先级', color: '#22c55e', minScore: 0, tasks: [] },
       ];
 
-      incompleteTasks.forEach((t) => {
+      sortedRootTasks.forEach((t) => {
         const score = calculateWeightedScore(t);
         if (score >= 0.75) scoreGroups[0].tasks.push(t);
         else if (score >= 0.5) scoreGroups[1].tasks.push(t);
@@ -180,17 +235,32 @@ export function GlobalView({
     }
 
     return groups;
-  }, [incompleteTasks, sortConfig.mode]);
+  }, [sortedRootTasks, sortConfig.mode, zones]);
+
+  const completedTasks = tasks.filter((t) => t.completed);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = incompleteTasks.findIndex((t) => t.id === active.id);
-      const newIndex = incompleteTasks.findIndex((t) => t.id === over.id);
-      
+      // Find active and over tasks
+      const activeTask = rootTasks.find((t) => t.id === active.id);
+      const overTask = rootTasks.find((t) => t.id === over.id);
+
+      if (!activeTask || !overTask) return;
+
+      // Case 1: Cross-zone drag - update zoneId
+      if (activeTask.zoneId !== overTask.zoneId && sortConfig.mode === 'zone') {
+        onUpdateTask(activeTask.id, { zoneId: overTask.zoneId });
+        return;
+      }
+
+      // Case 2: Same zone - reorder
+      const oldIndex = sortedRootTasks.findIndex((t) => t.id === active.id);
+      const newIndex = sortedRootTasks.findIndex((t) => t.id === over.id);
+
       if (oldIndex !== -1 && newIndex !== -1) {
-        const reordered = arrayMove(incompleteTasks, oldIndex, newIndex);
+        const reordered = arrayMove(sortedRootTasks, oldIndex, newIndex);
         // Group by zone and reorder within each zone
         const zoneGroups = new Map<string, Task[]>();
         reordered.forEach((task) => {
@@ -199,7 +269,7 @@ export function GlobalView({
           }
           zoneGroups.get(task.zoneId)!.push(task);
         });
-        
+
         // Update order for each zone
         zoneGroups.forEach((zoneTasks, zoneId) => {
           onReorderTasks(zoneId, zoneTasks);
@@ -221,8 +291,71 @@ export function GlobalView({
   const stats = {
     total: tasks.length,
     completed: completedTasks.length,
-    pending: incompleteTasks.length,
+    pending: rootTasks.length,
     completionRate: tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0,
+  };
+
+  // Recursively render task with children for zone mode
+  const renderTaskWithChildren = (task: Task, depth: number, maxExpandDepth: number): React.ReactNode => {
+    const taskChildren = getChildTasks(task.id);
+    const hasKids = taskChildren.length > 0;
+    const showChildren = !task.isCollapsed && depth < maxExpandDepth;
+
+    return (
+      <div
+        key={task.id}
+        className="task-tree-item"
+        style={{ paddingLeft: depth > 0 ? `${depth * 24}px` : undefined }}
+      >
+        <TaskItem
+          task={task}
+          zoneColor={getZoneColor(task.zoneId)}
+          isActive={task.id === activeTaskId}
+          isTimerRunning={isTimerRunning && task.id === activeTaskId}
+          onToggle={onToggleTask}
+          onDelete={onDeleteTask}
+          onUpdate={onUpdateTask}
+          onToggleExpanded={onToggleExpanded}
+          onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
+          onSelect={onSelectTask}
+          hasChildren={hasKids}
+          depth={depth}
+        />
+        {showChildren && taskChildren.map((child) => renderTaskWithChildren(child, depth + 1, maxExpandDepth))}
+      </div>
+    );
+  };
+
+  // Recursively render task with children for sorting modes (respecting viewDepth)
+  const renderTaskWithDepth = (task: Task, currentDepth: number): React.ReactNode => {
+    const taskChildren = getChildTasks(task.id);
+    const hasKids = taskChildren.length > 0;
+    const showChildren = !task.isCollapsed && currentDepth < viewDepth;
+
+    return (
+      <div
+        key={task.id}
+        className="task-tree-item"
+        style={{ paddingLeft: currentDepth > 0 ? `${currentDepth * 24}px` : undefined }}
+      >
+        <TaskItem
+          task={task}
+          zoneColor={getZoneColor(task.zoneId)}
+          isActive={task.id === activeTaskId}
+          isTimerRunning={isTimerRunning && task.id === activeTaskId}
+          onToggle={onToggleTask}
+          onDelete={onDeleteTask}
+          onUpdate={onUpdateTask}
+          onToggleExpanded={onToggleExpanded}
+          onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
+          onSelect={onSelectTask}
+          hasChildren={hasKids}
+          depth={currentDepth}
+          isDraggable={sortConfig.mode === 'zone' && currentDepth === 0}
+        />
+        {showChildren && taskChildren.map((child) => renderTaskWithDepth(child, currentDepth + 1))}
+      </div>
+    );
   };
 
   return (
@@ -245,7 +378,10 @@ export function GlobalView({
         <div className="sort-mode-selector">
           <Select
             value={sortConfig.mode}
-            onValueChange={(value: GlobalViewSortMode) => onSortConfigChange({ ...sortConfig, mode: value })}
+            onValueChange={(value: GlobalViewSortMode) => {
+              onSortConfigChange({ ...sortConfig, mode: value });
+              setViewDepth(1); // Reset depth when changing mode
+            }}
           >
             <SelectTrigger className="sort-select-trigger">
               <ArrowUpDown size={14} />
@@ -282,10 +418,54 @@ export function GlobalView({
         </div>
       </div>
 
+      {/* Depth Controls for sorting modes */}
+      {sortConfig.mode !== 'zone' && maxTreeDepth > 0 && (
+        <div className="depth-controls">
+          <span className="depth-label">展开层级:</span>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setViewDepth(1)}
+            className={viewDepth === 1 ? 'active' : ''}
+            title="返回顶层"
+          >
+            <ArrowUp size={14} />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setViewDepth(Math.max(1, viewDepth - 1))}
+            disabled={viewDepth <= 1}
+            title="收起一级"
+          >
+            <ChevronRight size={14} />
+          </Button>
+          <span className="depth-value">{viewDepth}</span>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setViewDepth(Math.min(maxTreeDepth, viewDepth + 1))}
+            disabled={viewDepth >= maxTreeDepth}
+            title="展开一级"
+          >
+            <ChevronDown size={14} />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setViewDepth(maxTreeDepth)}
+            className={viewDepth >= maxTreeDepth ? 'active' : ''}
+            title="展开所有"
+          >
+            <Layers size={14} />
+          </Button>
+        </div>
+      )}
+
       {/* Task List */}
       <ScrollArea className="task-scroll-area">
         <div className="tasks-container">
-          {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
+          {rootTasks.length === 0 && completedTasks.length === 0 ? (
             <div className="empty-state">
               <Globe size={48} className="empty-icon" />
               <p>暂无任务</p>
@@ -293,59 +473,36 @@ export function GlobalView({
             </div>
           ) : (
             <>
-              {/* Task Groups for non-zone sorting or Zone Labels for zone sorting */}
-              {sortConfig.mode === 'zone' ? (
-                // Zone sorting - show zone labels
+              {/* All sorting modes use taskGroups with DndContext at root level */}
+              {sortConfig.mode === 'zone' && taskGroups && taskGroups.length > 0 ? (
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}
                   onDragEnd={handleDragEnd}
                 >
-                  <SortableContext
-                    items={incompleteTasks.map((t) => t.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {incompleteTasks.map((task, index) => {
-                      const prevTask = incompleteTasks[index - 1];
-                      const showZoneLabel = !prevTask || prevTask.zoneId !== task.zoneId;
-
-                      return (
-                        <div key={task.id}>
-                          {showZoneLabel && (
-                            <div
-                              className="zone-label"
-                              style={{
-                                backgroundColor: `${getZoneColor(task.zoneId)}20`,
-                                borderLeftColor: getZoneColor(task.zoneId),
-                              }}
-                            >
-                              <div
-                                className="zone-label-dot"
-                                style={{ backgroundColor: getZoneColor(task.zoneId) }}
-                              />
-                              <span style={{ color: getZoneColor(task.zoneId) }}>
-                                {getZoneName(task.zoneId)}
-                              </span>
-                            </div>
-                          )}
-                          <TaskItem
-                            task={task}
-                            zoneColor={getZoneColor(task.zoneId)}
-                            isActive={task.id === activeTaskId}
-                            isTimerRunning={isTimerRunning && task.id === activeTaskId}
-                            onToggle={onToggleTask}
-                            onDelete={onDeleteTask}
-                            onUpdate={onUpdateTask}
-                            onToggleExpanded={onToggleExpanded}
-                            onSelect={onSelectTask}
-                          />
-                        </div>
-                      );
-                    })}
-                  </SortableContext>
+                  {taskGroups.map((group) => (
+                    <div key={group.title} className="task-group">
+                      <div
+                        className="group-label"
+                        style={{
+                          backgroundColor: `${group.color}15`,
+                          borderLeftColor: group.color,
+                        }}
+                      >
+                        <span style={{ color: group.color }}>{group.title}</span>
+                        <span className="group-count">({group.tasks.length})</span>
+                      </div>
+                      <SortableContext
+                        items={group.tasks.map((t) => t.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {group.tasks.map((task) => renderTaskWithDepth(task, 0))}
+                      </SortableContext>
+                    </div>
+                  ))}
                 </DndContext>
-              ) : (
-                // Non-zone sorting - show temporary blocks
+              ) : sortConfig.mode !== 'zone' ? (
+                /* Non-zone sorting modes */
                 taskGroups?.map((group) => (
                   <div key={group.title} className="task-group">
                     <div
@@ -358,34 +515,15 @@ export function GlobalView({
                       <span style={{ color: group.color }}>{group.title}</span>
                       <span className="group-count">({group.tasks.length})</span>
                     </div>
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={handleDragEnd}
+                    <SortableContext
+                      items={group.tasks.map((t) => t.id)}
+                      strategy={verticalListSortingStrategy}
                     >
-                      <SortableContext
-                        items={group.tasks.map((t) => t.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        {group.tasks.map((task) => (
-                          <TaskItem
-                            key={task.id}
-                            task={task}
-                            zoneColor={getZoneColor(task.zoneId)}
-                            isActive={task.id === activeTaskId}
-                            isTimerRunning={isTimerRunning && task.id === activeTaskId}
-                            onToggle={onToggleTask}
-                            onDelete={onDeleteTask}
-                            onUpdate={onUpdateTask}
-                            onToggleExpanded={onToggleExpanded}
-                            onSelect={onSelectTask}
-                          />
-                        ))}
-                      </SortableContext>
-                    </DndContext>
+                      {group.tasks.map((task) => renderTaskWithDepth(task, 0))}
+                    </SortableContext>
                   </div>
                 ))
-              )}
+              ) : null}
 
               {/* Completed Tasks */}
               {completedTasks.length > 0 && (
@@ -403,43 +541,60 @@ export function GlobalView({
 
                   {showCompleted && (
                     <div className="completed-tasks">
-                      {completedTasks.map((task, index) => {
-                        const prevTask = completedTasks[index - 1];
-                        const showZoneLabel = !prevTask || prevTask.zoneId !== task.zoneId;
-                        
-                        return (
-                          <div key={task.id}>
-                            {showZoneLabel && (
-                              <div
-                                className="zone-label completed"
-                                style={{
-                                  backgroundColor: `${getZoneColor(task.zoneId)}10`,
-                                  borderLeftColor: getZoneColor(task.zoneId),
-                                }}
-                              >
-                                <div
-                                  className="zone-label-dot"
-                                  style={{ backgroundColor: getZoneColor(task.zoneId) }}
-                                />
-                                <span style={{ color: getZoneColor(task.zoneId) }}>
-                                  {getZoneName(task.zoneId)}
-                                </span>
-                              </div>
-                            )}
-                            <TaskItem
-                              task={task}
-                              zoneColor={getZoneColor(task.zoneId)}
-                              isActive={false}
-                              isTimerRunning={false}
-                              onToggle={onToggleTask}
-                              onDelete={onDeleteTask}
-                              onUpdate={onUpdateTask}
-                              onToggleExpanded={onToggleExpanded}
-                              onSelect={onSelectTask}
-                            />
-                          </div>
-                        );
-                      })}
+                      {/* Only render root completed tasks recursively */}
+                      {completedTasks
+                        .filter((t) => t.parentId === null || t.parentId === undefined)
+                        .map((task) => {
+                          const taskChildren = getChildTasks(task.id);
+                          return (
+                            <div
+                              key={task.id}
+                              className="task-tree-item"
+                            >
+                              <TaskItem
+                                task={task}
+                                zoneColor={getZoneColor(task.zoneId)}
+                                isActive={false}
+                                isTimerRunning={false}
+                                onToggle={onToggleTask}
+                                onDelete={onDeleteTask}
+                                onUpdate={onUpdateTask}
+                                onToggleExpanded={onToggleExpanded}
+                                onSelect={onSelectTask}
+                                hasChildren={taskChildren.length > 0}
+                                depth={0}
+                              />
+                              {taskChildren.map((child) => {
+                                const renderChild = (c: Task, d: number): React.ReactNode => {
+                                  const grandchildren = getChildTasks(c.id);
+                                  return (
+                                    <div
+                                      key={c.id}
+                                      className="task-tree-item"
+                                      style={{ paddingLeft: d > 0 ? `${d * 24}px` : undefined }}
+                                    >
+                                      <TaskItem
+                                        task={c}
+                                        zoneColor={getZoneColor(c.zoneId)}
+                                        isActive={false}
+                                        isTimerRunning={false}
+                                        onToggle={onToggleTask}
+                                        onDelete={onDeleteTask}
+                                        onUpdate={onUpdateTask}
+                                        onToggleExpanded={onToggleExpanded}
+                                        onSelect={onSelectTask}
+                                        hasChildren={grandchildren.length > 0}
+                                        depth={0}
+                                      />
+                                      {grandchildren.map((gc) => renderChild(gc, d + 1))}
+                                    </div>
+                                  );
+                                };
+                                return renderChild(child, 1);
+                              })}
+                            </div>
+                          );
+                        })}
                     </div>
                   )}
                 </div>
