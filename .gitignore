@@ -1,0 +1,54 @@
+# ============================
+# Node.js / Frontend
+# ============================
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ============================
+# Tauri / Rust
+# ============================
+src-tauri/target/
+src-tauri/*.lock
+
+# Build outputs
+src-tauri/bin/
+src-tauri/release/
+src-tauri/debug/
+
+# ============================
+# Build artifacts
+# ============================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ============================
+# OS files
+# ============================
+.DS_Store
+Thumbs.db
+
+# ============================
+# Test / Coverage
+# ============================
+coverage/
+.nyc_output/
