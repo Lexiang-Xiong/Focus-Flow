@@ -105,12 +105,13 @@ F82: src/components/ui/toggle-group.tsx
 F83: src/components/ui/toggle.tsx
 F84: src/components/ui/tooltip.tsx
 F85: src/hooks/use-mobile.ts
-F86: src/hooks/useStorage.ts
-F87: src/hooks/useTasks.ts
-F88: src/hooks/useTimer.ts
-F89: src/hooks/useZones.ts
-F90: src/lib/utils.ts
-F91: src/types/index.ts
+F86: src/hooks/useClipboard.ts
+F87: src/hooks/useStorage.ts
+F88: src/hooks/useTasks.ts
+F89: src/hooks/useTimer.ts
+F90: src/hooks/useZones.ts
+F91: src/lib/utils.ts
+F92: src/types/index.ts
 -----------------------
 - 配置文件: context_config.yaml
 
@@ -184,6 +185,7 @@ F91: src/types/index.ts
         └── ZoneManager.tsx
     ├── hooks/
         ├── use-mobile.ts
+        ├── useClipboard.ts
         ├── useStorage.ts
         ├── useTasks.ts
         ├── useTimer.ts
@@ -1439,7 +1441,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F17:15]| });
 
 ================================================================================
-文件路径: src\App.css(F18) (约合大小: 39 KB)
+文件路径: src\App.css(F18) (约合大小: 45 KB)
 ================================================================================
 [F18:1]| /* Floating Todo App Styles */
 [F18:2]| 
@@ -1542,2158 +1544,2482 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F18:99]| .app-container {
 [F18:100]|   display: flex;
 [F18:101]|   flex-direction: column;
-[F18:102]|   height: 100%;
-[F18:103]|   padding: 12px;
-[F18:104]|   gap: 12px;
-[F18:105]|   min-width: 0;
-[F18:106]| }
-[F18:107]| 
-[F18:108]| /* Section Divider */
-[F18:109]| .section-divider {
-[F18:110]|   height: 1px;
-[F18:111]|   background: linear-gradient(
-[F18:112]|     90deg,
-[F18:113]|     transparent,
-[F18:114]|     rgba(255, 255, 255, 0.1),
-[F18:115]|     transparent
-[F18:116]|   );
-[F18:117]|   margin: 0 4px;
-[F18:118]| }
-[F18:119]| 
-[F18:120]| /* Main Content Layout - 配合 ResizablePanelGroup 使用 */
-[F18:121]| .main-content {
-[F18:122]|   display: flex;
-[F18:123]|   flex: 1;
-[F18:124]|   min-height: 0;
-[F18:125]|   min-width: 0;
-[F18:126]| }
-[F18:127]| 
-[F18:128]| /* Resizable Panel - 防止内容溢出导致重叠 */
-[F18:129]| /* 移除可能干扰 react-resizable-panels 内部 flex 计算的样式 */
-[F18:130]| [data-slot="resizable-panel"] {
-[F18:131]|   overflow: hidden;
-[F18:132]|   min-width: 0;
-[F18:133]| }
-[F18:134]| 
-[F18:135]| /* 分隔条样式 - 使用 react-resizable-panels 默认样式 */
-[F18:136]| /* 暂时注释自定义样式以测试基础功能 */
-[F18:137]| /*
-[F18:138]| .resize-handle {
-[F18:139]|   width: 10px;
-[F18:140]|   flex-shrink: 0;
-[F18:141]|   z-index: 50;
-[F18:142]|   display: flex;
-[F18:143]|   align-items: center;
-[F18:144]|   justify-content: center;
-[F18:145]| }
-[F18:146]| 
-[F18:147]| [data-slot="resizable-handle"] {
-[F18:148]|   pointer-events: auto !important;
+[F18:102]|   /* height: 100%; */
+[F18:103]|   height: 100vh; /* 强制占满视口高度 */
+[F18:104]|   max-height: 100vh; /* 防止溢出 */
+[F18:105]|   padding: 12px;
+[F18:106]|   gap: 12px;
+[F18:107]|   min-width: 0;
+[F18:108]|   overflow: hidden;
+[F18:109]| }
+[F18:110]| 
+[F18:111]| /* Section Divider */
+[F18:112]| .section-divider {
+[F18:113]|   height: 1px;
+[F18:114]|   background: linear-gradient(
+[F18:115]|     90deg,
+[F18:116]|     transparent,
+[F18:117]|     rgba(255, 255, 255, 0.1),
+[F18:118]|     transparent
+[F18:119]|   );
+[F18:120]|   margin: 0 4px;
+[F18:121]| }
+[F18:122]| 
+[F18:123]| /* Main Content Layout - 配合 ResizablePanelGroup 使用 */
+[F18:124]| .main-content {
+[F18:125]|   display: flex;
+[F18:126]|   flex: 1;
+[F18:127]|   min-height: 0;
+[F18:128]|   min-width: 0;
+[F18:129]|   overflow: hidden;
+[F18:130]| }
+[F18:131]| 
+[F18:132]| /* Resizable Panel - 防止内容溢出导致重叠 */
+[F18:133]| /* 移除可能干扰 react-resizable-panels 内部 flex 计算的样式 */
+[F18:134]| [data-slot="resizable-panel"] {
+[F18:135]|   overflow: hidden;
+[F18:136]|   min-width: 0;
+[F18:137]| }
+[F18:138]| 
+[F18:139]| /* 分隔条样式 - 使用 react-resizable-panels 默认样式 */
+[F18:140]| /* 暂时注释自定义样式以测试基础功能 */
+[F18:141]| /*
+[F18:142]| .resize-handle {
+[F18:143]|   width: 10px;
+[F18:144]|   flex-shrink: 0;
+[F18:145]|   z-index: 50;
+[F18:146]|   display: flex;
+[F18:147]|   align-items: center;
+[F18:148]|   justify-content: center;
 [F18:149]| }
 [F18:150]| 
-[F18:151]| .resize-handle::after {
-[F18:152]|   content: '';
-[F18:153]|   width: 1px;
-[F18:154]|   height: 100%;
-[F18:155]|   background: rgba(255, 255, 255, 0.1);
-[F18:156]|   transition: background 0.2s;
-[F18:157]| }
-[F18:158]| 
-[F18:159]| .resize-handle:hover::after,
-[F18:160]| .resize-handle:active::after {
-[F18:161]|   background: rgba(59, 130, 246, 0.8);
-[F18:162]|   width: 2px;
-[F18:163]| }
-[F18:164]| 
-[F18:165]| .resize-handle[data-panel-group-direction="vertical"] {
-[F18:166]|   width: auto;
-[F18:167]|   height: 10px;
-[F18:168]|   cursor: row-resize;
-[F18:169]| }
-[F18:170]| */
-[F18:171]| 
-[F18:172]| /* Timer Container */
-[F18:173]| .timer-container {
-[F18:174]|   padding: 12px 16px;
-[F18:175]|   border-radius: 12px;
-[F18:176]|   border: 1px solid;
-[F18:177]|   display: flex;
-[F18:178]|   flex-direction: column;
-[F18:179]|   gap: 10px;
-[F18:180]| }
-[F18:181]| 
-[F18:182]| .timer-header {
-[F18:183]|   display: flex;
-[F18:184]|   align-items: center;
-[F18:185]|   justify-content: space-between;
-[F18:186]| }
-[F18:187]| 
-[F18:188]| .mode-indicator {
-[F18:189]|   display: flex;
-[F18:190]|   align-items: center;
-[F18:191]|   gap: 6px;
-[F18:192]| }
-[F18:193]| 
-[F18:194]| .mode-text {
-[F18:195]|   font-size: 12px;
-[F18:196]|   font-weight: 500;
-[F18:197]|   text-transform: uppercase;
-[F18:198]|   letter-spacing: 0.5px;
-[F18:199]| }
-[F18:200]| 
-[F18:201]| .mode-work { color: #60a5fa; }
-[F18:202]| .mode-break { color: #4ade80; }
-[F18:203]| .mode-longBreak { color: #a78bfa; }
-[F18:204]| .mode-idle { color: #9ca3af; }
+[F18:151]| [data-slot="resizable-handle"] {
+[F18:152]|   pointer-events: auto !important;
+[F18:153]| }
+[F18:154]| 
+[F18:155]| .resize-handle::after {
+[F18:156]|   content: '';
+[F18:157]|   width: 1px;
+[F18:158]|   height: 100%;
+[F18:159]|   background: rgba(255, 255, 255, 0.1);
+[F18:160]|   transition: background 0.2s;
+[F18:161]| }
+[F18:162]| 
+[F18:163]| .resize-handle:hover::after,
+[F18:164]| .resize-handle:active::after {
+[F18:165]|   background: rgba(59, 130, 246, 0.8);
+[F18:166]|   width: 2px;
+[F18:167]| }
+[F18:168]| 
+[F18:169]| .resize-handle[data-panel-group-direction="vertical"] {
+[F18:170]|   width: auto;
+[F18:171]|   height: 10px;
+[F18:172]|   cursor: row-resize;
+[F18:173]| }
+[F18:174]| */
+[F18:175]| 
+[F18:176]| /* Timer Container */
+[F18:177]| .timer-container {
+[F18:178]|   padding: 12px 16px;
+[F18:179]|   border-radius: 12px;
+[F18:180]|   border: 1px solid;
+[F18:181]|   display: flex;
+[F18:182]|   flex-direction: column;
+[F18:183]|   gap: 10px;
+[F18:184]|   flex-shrink: 0;
+[F18:185]| }
+[F18:186]| 
+[F18:187]| .timer-header {
+[F18:188]|   display: flex;
+[F18:189]|   align-items: center;
+[F18:190]|   justify-content: space-between;
+[F18:191]| }
+[F18:192]| 
+[F18:193]| .mode-indicator {
+[F18:194]|   display: flex;
+[F18:195]|   align-items: center;
+[F18:196]|   gap: 6px;
+[F18:197]| }
+[F18:198]| 
+[F18:199]| .mode-text {
+[F18:200]|   font-size: 12px;
+[F18:201]|   font-weight: 500;
+[F18:202]|   text-transform: uppercase;
+[F18:203]|   letter-spacing: 0.5px;
+[F18:204]| }
 [F18:205]| 
-[F18:206]| .session-count {
-[F18:207]|   display: flex;
-[F18:208]|   gap: 4px;
-[F18:209]| }
+[F18:206]| .mode-work { color: #60a5fa; }
+[F18:207]| .mode-break { color: #4ade80; }
+[F18:208]| .mode-longBreak { color: #a78bfa; }
+[F18:209]| .mode-idle { color: #9ca3af; }
 [F18:210]| 
-[F18:211]| .session-dot {
-[F18:212]|   width: 6px;
-[F18:213]|   height: 6px;
-[F18:214]|   border-radius: 50%;
-[F18:215]|   background: rgba(255, 255, 255, 0.2);
-[F18:216]|   transition: all 0.3s ease;
-[F18:217]| }
-[F18:218]| 
-[F18:219]| .session-dot.active {
-[F18:220]|   background: #60a5fa;
-[F18:221]|   box-shadow: 0 0 6px rgba(96, 165, 250, 0.5);
+[F18:211]| .session-count {
+[F18:212]|   display: flex;
+[F18:213]|   gap: 4px;
+[F18:214]| }
+[F18:215]| 
+[F18:216]| .session-dot {
+[F18:217]|   width: 6px;
+[F18:218]|   height: 6px;
+[F18:219]|   border-radius: 50%;
+[F18:220]|   background: rgba(255, 255, 255, 0.2);
+[F18:221]|   transition: all 0.3s ease;
 [F18:222]| }
 [F18:223]| 
-[F18:224]| .time-display {
-[F18:225]|   text-align: center;
-[F18:226]|   padding: 4px 0;
+[F18:224]| .session-dot.active {
+[F18:225]|   background: #60a5fa;
+[F18:226]|   box-shadow: 0 0 6px rgba(96, 165, 250, 0.5);
 [F18:227]| }
 [F18:228]| 
-[F18:229]| .time-text {
-[F18:230]|   font-size: 36px;
-[F18:231]|   font-weight: 700;
-[F18:232]|   font-variant-numeric: tabular-nums;
-[F18:233]|   color: rgba(255, 255, 255, 0.95);
-[F18:234]|   font-family: 'SF Mono', Monaco, monospace;
-[F18:235]|   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-[F18:236]|   transition: all 0.3s ease;
-[F18:237]| }
-[F18:238]| 
-[F18:239]| .time-text.running {
-[F18:240]|   color: #60a5fa;
-[F18:241]|   text-shadow: 0 0 20px rgba(96, 165, 250, 0.4);
+[F18:229]| .time-display {
+[F18:230]|   text-align: center;
+[F18:231]|   padding: 4px 0;
+[F18:232]| }
+[F18:233]| 
+[F18:234]| .time-text {
+[F18:235]|   font-size: 36px;
+[F18:236]|   font-weight: 700;
+[F18:237]|   font-variant-numeric: tabular-nums;
+[F18:238]|   color: rgba(255, 255, 255, 0.95);
+[F18:239]|   font-family: 'SF Mono', Monaco, monospace;
+[F18:240]|   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+[F18:241]|   transition: all 0.3s ease;
 [F18:242]| }
 [F18:243]| 
-[F18:244]| .progress-container {
-[F18:245]|   padding: 0 4px;
-[F18:246]| }
-[F18:247]| 
-[F18:248]| .timer-progress {
-[F18:249]|   height: 4px;
-[F18:250]|   background: rgba(255, 255, 255, 0.1);
-[F18:251]|   border-radius: 2px;
-[F18:252]|   overflow: hidden;
-[F18:253]| }
-[F18:254]| 
-[F18:255]| .timer-progress > div {
-[F18:256]|   transition: width 1s linear;
-[F18:257]| }
-[F18:258]| 
-[F18:259]| /* Mode Selector */
-[F18:260]| .mode-selector {
-[F18:261]|   display: flex;
-[F18:262]|   justify-content: center;
-[F18:263]|   gap: 8px;
-[F18:264]|   margin-bottom: 8px;
-[F18:265]| }
-[F18:266]| 
-[F18:267]| .mode-btn {
-[F18:268]|   display: flex;
-[F18:269]|   align-items: center;
-[F18:270]|   gap: 4px;
-[F18:271]|   padding: 4px 10px;
-[F18:272]|   border-radius: 12px;
-[F18:273]|   border: 1px solid rgba(255, 255, 255, 0.15);
-[F18:274]|   background: rgba(255, 255, 255, 0.05);
-[F18:275]|   color: rgba(255, 255, 255, 0.6);
-[F18:276]|   font-size: 11px;
-[F18:277]|   cursor: pointer;
-[F18:278]|   transition: all 0.2s ease;
-[F18:279]| }
-[F18:280]| 
-[F18:281]| .mode-btn:hover {
-[F18:282]|   background: rgba(255, 255, 255, 0.1);
-[F18:283]|   color: rgba(255, 255, 255, 0.8);
+[F18:244]| .time-text.running {
+[F18:245]|   color: #60a5fa;
+[F18:246]|   text-shadow: 0 0 20px rgba(96, 165, 250, 0.4);
+[F18:247]| }
+[F18:248]| 
+[F18:249]| .progress-container {
+[F18:250]|   padding: 0 4px;
+[F18:251]| }
+[F18:252]| 
+[F18:253]| .timer-progress {
+[F18:254]|   height: 4px;
+[F18:255]|   background: rgba(255, 255, 255, 0.1);
+[F18:256]|   border-radius: 2px;
+[F18:257]|   overflow: hidden;
+[F18:258]| }
+[F18:259]| 
+[F18:260]| .timer-progress > div {
+[F18:261]|   transition: width 1s linear;
+[F18:262]| }
+[F18:263]| 
+[F18:264]| /* Mode Selector */
+[F18:265]| .mode-selector {
+[F18:266]|   display: flex;
+[F18:267]|   justify-content: center;
+[F18:268]|   gap: 8px;
+[F18:269]|   margin-bottom: 8px;
+[F18:270]| }
+[F18:271]| 
+[F18:272]| .mode-btn {
+[F18:273]|   display: flex;
+[F18:274]|   align-items: center;
+[F18:275]|   gap: 4px;
+[F18:276]|   padding: 4px 10px;
+[F18:277]|   border-radius: 12px;
+[F18:278]|   border: 1px solid rgba(255, 255, 255, 0.15);
+[F18:279]|   background: rgba(255, 255, 255, 0.05);
+[F18:280]|   color: rgba(255, 255, 255, 0.6);
+[F18:281]|   font-size: 11px;
+[F18:282]|   cursor: pointer;
+[F18:283]|   transition: all 0.2s ease;
 [F18:284]| }
 [F18:285]| 
-[F18:286]| .mode-btn.active {
-[F18:287]|   background: rgba(59, 130, 246, 0.3);
-[F18:288]|   border-color: rgba(59, 130, 246, 0.5);
-[F18:289]|   color: #60a5fa;
-[F18:290]| }
-[F18:291]| 
-[F18:292]| .timer-controls {
-[F18:293]|   display: flex;
-[F18:294]|   justify-content: center;
-[F18:295]|   gap: 8px;
-[F18:296]| }
-[F18:297]| 
-[F18:298]| .control-btn-primary {
-[F18:299]|   background: linear-gradient(135deg, #3b82f6, #2563eb);
-[F18:300]|   border: none;
-[F18:301]|   color: white;
-[F18:302]|   padding: 6px 16px;
-[F18:303]|   border-radius: 8px;
-[F18:304]|   font-size: 13px;
-[F18:305]|   font-weight: 500;
-[F18:306]|   cursor: pointer;
-[F18:307]|   transition: all 0.2s ease;
-[F18:308]|   display: flex;
-[F18:309]|   align-items: center;
-[F18:310]|   gap: 6px;
-[F18:311]| }
-[F18:312]| 
-[F18:313]| .control-btn-primary:hover {
-[F18:314]|   background: linear-gradient(135deg, #2563eb, #1d4ed8);
-[F18:315]|   transform: translateY(-1px);
-[F18:316]|   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-[F18:317]| }
-[F18:318]| 
-[F18:319]| .timer-controls .control-btn {
-[F18:320]|   width: 32px;
-[F18:321]|   height: 32px;
-[F18:322]|   border-radius: 8px;
-[F18:323]| }
-[F18:324]| 
-[F18:325]| /* Zone Manager */
-[F18:326]| .zone-manager {
-[F18:327]|   height: 100%;
-[F18:328]|   display: flex;
-[F18:329]|   flex-direction: column;
-[F18:330]|   background: rgba(0, 0, 0, 0.15);
-[F18:331]|   border-radius: 10px;
-[F18:332]|   overflow: hidden;
-[F18:333]|   min-width: 0;
-[F18:334]|   width: 100%;
-[F18:335]|   min-height: 100px;
-[F18:336]| }
-[F18:337]| 
-[F18:338]| .zone-manager-header {
-[F18:339]|   display: flex;
-[F18:340]|   align-items: center;
-[F18:341]|   justify-content: space-between;
-[F18:342]|   padding: 10px 8px;
-[F18:343]|   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-[F18:344]|   gap: 4px;
-[F18:345]| }
-[F18:346]| 
-[F18:347]| .zone-manager-title {
-[F18:348]|   display: flex;
-[F18:349]|   align-items: center;
-[F18:350]|   gap: 6px;
-[F18:351]|   font-size: 12px;
-[F18:352]|   font-weight: 500;
-[F18:353]|   color: rgba(255, 255, 255, 0.7);
-[F18:354]|   flex: 1; /* 新增 */
-[F18:355]|   min-width: 0; /* 新增: 允许它自身被压缩 */
-[F18:356]|   white-space: nowrap; /* 新增: 禁止文字换行 */
-[F18:357]|   overflow: hidden; /* 新增: 隐藏超出 */
-[F18:358]|   text-overflow: ellipsis; /* 新增: 显示省略号 */
-[F18:359]| }
-[F18:360]| 
-[F18:361]| .zone-manager-actions {
-[F18:362]|   display: flex;
-[F18:363]|   gap: 2px;
-[F18:364]|   flex-shrink: 0; 
-[F18:365]| }
-[F18:366]| 
-[F18:367]| .zone-action-btn {
-[F18:368]|   width: 22px;
-[F18:369]|   height: 22px;
-[F18:370]|   padding: 0;
-[F18:371]|   color: rgba(255, 255, 255, 0.5);
+[F18:286]| .mode-btn:hover {
+[F18:287]|   background: rgba(255, 255, 255, 0.1);
+[F18:288]|   color: rgba(255, 255, 255, 0.8);
+[F18:289]| }
+[F18:290]| 
+[F18:291]| .mode-btn.active {
+[F18:292]|   background: rgba(59, 130, 246, 0.3);
+[F18:293]|   border-color: rgba(59, 130, 246, 0.5);
+[F18:294]|   color: #60a5fa;
+[F18:295]| }
+[F18:296]| 
+[F18:297]| .timer-controls {
+[F18:298]|   display: flex;
+[F18:299]|   justify-content: center;
+[F18:300]|   gap: 8px;
+[F18:301]| }
+[F18:302]| 
+[F18:303]| .control-btn-primary {
+[F18:304]|   background: linear-gradient(135deg, #3b82f6, #2563eb);
+[F18:305]|   border: none;
+[F18:306]|   color: white;
+[F18:307]|   padding: 6px 16px;
+[F18:308]|   border-radius: 8px;
+[F18:309]|   font-size: 13px;
+[F18:310]|   font-weight: 500;
+[F18:311]|   cursor: pointer;
+[F18:312]|   transition: all 0.2s ease;
+[F18:313]|   display: flex;
+[F18:314]|   align-items: center;
+[F18:315]|   gap: 6px;
+[F18:316]| }
+[F18:317]| 
+[F18:318]| .control-btn-primary:hover {
+[F18:319]|   background: linear-gradient(135deg, #2563eb, #1d4ed8);
+[F18:320]|   transform: translateY(-1px);
+[F18:321]|   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+[F18:322]| }
+[F18:323]| 
+[F18:324]| .timer-controls .control-btn {
+[F18:325]|   width: 32px;
+[F18:326]|   height: 32px;
+[F18:327]|   border-radius: 8px;
+[F18:328]| }
+[F18:329]| 
+[F18:330]| /* Timer Collapse Toggle */
+[F18:331]| .timer-header-actions {
+[F18:332]|   display: flex;
+[F18:333]|   align-items: center;
+[F18:334]|   gap: 8px;
+[F18:335]| }
+[F18:336]| 
+[F18:337]| .timer-collapse-toggle {
+[F18:338]|   display: flex;
+[F18:339]|   align-items: center;
+[F18:340]|   justify-content: center;
+[F18:341]|   width: 24px;
+[F18:342]|   height: 24px;
+[F18:343]|   border-radius: 6px;
+[F18:344]|   background: rgba(255, 255, 255, 0.1);
+[F18:345]|   border: none;
+[F18:346]|   color: rgba(255, 255, 255, 0.6);
+[F18:347]|   cursor: pointer;
+[F18:348]|   transition: all 0.2s ease;
+[F18:349]| }
+[F18:350]| 
+[F18:351]| .timer-collapse-toggle:hover {
+[F18:352]|   background: rgba(255, 255, 255, 0.2);
+[F18:353]|   color: white;
+[F18:354]| }
+[F18:355]| 
+[F18:356]| /* Timer Collapsed View */
+[F18:357]| .timer-collapsed-wrapper {
+[F18:358]|   display: flex;
+[F18:359]|   align-items: center;
+[F18:360]|   gap: 4px;
+[F18:361]| }
+[F18:362]| 
+[F18:363]| .timer-collapsed-main {
+[F18:364]|   display: flex;
+[F18:365]|   align-items: center;
+[F18:366]|   justify-content: space-between;
+[F18:367]|   padding: 12px 16px;
+[F18:368]|   border-radius: 12px;
+[F18:369]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:370]|   min-height: 52px;
+[F18:371]|   flex: 1;
 [F18:372]| }
 [F18:373]| 
-[F18:374]| .zone-action-btn:hover {
-[F18:375]|   color: rgba(255, 255, 255, 0.9);
-[F18:376]|   background: rgba(255, 255, 255, 0.1);
-[F18:377]| }
-[F18:378]| 
-[F18:379]| .zone-list-scroll {
-[F18:380]|   flex: 1;
-[F18:381]|   min-height: 0;
-[F18:382]| }
-[F18:383]| 
-[F18:384]| .zone-list {
-[F18:385]|   padding: 6px;
-[F18:386]|   display: flex;
-[F18:387]|   flex-direction: column;
-[F18:388]|   gap: 4px;
-[F18:389]| }
-[F18:390]| 
-[F18:391]| .zone-item {
-[F18:392]|   display: flex;
-[F18:393]|   align-items: center;
-[F18:394]|   padding: 8px 6px;
-[F18:395]|   border-radius: 6px;
-[F18:396]|   background: rgba(255, 255, 255, 0.03);
-[F18:397]|   border: 1px solid transparent;
-[F18:398]|   transition: all 0.2s ease;
-[F18:399]|   cursor: pointer;
+[F18:374]| .timer-collapsed-controls {
+[F18:375]|   display: flex;
+[F18:376]|   align-items: center;
+[F18:377]|   gap: 8px;
+[F18:378]|   padding: 8px 12px;
+[F18:379]|   border-radius: 12px;
+[F18:380]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:381]| }
+[F18:382]| 
+[F18:383]| .timer-collapse-btn {
+[F18:384]|   display: flex;
+[F18:385]|   align-items: center;
+[F18:386]|   justify-content: center;
+[F18:387]|   width: 24px;
+[F18:388]|   height: 24px;
+[F18:389]|   border-radius: 6px;
+[F18:390]|   background: rgba(255, 255, 255, 0.1);
+[F18:391]|   border: none;
+[F18:392]|   color: rgba(255, 255, 255, 0.6);
+[F18:393]|   cursor: pointer;
+[F18:394]|   transition: all 0.2s ease;
+[F18:395]| }
+[F18:396]| 
+[F18:397]| .timer-collapse-btn:hover {
+[F18:398]|   background: rgba(255, 255, 255, 0.2);
+[F18:399]|   color: white;
 [F18:400]| }
 [F18:401]| 
-[F18:402]| .zone-item:hover {
-[F18:403]|   background: rgba(255, 255, 255, 0.06);
-[F18:404]| }
-[F18:405]| 
-[F18:406]| .zone-item.active {
-[F18:407]|   background: rgba(59, 130, 246, 0.15);
-[F18:408]|   border-color: rgba(59, 130, 246, 0.3);
-[F18:409]| }
-[F18:410]| 
-[F18:411]| .zone-item.global {
-[F18:412]|   background: linear-gradient(90deg, rgba(59, 130, 246, 0.1), rgba(34, 197, 94, 0.1));
-[F18:413]| }
-[F18:414]| 
-[F18:415]| .zone-item.global.active {
-[F18:416]|   background: linear-gradient(90deg, rgba(59, 130, 246, 0.2), rgba(34, 197, 94, 0.2));
-[F18:417]|   border-color: rgba(59, 130, 246, 0.4);
-[F18:418]| }
-[F18:419]| 
-[F18:420]| .zone-content {
-[F18:421]|   display: flex;
-[F18:422]|   align-items: center;
-[F18:423]|   gap: 8px;
-[F18:424]|   flex: 1;
-[F18:425]|   min-width: 0;
-[F18:426]| }
-[F18:427]| 
-[F18:428]| .zone-color-indicator {
-[F18:429]|   width: 8px;
-[F18:430]|   height: 8px;
-[F18:431]|   border-radius: 50%;
-[F18:432]|   flex-shrink: 0;
+[F18:402]| .timer-collapsed-content {
+[F18:403]|   display: flex;
+[F18:404]|   align-items: center;
+[F18:405]|   gap: 8px;
+[F18:406]|   flex: 1;
+[F18:407]|   justify-content: center;
+[F18:408]| }
+[F18:409]| 
+[F18:410]| .timer-collapsed-time {
+[F18:411]|   font-size: 24px;
+[F18:412]|   font-weight: 700;
+[F18:413]|   color: white;
+[F18:414]|   font-variant-numeric: tabular-nums;
+[F18:415]| }
+[F18:416]| 
+[F18:417]| .timer-collapsed-btn {
+[F18:418]|   display: flex;
+[F18:419]|   align-items: center;
+[F18:420]|   justify-content: center;
+[F18:421]|   width: 40px;
+[F18:422]|   height: 40px;
+[F18:423]|   border-radius: 10px;
+[F18:424]|   background: rgba(255, 255, 255, 0.1);
+[F18:425]|   border: none;
+[F18:426]|   color: white;
+[F18:427]|   cursor: pointer;
+[F18:428]|   transition: all 0.2s ease;
+[F18:429]| }
+[F18:430]| 
+[F18:431]| .timer-collapsed-btn:hover {
+[F18:432]|   background: rgba(255, 255, 255, 0.2);
 [F18:433]| }
 [F18:434]| 
-[F18:435]| .zone-name {
-[F18:436]|   font-size: 12px;
-[F18:437]|   color: rgba(255, 255, 255, 0.85);
-[F18:438]|   white-space: nowrap;
-[F18:439]|   overflow: hidden;
-[F18:440]|   text-overflow: ellipsis;
+[F18:435]| .timer-collapsed-btn.primary {
+[F18:436]|   background: rgba(59, 130, 246, 0.5);
+[F18:437]| }
+[F18:438]| 
+[F18:439]| .timer-collapsed-btn.primary:hover {
+[F18:440]|   background: rgba(59, 130, 246, 0.7);
 [F18:441]| }
 [F18:442]| 
-[F18:443]| .zone-count {
-[F18:444]|   font-size: 10px;
-[F18:445]|   color: rgba(255, 255, 255, 0.4);
-[F18:446]|   margin-left: auto;
-[F18:447]| }
-[F18:448]| 
-[F18:449]| .zone-actions {
-[F18:450]|   display: flex;
-[F18:451]|   gap: 2px;
-[F18:452]|   opacity: 0;
-[F18:453]|   transition: opacity 0.2s ease;
+[F18:443]| /* Zone Manager */
+[F18:444]| .zone-manager {
+[F18:445]|   height: 100%;
+[F18:446]|   display: flex;
+[F18:447]|   flex-direction: column;
+[F18:448]|   background: rgba(0, 0, 0, 0.15);
+[F18:449]|   border-radius: 10px;
+[F18:450]|   overflow: hidden;
+[F18:451]|   min-width: 0;
+[F18:452]|   width: 100%;
+[F18:453]|   min-height: 100px;
 [F18:454]| }
 [F18:455]| 
-[F18:456]| .zone-item:hover .zone-actions {
-[F18:457]|   opacity: 1;
-[F18:458]| }
-[F18:459]| 
-[F18:460]| .zone-edit-btn,
-[F18:461]| .zone-delete-btn {
-[F18:462]|   width: 18px;
-[F18:463]|   height: 18px;
-[F18:464]|   padding: 0;
-[F18:465]|   color: rgba(255, 255, 255, 0.4);
-[F18:466]| }
-[F18:467]| 
-[F18:468]| .zone-edit-btn:hover {
-[F18:469]|   color: rgba(255, 255, 255, 0.8);
-[F18:470]|   background: rgba(255, 255, 255, 0.1);
-[F18:471]| }
-[F18:472]| 
-[F18:473]| .zone-delete-btn:hover {
-[F18:474]|   color: #ef4444;
-[F18:475]|   background: rgba(239, 68, 68, 0.1);
-[F18:476]| }
-[F18:477]| 
-[F18:478]| /* Zone Add Form */
-[F18:479]| .zone-add-form {
-[F18:480]|   padding: 8px;
-[F18:481]|   border-top: 1px solid rgba(255, 255, 255, 0.05);
-[F18:482]|   display: flex;
-[F18:483]|   flex-direction: column;
-[F18:484]|   gap: 8px;
-[F18:485]| }
-[F18:486]| 
-[F18:487]| .zone-add-form input {
-[F18:488]|   background: rgba(255, 255, 255, 0.05);
-[F18:489]|   border: 1px solid rgba(255, 255, 255, 0.1);
-[F18:490]|   border-radius: 6px;
-[F18:491]|   padding: 6px 8px;
-[F18:492]|   font-size: 12px;
+[F18:456]| .zone-manager-header {
+[F18:457]|   display: flex;
+[F18:458]|   align-items: center;
+[F18:459]|   justify-content: space-between;
+[F18:460]|   padding: 10px 8px;
+[F18:461]|   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+[F18:462]|   gap: 4px;
+[F18:463]| }
+[F18:464]| 
+[F18:465]| .zone-manager-title {
+[F18:466]|   display: flex;
+[F18:467]|   align-items: center;
+[F18:468]|   gap: 6px;
+[F18:469]|   font-size: 12px;
+[F18:470]|   font-weight: 500;
+[F18:471]|   color: rgba(255, 255, 255, 0.7);
+[F18:472]|   flex: 1; /* 新增 */
+[F18:473]|   min-width: 0; /* 新增: 允许它自身被压缩 */
+[F18:474]|   white-space: nowrap; /* 新增: 禁止文字换行 */
+[F18:475]|   overflow: hidden; /* 新增: 隐藏超出 */
+[F18:476]|   text-overflow: ellipsis; /* 新增: 显示省略号 */
+[F18:477]| }
+[F18:478]| 
+[F18:479]| .zone-manager-actions {
+[F18:480]|   display: flex;
+[F18:481]|   gap: 2px;
+[F18:482]|   flex-shrink: 0; 
+[F18:483]| }
+[F18:484]| 
+[F18:485]| .zone-action-btn {
+[F18:486]|   width: 22px;
+[F18:487]|   height: 22px;
+[F18:488]|   padding: 0;
+[F18:489]|   color: rgba(255, 255, 255, 0.5);
+[F18:490]| }
+[F18:491]| 
+[F18:492]| .zone-action-btn:hover {
 [F18:493]|   color: rgba(255, 255, 255, 0.9);
-[F18:494]| }
-[F18:495]| 
-[F18:496]| .zone-add-form input:focus {
-[F18:497]|   outline: none;
-[F18:498]|   border-color: rgba(59, 130, 246, 0.5);
-[F18:499]| }
-[F18:500]| 
-[F18:501]| .color-picker {
-[F18:502]|   display: flex;
-[F18:503]|   flex-direction: column;
-[F18:504]|   gap: 6px;
-[F18:505]| }
-[F18:506]| 
-[F18:507]| .color-label {
-[F18:508]|   font-size: 10px;
-[F18:509]|   color: rgba(255, 255, 255, 0.5);
-[F18:510]| }
-[F18:511]| 
-[F18:512]| .color-grid {
-[F18:513]|   display: grid;
-[F18:514]|   grid-template-columns: repeat(6, 1fr);
-[F18:515]|   gap: 4px;
-[F18:516]| }
-[F18:517]| 
-[F18:518]| .color-option {
-[F18:519]|   width: 18px;
-[F18:520]|   height: 18px;
-[F18:521]|   border-radius: 4px;
-[F18:522]|   border: 2px solid transparent;
-[F18:523]|   cursor: pointer;
-[F18:524]|   transition: all 0.2s ease;
-[F18:525]| }
-[F18:526]| 
-[F18:527]| .color-option:hover {
-[F18:528]|   transform: scale(1.1);
-[F18:529]| }
-[F18:530]| 
-[F18:531]| .color-option.selected {
-[F18:532]|   border-color: white;
-[F18:533]|   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
-[F18:534]| }
-[F18:535]| 
-[F18:536]| .zone-add-actions {
-[F18:537]|   display: flex;
-[F18:538]|   gap: 6px;
-[F18:539]|   justify-content: flex-end;
-[F18:540]| }
-[F18:541]| 
-[F18:542]| /* Zone Manager Footer */
-[F18:543]| .zone-manager-footer {
-[F18:544]|   display: flex;
-[F18:545]|   gap: 4px;
-[F18:546]|   padding: 8px;
-[F18:547]|   border-top: 1px solid rgba(255, 255, 255, 0.05);
-[F18:548]|   margin-top: auto;
-[F18:549]|   flex-wrap: wrap;
-[F18:550]| }
-[F18:551]| 
-[F18:552]| .footer-btn {
-[F18:553]|   flex: 1;
-[F18:554]|   font-size: 11px;
-[F18:555]|   color: rgba(255, 255, 255, 0.5);
-[F18:556]|   padding: 6px 8px;
-[F18:557]|   height: auto;
-[F18:558]| }
-[F18:559]| 
-[F18:560]| .footer-btn:hover {
-[F18:561]|   color: rgba(255, 255, 255, 0.8);
-[F18:562]|   background: rgba(255, 255, 255, 0.08);
-[F18:563]| }
-[F18:564]| 
-[F18:565]| /* Template Dialog */
-[F18:566]| .template-dialog {
-[F18:567]|   max-width: 320px;
-[F18:568]| }
-[F18:569]| 
-[F18:570]| .template-list {
-[F18:571]|   display: flex;
-[F18:572]|   flex-direction: column;
-[F18:573]|   gap: 8px;
-[F18:574]|   padding: 8px 0;
-[F18:575]| }
-[F18:576]| 
-[F18:577]| .template-item {
-[F18:578]|   display: flex;
-[F18:579]|   align-items: center;
-[F18:580]|   justify-content: space-between;
-[F18:581]|   padding: 12px;
-[F18:582]|   background: rgba(255, 255, 255, 0.05);
-[F18:583]|   border: 1px solid rgba(255, 255, 255, 0.1);
-[F18:584]|   border-radius: 8px;
-[F18:585]|   cursor: pointer;
-[F18:586]|   transition: all 0.2s ease;
-[F18:587]| }
-[F18:588]| 
-[F18:589]| .template-item:hover {
-[F18:590]|   background: rgba(255, 255, 255, 0.08);
-[F18:591]|   border-color: rgba(255, 255, 255, 0.2);
-[F18:592]| }
-[F18:593]| 
-[F18:594]| .template-info {
-[F18:595]|   display: flex;
-[F18:596]|   flex-direction: column;
-[F18:597]|   gap: 4px;
-[F18:598]| }
-[F18:599]| 
-[F18:600]| .template-name {
-[F18:601]|   font-size: 13px;
-[F18:602]|   font-weight: 500;
-[F18:603]|   color: rgba(255, 255, 255, 0.9);
-[F18:604]| }
-[F18:605]| 
-[F18:606]| .template-desc {
-[F18:607]|   font-size: 11px;
-[F18:608]|   color: rgba(255, 255, 255, 0.5);
-[F18:609]| }
-[F18:610]| 
-[F18:611]| .template-zones {
-[F18:612]|   display: flex;
-[F18:613]|   gap: 4px;
-[F18:614]| }
-[F18:615]| 
-[F18:616]| .template-zone-dot {
-[F18:617]|   width: 10px;
-[F18:618]|   height: 10px;
-[F18:619]|   border-radius: 50%;
-[F18:620]| }
-[F18:621]| 
-[F18:622]| /* Zone Edit Dialog */
-[F18:623]| .zone-edit-dialog {
-[F18:624]|   max-width: 280px;
-[F18:625]| }
-[F18:626]| 
-[F18:627]| .zone-edit-form {
-[F18:628]|   display: flex;
-[F18:629]|   flex-direction: column;
-[F18:630]|   gap: 16px;
-[F18:631]|   padding: 8px 0;
-[F18:632]| }
-[F18:633]| 
-[F18:634]| .zone-edit-form input {
-[F18:635]|   background: rgba(0, 0, 0, 0.3);
-[F18:636]|   border: 1px solid rgba(255, 255, 255, 0.2);
-[F18:637]|   border-radius: 8px;
-[F18:638]|   padding: 10px 12px;
-[F18:639]|   font-size: 13px;
-[F18:640]|   color: #ffffff;
-[F18:641]| }
-[F18:642]| 
-[F18:643]| .zone-edit-form input:focus {
-[F18:644]|   outline: none;
-[F18:645]|   border-color: rgba(59, 130, 246, 0.5);
-[F18:646]| }
-[F18:647]| 
-[F18:648]| .zone-edit-actions {
-[F18:649]|   display: flex;
-[F18:650]|   gap: 8px;
-[F18:651]|   justify-content: flex-end;
+[F18:494]|   background: rgba(255, 255, 255, 0.1);
+[F18:495]| }
+[F18:496]| 
+[F18:497]| .zone-list-scroll {
+[F18:498]|   flex: 1;
+[F18:499]|   min-height: 0;
+[F18:500]| }
+[F18:501]| 
+[F18:502]| .zone-list {
+[F18:503]|   padding: 6px;
+[F18:504]|   display: flex;
+[F18:505]|   flex-direction: column;
+[F18:506]|   gap: 4px;
+[F18:507]| }
+[F18:508]| 
+[F18:509]| .zone-item {
+[F18:510]|   display: flex;
+[F18:511]|   align-items: center;
+[F18:512]|   padding: 8px 6px;
+[F18:513]|   border-radius: 6px;
+[F18:514]|   background: rgba(255, 255, 255, 0.03);
+[F18:515]|   border: 1px solid transparent;
+[F18:516]|   transition: all 0.2s ease;
+[F18:517]|   cursor: pointer;
+[F18:518]| }
+[F18:519]| 
+[F18:520]| .zone-item:hover {
+[F18:521]|   background: rgba(255, 255, 255, 0.06);
+[F18:522]| }
+[F18:523]| 
+[F18:524]| .zone-item.active {
+[F18:525]|   background: rgba(59, 130, 246, 0.15);
+[F18:526]|   border-color: rgba(59, 130, 246, 0.3);
+[F18:527]| }
+[F18:528]| 
+[F18:529]| .zone-item.global {
+[F18:530]|   background: linear-gradient(90deg, rgba(59, 130, 246, 0.1), rgba(34, 197, 94, 0.1));
+[F18:531]| }
+[F18:532]| 
+[F18:533]| .zone-item.global.active {
+[F18:534]|   background: linear-gradient(90deg, rgba(59, 130, 246, 0.2), rgba(34, 197, 94, 0.2));
+[F18:535]|   border-color: rgba(59, 130, 246, 0.4);
+[F18:536]| }
+[F18:537]| 
+[F18:538]| .zone-content {
+[F18:539]|   display: flex;
+[F18:540]|   align-items: center;
+[F18:541]|   gap: 8px;
+[F18:542]|   flex: 1;
+[F18:543]|   min-width: 0;
+[F18:544]| }
+[F18:545]| 
+[F18:546]| .zone-color-indicator {
+[F18:547]|   width: 8px;
+[F18:548]|   height: 8px;
+[F18:549]|   border-radius: 50%;
+[F18:550]|   flex-shrink: 0;
+[F18:551]| }
+[F18:552]| 
+[F18:553]| .zone-name {
+[F18:554]|   font-size: 12px;
+[F18:555]|   color: rgba(255, 255, 255, 0.85);
+[F18:556]|   white-space: nowrap;
+[F18:557]|   overflow: hidden;
+[F18:558]|   text-overflow: ellipsis;
+[F18:559]| }
+[F18:560]| 
+[F18:561]| .zone-count {
+[F18:562]|   font-size: 10px;
+[F18:563]|   color: rgba(255, 255, 255, 0.4);
+[F18:564]|   margin-left: auto;
+[F18:565]| }
+[F18:566]| 
+[F18:567]| .zone-actions {
+[F18:568]|   display: flex;
+[F18:569]|   gap: 2px;
+[F18:570]|   opacity: 0;
+[F18:571]|   transition: opacity 0.2s ease;
+[F18:572]| }
+[F18:573]| 
+[F18:574]| .zone-item:hover .zone-actions {
+[F18:575]|   opacity: 1;
+[F18:576]| }
+[F18:577]| 
+[F18:578]| .zone-edit-btn,
+[F18:579]| .zone-delete-btn {
+[F18:580]|   width: 18px;
+[F18:581]|   height: 18px;
+[F18:582]|   padding: 0;
+[F18:583]|   color: rgba(255, 255, 255, 0.4);
+[F18:584]| }
+[F18:585]| 
+[F18:586]| .zone-edit-btn:hover {
+[F18:587]|   color: rgba(255, 255, 255, 0.8);
+[F18:588]|   background: rgba(255, 255, 255, 0.1);
+[F18:589]| }
+[F18:590]| 
+[F18:591]| .zone-delete-btn:hover {
+[F18:592]|   color: #ef4444;
+[F18:593]|   background: rgba(239, 68, 68, 0.1);
+[F18:594]| }
+[F18:595]| 
+[F18:596]| /* Zone Add Form */
+[F18:597]| .zone-add-form {
+[F18:598]|   padding: 8px;
+[F18:599]|   border-top: 1px solid rgba(255, 255, 255, 0.05);
+[F18:600]|   display: flex;
+[F18:601]|   flex-direction: column;
+[F18:602]|   gap: 8px;
+[F18:603]| }
+[F18:604]| 
+[F18:605]| .zone-add-form input {
+[F18:606]|   background: rgba(255, 255, 255, 0.05);
+[F18:607]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:608]|   border-radius: 6px;
+[F18:609]|   padding: 6px 8px;
+[F18:610]|   font-size: 12px;
+[F18:611]|   color: rgba(255, 255, 255, 0.9);
+[F18:612]| }
+[F18:613]| 
+[F18:614]| .zone-add-form input:focus {
+[F18:615]|   outline: none;
+[F18:616]|   border-color: rgba(59, 130, 246, 0.5);
+[F18:617]| }
+[F18:618]| 
+[F18:619]| .color-picker {
+[F18:620]|   display: flex;
+[F18:621]|   flex-direction: column;
+[F18:622]|   gap: 6px;
+[F18:623]| }
+[F18:624]| 
+[F18:625]| .color-label {
+[F18:626]|   font-size: 10px;
+[F18:627]|   color: rgba(255, 255, 255, 0.5);
+[F18:628]| }
+[F18:629]| 
+[F18:630]| .color-grid {
+[F18:631]|   display: grid;
+[F18:632]|   grid-template-columns: repeat(6, 1fr);
+[F18:633]|   gap: 4px;
+[F18:634]| }
+[F18:635]| 
+[F18:636]| .color-option {
+[F18:637]|   width: 18px;
+[F18:638]|   height: 18px;
+[F18:639]|   border-radius: 4px;
+[F18:640]|   border: 2px solid transparent;
+[F18:641]|   cursor: pointer;
+[F18:642]|   transition: all 0.2s ease;
+[F18:643]| }
+[F18:644]| 
+[F18:645]| .color-option:hover {
+[F18:646]|   transform: scale(1.1);
+[F18:647]| }
+[F18:648]| 
+[F18:649]| .color-option.selected {
+[F18:650]|   border-color: white;
+[F18:651]|   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
 [F18:652]| }
 [F18:653]| 
-[F18:654]| /* Task List */
-[F18:655]| .task-list-container {
-[F18:656]|   flex: 1;
-[F18:657]|   display: flex;
-[F18:658]|   flex-direction: column;
-[F18:659]|   min-height: 0;
-[F18:660]|   background: rgba(0, 0, 0, 0.1);
-[F18:661]|   border-radius: 10px;
-[F18:662]|   padding: 12px;
-[F18:663]|   min-width: 0; 
-[F18:664]| }
-[F18:665]| 
-[F18:666]| .task-list-empty {
-[F18:667]|   flex: 1;
-[F18:668]|   display: flex;
-[F18:669]|   align-items: center;
-[F18:670]|   justify-content: center;
-[F18:671]|   color: rgba(255, 255, 255, 0.4);
-[F18:672]|   font-size: 13px;
-[F18:673]| }
-[F18:674]| 
-[F18:675]| .task-list-header {
-[F18:676]|   display: flex;
-[F18:677]|   align-items: center;
-[F18:678]|   justify-content: space-between;
-[F18:679]|   padding-bottom: 10px;
-[F18:680]|   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-[F18:681]|   gap: 8px;
-[F18:682]| }
-[F18:683]| 
-[F18:684]| .task-list-title {
-[F18:685]|   display: flex;
-[F18:686]|   align-items: center;
-[F18:687]|   gap: 8px;
-[F18:688]|   font-size: 14px;
-[F18:689]|   font-weight: 600;
-[F18:690]|   color: rgba(255, 255, 255, 0.9);
-[F18:691]|   flex: 1; /* 新增 */
-[F18:692]|   min-width: 0; /* 新增 */
+[F18:654]| .zone-add-actions {
+[F18:655]|   display: flex;
+[F18:656]|   gap: 6px;
+[F18:657]|   justify-content: flex-end;
+[F18:658]| }
+[F18:659]| 
+[F18:660]| /* Zone Manager Footer */
+[F18:661]| .zone-manager-footer {
+[F18:662]|   display: flex;
+[F18:663]|   gap: 4px;
+[F18:664]|   padding: 8px;
+[F18:665]|   border-top: 1px solid rgba(255, 255, 255, 0.05);
+[F18:666]|   margin-top: auto;
+[F18:667]|   flex-wrap: wrap;
+[F18:668]| }
+[F18:669]| 
+[F18:670]| .footer-btn {
+[F18:671]|   flex: 1;
+[F18:672]|   font-size: 11px;
+[F18:673]|   color: rgba(255, 255, 255, 0.5);
+[F18:674]|   padding: 6px 8px;
+[F18:675]|   height: auto;
+[F18:676]| }
+[F18:677]| 
+[F18:678]| .footer-btn:hover {
+[F18:679]|   color: rgba(255, 255, 255, 0.8);
+[F18:680]|   background: rgba(255, 255, 255, 0.08);
+[F18:681]| }
+[F18:682]| 
+[F18:683]| /* Template Dialog */
+[F18:684]| .template-dialog {
+[F18:685]|   max-width: 320px;
+[F18:686]| }
+[F18:687]| 
+[F18:688]| .template-list {
+[F18:689]|   display: flex;
+[F18:690]|   flex-direction: column;
+[F18:691]|   gap: 8px;
+[F18:692]|   padding: 8px 0;
 [F18:693]| }
 [F18:694]| 
-[F18:695]| .task-list-title > span:nth-child(2) {
-[F18:696]|   white-space: nowrap;
-[F18:697]|   overflow: hidden;
-[F18:698]|   text-overflow: ellipsis;
-[F18:699]| }
-[F18:700]| 
-[F18:701]| .zone-color-badge {
-[F18:702]|   width: 10px;
-[F18:703]|   height: 10px;
-[F18:704]|   border-radius: 50%;
+[F18:695]| .template-item {
+[F18:696]|   display: flex;
+[F18:697]|   align-items: center;
+[F18:698]|   justify-content: space-between;
+[F18:699]|   padding: 12px;
+[F18:700]|   background: rgba(255, 255, 255, 0.05);
+[F18:701]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:702]|   border-radius: 8px;
+[F18:703]|   cursor: pointer;
+[F18:704]|   transition: all 0.2s ease;
 [F18:705]| }
 [F18:706]| 
-[F18:707]| .task-count {
-[F18:708]|   font-size: 12px;
-[F18:709]|   font-weight: 400;
-[F18:710]|   color: rgba(255, 255, 255, 0.5);
-[F18:711]| }
-[F18:712]| 
-[F18:713]| /* Add Task */
-[F18:714]| .add-task-container {
-[F18:715]|   display: flex;
-[F18:716]|   flex-direction: column;
-[F18:717]|   gap: 8px;
-[F18:718]|   padding: 10px 0;
-[F18:719]|   min-width: 0;
-[F18:720]|   width: 100%;
-[F18:721]| }
-[F18:722]| 
-[F18:723]| .add-task-top {
-[F18:724]|   display: flex;
-[F18:725]|   gap: 8px;
-[F18:726]|   align-items: flex-start;
+[F18:707]| .template-item:hover {
+[F18:708]|   background: rgba(255, 255, 255, 0.08);
+[F18:709]|   border-color: rgba(255, 255, 255, 0.2);
+[F18:710]| }
+[F18:711]| 
+[F18:712]| .template-info {
+[F18:713]|   display: flex;
+[F18:714]|   flex-direction: column;
+[F18:715]|   gap: 4px;
+[F18:716]| }
+[F18:717]| 
+[F18:718]| .template-name {
+[F18:719]|   font-size: 13px;
+[F18:720]|   font-weight: 500;
+[F18:721]|   color: rgba(255, 255, 255, 0.9);
+[F18:722]| }
+[F18:723]| 
+[F18:724]| .template-desc {
+[F18:725]|   font-size: 11px;
+[F18:726]|   color: rgba(255, 255, 255, 0.5);
 [F18:727]| }
 [F18:728]| 
-[F18:729]| .priority-selector {
+[F18:729]| .template-zones {
 [F18:730]|   display: flex;
 [F18:731]|   gap: 4px;
-[F18:732]|   min-width: 0;
-[F18:733]| }
-[F18:734]| 
-[F18:735]| .priority-btn {
-[F18:736]|   width: 24px;
-[F18:737]|   height: 24px;
-[F18:738]|   border-radius: 6px;
-[F18:739]|   border: 1px solid rgba(255, 255, 255, 0.1);
-[F18:740]|   background: rgba(255, 255, 255, 0.05);
-[F18:741]|   cursor: pointer;
-[F18:742]|   display: flex;
-[F18:743]|   align-items: center;
-[F18:744]|   justify-content: center;
-[F18:745]|   transition: all 0.2s ease;
-[F18:746]|   min-width: 0;
-[F18:747]| }
-[F18:748]| 
-[F18:749]| .priority-btn:hover {
-[F18:750]|   background: rgba(255, 255, 255, 0.1);
-[F18:751]| }
-[F18:752]| 
-[F18:753]| .priority-btn.active {
-[F18:754]|   border-color: currentColor;
-[F18:755]|   background: rgba(255, 255, 255, 0.1);
-[F18:756]| }
-[F18:757]| 
-[F18:758]| .priority-dot {
-[F18:759]|   width: 8px;
-[F18:760]|   height: 8px;
-[F18:761]|   border-radius: 50%;
-[F18:762]| }
-[F18:763]| 
-[F18:764]| .priority-dot.high { background: #ef4444; }
-[F18:765]| .priority-dot.medium { background: #eab308; }
-[F18:766]| .priority-dot.low { background: #22c55e; }
-[F18:767]| 
-[F18:768]| .priority-btn.priority-high.active { color: #ef4444; border-color: #ef4444; }
-[F18:769]| .priority-btn.priority-medium.active { color: #eab308; border-color: #eab308; }
-[F18:770]| .priority-btn.priority-low.active { color: #22c55e; border-color: #22c55e; }
+[F18:732]| }
+[F18:733]| 
+[F18:734]| .template-zone-dot {
+[F18:735]|   width: 10px;
+[F18:736]|   height: 10px;
+[F18:737]|   border-radius: 50%;
+[F18:738]| }
+[F18:739]| 
+[F18:740]| /* Zone Edit Dialog */
+[F18:741]| .zone-edit-dialog {
+[F18:742]|   max-width: 280px;
+[F18:743]| }
+[F18:744]| 
+[F18:745]| .zone-edit-form {
+[F18:746]|   display: flex;
+[F18:747]|   flex-direction: column;
+[F18:748]|   gap: 16px;
+[F18:749]|   padding: 8px 0;
+[F18:750]| }
+[F18:751]| 
+[F18:752]| .zone-edit-form input {
+[F18:753]|   background: rgba(0, 0, 0, 0.3);
+[F18:754]|   border: 1px solid rgba(255, 255, 255, 0.2);
+[F18:755]|   border-radius: 8px;
+[F18:756]|   padding: 10px 12px;
+[F18:757]|   font-size: 13px;
+[F18:758]|   color: #ffffff;
+[F18:759]| }
+[F18:760]| 
+[F18:761]| .zone-edit-form input:focus {
+[F18:762]|   outline: none;
+[F18:763]|   border-color: rgba(59, 130, 246, 0.5);
+[F18:764]| }
+[F18:765]| 
+[F18:766]| .zone-edit-actions {
+[F18:767]|   display: flex;
+[F18:768]|   gap: 8px;
+[F18:769]|   justify-content: flex-end;
+[F18:770]| }
 [F18:771]| 
-[F18:772]| .add-task-inputs {
-[F18:773]|   flex: 1;
-[F18:774]|   display: flex;
-[F18:775]|   flex-direction: column;
-[F18:776]|   gap: 6px;
-[F18:777]|   min-width: 0;
-[F18:778]| }
-[F18:779]| 
-[F18:780]| .add-task-title-input,
-[F18:781]| .add-task-desc-input {
-[F18:782]|   background: rgba(255, 255, 255, 0.05);
-[F18:783]|   border: 1px solid rgba(255, 255, 255, 0.1);
-[F18:784]|   border-radius: 8px;
-[F18:785]|   padding: 8px 12px;
-[F18:786]|   font-size: 13px;
-[F18:787]|   color: rgba(255, 255, 255, 0.9);
-[F18:788]|   transition: all 0.2s ease;
-[F18:789]| }
-[F18:790]| 
-[F18:791]| .add-task-title-input:focus,
-[F18:792]| .add-task-desc-input:focus {
-[F18:793]|   outline: none;
-[F18:794]|   border-color: rgba(59, 130, 246, 0.5);
-[F18:795]|   background: rgba(255, 255, 255, 0.08);
-[F18:796]| }
-[F18:797]| 
-[F18:798]| .add-task-title-input::placeholder,
-[F18:799]| .add-task-desc-input::placeholder {
-[F18:800]|   color: rgba(255, 255, 255, 0.4);
-[F18:801]| }
-[F18:802]| 
-[F18:803]| .add-task-desc-input {
-[F18:804]|   font-size: 12px;
-[F18:805]| }
-[F18:806]| 
-[F18:807]| .add-task-btn {
-[F18:808]|   width: 32px;
-[F18:809]|   height: 32px;
-[F18:810]|   border-radius: 8px;
-[F18:811]|   background: linear-gradient(135deg, #3b82f6, #2563eb);
-[F18:812]|   border: none;
-[F18:813]|   color: white;
-[F18:814]|   cursor: pointer;
-[F18:815]|   display: flex;
-[F18:816]|   align-items: center;
-[F18:817]|   justify-content: center;
-[F18:818]|   transition: all 0.2s ease;
-[F18:819]| }
-[F18:820]| 
-[F18:821]| .add-task-btn:hover:not(:disabled) {
-[F18:822]|   background: linear-gradient(135deg, #2563eb, #1d4ed8);
-[F18:823]|   transform: translateY(-1px);
-[F18:824]| }
-[F18:825]| 
-[F18:826]| .add-task-btn:disabled {
-[F18:827]|   opacity: 0.5;
-[F18:828]|   cursor: not-allowed;
+[F18:772]| /* Task List */
+[F18:773]| .task-list-container {
+[F18:774]|   flex: 1;
+[F18:775]|   display: flex;
+[F18:776]|   flex-direction: column;
+[F18:777]|   min-height: 0;
+[F18:778]|   background: rgba(0, 0, 0, 0.1);
+[F18:779]|   border-radius: 10px;
+[F18:780]|   padding: 12px;
+[F18:781]|   min-width: 0; 
+[F18:782]| }
+[F18:783]| 
+[F18:784]| .task-list-empty {
+[F18:785]|   flex: 1;
+[F18:786]|   display: flex;
+[F18:787]|   align-items: center;
+[F18:788]|   justify-content: center;
+[F18:789]|   color: rgba(255, 255, 255, 0.4);
+[F18:790]|   font-size: 13px;
+[F18:791]| }
+[F18:792]| 
+[F18:793]| .task-list-header {
+[F18:794]|   display: flex;
+[F18:795]|   align-items: center;
+[F18:796]|   justify-content: space-between;
+[F18:797]|   padding-bottom: 10px;
+[F18:798]|   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+[F18:799]|   gap: 8px;
+[F18:800]| }
+[F18:801]| 
+[F18:802]| .task-list-title {
+[F18:803]|   display: flex;
+[F18:804]|   align-items: center;
+[F18:805]|   gap: 8px;
+[F18:806]|   font-size: 14px;
+[F18:807]|   font-weight: 600;
+[F18:808]|   color: rgba(255, 255, 255, 0.9);
+[F18:809]|   flex: 1; /* 新增 */
+[F18:810]|   min-width: 0; /* 新增 */
+[F18:811]| }
+[F18:812]| 
+[F18:813]| .task-list-title > span:nth-child(2) {
+[F18:814]|   white-space: nowrap;
+[F18:815]|   overflow: hidden;
+[F18:816]|   text-overflow: ellipsis;
+[F18:817]| }
+[F18:818]| 
+[F18:819]| .zone-color-badge {
+[F18:820]|   width: 10px;
+[F18:821]|   height: 10px;
+[F18:822]|   border-radius: 50%;
+[F18:823]| }
+[F18:824]| 
+[F18:825]| .task-count {
+[F18:826]|   font-size: 12px;
+[F18:827]|   font-weight: 400;
+[F18:828]|   color: rgba(255, 255, 255, 0.5);
 [F18:829]| }
 [F18:830]| 
-[F18:831]| /* Task Scroll Area */
-[F18:832]| .task-scroll-area {
-[F18:833]|   flex: 1;
-[F18:834]|   min-height: 0;
-[F18:835]| }
-[F18:836]| 
-[F18:837]| .tasks-container {
-[F18:838]|   display: flex;
-[F18:839]|   flex-direction: column;
-[F18:840]|   gap: 4px;
-[F18:841]| }
-[F18:842]| 
-[F18:843]| /* Empty State */
-[F18:844]| .empty-state {
-[F18:845]|   display: flex;
-[F18:846]|   flex-direction: column;
-[F18:847]|   align-items: center;
-[F18:848]|   justify-content: center;
-[F18:849]|   padding: 32px 16px;
-[F18:850]|   color: rgba(255, 255, 255, 0.4);
-[F18:851]|   text-align: center;
-[F18:852]| }
-[F18:853]| 
-[F18:854]| .empty-icon {
-[F18:855]|   margin-bottom: 12px;
-[F18:856]|   opacity: 0.5;
+[F18:831]| /* Add Task */
+[F18:832]| .add-task-container {
+[F18:833]|   display: flex;
+[F18:834]|   flex-direction: column;
+[F18:835]|   gap: 8px;
+[F18:836]|   padding: 10px 0;
+[F18:837]|   min-width: 0;
+[F18:838]|   width: 100%;
+[F18:839]| }
+[F18:840]| 
+[F18:841]| .add-task-top {
+[F18:842]|   display: flex;
+[F18:843]|   gap: 8px;
+[F18:844]|   align-items: flex-start;
+[F18:845]| }
+[F18:846]| 
+[F18:847]| .priority-selector {
+[F18:848]|   display: flex;
+[F18:849]|   gap: 4px;
+[F18:850]|   min-width: 0;
+[F18:851]| }
+[F18:852]| 
+[F18:853]| .priority-urgency-row {
+[F18:854]|   display: flex;
+[F18:855]|   gap: 8px;
+[F18:856]|   align-items: center;
 [F18:857]| }
 [F18:858]| 
-[F18:859]| .empty-state p {
-[F18:860]|   font-size: 13px;
-[F18:861]| }
-[F18:862]| 
-[F18:863]| .empty-hint {
-[F18:864]|   font-size: 11px;
-[F18:865]|   color: rgba(255, 255, 255, 0.3);
-[F18:866]|   margin-top: 8px;
-[F18:867]| }
-[F18:868]| 
-[F18:869]| /* Task Item */
-[F18:870]| .task-item {
-[F18:871]|   display: flex;
-[F18:872]|   align-items: flex-start;
-[F18:873]|   gap: 8px;
-[F18:874]|   padding: 10px 8px;
-[F18:875]|   border-radius: 8px;
-[F18:876]|   background: rgba(255, 255, 255, 0.03);
-[F18:877]|   border: 1px solid transparent;
-[F18:878]|   transition: all 0.2s ease;
-[F18:879]| }
-[F18:880]| 
-[F18:881]| .task-item:hover {
-[F18:882]|   background: rgba(255, 255, 255, 0.06);
-[F18:883]|   border-color: rgba(255, 255, 255, 0.1);
-[F18:884]| }
-[F18:885]| 
-[F18:886]| .task-item.completed {
-[F18:887]|   opacity: 0.5;
-[F18:888]| }
-[F18:889]| 
-[F18:890]| .task-item.completed .task-title {
-[F18:891]|   text-decoration: line-through;
-[F18:892]|   color: rgba(255, 255, 255, 0.4);
-[F18:893]| }
-[F18:894]| 
-[F18:895]| .task-item.active {
-[F18:896]|   background: rgba(59, 130, 246, 0.1);
-[F18:897]|   border-color: rgba(59, 130, 246, 0.3);
-[F18:898]| }
-[F18:899]| 
-[F18:900]| .task-drag-handle {
-[F18:901]|   padding: 4px 0;
-[F18:902]|   cursor: grab;
-[F18:903]|   color: rgba(255, 255, 255, 0.2);
-[F18:904]|   transition: color 0.2s ease;
-[F18:905]| }
-[F18:906]| 
-[F18:907]| .task-drag-handle:hover {
-[F18:908]|   color: rgba(255, 255, 255, 0.4);
-[F18:909]| }
-[F18:910]| 
-[F18:911]| .task-drag-handle:active {
-[F18:912]|   cursor: grabbing;
+[F18:859]| .priority-btn {
+[F18:860]|   width: 24px;
+[F18:861]|   height: 24px;
+[F18:862]|   border-radius: 6px;
+[F18:863]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:864]|   background: rgba(255, 255, 255, 0.05);
+[F18:865]|   cursor: pointer;
+[F18:866]|   display: flex;
+[F18:867]|   align-items: center;
+[F18:868]|   justify-content: center;
+[F18:869]|   transition: all 0.2s ease;
+[F18:870]|   min-width: 0;
+[F18:871]| }
+[F18:872]| 
+[F18:873]| .priority-btn:hover {
+[F18:874]|   background: rgba(255, 255, 255, 0.1);
+[F18:875]| }
+[F18:876]| 
+[F18:877]| .priority-btn.active {
+[F18:878]|   border-color: currentColor;
+[F18:879]|   background: rgba(255, 255, 255, 0.1);
+[F18:880]| }
+[F18:881]| 
+[F18:882]| .priority-dot {
+[F18:883]|   width: 8px;
+[F18:884]|   height: 8px;
+[F18:885]|   border-radius: 50%;
+[F18:886]| }
+[F18:887]| 
+[F18:888]| .priority-dot.high { background: #ef4444; }
+[F18:889]| .priority-dot.medium { background: #eab308; }
+[F18:890]| .priority-dot.low { background: #22c55e; }
+[F18:891]| 
+[F18:892]| .priority-btn.priority-high.active { color: #ef4444; border-color: #ef4444; }
+[F18:893]| .priority-btn.priority-medium.active { color: #eab308; border-color: #eab308; }
+[F18:894]| .priority-btn.priority-low.active { color: #22c55e; border-color: #22c55e; }
+[F18:895]| 
+[F18:896]| .add-task-inputs {
+[F18:897]|   flex: 1;
+[F18:898]|   display: flex;
+[F18:899]|   flex-direction: column;
+[F18:900]|   gap: 6px;
+[F18:901]|   min-width: 0;
+[F18:902]| }
+[F18:903]| 
+[F18:904]| .add-task-title-input,
+[F18:905]| .add-task-desc-input {
+[F18:906]|   background: rgba(255, 255, 255, 0.05);
+[F18:907]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:908]|   border-radius: 8px;
+[F18:909]|   padding: 8px 12px;
+[F18:910]|   font-size: 13px;
+[F18:911]|   color: rgba(255, 255, 255, 0.9);
+[F18:912]|   transition: all 0.2s ease;
 [F18:913]| }
 [F18:914]| 
-[F18:915]| .task-zone-indicator {
-[F18:916]|   width: 4px;
-[F18:917]|   height: 24px;
-[F18:918]|   border-radius: 2px;
-[F18:919]|   flex-shrink: 0;
-[F18:920]|   margin-top: 2px;
-[F18:921]| }
-[F18:922]| 
-[F18:923]| .task-checkbox {
-[F18:924]|   width: 18px;
-[F18:925]|   height: 18px;
-[F18:926]|   border-radius: 5px;
-[F18:927]|   border: 2px solid rgba(255, 255, 255, 0.3);
-[F18:928]|   background: transparent;
-[F18:929]|   cursor: pointer;
-[F18:930]|   display: flex;
-[F18:931]|   align-items: center;
-[F18:932]|   justify-content: center;
-[F18:933]|   transition: all 0.2s ease;
-[F18:934]|   flex-shrink: 0;
-[F18:935]|   color: white;
-[F18:936]|   margin-top: 2px;
-[F18:937]| }
-[F18:938]| 
-[F18:939]| .task-checkbox:hover {
-[F18:940]|   border-color: rgba(255, 255, 255, 0.5);
-[F18:941]| }
-[F18:942]| 
-[F18:943]| .task-checkbox.checked {
-[F18:944]|   background: #22c55e;
-[F18:945]|   border-color: #22c55e;
-[F18:946]| }
-[F18:947]| 
-[F18:948]| .task-content-wrapper {
-[F18:949]|   flex: 1;
-[F18:950]|   min-width: 0;
-[F18:951]| }
-[F18:952]| 
-[F18:953]| .task-content {
-[F18:954]|   display: flex;
-[F18:955]|   flex-direction: column;
-[F18:956]|   gap: 4px;
-[F18:957]| }
-[F18:958]| 
-[F18:959]| .task-header-row {
-[F18:960]|   display: flex;
-[F18:961]|   align-items: center;
-[F18:962]|   gap: 8px;
-[F18:963]|   min-width: 0;
-[F18:964]| }
-[F18:965]| 
-[F18:966]| .task-title {
-[F18:967]|   font-size: 13px;
-[F18:968]|   color: rgba(255, 255, 255, 0.85);
-[F18:969]|   word-break: break-word;
-[F18:970]|   line-height: 1.4;
-[F18:971]|   flex: 1;
+[F18:915]| .add-task-title-input:focus,
+[F18:916]| .add-task-desc-input:focus {
+[F18:917]|   outline: none;
+[F18:918]|   border-color: rgba(59, 130, 246, 0.5);
+[F18:919]|   background: rgba(255, 255, 255, 0.08);
+[F18:920]| }
+[F18:921]| 
+[F18:922]| .add-task-title-input::placeholder,
+[F18:923]| .add-task-desc-input::placeholder {
+[F18:924]|   color: rgba(255, 255, 255, 0.4);
+[F18:925]| }
+[F18:926]| 
+[F18:927]| .add-task-desc-input {
+[F18:928]|   font-size: 12px;
+[F18:929]| }
+[F18:930]| 
+[F18:931]| .add-task-btn {
+[F18:932]|   width: 32px;
+[F18:933]|   height: 32px;
+[F18:934]|   border-radius: 8px;
+[F18:935]|   background: linear-gradient(135deg, #3b82f6, #2563eb);
+[F18:936]|   border: none;
+[F18:937]|   color: white;
+[F18:938]|   cursor: pointer;
+[F18:939]|   display: flex;
+[F18:940]|   align-items: center;
+[F18:941]|   justify-content: center;
+[F18:942]|   transition: all 0.2s ease;
+[F18:943]| }
+[F18:944]| 
+[F18:945]| .add-task-btn:hover:not(:disabled) {
+[F18:946]|   background: linear-gradient(135deg, #2563eb, #1d4ed8);
+[F18:947]|   transform: translateY(-1px);
+[F18:948]| }
+[F18:949]| 
+[F18:950]| .add-task-btn:disabled {
+[F18:951]|   opacity: 0.5;
+[F18:952]|   cursor: not-allowed;
+[F18:953]| }
+[F18:954]| 
+[F18:955]| .add-task-actions {
+[F18:956]|   display: flex;
+[F18:957]|   gap: 4px;
+[F18:958]| }
+[F18:959]| 
+[F18:960]| .cancel-task-btn {
+[F18:961]|   width: 32px;
+[F18:962]|   height: 32px;
+[F18:963]|   border-radius: 8px;
+[F18:964]|   background: rgba(255, 255, 255, 0.1);
+[F18:965]|   border: none;
+[F18:966]|   color: rgba(255, 255, 255, 0.6);
+[F18:967]|   cursor: pointer;
+[F18:968]|   display: flex;
+[F18:969]|   align-items: center;
+[F18:970]|   justify-content: center;
+[F18:971]|   transition: all 0.2s ease;
 [F18:972]| }
 [F18:973]| 
-[F18:974]| .task-expand-btn {
-[F18:975]|   width: 18px;
-[F18:976]|   height: 18px;
-[F18:977]|   border-radius: 4px;
-[F18:978]|   border: none;
-[F18:979]|   background: rgba(255, 255, 255, 0.05);
-[F18:980]|   color: rgba(255, 255, 255, 0.4);
-[F18:981]|   cursor: pointer;
-[F18:982]|   display: flex;
-[F18:983]|   align-items: center;
-[F18:984]|   justify-content: center;
-[F18:985]|   transition: all 0.2s ease;
-[F18:986]|   flex-shrink: 0;
-[F18:987]| }
-[F18:988]| 
-[F18:989]| .task-expand-btn:hover {
-[F18:990]|   background: rgba(255, 255, 255, 0.1);
-[F18:991]|   color: rgba(255, 255, 255, 0.7);
+[F18:974]| .cancel-task-btn:hover {
+[F18:975]|   background: rgba(255, 255, 255, 0.2);
+[F18:976]|   color: white;
+[F18:977]| }
+[F18:978]| 
+[F18:979]| .add-task-collapsed {
+[F18:980]|   display: flex;
+[F18:981]|   align-items: center;
+[F18:982]|   gap: 8px;
+[F18:983]|   padding: 10px 12px;
+[F18:984]|   margin: 8px;
+[F18:985]|   border-radius: 8px;
+[F18:986]|   background: rgba(255, 255, 255, 0.05);
+[F18:987]|   border: 1px dashed rgba(255, 255, 255, 0.2);
+[F18:988]|   color: rgba(255, 255, 255, 0.6);
+[F18:989]|   cursor: pointer;
+[F18:990]|   transition: all 0.2s ease;
+[F18:991]|   width: calc(100% - 16px);
 [F18:992]| }
 [F18:993]| 
-[F18:994]| .task-description {
-[F18:995]|   font-size: 12px;
-[F18:996]|   color: rgba(255, 255, 255, 0.5);
-[F18:997]|   line-height: 1.4;
-[F18:998]|   padding: 4px 0;
-[F18:999]|   border-left: 2px solid rgba(255, 255, 255, 0.1);
-[F18:1000]|   padding-left: 8px;
-[F18:1001]|   margin-left: 4px;
-[F18:1002]| }
-[F18:1003]| 
-[F18:1004]| .task-work-time {
-[F18:1005]|   display: flex;
-[F18:1006]|   align-items: center;
-[F18:1007]|   gap: 6px;
-[F18:1008]|   font-size: 11px;
-[F18:1009]|   color: rgba(255, 255, 255, 0.4);
-[F18:1010]|   margin-top: 4px;
-[F18:1011]| }
-[F18:1012]| 
-[F18:1013]| .task-work-time svg {
-[F18:1014]|   color: rgba(255, 255, 255, 0.3);
-[F18:1015]| }
-[F18:1016]| 
-[F18:1017]| .task-work-time svg.pulse {
-[F18:1018]|   color: #60a5fa;
-[F18:1019]|   animation: pulse 1.5s ease-in-out infinite;
-[F18:1020]| }
-[F18:1021]| 
-[F18:1022]| @keyframes pulse {
-[F18:1023]|   0%, 100% { opacity: 1; }
-[F18:1024]|   50% { opacity: 0.5; }
-[F18:1025]| }
-[F18:1026]| 
-[F18:1027]| .reset-work-time-btn {
-[F18:1028]|   width: 16px;
-[F18:1029]|   height: 16px;
-[F18:1030]|   border-radius: 4px;
-[F18:1031]|   border: none;
-[F18:1032]|   background: transparent;
-[F18:1033]|   color: rgba(255, 255, 255, 0.3);
-[F18:1034]|   cursor: pointer;
-[F18:1035]|   display: flex;
-[F18:1036]|   align-items: center;
-[F18:1037]|   justify-content: center;
-[F18:1038]|   transition: all 0.2s ease;
-[F18:1039]|   opacity: 0;
-[F18:1040]| }
-[F18:1041]| 
-[F18:1042]| .task-item:hover .reset-work-time-btn {
-[F18:1043]|   opacity: 1;
-[F18:1044]| }
-[F18:1045]| 
-[F18:1046]| .reset-work-time-btn:hover {
-[F18:1047]|   color: #ef4444;
-[F18:1048]|   background: rgba(239, 68, 68, 0.1);
-[F18:1049]| }
-[F18:1050]| 
-[F18:1051]| .task-edit-form {
-[F18:1052]|   display: flex;
-[F18:1053]|   flex-direction: column;
-[F18:1054]|   gap: 6px;
-[F18:1055]| }
-[F18:1056]| 
-[F18:1057]| .task-edit-input {
-[F18:1058]|   background: rgba(255, 255, 255, 0.1);
-[F18:1059]|   border: 1px solid rgba(59, 130, 246, 0.5);
-[F18:1060]|   border-radius: 6px;
-[F18:1061]|   padding: 6px 10px;
-[F18:1062]|   font-size: 13px;
-[F18:1063]|   color: rgba(255, 255, 255, 0.9);
-[F18:1064]| }
-[F18:1065]| 
-[F18:1066]| .task-edit-input:focus {
-[F18:1067]|   outline: none;
-[F18:1068]| }
-[F18:1069]| 
-[F18:1070]| .task-edit-input.description {
-[F18:1071]|   font-size: 12px;
-[F18:1072]| }
-[F18:1073]| 
-[F18:1074]| /* Task Priority */
-[F18:1075]| .task-priority-wrapper {
-[F18:1076]|   position: relative;
-[F18:1077]| }
-[F18:1078]| 
-[F18:1079]| .task-priority {
-[F18:1080]|   display: flex;
-[F18:1081]|   align-items: center;
-[F18:1082]|   gap: 4px;
-[F18:1083]|   padding: 4px 8px;
-[F18:1084]|   border-radius: 6px;
-[F18:1085]|   background: rgba(255, 255, 255, 0.05);
-[F18:1086]|   border: 1px solid rgba(255, 255, 255, 0.1);
-[F18:1087]|   cursor: pointer;
-[F18:1088]|   font-size: 11px;
-[F18:1089]|   font-weight: 500;
-[F18:1090]|   transition: all 0.2s ease;
-[F18:1091]| }
-[F18:1092]| 
-[F18:1093]| .task-priority:hover {
-[F18:1094]|   background: rgba(255, 255, 255, 0.1);
-[F18:1095]| }
-[F18:1096]| 
-[F18:1097]| .priority-menu {
-[F18:1098]|   position: absolute;
-[F18:1099]|   top: 100%;
-[F18:1100]|   right: 0;
-[F18:1101]|   margin-top: 4px;
-[F18:1102]|   background: rgba(35, 35, 45, 0.98);
-[F18:1103]|   border: 1px solid rgba(255, 255, 255, 0.1);
-[F18:1104]|   border-radius: 8px;
-[F18:1105]|   padding: 4px;
-[F18:1106]|   display: flex;
-[F18:1107]|   flex-direction: column;
-[F18:1108]|   gap: 2px;
-[F18:1109]|   z-index: 100;
-[F18:1110]|   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-[F18:1111]|   min-width: 60px;
-[F18:1112]| }
-[F18:1113]| 
-[F18:1114]| .priority-option {
-[F18:1115]|   display: flex;
-[F18:1116]|   align-items: center;
-[F18:1117]|   gap: 6px;
-[F18:1118]|   padding: 6px 10px;
-[F18:1119]|   border-radius: 4px;
-[F18:1120]|   border: 1px solid transparent;
-[F18:1121]|   background: transparent;
-[F18:1122]|   cursor: pointer;
-[F18:1123]|   font-size: 11px;
-[F18:1124]|   font-weight: 500;
-[F18:1125]|   transition: all 0.2s ease;
+[F18:994]| .add-task-collapsed:hover {
+[F18:995]|   background: rgba(255, 255, 255, 0.1);
+[F18:996]|   border-color: rgba(255, 255, 255, 0.3);
+[F18:997]|   color: white;
+[F18:998]| }
+[F18:999]| 
+[F18:1000]| /* Task Scroll Area */
+[F18:1001]| .task-scroll-area {
+[F18:1002]|   flex: 1;
+[F18:1003]|   min-height: 0;
+[F18:1004]| }
+[F18:1005]| 
+[F18:1006]| .tasks-container {
+[F18:1007]|   display: flex;
+[F18:1008]|   flex-direction: column;
+[F18:1009]|   gap: 4px;
+[F18:1010]| }
+[F18:1011]| 
+[F18:1012]| /* Empty State */
+[F18:1013]| .empty-state {
+[F18:1014]|   display: flex;
+[F18:1015]|   flex-direction: column;
+[F18:1016]|   align-items: center;
+[F18:1017]|   justify-content: center;
+[F18:1018]|   padding: 32px 16px;
+[F18:1019]|   color: rgba(255, 255, 255, 0.4);
+[F18:1020]|   text-align: center;
+[F18:1021]| }
+[F18:1022]| 
+[F18:1023]| .empty-icon {
+[F18:1024]|   margin-bottom: 12px;
+[F18:1025]|   opacity: 0.5;
+[F18:1026]| }
+[F18:1027]| 
+[F18:1028]| .empty-state p {
+[F18:1029]|   font-size: 13px;
+[F18:1030]| }
+[F18:1031]| 
+[F18:1032]| .empty-hint {
+[F18:1033]|   font-size: 11px;
+[F18:1034]|   color: rgba(255, 255, 255, 0.3);
+[F18:1035]|   margin-top: 8px;
+[F18:1036]| }
+[F18:1037]| 
+[F18:1038]| /* Task Item */
+[F18:1039]| .task-item {
+[F18:1040]|   display: flex;
+[F18:1041]|   align-items: flex-start;
+[F18:1042]|   gap: 8px;
+[F18:1043]|   padding: 10px 8px;
+[F18:1044]|   border-radius: 8px;
+[F18:1045]|   background: rgba(255, 255, 255, 0.03);
+[F18:1046]|   border: 1px solid transparent;
+[F18:1047]|   transition: all 0.2s ease;
+[F18:1048]| }
+[F18:1049]| 
+[F18:1050]| .task-item:hover {
+[F18:1051]|   background: rgba(255, 255, 255, 0.06);
+[F18:1052]|   border-color: rgba(255, 255, 255, 0.1);
+[F18:1053]| }
+[F18:1054]| 
+[F18:1055]| .task-item.completed {
+[F18:1056]|   opacity: 0.5;
+[F18:1057]| }
+[F18:1058]| 
+[F18:1059]| .task-item.completed .task-title {
+[F18:1060]|   text-decoration: line-through;
+[F18:1061]|   color: rgba(255, 255, 255, 0.4);
+[F18:1062]| }
+[F18:1063]| 
+[F18:1064]| .task-item.active {
+[F18:1065]|   background: rgba(59, 130, 246, 0.1);
+[F18:1066]|   border-color: rgba(59, 130, 246, 0.3);
+[F18:1067]| }
+[F18:1068]| 
+[F18:1069]| .task-drag-handle {
+[F18:1070]|   padding: 4px 0;
+[F18:1071]|   cursor: grab;
+[F18:1072]|   color: rgba(255, 255, 255, 0.2);
+[F18:1073]|   transition: color 0.2s ease;
+[F18:1074]| }
+[F18:1075]| 
+[F18:1076]| .task-drag-handle:hover {
+[F18:1077]|   color: rgba(255, 255, 255, 0.4);
+[F18:1078]| }
+[F18:1079]| 
+[F18:1080]| .task-drag-handle:active {
+[F18:1081]|   cursor: grabbing;
+[F18:1082]| }
+[F18:1083]| 
+[F18:1084]| .task-zone-indicator {
+[F18:1085]|   width: 4px;
+[F18:1086]|   height: 24px;
+[F18:1087]|   border-radius: 2px;
+[F18:1088]|   flex-shrink: 0;
+[F18:1089]|   margin-top: 2px;
+[F18:1090]| }
+[F18:1091]| 
+[F18:1092]| .task-checkbox {
+[F18:1093]|   width: 18px;
+[F18:1094]|   height: 18px;
+[F18:1095]|   border-radius: 5px;
+[F18:1096]|   border: 2px solid rgba(255, 255, 255, 0.3);
+[F18:1097]|   background: transparent;
+[F18:1098]|   cursor: pointer;
+[F18:1099]|   display: flex;
+[F18:1100]|   align-items: center;
+[F18:1101]|   justify-content: center;
+[F18:1102]|   transition: all 0.2s ease;
+[F18:1103]|   flex-shrink: 0;
+[F18:1104]|   color: white;
+[F18:1105]|   margin-top: 2px;
+[F18:1106]| }
+[F18:1107]| 
+[F18:1108]| .task-checkbox:hover {
+[F18:1109]|   border-color: rgba(255, 255, 255, 0.5);
+[F18:1110]| }
+[F18:1111]| 
+[F18:1112]| .task-checkbox.checked {
+[F18:1113]|   background: #22c55e;
+[F18:1114]|   border-color: #22c55e;
+[F18:1115]| }
+[F18:1116]| 
+[F18:1117]| .task-content-wrapper {
+[F18:1118]|   flex: 1;
+[F18:1119]|   min-width: 0;
+[F18:1120]| }
+[F18:1121]| 
+[F18:1122]| .task-content {
+[F18:1123]|   display: flex;
+[F18:1124]|   flex-direction: column;
+[F18:1125]|   gap: 4px;
 [F18:1126]| }
 [F18:1127]| 
-[F18:1128]| .priority-option:hover {
-[F18:1129]|   background: rgba(255, 255, 255, 0.05);
-[F18:1130]| }
-[F18:1131]| 
-[F18:1132]| .priority-option.selected {
-[F18:1133]|   border-color: currentColor;
-[F18:1134]|   background: rgba(255, 255, 255, 0.08);
-[F18:1135]| }
-[F18:1136]| 
-[F18:1137]| /* Task Actions */
-[F18:1138]| .task-actions {
-[F18:1139]|   display: flex;
-[F18:1140]|   gap: 2px;
-[F18:1141]|   opacity: 0;
-[F18:1142]|   transition: opacity 0.2s ease;
-[F18:1143]| }
-[F18:1144]| 
-[F18:1145]| .task-item:hover .task-actions {
-[F18:1146]|   opacity: 1;
-[F18:1147]| }
-[F18:1148]| 
-[F18:1149]| .task-action-btn {
-[F18:1150]|   width: 24px;
-[F18:1151]|   height: 24px;
-[F18:1152]|   padding: 0;
-[F18:1153]|   color: rgba(255, 255, 255, 0.4);
-[F18:1154]| }
-[F18:1155]| 
-[F18:1156]| .task-action-btn:hover {
-[F18:1157]|   color: rgba(255, 255, 255, 0.9);
-[F18:1158]|   background: rgba(255, 255, 255, 0.1);
-[F18:1159]| }
-[F18:1160]| 
-[F18:1161]| .task-action-btn.delete:hover {
-[F18:1162]|   color: #ef4444;
-[F18:1163]|   background: rgba(239, 68, 68, 0.1);
-[F18:1164]| }
-[F18:1165]| 
-[F18:1166]| /* Completed Section */
-[F18:1167]| .completed-section {
-[F18:1168]|   margin-top: 8px;
-[F18:1169]|   padding-top: 8px;
-[F18:1170]|   border-top: 1px solid rgba(255, 255, 255, 0.05);
+[F18:1128]| .task-header-row {
+[F18:1129]|   display: flex;
+[F18:1130]|   align-items: center;
+[F18:1131]|   gap: 8px;
+[F18:1132]|   min-width: 0;
+[F18:1133]| }
+[F18:1134]| 
+[F18:1135]| .task-title {
+[F18:1136]|   font-size: 13px;
+[F18:1137]|   color: rgba(255, 255, 255, 0.85);
+[F18:1138]|   word-break: break-word;
+[F18:1139]|   line-height: 1.4;
+[F18:1140]|   flex: 1;
+[F18:1141]| }
+[F18:1142]| 
+[F18:1143]| .task-expand-btn {
+[F18:1144]|   width: 18px;
+[F18:1145]|   height: 18px;
+[F18:1146]|   border-radius: 4px;
+[F18:1147]|   border: none;
+[F18:1148]|   background: rgba(255, 255, 255, 0.05);
+[F18:1149]|   color: rgba(255, 255, 255, 0.4);
+[F18:1150]|   cursor: pointer;
+[F18:1151]|   display: flex;
+[F18:1152]|   align-items: center;
+[F18:1153]|   justify-content: center;
+[F18:1154]|   transition: all 0.2s ease;
+[F18:1155]|   flex-shrink: 0;
+[F18:1156]| }
+[F18:1157]| 
+[F18:1158]| .task-expand-btn:hover {
+[F18:1159]|   background: rgba(255, 255, 255, 0.1);
+[F18:1160]|   color: rgba(255, 255, 255, 0.7);
+[F18:1161]| }
+[F18:1162]| 
+[F18:1163]| .task-description {
+[F18:1164]|   font-size: 12px;
+[F18:1165]|   color: rgba(255, 255, 255, 0.5);
+[F18:1166]|   line-height: 1.4;
+[F18:1167]|   padding: 4px 0;
+[F18:1168]|   border-left: 2px solid rgba(255, 255, 255, 0.1);
+[F18:1169]|   padding-left: 8px;
+[F18:1170]|   margin-left: 4px;
 [F18:1171]| }
 [F18:1172]| 
-[F18:1173]| .completed-toggle {
+[F18:1173]| .task-work-time {
 [F18:1174]|   display: flex;
 [F18:1175]|   align-items: center;
-[F18:1176]|   gap: 8px;
-[F18:1177]|   padding: 8px;
-[F18:1178]|   background: transparent;
-[F18:1179]|   border: none;
-[F18:1180]|   color: rgba(255, 255, 255, 0.6);
-[F18:1181]|   font-size: 12px;
-[F18:1182]|   cursor: pointer;
-[F18:1183]|   width: 100%;
-[F18:1184]|   transition: all 0.2s ease;
-[F18:1185]| }
-[F18:1186]| 
-[F18:1187]| .completed-toggle:hover {
-[F18:1188]|   color: rgba(255, 255, 255, 0.8);
+[F18:1176]|   gap: 6px;
+[F18:1177]|   font-size: 11px;
+[F18:1178]|   color: rgba(255, 255, 255, 0.4);
+[F18:1179]|   margin-top: 4px;
+[F18:1180]| }
+[F18:1181]| 
+[F18:1182]| .task-work-time svg {
+[F18:1183]|   color: rgba(255, 255, 255, 0.3);
+[F18:1184]| }
+[F18:1185]| 
+[F18:1186]| .task-work-time svg.pulse {
+[F18:1187]|   color: #60a5fa;
+[F18:1188]|   animation: pulse 1.5s ease-in-out infinite;
 [F18:1189]| }
 [F18:1190]| 
-[F18:1191]| .toggle-arrow {
-[F18:1192]|   margin-left: auto;
-[F18:1193]|   transition: transform 0.2s ease;
-[F18:1194]|   font-size: 10px;
-[F18:1195]| }
-[F18:1196]| 
-[F18:1197]| .toggle-arrow.open {
-[F18:1198]|   transform: rotate(180deg);
-[F18:1199]| }
-[F18:1200]| 
-[F18:1201]| .completed-tasks {
-[F18:1202]|   display: flex;
-[F18:1203]|   flex-direction: column;
-[F18:1204]|   gap: 4px;
-[F18:1205]|   padding-top: 8px;
-[F18:1206]| }
-[F18:1207]| 
-[F18:1208]| .clear-completed-btn {
-[F18:1209]|   margin-top: 8px;
-[F18:1210]|   color: rgba(255, 255, 255, 0.5);
-[F18:1211]|   font-size: 12px;
-[F18:1212]| }
-[F18:1213]| 
-[F18:1214]| .clear-completed-btn:hover {
-[F18:1215]|   color: #ef4444;
-[F18:1216]|   background: rgba(239, 68, 68, 0.1);
-[F18:1217]| }
-[F18:1218]| 
-[F18:1219]| /* Task List Footer */
-[F18:1220]| .task-list-footer {
+[F18:1191]| @keyframes pulse {
+[F18:1192]|   0%, 100% { opacity: 1; }
+[F18:1193]|   50% { opacity: 0.5; }
+[F18:1194]| }
+[F18:1195]| 
+[F18:1196]| .reset-work-time-btn {
+[F18:1197]|   width: 16px;
+[F18:1198]|   height: 16px;
+[F18:1199]|   border-radius: 4px;
+[F18:1200]|   border: none;
+[F18:1201]|   background: transparent;
+[F18:1202]|   color: rgba(255, 255, 255, 0.3);
+[F18:1203]|   cursor: pointer;
+[F18:1204]|   display: flex;
+[F18:1205]|   align-items: center;
+[F18:1206]|   justify-content: center;
+[F18:1207]|   transition: all 0.2s ease;
+[F18:1208]|   opacity: 0;
+[F18:1209]| }
+[F18:1210]| 
+[F18:1211]| .task-item:hover .reset-work-time-btn {
+[F18:1212]|   opacity: 1;
+[F18:1213]| }
+[F18:1214]| 
+[F18:1215]| .reset-work-time-btn:hover {
+[F18:1216]|   color: #ef4444;
+[F18:1217]|   background: rgba(239, 68, 68, 0.1);
+[F18:1218]| }
+[F18:1219]| 
+[F18:1220]| .task-edit-form {
 [F18:1221]|   display: flex;
-[F18:1222]|   justify-content: space-between;
-[F18:1223]|   padding-top: 10px;
-[F18:1224]|   border-top: 1px solid rgba(255, 255, 255, 0.05);
-[F18:1225]|   margin-top: 8px;
-[F18:1226]| }
-[F18:1227]| 
-[F18:1228]| .footer-stat {
-[F18:1229]|   display: flex;
-[F18:1230]|   align-items: center;
-[F18:1231]|   gap: 6px;
-[F18:1232]|   font-size: 11px;
+[F18:1222]|   flex-direction: column;
+[F18:1223]|   gap: 6px;
+[F18:1224]| }
+[F18:1225]| 
+[F18:1226]| .task-edit-input {
+[F18:1227]|   background: rgba(255, 255, 255, 0.1);
+[F18:1228]|   border: 1px solid rgba(59, 130, 246, 0.5);
+[F18:1229]|   border-radius: 6px;
+[F18:1230]|   padding: 6px 10px;
+[F18:1231]|   font-size: 13px;
+[F18:1232]|   color: rgba(255, 255, 255, 0.9);
 [F18:1233]| }
 [F18:1234]| 
-[F18:1235]| .stat-label {
-[F18:1236]|   color: rgba(255, 255, 255, 0.4);
+[F18:1235]| .task-edit-input:focus {
+[F18:1236]|   outline: none;
 [F18:1237]| }
 [F18:1238]| 
-[F18:1239]| .stat-value {
-[F18:1240]|   color: rgba(255, 255, 255, 0.7);
-[F18:1241]|   font-weight: 500;
-[F18:1242]| }
-[F18:1243]| 
-[F18:1244]| /* Global View */
-[F18:1245]| .global-view-container {
-[F18:1246]|   flex: 1;
-[F18:1247]|   display: flex;
-[F18:1248]|   flex-direction: column;
-[F18:1249]|   min-height: 0;
-[F18:1250]|   background: rgba(0, 0, 0, 0.1);
-[F18:1251]|   border-radius: 10px;
-[F18:1252]|   padding: 12px;
-[F18:1253]|   min-width: 0;
-[F18:1254]| }
-[F18:1255]| 
-[F18:1256]| .global-view-header {
-[F18:1257]|   display: flex;
-[F18:1258]|   align-items: center;
-[F18:1259]|   gap: 10px;
-[F18:1260]|   padding-bottom: 10px;
-[F18:1261]|   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-[F18:1262]| }
-[F18:1263]| 
-[F18:1264]| .back-btn {
-[F18:1265]|   width: 28px;
-[F18:1266]|   height: 28px;
-[F18:1267]|   padding: 0;
-[F18:1268]|   color: rgba(255, 255, 255, 0.6);
-[F18:1269]| }
-[F18:1270]| 
-[F18:1271]| .back-btn:hover {
-[F18:1272]|   color: rgba(255, 255, 255, 0.9);
-[F18:1273]|   background: rgba(255, 255, 255, 0.1);
-[F18:1274]| }
-[F18:1275]| 
-[F18:1276]| .global-view-title {
-[F18:1277]|   display: flex;
-[F18:1278]|   align-items: center;
-[F18:1279]|   gap: 8px;
-[F18:1280]|   font-size: 14px;
-[F18:1281]|   font-weight: 600;
-[F18:1282]|   color: rgba(255, 255, 255, 0.9);
-[F18:1283]| }
-[F18:1284]| 
-[F18:1285]| /* Zone Label in Global View */
-[F18:1286]| .zone-label {
-[F18:1287]|   display: flex;
-[F18:1288]|   align-items: center;
-[F18:1289]|   gap: 8px;
-[F18:1290]|   padding: 6px 10px;
-[F18:1291]|   margin: 4px 0;
-[F18:1292]|   border-radius: 6px;
-[F18:1293]|   border-left: 3px solid;
-[F18:1294]|   font-size: 11px;
-[F18:1295]|   font-weight: 500;
-[F18:1296]| }
-[F18:1297]| 
-[F18:1298]| .zone-label.completed {
-[F18:1299]|   opacity: 0.6;
-[F18:1300]| }
-[F18:1301]| 
-[F18:1302]| .zone-label-dot {
-[F18:1303]|   width: 8px;
-[F18:1304]|   height: 8px;
-[F18:1305]|   border-radius: 50%;
-[F18:1306]| }
-[F18:1307]| 
-[F18:1308]| /* Archive Manager */
-[F18:1309]| .archive-manager-container {
-[F18:1310]|   flex: 1;
-[F18:1311]|   display: flex;
-[F18:1312]|   flex-direction: column;
-[F18:1313]|   min-height: 0;
-[F18:1314]|   background: rgba(0, 0, 0, 0.1);
-[F18:1315]|   border-radius: 10px;
-[F18:1316]|   padding: 12px;
-[F18:1317]| }
-[F18:1318]| 
-[F18:1319]| .archive-manager-header {
-[F18:1320]|   display: flex;
-[F18:1321]|   align-items: center;
-[F18:1322]|   gap: 10px;
-[F18:1323]|   padding-bottom: 10px;
-[F18:1324]|   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-[F18:1325]| }
-[F18:1326]| 
-[F18:1327]| .archive-manager-title {
-[F18:1328]|   display: flex;
-[F18:1329]|   align-items: center;
-[F18:1330]|   gap: 8px;
-[F18:1331]|   font-size: 14px;
-[F18:1332]|   font-weight: 600;
-[F18:1333]|   color: rgba(255, 255, 255, 0.9);
-[F18:1334]| }
-[F18:1335]| 
-[F18:1336]| .archive-actions {
-[F18:1337]|   display: flex;
-[F18:1338]|   gap: 8px;
-[F18:1339]|   padding: 10px 0;
+[F18:1239]| .task-edit-input.description {
+[F18:1240]|   font-size: 12px;
+[F18:1241]| }
+[F18:1242]| 
+[F18:1243]| /* Task Priority */
+[F18:1244]| .task-priority-wrapper {
+[F18:1245]|   position: relative;
+[F18:1246]| }
+[F18:1247]| 
+[F18:1248]| .task-priority {
+[F18:1249]|   display: flex;
+[F18:1250]|   align-items: center;
+[F18:1251]|   gap: 4px;
+[F18:1252]|   padding: 4px 8px;
+[F18:1253]|   border-radius: 6px;
+[F18:1254]|   background: rgba(255, 255, 255, 0.05);
+[F18:1255]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:1256]|   cursor: pointer;
+[F18:1257]|   font-size: 11px;
+[F18:1258]|   font-weight: 500;
+[F18:1259]|   transition: all 0.2s ease;
+[F18:1260]| }
+[F18:1261]| 
+[F18:1262]| .task-priority:hover {
+[F18:1263]|   background: rgba(255, 255, 255, 0.1);
+[F18:1264]| }
+[F18:1265]| 
+[F18:1266]| .priority-menu {
+[F18:1267]|   position: absolute;
+[F18:1268]|   top: 100%;
+[F18:1269]|   right: 0;
+[F18:1270]|   margin-top: 4px;
+[F18:1271]|   background: rgba(35, 35, 45, 0.98);
+[F18:1272]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:1273]|   border-radius: 8px;
+[F18:1274]|   padding: 4px;
+[F18:1275]|   display: flex;
+[F18:1276]|   flex-direction: column;
+[F18:1277]|   gap: 2px;
+[F18:1278]|   z-index: 100;
+[F18:1279]|   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+[F18:1280]|   min-width: 60px;
+[F18:1281]| }
+[F18:1282]| 
+[F18:1283]| .priority-option {
+[F18:1284]|   display: flex;
+[F18:1285]|   align-items: center;
+[F18:1286]|   gap: 6px;
+[F18:1287]|   padding: 6px 10px;
+[F18:1288]|   border-radius: 4px;
+[F18:1289]|   border: 1px solid transparent;
+[F18:1290]|   background: transparent;
+[F18:1291]|   cursor: pointer;
+[F18:1292]|   font-size: 11px;
+[F18:1293]|   font-weight: 500;
+[F18:1294]|   transition: all 0.2s ease;
+[F18:1295]| }
+[F18:1296]| 
+[F18:1297]| .priority-option:hover {
+[F18:1298]|   background: rgba(255, 255, 255, 0.05);
+[F18:1299]| }
+[F18:1300]| 
+[F18:1301]| .priority-option.selected {
+[F18:1302]|   border-color: currentColor;
+[F18:1303]|   background: rgba(255, 255, 255, 0.08);
+[F18:1304]| }
+[F18:1305]| 
+[F18:1306]| /* Task Actions */
+[F18:1307]| .task-actions {
+[F18:1308]|   display: flex;
+[F18:1309]|   gap: 2px;
+[F18:1310]|   opacity: 0;
+[F18:1311]|   transition: opacity 0.2s ease;
+[F18:1312]| }
+[F18:1313]| 
+[F18:1314]| .task-item:hover .task-actions {
+[F18:1315]|   opacity: 1;
+[F18:1316]| }
+[F18:1317]| 
+[F18:1318]| .task-action-btn {
+[F18:1319]|   width: 24px;
+[F18:1320]|   height: 24px;
+[F18:1321]|   padding: 0;
+[F18:1322]|   color: rgba(255, 255, 255, 0.4);
+[F18:1323]| }
+[F18:1324]| 
+[F18:1325]| .task-action-btn:hover {
+[F18:1326]|   color: rgba(255, 255, 255, 0.9);
+[F18:1327]|   background: rgba(255, 255, 255, 0.1);
+[F18:1328]| }
+[F18:1329]| 
+[F18:1330]| .task-action-btn.delete:hover {
+[F18:1331]|   color: #ef4444;
+[F18:1332]|   background: rgba(239, 68, 68, 0.1);
+[F18:1333]| }
+[F18:1334]| 
+[F18:1335]| /* Completed Section */
+[F18:1336]| .completed-section {
+[F18:1337]|   margin-top: 8px;
+[F18:1338]|   padding-top: 8px;
+[F18:1339]|   border-top: 1px solid rgba(255, 255, 255, 0.05);
 [F18:1340]| }
 [F18:1341]| 
-[F18:1342]| .archive-action-btn {
-[F18:1343]|   font-size: 12px;
-[F18:1344]|   color: rgba(255, 255, 255, 0.7);
-[F18:1345]| }
-[F18:1346]| 
-[F18:1347]| .archive-action-btn:hover {
-[F18:1348]|   color: rgba(255, 255, 255, 0.9);
-[F18:1349]|   background: rgba(255, 255, 255, 0.1);
-[F18:1350]| }
-[F18:1351]| 
-[F18:1352]| .archive-list-scroll {
-[F18:1353]|   flex: 1;
-[F18:1354]|   min-height: 0;
-[F18:1355]| }
-[F18:1356]| 
-[F18:1357]| .archive-list {
-[F18:1358]|   display: flex;
-[F18:1359]|   flex-direction: column;
-[F18:1360]|   gap: 8px;
-[F18:1361]| }
-[F18:1362]| 
-[F18:1363]| .archive-item {
-[F18:1364]|   display: flex;
-[F18:1365]|   align-items: center;
-[F18:1366]|   justify-content: space-between;
-[F18:1367]|   padding: 12px;
-[F18:1368]|   background: rgba(255, 255, 255, 0.03);
-[F18:1369]|   border: 1px solid rgba(255, 255, 255, 0.05);
-[F18:1370]|   border-radius: 8px;
-[F18:1371]|   transition: all 0.2s ease;
-[F18:1372]| }
-[F18:1373]| 
-[F18:1374]| .archive-item:hover {
-[F18:1375]|   background: rgba(255, 255, 255, 0.06);
-[F18:1376]|   border-color: rgba(255, 255, 255, 0.1);
-[F18:1377]| }
-[F18:1378]| 
-[F18:1379]| .archive-info {
-[F18:1380]|   display: flex;
-[F18:1381]|   flex-direction: column;
-[F18:1382]|   gap: 4px;
-[F18:1383]| }
-[F18:1384]| 
-[F18:1385]| .archive-name {
-[F18:1386]|   font-size: 13px;
-[F18:1387]|   font-weight: 500;
-[F18:1388]|   color: rgba(255, 255, 255, 0.9);
-[F18:1389]|   cursor: pointer;
-[F18:1390]| }
-[F18:1391]| 
-[F18:1392]| .archive-name:hover {
-[F18:1393]|   color: #60a5fa;
-[F18:1394]| }
-[F18:1395]| 
-[F18:1396]| .archive-date {
-[F18:1397]|   font-size: 11px;
-[F18:1398]|   color: rgba(255, 255, 255, 0.4);
-[F18:1399]| }
-[F18:1400]| 
-[F18:1401]| .archive-stats {
-[F18:1402]|   display: flex;
-[F18:1403]|   gap: 12px;
-[F18:1404]|   font-size: 11px;
-[F18:1405]|   color: rgba(255, 255, 255, 0.5);
+[F18:1342]| .completed-toggle {
+[F18:1343]|   display: flex;
+[F18:1344]|   align-items: center;
+[F18:1345]|   gap: 8px;
+[F18:1346]|   padding: 8px;
+[F18:1347]|   background: transparent;
+[F18:1348]|   border: none;
+[F18:1349]|   color: rgba(255, 255, 255, 0.6);
+[F18:1350]|   font-size: 12px;
+[F18:1351]|   cursor: pointer;
+[F18:1352]|   width: 100%;
+[F18:1353]|   transition: all 0.2s ease;
+[F18:1354]| }
+[F18:1355]| 
+[F18:1356]| .completed-toggle:hover {
+[F18:1357]|   color: rgba(255, 255, 255, 0.8);
+[F18:1358]| }
+[F18:1359]| 
+[F18:1360]| .toggle-arrow {
+[F18:1361]|   margin-left: auto;
+[F18:1362]|   transition: transform 0.2s ease;
+[F18:1363]|   font-size: 10px;
+[F18:1364]| }
+[F18:1365]| 
+[F18:1366]| .toggle-arrow.open {
+[F18:1367]|   transform: rotate(180deg);
+[F18:1368]| }
+[F18:1369]| 
+[F18:1370]| .completed-tasks {
+[F18:1371]|   display: flex;
+[F18:1372]|   flex-direction: column;
+[F18:1373]|   gap: 4px;
+[F18:1374]|   padding-top: 8px;
+[F18:1375]| }
+[F18:1376]| 
+[F18:1377]| .clear-completed-btn {
+[F18:1378]|   margin-top: 8px;
+[F18:1379]|   color: rgba(255, 255, 255, 0.5);
+[F18:1380]|   font-size: 12px;
+[F18:1381]| }
+[F18:1382]| 
+[F18:1383]| .clear-completed-btn:hover {
+[F18:1384]|   color: #ef4444;
+[F18:1385]|   background: rgba(239, 68, 68, 0.1);
+[F18:1386]| }
+[F18:1387]| 
+[F18:1388]| /* Task List Footer */
+[F18:1389]| .task-list-footer {
+[F18:1390]|   display: flex;
+[F18:1391]|   justify-content: space-between;
+[F18:1392]|   padding-top: 10px;
+[F18:1393]|   border-top: 1px solid rgba(255, 255, 255, 0.05);
+[F18:1394]|   margin-top: 8px;
+[F18:1395]| }
+[F18:1396]| 
+[F18:1397]| .footer-stat {
+[F18:1398]|   display: flex;
+[F18:1399]|   align-items: center;
+[F18:1400]|   gap: 6px;
+[F18:1401]|   font-size: 11px;
+[F18:1402]| }
+[F18:1403]| 
+[F18:1404]| .stat-label {
+[F18:1405]|   color: rgba(255, 255, 255, 0.4);
 [F18:1406]| }
 [F18:1407]| 
-[F18:1408]| .archive-actions {
-[F18:1409]|   display: flex;
-[F18:1410]|   gap: 4px;
+[F18:1408]| .stat-value {
+[F18:1409]|   color: rgba(255, 255, 255, 0.7);
+[F18:1410]|   font-weight: 500;
 [F18:1411]| }
 [F18:1412]| 
-[F18:1413]| .archive-action-btn {
-[F18:1414]|   width: 28px;
-[F18:1415]|   height: 28px;
-[F18:1416]|   padding: 0;
-[F18:1417]|   color: rgba(255, 255, 255, 0.4);
-[F18:1418]| }
-[F18:1419]| 
-[F18:1420]| .archive-action-btn.restore:hover {
-[F18:1421]|   color: #22c55e;
-[F18:1422]|   background: rgba(34, 197, 94, 0.1);
+[F18:1413]| /* Global View */
+[F18:1414]| .global-view-container {
+[F18:1415]|   flex: 1;
+[F18:1416]|   display: flex;
+[F18:1417]|   flex-direction: column;
+[F18:1418]|   min-height: 0;
+[F18:1419]|   background: rgba(0, 0, 0, 0.1);
+[F18:1420]|   border-radius: 10px;
+[F18:1421]|   padding: 12px;
+[F18:1422]|   min-width: 0;
 [F18:1423]| }
 [F18:1424]| 
-[F18:1425]| .archive-action-btn.delete:hover {
-[F18:1426]|   color: #ef4444;
-[F18:1427]|   background: rgba(239, 68, 68, 0.1);
-[F18:1428]| }
-[F18:1429]| 
-[F18:1430]| .archive-edit-input {
-[F18:1431]|   background: rgba(255, 255, 255, 0.1);
-[F18:1432]|   border: 1px solid rgba(59, 130, 246, 0.5);
-[F18:1433]|   border-radius: 6px;
-[F18:1434]|   padding: 4px 8px;
-[F18:1435]|   font-size: 13px;
-[F18:1436]|   color: rgba(255, 255, 255, 0.9);
-[F18:1437]|   width: 150px;
+[F18:1425]| .global-view-header {
+[F18:1426]|   display: flex;
+[F18:1427]|   align-items: center;
+[F18:1428]|   gap: 10px;
+[F18:1429]|   padding-bottom: 10px;
+[F18:1430]|   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+[F18:1431]| }
+[F18:1432]| 
+[F18:1433]| .back-btn {
+[F18:1434]|   width: 28px;
+[F18:1435]|   height: 28px;
+[F18:1436]|   padding: 0;
+[F18:1437]|   color: rgba(255, 255, 255, 0.6);
 [F18:1438]| }
 [F18:1439]| 
-[F18:1440]| /* Archive Dialog */
-[F18:1441]| .archive-dialog {
-[F18:1442]|   max-width: 320px;
+[F18:1440]| .back-btn:hover {
+[F18:1441]|   color: rgba(255, 255, 255, 0.9);
+[F18:1442]|   background: rgba(255, 255, 255, 0.1);
 [F18:1443]| }
 [F18:1444]| 
-[F18:1445]| .archive-form {
+[F18:1445]| .global-view-title {
 [F18:1446]|   display: flex;
-[F18:1447]|   flex-direction: column;
-[F18:1448]|   gap: 16px;
-[F18:1449]|   padding: 8px 0;
-[F18:1450]| }
-[F18:1451]| 
-[F18:1452]| .archive-form input {
-[F18:1453]|   background: rgba(255, 255, 255, 0.05);
-[F18:1454]|   border: 1px solid rgba(255, 255, 255, 0.1);
-[F18:1455]|   border-radius: 8px;
-[F18:1456]|   padding: 10px 12px;
-[F18:1457]|   font-size: 13px;
-[F18:1458]|   color: rgba(255, 255, 255, 0.9);
-[F18:1459]| }
-[F18:1460]| 
-[F18:1461]| .archive-form input:focus {
-[F18:1462]|   outline: none;
-[F18:1463]|   border-color: rgba(59, 130, 246, 0.5);
-[F18:1464]| }
-[F18:1465]| 
-[F18:1466]| .archive-form-actions {
-[F18:1467]|   display: flex;
-[F18:1468]|   gap: 8px;
-[F18:1469]|   justify-content: flex-end;
-[F18:1470]| }
-[F18:1471]| 
-[F18:1472]| /* Collapse Button */
-[F18:1473]| .collapse-button {
-[F18:1474]|   position: fixed;
-[F18:1475]|   width: 56px;
-[F18:1476]|   height: 56px;
-[F18:1477]|   border-radius: 50%;
-[F18:1478]|   border: none;
-[F18:1479]|   cursor: pointer;
+[F18:1447]|   align-items: center;
+[F18:1448]|   gap: 8px;
+[F18:1449]|   font-size: 14px;
+[F18:1450]|   font-weight: 600;
+[F18:1451]|   color: rgba(255, 255, 255, 0.9);
+[F18:1452]| }
+[F18:1453]| 
+[F18:1454]| /* Zone Label in Global View */
+[F18:1455]| .zone-label {
+[F18:1456]|   display: flex;
+[F18:1457]|   align-items: center;
+[F18:1458]|   gap: 8px;
+[F18:1459]|   padding: 6px 10px;
+[F18:1460]|   margin: 4px 0;
+[F18:1461]|   border-radius: 6px;
+[F18:1462]|   border-left: 3px solid;
+[F18:1463]|   font-size: 11px;
+[F18:1464]|   font-weight: 500;
+[F18:1465]| }
+[F18:1466]| 
+[F18:1467]| .zone-label.completed {
+[F18:1468]|   opacity: 0.6;
+[F18:1469]| }
+[F18:1470]| 
+[F18:1471]| .zone-label-dot {
+[F18:1472]|   width: 8px;
+[F18:1473]|   height: 8px;
+[F18:1474]|   border-radius: 50%;
+[F18:1475]| }
+[F18:1476]| 
+[F18:1477]| /* Archive Manager */
+[F18:1478]| .archive-manager-container {
+[F18:1479]|   flex: 1;
 [F18:1480]|   display: flex;
-[F18:1481]|   align-items: center;
-[F18:1482]|   justify-content: center;
-[F18:1483]|   box-shadow: 
-[F18:1484]|     0 4px 20px rgba(0, 0, 0, 0.4),
-[F18:1485]|     0 0 0 2px rgba(255, 255, 255, 0.1);
-[F18:1486]|   transition: all 0.2s ease;
-[F18:1487]|   z-index: 9999;
-[F18:1488]| }
-[F18:1489]| 
-[F18:1490]| .collapse-button:hover {
-[F18:1491]|   transform: scale(1.05);
-[F18:1492]|   box-shadow: 
-[F18:1493]|     0 6px 24px rgba(0, 0, 0, 0.5),
-[F18:1494]|     0 0 0 2px rgba(255, 255, 255, 0.2);
-[F18:1495]| }
-[F18:1496]| 
-[F18:1497]| .collapse-button.dragging {
-[F18:1498]|   cursor: grabbing;
-[F18:1499]|   transform: scale(1.1);
-[F18:1500]| }
-[F18:1501]| 
-[F18:1502]| .collapse-button-content {
-[F18:1503]|   position: relative;
-[F18:1504]|   display: flex;
-[F18:1505]|   align-items: center;
-[F18:1506]|   justify-content: center;
-[F18:1507]| }
-[F18:1508]| 
-[F18:1509]| .collapse-icon {
-[F18:1510]|   color: white;
-[F18:1511]| }
-[F18:1512]| 
-[F18:1513]| .collapse-icon.pulse {
-[F18:1514]|   animation: pulse 1.5s ease-in-out infinite;
-[F18:1515]| }
-[F18:1516]| 
-[F18:1517]| @keyframes pulse {
-[F18:1518]|   0%, 100% { opacity: 1; }
-[F18:1519]|   50% { opacity: 0.6; }
-[F18:1520]| }
-[F18:1521]| 
-[F18:1522]| .collapse-badge {
-[F18:1523]|   position: absolute;
-[F18:1524]|   top: -8px;
-[F18:1525]|   right: -8px;
-[F18:1526]|   min-width: 18px;
-[F18:1527]|   height: 18px;
-[F18:1528]|   padding: 0 5px;
-[F18:1529]|   border-radius: 9px;
-[F18:1530]|   background: #ef4444;
-[F18:1531]|   color: white;
-[F18:1532]|   font-size: 11px;
-[F18:1533]|   font-weight: 600;
-[F18:1534]|   display: flex;
-[F18:1535]|   align-items: center;
-[F18:1536]|   justify-content: center;
-[F18:1537]|   box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
-[F18:1538]| }
-[F18:1539]| 
-[F18:1540]| .collapse-button-hint {
-[F18:1541]|   position: absolute;
-[F18:1542]|   bottom: -4px;
-[F18:1543]|   right: -4px;
-[F18:1544]|   width: 16px;
-[F18:1545]|   height: 16px;
-[F18:1546]|   border-radius: 50%;
-[F18:1547]|   background: rgba(0, 0, 0, 0.5);
-[F18:1548]|   display: flex;
-[F18:1549]|   align-items: center;
-[F18:1550]|   justify-content: center;
-[F18:1551]|   color: rgba(255, 255, 255, 0.6);
+[F18:1481]|   flex-direction: column;
+[F18:1482]|   min-height: 0;
+[F18:1483]|   background: rgba(0, 0, 0, 0.1);
+[F18:1484]|   border-radius: 10px;
+[F18:1485]|   padding: 12px;
+[F18:1486]| }
+[F18:1487]| 
+[F18:1488]| .archive-manager-header {
+[F18:1489]|   display: flex;
+[F18:1490]|   align-items: center;
+[F18:1491]|   gap: 10px;
+[F18:1492]|   padding-bottom: 10px;
+[F18:1493]|   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+[F18:1494]| }
+[F18:1495]| 
+[F18:1496]| .archive-manager-title {
+[F18:1497]|   display: flex;
+[F18:1498]|   align-items: center;
+[F18:1499]|   gap: 8px;
+[F18:1500]|   font-size: 14px;
+[F18:1501]|   font-weight: 600;
+[F18:1502]|   color: rgba(255, 255, 255, 0.9);
+[F18:1503]| }
+[F18:1504]| 
+[F18:1505]| .archive-actions {
+[F18:1506]|   display: flex;
+[F18:1507]|   gap: 8px;
+[F18:1508]|   padding: 10px 0;
+[F18:1509]| }
+[F18:1510]| 
+[F18:1511]| .archive-action-btn {
+[F18:1512]|   font-size: 12px;
+[F18:1513]|   color: rgba(255, 255, 255, 0.7);
+[F18:1514]| }
+[F18:1515]| 
+[F18:1516]| .archive-action-btn:hover {
+[F18:1517]|   color: rgba(255, 255, 255, 0.9);
+[F18:1518]|   background: rgba(255, 255, 255, 0.1);
+[F18:1519]| }
+[F18:1520]| 
+[F18:1521]| .archive-list-scroll {
+[F18:1522]|   flex: 1;
+[F18:1523]|   min-height: 0;
+[F18:1524]| }
+[F18:1525]| 
+[F18:1526]| .archive-list {
+[F18:1527]|   display: flex;
+[F18:1528]|   flex-direction: column;
+[F18:1529]|   gap: 8px;
+[F18:1530]| }
+[F18:1531]| 
+[F18:1532]| .archive-item {
+[F18:1533]|   display: flex;
+[F18:1534]|   align-items: center;
+[F18:1535]|   justify-content: space-between;
+[F18:1536]|   padding: 12px;
+[F18:1537]|   background: rgba(255, 255, 255, 0.03);
+[F18:1538]|   border: 1px solid rgba(255, 255, 255, 0.05);
+[F18:1539]|   border-radius: 8px;
+[F18:1540]|   transition: all 0.2s ease;
+[F18:1541]| }
+[F18:1542]| 
+[F18:1543]| .archive-item:hover {
+[F18:1544]|   background: rgba(255, 255, 255, 0.06);
+[F18:1545]|   border-color: rgba(255, 255, 255, 0.1);
+[F18:1546]| }
+[F18:1547]| 
+[F18:1548]| .archive-info {
+[F18:1549]|   display: flex;
+[F18:1550]|   flex-direction: column;
+[F18:1551]|   gap: 4px;
 [F18:1552]| }
 [F18:1553]| 
-[F18:1554]| /* ============================================
-[F18:1555]|    Collapse Float - 方形半透明磨砂玻璃风格小浮窗
-[F18:1556]|    ============================================ */
-[F18:1557]| 
-[F18:1558]| .collapse-float {
-[F18:1559]|   display: flex;
-[F18:1560]|   align-items: center;
-[F18:1561]|   justify-content: space-between;
-[F18:1562]|   padding: 0 12px;
-[F18:1563]|   background: rgba(25, 25, 35, 0.5);
-[F18:1564]|   backdrop-filter: blur(20px);
-[F18:1565]|   -webkit-backdrop-filter: blur(20px);
-[F18:1566]|   border: 1px solid rgba(255, 255, 255, 0.15);
-[F18:1567]|   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
-[F18:1568]|   cursor: move;
-[F18:1569]|   user-select: none;
-[F18:1570]|   overflow: hidden;
-[F18:1571]| }
-[F18:1572]| 
-[F18:1573]| .collapse-float:hover {
-[F18:1574]|   box-shadow:
-[F18:1575]|     0 12px 40px rgba(0, 0, 0, 0.5),
-[F18:1576]|     0 0 0 1px rgba(255, 255, 255, 0.1),
-[F18:1577]|     0 0 20px rgba(var(--accent-color, 99, 102, 241), 0.2);
-[F18:1578]| }
-[F18:1579]| 
-[F18:1580]| .collapse-float.dragging {
-[F18:1581]|   cursor: grabbing;
-[F18:1582]|   transform: scale(1.02);
-[F18:1583]| }
-[F18:1584]| 
-[F18:1585]| /* 展开提示 */
-[F18:1586]| .float-expand-hint {
-[F18:1587]|   position: absolute;
-[F18:1588]|   top: -8px;
-[F18:1589]|   left: 50%;
-[F18:1590]|   transform: translateX(-50%);
-[F18:1591]|   width: 24px;
-[F18:1592]|   height: 16px;
-[F18:1593]|   background: rgba(25, 25, 35, 0.5);
-[F18:1594]|   border-radius: 0 0 8px 8px;
-[F18:1595]|   display: flex;
-[F18:1596]|   align-items: center;
-[F18:1597]|   justify-content: center;
-[F18:1598]|   color: rgba(255, 255, 255, 0.5);
-[F18:1599]| }
-[F18:1600]| 
-[F18:1601]| /* 左侧：任务信息 */
-[F18:1602]| .float-task-info {
-[F18:1603]|   flex: 1;
-[F18:1604]|   display: flex;
-[F18:1605]|   align-items: center;
-[F18:1606]|   gap: 8px;
-[F18:1607]|   min-width: 0;
-[F18:1608]| }
-[F18:1609]| 
-[F18:1610]| .float-task-title {
-[F18:1611]|   font-size: 13px;
-[F18:1612]|   font-weight: 500;
-[F18:1613]|   color: rgba(255, 255, 255, 0.9);
-[F18:1614]|   white-space: nowrap;
-[F18:1615]|   overflow: hidden;
-[F18:1616]|   text-overflow: ellipsis;
-[F18:1617]|   max-width: 100px;
-[F18:1618]| }
-[F18:1619]| 
-[F18:1620]| .float-task-badge {
-[F18:1621]|   min-width: 18px;
-[F18:1622]|   height: 18px;
-[F18:1623]|   padding: 0 5px;
-[F18:1624]|   border-radius: 9px;
-[F18:1625]|   background: rgba(239, 68, 68, 0.8);
-[F18:1626]|   color: white;
-[F18:1627]|   font-size: 11px;
-[F18:1628]|   font-weight: 600;
-[F18:1629]|   display: flex;
-[F18:1630]|   align-items: center;
-[F18:1631]|   justify-content: center;
-[F18:1632]| }
-[F18:1633]| 
-[F18:1634]| /* 中间：计时器 */
-[F18:1635]| .float-timer {
+[F18:1554]| .archive-name {
+[F18:1555]|   font-size: 13px;
+[F18:1556]|   font-weight: 500;
+[F18:1557]|   color: rgba(255, 255, 255, 0.9);
+[F18:1558]|   cursor: pointer;
+[F18:1559]| }
+[F18:1560]| 
+[F18:1561]| .archive-name:hover {
+[F18:1562]|   color: #60a5fa;
+[F18:1563]| }
+[F18:1564]| 
+[F18:1565]| .archive-date {
+[F18:1566]|   font-size: 11px;
+[F18:1567]|   color: rgba(255, 255, 255, 0.4);
+[F18:1568]| }
+[F18:1569]| 
+[F18:1570]| .archive-stats {
+[F18:1571]|   display: flex;
+[F18:1572]|   gap: 12px;
+[F18:1573]|   font-size: 11px;
+[F18:1574]|   color: rgba(255, 255, 255, 0.5);
+[F18:1575]| }
+[F18:1576]| 
+[F18:1577]| .archive-actions {
+[F18:1578]|   display: flex;
+[F18:1579]|   gap: 4px;
+[F18:1580]| }
+[F18:1581]| 
+[F18:1582]| .archive-action-btn {
+[F18:1583]|   width: 28px;
+[F18:1584]|   height: 28px;
+[F18:1585]|   padding: 0;
+[F18:1586]|   color: rgba(255, 255, 255, 0.4);
+[F18:1587]| }
+[F18:1588]| 
+[F18:1589]| .archive-action-btn.restore:hover {
+[F18:1590]|   color: #22c55e;
+[F18:1591]|   background: rgba(34, 197, 94, 0.1);
+[F18:1592]| }
+[F18:1593]| 
+[F18:1594]| .archive-action-btn.delete:hover {
+[F18:1595]|   color: #ef4444;
+[F18:1596]|   background: rgba(239, 68, 68, 0.1);
+[F18:1597]| }
+[F18:1598]| 
+[F18:1599]| .archive-edit-input {
+[F18:1600]|   background: rgba(255, 255, 255, 0.1);
+[F18:1601]|   border: 1px solid rgba(59, 130, 246, 0.5);
+[F18:1602]|   border-radius: 6px;
+[F18:1603]|   padding: 4px 8px;
+[F18:1604]|   font-size: 13px;
+[F18:1605]|   color: rgba(255, 255, 255, 0.9);
+[F18:1606]|   width: 150px;
+[F18:1607]| }
+[F18:1608]| 
+[F18:1609]| /* Archive Dialog */
+[F18:1610]| .archive-dialog {
+[F18:1611]|   max-width: 320px;
+[F18:1612]| }
+[F18:1613]| 
+[F18:1614]| .archive-form {
+[F18:1615]|   display: flex;
+[F18:1616]|   flex-direction: column;
+[F18:1617]|   gap: 16px;
+[F18:1618]|   padding: 8px 0;
+[F18:1619]| }
+[F18:1620]| 
+[F18:1621]| .archive-form input {
+[F18:1622]|   background: rgba(255, 255, 255, 0.05);
+[F18:1623]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:1624]|   border-radius: 8px;
+[F18:1625]|   padding: 10px 12px;
+[F18:1626]|   font-size: 13px;
+[F18:1627]|   color: rgba(255, 255, 255, 0.9);
+[F18:1628]| }
+[F18:1629]| 
+[F18:1630]| .archive-form input:focus {
+[F18:1631]|   outline: none;
+[F18:1632]|   border-color: rgba(59, 130, 246, 0.5);
+[F18:1633]| }
+[F18:1634]| 
+[F18:1635]| .archive-form-actions {
 [F18:1636]|   display: flex;
-[F18:1637]|   align-items: center;
-[F18:1638]|   gap: 6px;
-[F18:1639]|   padding: 6px 12px;
-[F18:1640]|   background: rgba(0, 0, 0, 0.3);
-[F18:1641]|   border-radius: 8px;
-[F18:1642]| }
-[F18:1643]| 
-[F18:1644]| .float-timer-icon {
-[F18:1645]|   color: var(--accent-color, #6366f1);
-[F18:1646]| }
-[F18:1647]| 
-[F18:1648]| .float-timer-text {
-[F18:1649]|   font-size: 18px;
-[F18:1650]|   font-weight: 600;
-[F18:1651]|   font-variant-numeric: tabular-nums;
-[F18:1652]|   color: rgba(255, 255, 255, 0.95);
-[F18:1653]|   font-family: 'SF Mono', Monaco, monospace;
-[F18:1654]| }
-[F18:1655]| 
-[F18:1656]| /* 右侧：操作按钮 */
-[F18:1657]| .float-action-area {
-[F18:1658]|   display: flex;
-[F18:1659]|   align-items: center;
-[F18:1660]|   gap: 6px;
-[F18:1661]| }
-[F18:1662]| 
-[F18:1663]| .float-action-btn {
-[F18:1664]|   width: 32px;
-[F18:1665]|   height: 32px;
-[F18:1666]|   border-radius: 8px;
-[F18:1667]|   border: none;
-[F18:1668]|   background: rgba(255, 255, 255, 0.1);
-[F18:1669]|   color: rgba(255, 255, 255, 0.8);
-[F18:1670]|   cursor: pointer;
-[F18:1671]|   display: flex;
-[F18:1672]|   align-items: center;
-[F18:1673]|   justify-content: center;
-[F18:1674]|   transition: all 0.2s ease;
-[F18:1675]| }
-[F18:1676]| 
-[F18:1677]| .float-action-btn:hover {
-[F18:1678]|   background: rgba(255, 255, 255, 0.2);
-[F18:1679]|   color: rgba(255, 255, 255, 1);
+[F18:1637]|   gap: 8px;
+[F18:1638]|   justify-content: flex-end;
+[F18:1639]| }
+[F18:1640]| 
+[F18:1641]| /* Collapse Button */
+[F18:1642]| .collapse-button {
+[F18:1643]|   position: fixed;
+[F18:1644]|   width: 56px;
+[F18:1645]|   height: 56px;
+[F18:1646]|   border-radius: 50%;
+[F18:1647]|   border: none;
+[F18:1648]|   cursor: pointer;
+[F18:1649]|   display: flex;
+[F18:1650]|   align-items: center;
+[F18:1651]|   justify-content: center;
+[F18:1652]|   box-shadow: 
+[F18:1653]|     0 4px 20px rgba(0, 0, 0, 0.4),
+[F18:1654]|     0 0 0 2px rgba(255, 255, 255, 0.1);
+[F18:1655]|   transition: all 0.2s ease;
+[F18:1656]|   z-index: 9999;
+[F18:1657]| }
+[F18:1658]| 
+[F18:1659]| .collapse-button:hover {
+[F18:1660]|   transform: scale(1.05);
+[F18:1661]|   box-shadow: 
+[F18:1662]|     0 6px 24px rgba(0, 0, 0, 0.5),
+[F18:1663]|     0 0 0 2px rgba(255, 255, 255, 0.2);
+[F18:1664]| }
+[F18:1665]| 
+[F18:1666]| .collapse-button.dragging {
+[F18:1667]|   cursor: grabbing;
+[F18:1668]|   transform: scale(1.1);
+[F18:1669]| }
+[F18:1670]| 
+[F18:1671]| .collapse-button-content {
+[F18:1672]|   position: relative;
+[F18:1673]|   display: flex;
+[F18:1674]|   align-items: center;
+[F18:1675]|   justify-content: center;
+[F18:1676]| }
+[F18:1677]| 
+[F18:1678]| .collapse-icon {
+[F18:1679]|   color: white;
 [F18:1680]| }
 [F18:1681]| 
-[F18:1682]| .float-action-btn.running {
-[F18:1683]|   background: rgba(239, 68, 68, 0.2);
-[F18:1684]|   color: #f87171;
-[F18:1685]| }
-[F18:1686]| 
-[F18:1687]| .float-action-btn.running:hover {
-[F18:1688]|   background: rgba(239, 68, 68, 0.3);
+[F18:1682]| .collapse-icon.pulse {
+[F18:1683]|   animation: pulse 1.5s ease-in-out infinite;
+[F18:1684]| }
+[F18:1685]| 
+[F18:1686]| @keyframes pulse {
+[F18:1687]|   0%, 100% { opacity: 1; }
+[F18:1688]|   50% { opacity: 0.6; }
 [F18:1689]| }
 [F18:1690]| 
-[F18:1691]| .float-action-btn.expand {
-[F18:1692]|   background: rgba(99, 102, 241, 0.5);
-[F18:1693]|   color: #818cf8;
-[F18:1694]| }
-[F18:1695]| 
-[F18:1696]| .float-action-btn.expand:hover {
-[F18:1697]|   background: rgba(99, 102, 241, 0.8);
-[F18:1698]| }
-[F18:1699]| 
-[F18:1700]| /* 独立浮动球窗口样式 */
-[F18:1701]| .float-ball {
-[F18:1702]|   width: 100vw;
-[F18:1703]|   height: 100vh;
-[F18:1704]|   border-radius: 16px;
-[F18:1705]|   background: rgba(25, 25, 35, 0.85);
-[F18:1706]|   backdrop-filter: blur(20px);
-[F18:1707]|   -webkit-backdrop-filter: blur(20px);
-[F18:1708]|   border: 1px solid rgba(255, 255, 255, 0.15);
-[F18:1709]|   box-shadow:
-[F18:1710]|     0 8px 32px rgba(0, 0, 0, 0.4),
-[F18:1711]|     0 0 0 1px rgba(255, 255, 255, 0.05);
-[F18:1712]|   cursor: move;
-[F18:1713]|   display: flex;
-[F18:1714]|   align-items: center;
-[F18:1715]|   padding: 0 16px;
-[F18:1716]|   gap: 12px;
-[F18:1717]|   transition: transform 0.1s ease, box-shadow 0.2s ease;
-[F18:1718]|   user-select: none;
-[F18:1719]| }
-[F18:1720]| 
-[F18:1721]| .float-ball-window-container {
-[F18:1722]|   width: 100vw;
-[F18:1723]|   height: 100vh;
-[F18:1724]|   display: flex;
-[F18:1725]|   align-items: center;
-[F18:1726]|   justify-content: center;
-[F18:1727]|   background: transparent;
-[F18:1728]| }
-[F18:1729]| 
-[F18:1730]| .loading-text {
-[F18:1731]|   color: rgba(255, 255, 255, 0.5);
-[F18:1732]|   font-size: 14px;
-[F18:1733]| }
-[F18:1734]| 
-[F18:1735]| /* Loading Screen */
-[F18:1736]| .loading-screen {
-[F18:1737]|   display: flex;
-[F18:1738]|   flex-direction: column;
-[F18:1739]|   align-items: center;
-[F18:1740]|   justify-content: center;
-[F18:1741]|   height: 100vh;
-[F18:1742]|   gap: 16px;
-[F18:1743]|   color: rgba(255, 255, 255, 0.6);
-[F18:1744]|   font-size: 14px;
-[F18:1745]| }
-[F18:1746]| 
-[F18:1747]| .loading-spinner {
-[F18:1748]|   width: 32px;
-[F18:1749]|   height: 32px;
-[F18:1750]|   border: 2px solid rgba(255, 255, 255, 0.1);
-[F18:1751]|   border-top-color: #3b82f6;
-[F18:1752]|   border-radius: 50%;
-[F18:1753]|   animation: spin 1s linear infinite;
-[F18:1754]| }
-[F18:1755]| 
-[F18:1756]| @keyframes spin {
-[F18:1757]|   to { transform: rotate(360deg); }
-[F18:1758]| }
-[F18:1759]| 
-[F18:1760]| /* Scrollbar Styling */
-[F18:1761]| ::-webkit-scrollbar {
-[F18:1762]|   width: 4px;
-[F18:1763]| }
-[F18:1764]| 
-[F18:1765]| ::-webkit-scrollbar-track {
-[F18:1766]|   background: transparent;
-[F18:1767]| }
-[F18:1768]| 
-[F18:1769]| ::-webkit-scrollbar-thumb {
-[F18:1770]|   background: rgba(255, 255, 255, 0.15);
-[F18:1771]|   border-radius: 2px;
-[F18:1772]| }
-[F18:1773]| 
-[F18:1774]| ::-webkit-scrollbar-thumb:hover {
-[F18:1775]|   background: rgba(255, 255, 255, 0.25);
-[F18:1776]| }
-[F18:1777]| 
-[F18:1778]| /* Selection */
-[F18:1779]| ::selection {
-[F18:1780]|   background: rgba(59, 130, 246, 0.3);
-[F18:1781]|   color: white;
-[F18:1782]| }
-[F18:1783]| 
-[F18:1784]| /* Settings Panel */
-[F18:1785]| .settings-panel-container {
-[F18:1786]|   flex: 1;
-[F18:1787]|   display: flex;
-[F18:1788]|   flex-direction: column;
-[F18:1789]|   min-height: 0;
-[F18:1790]|   background: rgba(0, 0, 0, 0.1);
-[F18:1791]|   border-radius: 10px;
-[F18:1792]|   padding: 12px;
-[F18:1793]| }
-[F18:1794]| 
-[F18:1795]| .settings-panel-header {
-[F18:1796]|   display: flex;
-[F18:1797]|   align-items: center;
-[F18:1798]|   gap: 10px;
-[F18:1799]|   padding-bottom: 10px;
-[F18:1800]|   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+[F18:1691]| .collapse-badge {
+[F18:1692]|   position: absolute;
+[F18:1693]|   top: -8px;
+[F18:1694]|   right: -8px;
+[F18:1695]|   min-width: 18px;
+[F18:1696]|   height: 18px;
+[F18:1697]|   padding: 0 5px;
+[F18:1698]|   border-radius: 9px;
+[F18:1699]|   background: #ef4444;
+[F18:1700]|   color: white;
+[F18:1701]|   font-size: 11px;
+[F18:1702]|   font-weight: 600;
+[F18:1703]|   display: flex;
+[F18:1704]|   align-items: center;
+[F18:1705]|   justify-content: center;
+[F18:1706]|   box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+[F18:1707]| }
+[F18:1708]| 
+[F18:1709]| .collapse-button-hint {
+[F18:1710]|   position: absolute;
+[F18:1711]|   bottom: -4px;
+[F18:1712]|   right: -4px;
+[F18:1713]|   width: 16px;
+[F18:1714]|   height: 16px;
+[F18:1715]|   border-radius: 50%;
+[F18:1716]|   background: rgba(0, 0, 0, 0.5);
+[F18:1717]|   display: flex;
+[F18:1718]|   align-items: center;
+[F18:1719]|   justify-content: center;
+[F18:1720]|   color: rgba(255, 255, 255, 0.6);
+[F18:1721]| }
+[F18:1722]| 
+[F18:1723]| /* ============================================
+[F18:1724]|    Collapse Float - 方形半透明磨砂玻璃风格小浮窗
+[F18:1725]|    ============================================ */
+[F18:1726]| 
+[F18:1727]| .collapse-float {
+[F18:1728]|   display: flex;
+[F18:1729]|   align-items: center;
+[F18:1730]|   justify-content: space-between;
+[F18:1731]|   padding: 0 12px;
+[F18:1732]|   background: rgba(25, 25, 35, 0.5);
+[F18:1733]|   backdrop-filter: blur(20px);
+[F18:1734]|   -webkit-backdrop-filter: blur(20px);
+[F18:1735]|   border: 1px solid rgba(255, 255, 255, 0.15);
+[F18:1736]|   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
+[F18:1737]|   cursor: move;
+[F18:1738]|   user-select: none;
+[F18:1739]|   overflow: hidden;
+[F18:1740]| }
+[F18:1741]| 
+[F18:1742]| .collapse-float:hover {
+[F18:1743]|   box-shadow:
+[F18:1744]|     0 12px 40px rgba(0, 0, 0, 0.5),
+[F18:1745]|     0 0 0 1px rgba(255, 255, 255, 0.1),
+[F18:1746]|     0 0 20px rgba(var(--accent-color, 99, 102, 241), 0.2);
+[F18:1747]| }
+[F18:1748]| 
+[F18:1749]| .collapse-float.dragging {
+[F18:1750]|   cursor: grabbing;
+[F18:1751]|   transform: scale(1.02);
+[F18:1752]| }
+[F18:1753]| 
+[F18:1754]| /* 展开提示 */
+[F18:1755]| .float-expand-hint {
+[F18:1756]|   position: absolute;
+[F18:1757]|   top: -8px;
+[F18:1758]|   left: 50%;
+[F18:1759]|   transform: translateX(-50%);
+[F18:1760]|   width: 24px;
+[F18:1761]|   height: 16px;
+[F18:1762]|   background: rgba(25, 25, 35, 0.5);
+[F18:1763]|   border-radius: 0 0 8px 8px;
+[F18:1764]|   display: flex;
+[F18:1765]|   align-items: center;
+[F18:1766]|   justify-content: center;
+[F18:1767]|   color: rgba(255, 255, 255, 0.5);
+[F18:1768]| }
+[F18:1769]| 
+[F18:1770]| /* 左侧：任务信息 */
+[F18:1771]| .float-task-info {
+[F18:1772]|   flex: 1;
+[F18:1773]|   display: flex;
+[F18:1774]|   align-items: center;
+[F18:1775]|   gap: 8px;
+[F18:1776]|   min-width: 0;
+[F18:1777]| }
+[F18:1778]| 
+[F18:1779]| .float-task-title {
+[F18:1780]|   font-size: 13px;
+[F18:1781]|   font-weight: 500;
+[F18:1782]|   color: rgba(255, 255, 255, 0.9);
+[F18:1783]|   white-space: nowrap;
+[F18:1784]|   overflow: hidden;
+[F18:1785]|   text-overflow: ellipsis;
+[F18:1786]|   max-width: 100px;
+[F18:1787]| }
+[F18:1788]| 
+[F18:1789]| .float-task-badge {
+[F18:1790]|   min-width: 18px;
+[F18:1791]|   height: 18px;
+[F18:1792]|   padding: 0 5px;
+[F18:1793]|   border-radius: 9px;
+[F18:1794]|   background: rgba(239, 68, 68, 0.8);
+[F18:1795]|   color: white;
+[F18:1796]|   font-size: 11px;
+[F18:1797]|   font-weight: 600;
+[F18:1798]|   display: flex;
+[F18:1799]|   align-items: center;
+[F18:1800]|   justify-content: center;
 [F18:1801]| }
 [F18:1802]| 
-[F18:1803]| .settings-panel-title {
-[F18:1804]|   display: flex;
-[F18:1805]|   align-items: center;
-[F18:1806]|   gap: 8px;
-[F18:1807]|   font-size: 14px;
-[F18:1808]|   font-weight: 600;
-[F18:1809]|   color: rgba(255, 255, 255, 0.9);
-[F18:1810]| }
-[F18:1811]| 
-[F18:1812]| .settings-content {
-[F18:1813]|   flex: 1;
-[F18:1814]|   overflow-y: auto;
-[F18:1815]|   padding: 8px 0;
-[F18:1816]| }
-[F18:1817]| 
-[F18:1818]| .settings-section {
-[F18:1819]|   margin-bottom: 20px;
-[F18:1820]| }
-[F18:1821]| 
-[F18:1822]| .settings-section-title {
-[F18:1823]|   display: flex;
-[F18:1824]|   align-items: center;
-[F18:1825]|   font-size: 12px;
-[F18:1826]|   font-weight: 600;
-[F18:1827]|   color: rgba(255, 255, 255, 0.7);
-[F18:1828]|   margin-bottom: 12px;
-[F18:1829]|   padding-bottom: 8px;
-[F18:1830]|   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-[F18:1831]| }
-[F18:1832]| 
-[F18:1833]| .setting-item {
-[F18:1834]|   margin-bottom: 16px;
-[F18:1835]| }
-[F18:1836]| 
-[F18:1837]| .setting-item.switch {
-[F18:1838]|   display: flex;
-[F18:1839]|   align-items: center;
-[F18:1840]|   justify-content: space-between;
-[F18:1841]| }
-[F18:1842]| 
-[F18:1843]| .setting-label {
-[F18:1844]|   display: flex;
-[F18:1845]|   align-items: center;
-[F18:1846]|   justify-content: space-between;
-[F18:1847]|   margin-bottom: 8px;
-[F18:1848]| }
-[F18:1849]| 
-[F18:1850]| .setting-item.switch .setting-label {
-[F18:1851]|   flex-direction: column;
-[F18:1852]|   align-items: flex-start;
-[F18:1853]|   margin-bottom: 0;
+[F18:1803]| /* 中间：计时器 */
+[F18:1804]| .float-timer {
+[F18:1805]|   display: flex;
+[F18:1806]|   align-items: center;
+[F18:1807]|   gap: 6px;
+[F18:1808]|   padding: 6px 12px;
+[F18:1809]|   background: rgba(0, 0, 0, 0.3);
+[F18:1810]|   border-radius: 8px;
+[F18:1811]| }
+[F18:1812]| 
+[F18:1813]| .float-timer-icon {
+[F18:1814]|   color: var(--accent-color, #6366f1);
+[F18:1815]| }
+[F18:1816]| 
+[F18:1817]| .float-timer-text {
+[F18:1818]|   font-size: 18px;
+[F18:1819]|   font-weight: 600;
+[F18:1820]|   font-variant-numeric: tabular-nums;
+[F18:1821]|   color: rgba(255, 255, 255, 0.95);
+[F18:1822]|   font-family: 'SF Mono', Monaco, monospace;
+[F18:1823]| }
+[F18:1824]| 
+[F18:1825]| /* 右侧：操作按钮 */
+[F18:1826]| .float-action-area {
+[F18:1827]|   display: flex;
+[F18:1828]|   align-items: center;
+[F18:1829]|   gap: 6px;
+[F18:1830]| }
+[F18:1831]| 
+[F18:1832]| .float-action-btn {
+[F18:1833]|   width: 32px;
+[F18:1834]|   height: 32px;
+[F18:1835]|   border-radius: 8px;
+[F18:1836]|   border: none;
+[F18:1837]|   background: rgba(255, 255, 255, 0.1);
+[F18:1838]|   color: rgba(255, 255, 255, 0.8);
+[F18:1839]|   cursor: pointer;
+[F18:1840]|   display: flex;
+[F18:1841]|   align-items: center;
+[F18:1842]|   justify-content: center;
+[F18:1843]|   transition: all 0.2s ease;
+[F18:1844]| }
+[F18:1845]| 
+[F18:1846]| .float-action-btn:hover {
+[F18:1847]|   background: rgba(255, 255, 255, 0.2);
+[F18:1848]|   color: rgba(255, 255, 255, 1);
+[F18:1849]| }
+[F18:1850]| 
+[F18:1851]| .float-action-btn.running {
+[F18:1852]|   background: rgba(239, 68, 68, 0.2);
+[F18:1853]|   color: #f87171;
 [F18:1854]| }
 [F18:1855]| 
-[F18:1856]| .setting-label span:first-child {
-[F18:1857]|   font-size: 13px;
-[F18:1858]|   color: rgba(255, 255, 255, 0.85);
-[F18:1859]| }
-[F18:1860]| 
-[F18:1861]| .setting-value {
-[F18:1862]|   font-size: 12px;
-[F18:1863]|   color: #60a5fa;
-[F18:1864]|   font-weight: 500;
-[F18:1865]| }
-[F18:1866]| 
-[F18:1867]| .setting-desc {
-[F18:1868]|   font-size: 11px;
-[F18:1869]|   color: rgba(255, 255, 255, 0.4);
-[F18:1870]|   margin-top: 2px;
-[F18:1871]| }
-[F18:1872]| 
-[F18:1873]| .setting-slider {
-[F18:1874]|   width: 100%;
-[F18:1875]| }
-[F18:1876]| 
-[F18:1877]| .settings-footer {
-[F18:1878]|   padding-top: 12px;
-[F18:1879]|   border-top: 1px solid rgba(255, 255, 255, 0.05);
-[F18:1880]| }
-[F18:1881]| 
-[F18:1882]| .reset-btn {
-[F18:1883]|   font-size: 12px;
-[F18:1884]|   color: rgba(255, 255, 255, 0.5);
-[F18:1885]| }
-[F18:1886]| 
-[F18:1887]| .reset-btn:hover {
-[F18:1888]|   color: rgba(255, 255, 255, 0.8);
-[F18:1889]| }
-[F18:1890]| 
-[F18:1891]| /* ============================================
-[F18:1892]|    History Manager Styles (问题1&2)
-[F18:1893]|    ============================================ */
-[F18:1894]| 
-[F18:1895]| .history-manager-container {
-[F18:1896]|   display: flex;
-[F18:1897]|   flex-direction: column;
-[F18:1898]|   height: 100%;
-[F18:1899]|   padding: 12px;
-[F18:1900]|   gap: 12px;
-[F18:1901]|   background: transparent;
+[F18:1856]| .float-action-btn.running:hover {
+[F18:1857]|   background: rgba(239, 68, 68, 0.3);
+[F18:1858]| }
+[F18:1859]| 
+[F18:1860]| .float-action-btn.expand {
+[F18:1861]|   background: rgba(99, 102, 241, 0.5);
+[F18:1862]|   color: #818cf8;
+[F18:1863]| }
+[F18:1864]| 
+[F18:1865]| .float-action-btn.expand:hover {
+[F18:1866]|   background: rgba(99, 102, 241, 0.8);
+[F18:1867]| }
+[F18:1868]| 
+[F18:1869]| /* 独立浮动球窗口样式 */
+[F18:1870]| .float-ball {
+[F18:1871]|   width: 100vw;
+[F18:1872]|   height: 100vh;
+[F18:1873]|   border-radius: 16px;
+[F18:1874]|   background: rgba(25, 25, 35, 0.85);
+[F18:1875]|   backdrop-filter: blur(20px);
+[F18:1876]|   -webkit-backdrop-filter: blur(20px);
+[F18:1877]|   border: 1px solid rgba(255, 255, 255, 0.15);
+[F18:1878]|   box-shadow:
+[F18:1879]|     0 8px 32px rgba(0, 0, 0, 0.4),
+[F18:1880]|     0 0 0 1px rgba(255, 255, 255, 0.05);
+[F18:1881]|   cursor: move;
+[F18:1882]|   display: flex;
+[F18:1883]|   align-items: center;
+[F18:1884]|   padding: 0 16px;
+[F18:1885]|   gap: 12px;
+[F18:1886]|   transition: transform 0.1s ease, box-shadow 0.2s ease;
+[F18:1887]|   user-select: none;
+[F18:1888]| }
+[F18:1889]| 
+[F18:1890]| .float-ball-window-container {
+[F18:1891]|   width: 100vw;
+[F18:1892]|   height: 100vh;
+[F18:1893]|   display: flex;
+[F18:1894]|   align-items: center;
+[F18:1895]|   justify-content: center;
+[F18:1896]|   background: transparent;
+[F18:1897]| }
+[F18:1898]| 
+[F18:1899]| .loading-text {
+[F18:1900]|   color: rgba(255, 255, 255, 0.5);
+[F18:1901]|   font-size: 14px;
 [F18:1902]| }
 [F18:1903]| 
-[F18:1904]| .history-manager-header {
-[F18:1905]|   display: flex;
-[F18:1906]|   align-items: center;
-[F18:1907]|   gap: 12px;
-[F18:1908]|   padding-bottom: 8px;
-[F18:1909]|   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-[F18:1910]| }
-[F18:1911]| 
-[F18:1912]| .history-manager-title {
-[F18:1913]|   display: flex;
-[F18:1914]|   align-items: center;
-[F18:1915]|   gap: 8px;
-[F18:1916]|   font-size: 15px;
-[F18:1917]|   font-weight: 600;
-[F18:1918]|   color: rgba(255, 255, 255, 0.95);
-[F18:1919]| }
-[F18:1920]| 
-[F18:1921]| .history-count {
-[F18:1922]|   font-size: 12px;
-[F18:1923]|   font-weight: 400;
-[F18:1924]|   color: rgba(255, 255, 255, 0.5);
-[F18:1925]| }
-[F18:1926]| 
-[F18:1927]| .history-actions {
-[F18:1928]|   display: flex;
-[F18:1929]|   gap: 8px;
-[F18:1930]|   flex-wrap: wrap;
-[F18:1931]| }
-[F18:1932]| 
-[F18:1933]| .history-action-btn {
-[F18:1934]|   display: flex;
-[F18:1935]|   align-items: center;
-[F18:1936]|   gap: 4px;
-[F18:1937]|   padding: 6px 12px;
-[F18:1938]|   font-size: 12px;
-[F18:1939]|   border-radius: 6px;
-[F18:1940]|   background: rgba(255, 255, 255, 0.08);
-[F18:1941]|   color: rgba(255, 255, 255, 0.7);
-[F18:1942]|   border: 1px solid rgba(255, 255, 255, 0.1);
-[F18:1943]|   cursor: pointer;
-[F18:1944]|   transition: all 0.2s ease;
+[F18:1904]| /* Loading Screen */
+[F18:1905]| .loading-screen {
+[F18:1906]|   display: flex;
+[F18:1907]|   flex-direction: column;
+[F18:1908]|   align-items: center;
+[F18:1909]|   justify-content: center;
+[F18:1910]|   height: 100vh;
+[F18:1911]|   gap: 16px;
+[F18:1912]|   color: rgba(255, 255, 255, 0.6);
+[F18:1913]|   font-size: 14px;
+[F18:1914]| }
+[F18:1915]| 
+[F18:1916]| .loading-spinner {
+[F18:1917]|   width: 32px;
+[F18:1918]|   height: 32px;
+[F18:1919]|   border: 2px solid rgba(255, 255, 255, 0.1);
+[F18:1920]|   border-top-color: #3b82f6;
+[F18:1921]|   border-radius: 50%;
+[F18:1922]|   animation: spin 1s linear infinite;
+[F18:1923]| }
+[F18:1924]| 
+[F18:1925]| @keyframes spin {
+[F18:1926]|   to { transform: rotate(360deg); }
+[F18:1927]| }
+[F18:1928]| 
+[F18:1929]| /* Scrollbar Styling */
+[F18:1930]| ::-webkit-scrollbar {
+[F18:1931]|   width: 4px;
+[F18:1932]| }
+[F18:1933]| 
+[F18:1934]| ::-webkit-scrollbar-track {
+[F18:1935]|   background: transparent;
+[F18:1936]| }
+[F18:1937]| 
+[F18:1938]| ::-webkit-scrollbar-thumb {
+[F18:1939]|   background: rgba(255, 255, 255, 0.15);
+[F18:1940]|   border-radius: 2px;
+[F18:1941]| }
+[F18:1942]| 
+[F18:1943]| ::-webkit-scrollbar-thumb:hover {
+[F18:1944]|   background: rgba(255, 255, 255, 0.25);
 [F18:1945]| }
 [F18:1946]| 
-[F18:1947]| .history-action-btn:hover {
-[F18:1948]|   background: rgba(255, 255, 255, 0.15);
-[F18:1949]|   color: rgba(255, 255, 255, 0.95);
-[F18:1950]| }
-[F18:1951]| 
-[F18:1952]| .history-action-btn.primary {
-[F18:1953]|   background: rgba(139, 92, 246, 0.2);
-[F18:1954]|   border-color: rgba(139, 92, 246, 0.3);
-[F18:1955]|   color: #a78bfa;
-[F18:1956]| }
-[F18:1957]| 
-[F18:1958]| .history-action-btn.primary:hover {
-[F18:1959]|   background: rgba(139, 92, 246, 0.3);
-[F18:1960]| }
-[F18:1961]| 
-[F18:1962]| .history-list-scroll {
-[F18:1963]|   flex: 1;
-[F18:1964]|   overflow: hidden;
-[F18:1965]| }
-[F18:1966]| 
-[F18:1967]| .history-list {
-[F18:1968]|   display: flex;
-[F18:1969]|   flex-direction: column;
-[F18:1970]|   gap: 8px;
-[F18:1971]|   padding-right: 4px;
-[F18:1972]| }
-[F18:1973]| 
-[F18:1974]| /* 历史记录卡片 - 基础样式 */
-[F18:1975]| .history-item {
-[F18:1976]|   display: flex;
-[F18:1977]|   flex-direction: column;
-[F18:1978]|   gap: 8px;
-[F18:1979]|   padding: 12px;
-[F18:1980]|   background: rgba(255, 255, 255, 0.06);
-[F18:1981]|   border: 1px solid rgba(255, 255, 255, 0.1);
-[F18:1982]|   border-radius: 10px;
-[F18:1983]|   cursor: pointer;
-[F18:1984]|   transition: all 0.2s ease;
+[F18:1947]| /* Selection */
+[F18:1948]| ::selection {
+[F18:1949]|   background: rgba(59, 130, 246, 0.3);
+[F18:1950]|   color: white;
+[F18:1951]| }
+[F18:1952]| 
+[F18:1953]| /* Settings Panel */
+[F18:1954]| .settings-panel-container {
+[F18:1955]|   flex: 1;
+[F18:1956]|   display: flex;
+[F18:1957]|   flex-direction: column;
+[F18:1958]|   min-height: 0;
+[F18:1959]|   background: rgba(0, 0, 0, 0.1);
+[F18:1960]|   border-radius: 10px;
+[F18:1961]|   padding: 12px;
+[F18:1962]| }
+[F18:1963]| 
+[F18:1964]| .settings-panel-header {
+[F18:1965]|   display: flex;
+[F18:1966]|   align-items: center;
+[F18:1967]|   gap: 10px;
+[F18:1968]|   padding-bottom: 10px;
+[F18:1969]|   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+[F18:1970]| }
+[F18:1971]| 
+[F18:1972]| .settings-panel-title {
+[F18:1973]|   display: flex;
+[F18:1974]|   align-items: center;
+[F18:1975]|   gap: 8px;
+[F18:1976]|   font-size: 14px;
+[F18:1977]|   font-weight: 600;
+[F18:1978]|   color: rgba(255, 255, 255, 0.9);
+[F18:1979]| }
+[F18:1980]| 
+[F18:1981]| .settings-content {
+[F18:1982]|   flex: 1;
+[F18:1983]|   overflow-y: auto;
+[F18:1984]|   padding: 8px 0;
 [F18:1985]| }
 [F18:1986]| 
-[F18:1987]| .history-item:hover {
-[F18:1988]|   background: rgba(255, 255, 255, 0.1);
-[F18:1989]|   border-color: rgba(255, 255, 255, 0.2);
-[F18:1990]|   transform: translateY(-1px);
-[F18:1991]| }
-[F18:1992]| 
-[F18:1993]| /* 展开状态 */
-[F18:1994]| .history-item.expanded {
-[F18:1995]|   background: rgba(255, 255, 255, 0.1);
-[F18:1996]|   border-color: rgba(139, 92, 246, 0.4);
-[F18:1997]| }
-[F18:1998]| 
-[F18:1999]| .history-info {
-[F18:2000]|   display: flex;
-[F18:2001]|   flex-direction: column;
-[F18:2002]|   gap: 6px;
-[F18:2003]| }
-[F18:2004]| 
-[F18:2005]| .history-header-row {
-[F18:2006]|   display: flex;
-[F18:2007]|   align-items: center;
-[F18:2008]|   justify-content: space-between;
-[F18:2009]|   gap: 8px;
+[F18:1987]| .settings-section {
+[F18:1988]|   margin-bottom: 20px;
+[F18:1989]| }
+[F18:1990]| 
+[F18:1991]| .settings-section-title {
+[F18:1992]|   display: flex;
+[F18:1993]|   align-items: center;
+[F18:1994]|   font-size: 12px;
+[F18:1995]|   font-weight: 600;
+[F18:1996]|   color: rgba(255, 255, 255, 0.7);
+[F18:1997]|   margin-bottom: 12px;
+[F18:1998]|   padding-bottom: 8px;
+[F18:1999]|   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+[F18:2000]| }
+[F18:2001]| 
+[F18:2002]| .setting-item {
+[F18:2003]|   margin-bottom: 16px;
+[F18:2004]| }
+[F18:2005]| 
+[F18:2006]| .setting-item.switch {
+[F18:2007]|   display: flex;
+[F18:2008]|   align-items: center;
+[F18:2009]|   justify-content: space-between;
 [F18:2010]| }
 [F18:2011]| 
-[F18:2012]| .history-name {
-[F18:2013]|   font-size: 14px;
-[F18:2014]|   font-weight: 600;
-[F18:2015]|   color: rgba(255, 255, 255, 0.95);
-[F18:2016]|   flex: 1;
-[F18:2017]|   overflow: hidden;
-[F18:2018]|   text-overflow: ellipsis;
-[F18:2019]|   white-space: nowrap;
-[F18:2020]| }
-[F18:2021]| 
-[F18:2022]| .history-time {
-[F18:2023]|   font-size: 11px;
-[F18:2024]|   color: rgba(255, 255, 255, 0.45);
-[F18:2025]|   flex-shrink: 0;
-[F18:2026]| }
-[F18:2027]| 
-[F18:2028]| .history-summary {
-[F18:2029]|   font-size: 12px;
-[F18:2030]|   color: rgba(255, 255, 255, 0.55);
-[F18:2031]|   line-height: 1.4;
-[F18:2032]| }
-[F18:2033]| 
-[F18:2034]| .history-summary:hover {
-[F18:2035]|   color: rgba(255, 255, 255, 0.75);
-[F18:2036]| }
-[F18:2037]| 
-[F18:2038]| .history-stats {
-[F18:2039]|   display: flex;
-[F18:2040]|   flex-wrap: wrap;
-[F18:2041]|   gap: 8px;
-[F18:2042]|   padding-top: 6px;
-[F18:2043]|   border-top: 1px solid rgba(255, 255, 255, 0.06);
+[F18:2012]| .setting-label {
+[F18:2013]|   display: flex;
+[F18:2014]|   align-items: center;
+[F18:2015]|   justify-content: space-between;
+[F18:2016]|   margin-bottom: 8px;
+[F18:2017]| }
+[F18:2018]| 
+[F18:2019]| .setting-item.switch .setting-label {
+[F18:2020]|   flex-direction: column;
+[F18:2021]|   align-items: flex-start;
+[F18:2022]|   margin-bottom: 0;
+[F18:2023]| }
+[F18:2024]| 
+[F18:2025]| .setting-label span:first-child {
+[F18:2026]|   font-size: 13px;
+[F18:2027]|   color: rgba(255, 255, 255, 0.85);
+[F18:2028]| }
+[F18:2029]| 
+[F18:2030]| .setting-value {
+[F18:2031]|   font-size: 12px;
+[F18:2032]|   color: #60a5fa;
+[F18:2033]|   font-weight: 500;
+[F18:2034]| }
+[F18:2035]| 
+[F18:2036]| .setting-desc {
+[F18:2037]|   font-size: 11px;
+[F18:2038]|   color: rgba(255, 255, 255, 0.4);
+[F18:2039]|   margin-top: 2px;
+[F18:2040]| }
+[F18:2041]| 
+[F18:2042]| .setting-slider {
+[F18:2043]|   width: 100%;
 [F18:2044]| }
 [F18:2045]| 
-[F18:2046]| .history-stat {
-[F18:2047]|   display: flex;
-[F18:2048]|   align-items: center;
-[F18:2049]|   gap: 4px;
-[F18:2050]|   font-size: 11px;
-[F18:2051]|   color: rgba(255, 255, 255, 0.4);
-[F18:2052]| }
-[F18:2053]| 
-[F18:2054]| .history-actions {
-[F18:2055]|   display: flex;
-[F18:2056]|   gap: 4px;
-[F18:2057]|   padding-top: 6px;
-[F18:2058]|   border-top: 1px solid rgba(255, 255, 255, 0.06);
-[F18:2059]| }
-[F18:2060]| 
-[F18:2061]| /* 历史记录项内的按钮 */
-[F18:2062]| .history-item .history-action-btn {
-[F18:2063]|   padding: 4px 8px;
-[F18:2064]|   font-size: 11px;
-[F18:2065]| }
-[F18:2066]| 
-[F18:2067]| .history-item .history-action-btn.restore:hover {
-[F18:2068]|   background: rgba(34, 197, 94, 0.2);
-[F18:2069]|   color: #4ade80;
-[F18:2070]|   border-color: rgba(34, 197, 94, 0.3);
+[F18:2046]| .settings-footer {
+[F18:2047]|   padding-top: 12px;
+[F18:2048]|   border-top: 1px solid rgba(255, 255, 255, 0.05);
+[F18:2049]| }
+[F18:2050]| 
+[F18:2051]| .reset-btn {
+[F18:2052]|   font-size: 12px;
+[F18:2053]|   color: rgba(32, 32, 32, 0.5);
+[F18:2054]| }
+[F18:2055]| 
+[F18:2056]| .reset-btn:hover {
+[F18:2057]|   color: rgba(4, 4, 138, 0.8);
+[F18:2058]| }
+[F18:2059]| 
+[F18:2060]| /* ============================================
+[F18:2061]|    History Manager Styles (问题1&2)
+[F18:2062]|    ============================================ */
+[F18:2063]| 
+[F18:2064]| .history-manager-container {
+[F18:2065]|   display: flex;
+[F18:2066]|   flex-direction: column;
+[F18:2067]|   height: 100%;
+[F18:2068]|   padding: 12px;
+[F18:2069]|   gap: 12px;
+[F18:2070]|   background: transparent;
 [F18:2071]| }
 [F18:2072]| 
-[F18:2073]| .history-item .history-action-btn.copy:hover {
-[F18:2074]|   background: rgba(59, 130, 246, 0.2);
-[F18:2075]|   color: #60a5fa;
-[F18:2076]|   border-color: rgba(59, 130, 246, 0.3);
-[F18:2077]| }
-[F18:2078]| 
-[F18:2079]| .history-item .history-action-btn.delete:hover {
-[F18:2080]|   background: rgba(239, 68, 68, 0.2);
-[F18:2081]|   color: #f87171;
-[F18:2082]|   border-color: rgba(239, 68, 68, 0.3);
-[F18:2083]| }
-[F18:2084]| 
-[F18:2085]| /* 编辑输入框 */
-[F18:2086]| .history-edit-input,
-[F18:2087]| .history-summary-edit-input {
-[F18:2088]|   font-size: 14px;
-[F18:2089]|   padding: 4px 8px;
-[F18:2090]|   background: rgba(0, 0, 0, 0.3);
-[F18:2091]|   border: 1px solid rgba(139, 92, 246, 0.5);
-[F18:2092]|   border-radius: 4px;
-[F18:2093]|   color: rgba(255, 255, 255, 0.95);
-[F18:2094]|   outline: none;
-[F18:2095]| }
-[F18:2096]| 
-[F18:2097]| .history-edit-input:focus,
-[F18:2098]| .history-summary-edit-input:focus {
-[F18:2099]|   border-color: rgba(139, 92, 246, 0.8);
-[F18:2100]|   box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
-[F18:2101]| }
-[F18:2102]| 
-[F18:2103]| /* 展开的任务详情区域 */
-[F18:2104]| .history-task-details {
-[F18:2105]|   margin-top: 8px;
-[F18:2106]|   padding-top: 8px;
-[F18:2107]|   border-top: 1px solid rgba(255, 255, 255, 0.1);
-[F18:2108]| }
-[F18:2109]| 
-[F18:2110]| .history-task-list {
-[F18:2111]|   display: flex;
-[F18:2112]|   flex-direction: column;
-[F18:2113]|   gap: 4px;
-[F18:2114]|   max-height: 150px;
-[F18:2115]|   overflow-y: auto;
-[F18:2116]| }
-[F18:2117]| 
-[F18:2118]| .history-task-item {
-[F18:2119]|   display: flex;
-[F18:2120]|   align-items: center;
-[F18:2121]|   gap: 6px;
-[F18:2122]|   padding: 6px 8px;
-[F18:2123]|   background: rgba(0, 0, 0, 0.2);
-[F18:2124]|   border-radius: 6px;
-[F18:2125]|   font-size: 12px;
-[F18:2126]|   color: rgba(255, 255, 255, 0.75);
-[F18:2127]| }
-[F18:2128]| 
-[F18:2129]| .history-task-item.completed {
-[F18:2130]|   color: rgba(255, 255, 255, 0.4);
-[F18:2131]|   text-decoration: line-through;
-[F18:2132]| }
-[F18:2133]| 
-[F18:2134]| .history-task-item .check-icon {
-[F18:2135]|   width: 14px;
-[F18:2136]|   height: 14px;
-[F18:2137]|   color: #4ade80;
-[F18:2138]| }
-[F18:2139]| 
-[F18:2140]| /* 空状态 */
-[F18:2141]| .history-manager-container .empty-state {
-[F18:2142]|   display: flex;
-[F18:2143]|   flex-direction: column;
-[F18:2144]|   align-items: center;
-[F18:2145]|   justify-content: center;
-[F18:2146]|   padding: 40px 20px;
-[F18:2147]|   text-align: center;
-[F18:2148]| }
-[F18:2149]| 
-[F18:2150]| .history-manager-container .empty-icon {
-[F18:2151]|   color: rgba(255, 255, 255, 0.2);
-[F18:2152]|   margin-bottom: 12px;
-[F18:2153]| }
-[F18:2154]| 
-[F18:2155]| .history-manager-container .empty-state p {
-[F18:2156]|   color: rgba(255, 255, 255, 0.6);
-[F18:2157]|   font-size: 14px;
-[F18:2158]| }
-[F18:2159]| 
-[F18:2160]| .history-manager-container .empty-hint {
-[F18:2161]|   color: rgba(255, 255, 255, 0.4);
-[F18:2162]|   font-size: 12px;
-[F18:2163]|   margin-top: 8px;
-[F18:2164]| }
-[F18:2165]| 
-[F18:2166]| /* 对话框样式 */
-[F18:2167]| .history-dialog,
-[F18:2168]| .template-dialog {
-[F18:2169]|   background: rgba(25, 25, 35, 0.98) !important;
-[F18:2170]|   border: 1px solid rgba(255, 255, 255, 0.1);
-[F18:2171]|   border-radius: 12px;
+[F18:2073]| .history-manager-header {
+[F18:2074]|   display: flex;
+[F18:2075]|   align-items: center;
+[F18:2076]|   gap: 12px;
+[F18:2077]|   padding-bottom: 8px;
+[F18:2078]|   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+[F18:2079]| }
+[F18:2080]| 
+[F18:2081]| .history-manager-title {
+[F18:2082]|   display: flex;
+[F18:2083]|   align-items: center;
+[F18:2084]|   gap: 8px;
+[F18:2085]|   font-size: 15px;
+[F18:2086]|   font-weight: 600;
+[F18:2087]|   color: rgba(255, 255, 255, 0.95);
+[F18:2088]| }
+[F18:2089]| 
+[F18:2090]| .history-count {
+[F18:2091]|   font-size: 12px;
+[F18:2092]|   font-weight: 400;
+[F18:2093]|   color: rgba(255, 255, 255, 0.5);
+[F18:2094]| }
+[F18:2095]| 
+[F18:2096]| .history-actions {
+[F18:2097]|   display: flex;
+[F18:2098]|   gap: 8px;
+[F18:2099]|   flex-wrap: wrap;
+[F18:2100]| }
+[F18:2101]| 
+[F18:2102]| .history-action-btn {
+[F18:2103]|   display: flex;
+[F18:2104]|   align-items: center;
+[F18:2105]|   gap: 4px;
+[F18:2106]|   padding: 6px 12px;
+[F18:2107]|   font-size: 12px;
+[F18:2108]|   border-radius: 6px;
+[F18:2109]|   background: rgba(255, 255, 255, 0.08);
+[F18:2110]|   color: rgba(255, 255, 255, 0.7);
+[F18:2111]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:2112]|   cursor: pointer;
+[F18:2113]|   transition: all 0.2s ease;
+[F18:2114]| }
+[F18:2115]| 
+[F18:2116]| .history-action-btn:hover {
+[F18:2117]|   background: rgba(255, 255, 255, 0.15);
+[F18:2118]|   color: rgba(255, 255, 255, 0.95);
+[F18:2119]| }
+[F18:2120]| 
+[F18:2121]| .history-action-btn.primary {
+[F18:2122]|   background: rgba(139, 92, 246, 0.2);
+[F18:2123]|   border-color: rgba(139, 92, 246, 0.3);
+[F18:2124]|   color: #a78bfa;
+[F18:2125]| }
+[F18:2126]| 
+[F18:2127]| .history-action-btn.primary:hover {
+[F18:2128]|   background: rgba(139, 92, 246, 0.3);
+[F18:2129]| }
+[F18:2130]| 
+[F18:2131]| .history-list-scroll {
+[F18:2132]|   flex: 1;
+[F18:2133]|   overflow: hidden;
+[F18:2134]| }
+[F18:2135]| 
+[F18:2136]| .history-list {
+[F18:2137]|   display: flex;
+[F18:2138]|   flex-direction: column;
+[F18:2139]|   gap: 8px;
+[F18:2140]|   padding-right: 4px;
+[F18:2141]| }
+[F18:2142]| 
+[F18:2143]| /* 历史记录卡片 - 基础样式 */
+[F18:2144]| .history-item {
+[F18:2145]|   display: flex;
+[F18:2146]|   flex-direction: column;
+[F18:2147]|   gap: 8px;
+[F18:2148]|   padding: 12px;
+[F18:2149]|   background: rgba(255, 255, 255, 0.06);
+[F18:2150]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:2151]|   border-radius: 10px;
+[F18:2152]|   cursor: pointer;
+[F18:2153]|   transition: all 0.2s ease;
+[F18:2154]| }
+[F18:2155]| 
+[F18:2156]| .history-item:hover {
+[F18:2157]|   background: rgba(255, 255, 255, 0.1);
+[F18:2158]|   border-color: rgba(255, 255, 255, 0.2);
+[F18:2159]|   transform: translateY(-1px);
+[F18:2160]| }
+[F18:2161]| 
+[F18:2162]| /* 展开状态 */
+[F18:2163]| .history-item.expanded {
+[F18:2164]|   background: rgba(255, 255, 255, 0.1);
+[F18:2165]|   border-color: rgba(139, 92, 246, 0.4);
+[F18:2166]| }
+[F18:2167]| 
+[F18:2168]| .history-info {
+[F18:2169]|   display: flex;
+[F18:2170]|   flex-direction: column;
+[F18:2171]|   gap: 6px;
 [F18:2172]| }
 [F18:2173]| 
-[F18:2174]| .history-form {
+[F18:2174]| .history-header-row {
 [F18:2175]|   display: flex;
-[F18:2176]|   flex-direction: column;
-[F18:2177]|   gap: 12px;
-[F18:2178]|   padding: 8px 0;
+[F18:2176]|   align-items: center;
+[F18:2177]|   justify-content: space-between;
+[F18:2178]|   gap: 8px;
 [F18:2179]| }
 [F18:2180]| 
-[F18:2181]| .history-form-actions {
-[F18:2182]|   display: flex;
-[F18:2183]|   justify-content: flex-end;
-[F18:2184]|   gap: 8px;
-[F18:2185]|   padding-top: 8px;
-[F18:2186]| }
-[F18:2187]| 
-[F18:2188]| .new-workspace-form {
-[F18:2189]|   padding: 8px 0;
-[F18:2190]| }
-[F18:2191]| 
-[F18:2192]| .template-label {
-[F18:2193]|   font-size: 12px;
-[F18:2194]|   color: rgba(255, 255, 255, 0.5);
-[F18:2195]|   margin-bottom: 8px;
-[F18:2196]| }
-[F18:2197]| 
-[F18:2198]| .template-list {
-[F18:2199]|   display: flex;
-[F18:2200]|   flex-direction: column;
-[F18:2201]|   gap: 8px;
-[F18:2202]|   max-height: 300px;
-[F18:2203]|   overflow-y: auto;
-[F18:2204]| }
-[F18:2205]| 
-[F18:2206]| .template-item {
-[F18:2207]|   display: flex;
-[F18:2208]|   align-items: center;
-[F18:2209]|   justify-content: space-between;
-[F18:2210]|   padding: 12px;
-[F18:2211]|   background: rgba(255, 255, 255, 0.05);
-[F18:2212]|   border: 1px solid rgba(255, 255, 255, 0.1);
-[F18:2213]|   border-radius: 8px;
-[F18:2214]|   cursor: pointer;
-[F18:2215]|   transition: all 0.2s ease;
-[F18:2216]|   text-align: left;
-[F18:2217]| }
-[F18:2218]| 
-[F18:2219]| .template-item:hover {
-[F18:2220]|   background: rgba(255, 255, 255, 0.1);
-[F18:2221]|   border-color: rgba(139, 92, 246, 0.4);
-[F18:2222]| }
-[F18:2223]| 
-[F18:2224]| .template-info {
-[F18:2225]|   display: flex;
-[F18:2226]|   flex-direction: column;
-[F18:2227]|   gap: 2px;
+[F18:2181]| .history-name {
+[F18:2182]|   font-size: 14px;
+[F18:2183]|   font-weight: 600;
+[F18:2184]|   color: rgba(255, 255, 255, 0.95);
+[F18:2185]|   flex: 1;
+[F18:2186]|   overflow: hidden;
+[F18:2187]|   text-overflow: ellipsis;
+[F18:2188]|   white-space: nowrap;
+[F18:2189]| }
+[F18:2190]| 
+[F18:2191]| .history-time {
+[F18:2192]|   font-size: 11px;
+[F18:2193]|   color: rgba(255, 255, 255, 0.45);
+[F18:2194]|   flex-shrink: 0;
+[F18:2195]| }
+[F18:2196]| 
+[F18:2197]| .history-summary {
+[F18:2198]|   font-size: 12px;
+[F18:2199]|   color: rgba(255, 255, 255, 0.55);
+[F18:2200]|   line-height: 1.4;
+[F18:2201]| }
+[F18:2202]| 
+[F18:2203]| .history-summary:hover {
+[F18:2204]|   color: rgba(255, 255, 255, 0.75);
+[F18:2205]| }
+[F18:2206]| 
+[F18:2207]| .history-stats {
+[F18:2208]|   display: flex;
+[F18:2209]|   flex-wrap: wrap;
+[F18:2210]|   gap: 8px;
+[F18:2211]|   padding-top: 6px;
+[F18:2212]|   border-top: 1px solid rgba(255, 255, 255, 0.06);
+[F18:2213]| }
+[F18:2214]| 
+[F18:2215]| .history-stat {
+[F18:2216]|   display: flex;
+[F18:2217]|   align-items: center;
+[F18:2218]|   gap: 4px;
+[F18:2219]|   font-size: 11px;
+[F18:2220]|   color: rgba(255, 255, 255, 0.4);
+[F18:2221]| }
+[F18:2222]| 
+[F18:2223]| .history-actions {
+[F18:2224]|   display: flex;
+[F18:2225]|   gap: 4px;
+[F18:2226]|   padding-top: 6px;
+[F18:2227]|   border-top: 1px solid rgba(255, 255, 255, 0.06);
 [F18:2228]| }
 [F18:2229]| 
-[F18:2230]| .template-name {
-[F18:2231]|   font-size: 13px;
-[F18:2232]|   font-weight: 500;
-[F18:2233]|   color: rgba(255, 255, 255, 0.9);
+[F18:2230]| /* 历史记录项内的按钮 */
+[F18:2231]| .history-item .history-action-btn {
+[F18:2232]|   padding: 4px 8px;
+[F18:2233]|   font-size: 11px;
 [F18:2234]| }
 [F18:2235]| 
-[F18:2236]| .template-desc {
-[F18:2237]|   font-size: 11px;
-[F18:2238]|   color: rgba(255, 255, 255, 0.5);
-[F18:2239]| }
-[F18:2240]| 
-[F18:2241]| .template-zones {
-[F18:2242]|   display: flex;
-[F18:2243]|   gap: 4px;
-[F18:2244]| }
-[F18:2245]| 
-[F18:2246]| .template-zone-dot {
-[F18:2247]|   width: 8px;
-[F18:2248]|   height: 8px;
-[F18:2249]|   border-radius: 50%;
-[F18:2250]| }
+[F18:2236]| .history-item .history-action-btn.restore:hover {
+[F18:2237]|   background: rgba(34, 197, 94, 0.2);
+[F18:2238]|   color: #4ade80;
+[F18:2239]|   border-color: rgba(34, 197, 94, 0.3);
+[F18:2240]| }
+[F18:2241]| 
+[F18:2242]| .history-item .history-action-btn.copy:hover {
+[F18:2243]|   background: rgba(59, 130, 246, 0.2);
+[F18:2244]|   color: #60a5fa;
+[F18:2245]|   border-color: rgba(59, 130, 246, 0.3);
+[F18:2246]| }
+[F18:2247]| 
+[F18:2248]| .history-item .history-action-btn.delete:hover {
+[F18:2249]|   background: rgba(239, 68, 68, 0.2);
+[F18:2250]|   color: #f87171;
+[F18:2251]|   border-color: rgba(239, 68, 68, 0.3);
+[F18:2252]| }
+[F18:2253]| 
+[F18:2254]| /* 编辑输入框 */
+[F18:2255]| .history-edit-input,
+[F18:2256]| .history-summary-edit-input {
+[F18:2257]|   font-size: 14px;
+[F18:2258]|   padding: 4px 8px;
+[F18:2259]|   background: rgba(0, 0, 0, 0.3);
+[F18:2260]|   border: 1px solid rgba(139, 92, 246, 0.5);
+[F18:2261]|   border-radius: 4px;
+[F18:2262]|   color: rgba(255, 255, 255, 0.95);
+[F18:2263]|   outline: none;
+[F18:2264]| }
+[F18:2265]| 
+[F18:2266]| .history-edit-input:focus,
+[F18:2267]| .history-summary-edit-input:focus {
+[F18:2268]|   border-color: rgba(139, 92, 246, 0.8);
+[F18:2269]|   box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+[F18:2270]| }
+[F18:2271]| 
+[F18:2272]| /* 展开的任务详情区域 */
+[F18:2273]| .history-task-details {
+[F18:2274]|   margin-top: 8px;
+[F18:2275]|   padding-top: 8px;
+[F18:2276]|   border-top: 1px solid rgba(255, 255, 255, 0.1);
+[F18:2277]| }
+[F18:2278]| 
+[F18:2279]| .history-task-list {
+[F18:2280]|   display: flex;
+[F18:2281]|   flex-direction: column;
+[F18:2282]|   gap: 4px;
+[F18:2283]|   max-height: 150px;
+[F18:2284]|   overflow-y: auto;
+[F18:2285]| }
+[F18:2286]| 
+[F18:2287]| .history-task-item {
+[F18:2288]|   display: flex;
+[F18:2289]|   align-items: center;
+[F18:2290]|   gap: 6px;
+[F18:2291]|   padding: 6px 8px;
+[F18:2292]|   background: rgba(0, 0, 0, 0.2);
+[F18:2293]|   border-radius: 6px;
+[F18:2294]|   font-size: 12px;
+[F18:2295]|   color: rgba(255, 255, 255, 0.75);
+[F18:2296]| }
+[F18:2297]| 
+[F18:2298]| .history-task-item.completed {
+[F18:2299]|   color: rgba(255, 255, 255, 0.4);
+[F18:2300]|   text-decoration: line-through;
+[F18:2301]| }
+[F18:2302]| 
+[F18:2303]| .history-task-item .check-icon {
+[F18:2304]|   width: 14px;
+[F18:2305]|   height: 14px;
+[F18:2306]|   color: #4ade80;
+[F18:2307]| }
+[F18:2308]| 
+[F18:2309]| /* 空状态 */
+[F18:2310]| .history-manager-container .empty-state {
+[F18:2311]|   display: flex;
+[F18:2312]|   flex-direction: column;
+[F18:2313]|   align-items: center;
+[F18:2314]|   justify-content: center;
+[F18:2315]|   padding: 40px 20px;
+[F18:2316]|   text-align: center;
+[F18:2317]| }
+[F18:2318]| 
+[F18:2319]| .history-manager-container .empty-icon {
+[F18:2320]|   color: rgba(255, 255, 255, 0.2);
+[F18:2321]|   margin-bottom: 12px;
+[F18:2322]| }
+[F18:2323]| 
+[F18:2324]| .history-manager-container .empty-state p {
+[F18:2325]|   color: rgba(255, 255, 255, 0.6);
+[F18:2326]|   font-size: 14px;
+[F18:2327]| }
+[F18:2328]| 
+[F18:2329]| .history-manager-container .empty-hint {
+[F18:2330]|   color: rgba(255, 255, 255, 0.4);
+[F18:2331]|   font-size: 12px;
+[F18:2332]|   margin-top: 8px;
+[F18:2333]| }
+[F18:2334]| 
+[F18:2335]| /* 对话框样式 */
+[F18:2336]| .history-dialog,
+[F18:2337]| .template-dialog {
+[F18:2338]|   background: rgba(25, 25, 35, 0.98) !important;
+[F18:2339]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:2340]|   border-radius: 12px;
+[F18:2341]| }
+[F18:2342]| 
+[F18:2343]| .history-form {
+[F18:2344]|   display: flex;
+[F18:2345]|   flex-direction: column;
+[F18:2346]|   gap: 12px;
+[F18:2347]|   padding: 8px 0;
+[F18:2348]| }
+[F18:2349]| 
+[F18:2350]| .history-form-actions {
+[F18:2351]|   display: flex;
+[F18:2352]|   justify-content: flex-end;
+[F18:2353]|   gap: 8px;
+[F18:2354]|   padding-top: 8px;
+[F18:2355]| }
+[F18:2356]| 
+[F18:2357]| .new-workspace-form {
+[F18:2358]|   padding: 8px 0;
+[F18:2359]| }
+[F18:2360]| 
+[F18:2361]| .template-label {
+[F18:2362]|   font-size: 12px;
+[F18:2363]|   color: rgba(255, 255, 255, 0.5);
+[F18:2364]|   margin-bottom: 8px;
+[F18:2365]| }
+[F18:2366]| 
+[F18:2367]| .template-list {
+[F18:2368]|   display: flex;
+[F18:2369]|   flex-direction: column;
+[F18:2370]|   gap: 8px;
+[F18:2371]|   max-height: 300px;
+[F18:2372]|   overflow-y: auto;
+[F18:2373]| }
+[F18:2374]| 
+[F18:2375]| .template-item {
+[F18:2376]|   display: flex;
+[F18:2377]|   align-items: center;
+[F18:2378]|   justify-content: space-between;
+[F18:2379]|   padding: 12px;
+[F18:2380]|   background: rgba(255, 255, 255, 0.05);
+[F18:2381]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:2382]|   border-radius: 8px;
+[F18:2383]|   cursor: pointer;
+[F18:2384]|   transition: all 0.2s ease;
+[F18:2385]|   text-align: left;
+[F18:2386]| }
+[F18:2387]| 
+[F18:2388]| .template-item:hover {
+[F18:2389]|   background: rgba(255, 255, 255, 0.1);
+[F18:2390]|   border-color: rgba(139, 92, 246, 0.4);
+[F18:2391]| }
+[F18:2392]| 
+[F18:2393]| .template-info {
+[F18:2394]|   display: flex;
+[F18:2395]|   flex-direction: column;
+[F18:2396]|   gap: 2px;
+[F18:2397]| }
+[F18:2398]| 
+[F18:2399]| .template-name {
+[F18:2400]|   font-size: 13px;
+[F18:2401]|   font-weight: 500;
+[F18:2402]|   color: rgba(255, 255, 255, 0.9);
+[F18:2403]| }
+[F18:2404]| 
+[F18:2405]| .template-desc {
+[F18:2406]|   font-size: 11px;
+[F18:2407]|   color: rgba(255, 255, 255, 0.5);
+[F18:2408]| }
+[F18:2409]| 
+[F18:2410]| .template-zones {
+[F18:2411]|   display: flex;
+[F18:2412]|   gap: 4px;
+[F18:2413]| }
+[F18:2414]| 
+[F18:2415]| .template-zone-dot {
+[F18:2416]|   width: 8px;
+[F18:2417]|   height: 8px;
+[F18:2418]|   border-radius: 50%;
+[F18:2419]| }
+[F18:2420]| 
+[F18:2421]| /* ===== Urgency Selector Styles ===== */
+[F18:2422]| .urgency-selector {
+[F18:2423]|   display: flex;
+[F18:2424]|   gap: 4px;
+[F18:2425]|   padding: 4px;
+[F18:2426]|   background: rgba(0, 0, 0, 0.2);
+[F18:2427]|   border-radius: 6px;
+[F18:2428]| }
+[F18:2429]| 
+[F18:2430]| .urgency-btn {
+[F18:2431]|   display: flex;
+[F18:2432]|   align-items: center;
+[F18:2433]|   justify-content: center;
+[F18:2434]|   width: 24px;
+[F18:2435]|   height: 24px;
+[F18:2436]|   border: none;
+[F18:2437]|   border-radius: 4px;
+[F18:2438]|   background: transparent;
+[F18:2439]|   color: rgba(255, 255, 255, 0.4);
+[F18:2440]|   cursor: pointer;
+[F18:2441]|   transition: all 0.2s ease;
+[F18:2442]| }
+[F18:2443]| 
+[F18:2444]| .urgency-btn:hover {
+[F18:2445]|   background: rgba(255, 255, 255, 0.1);
+[F18:2446]| }
+[F18:2447]| 
+[F18:2448]| .urgency-btn.active {
+[F18:2449]|   background: rgba(255, 255, 255, 0.15);
+[F18:2450]| }
+[F18:2451]| 
+[F18:2452]| .urgency-btn.urgency-urgent.active { color: #dc2626; }
+[F18:2453]| .urgency-btn.urgency-high.active { color: #f97316; }
+[F18:2454]| .urgency-btn.urgency-medium.active { color: #eab308; }
+[F18:2455]| .urgency-btn.urgency-low.active { color: #22c55e; }
+[F18:2456]| 
+[F18:2457]| /* ===== Urgency in TaskItem ===== */
+[F18:2458]| .task-urgency {
+[F18:2459]|   display: flex;
+[F18:2460]|   align-items: center;
+[F18:2461]|   gap: 2px;
+[F18:2462]|   padding: 4px 6px;
+[F18:2463]|   border: none;
+[F18:2464]|   border-radius: 4px;
+[F18:2465]|   background: transparent;
+[F18:2466]|   cursor: pointer;
+[F18:2467]|   font-size: 10px;
+[F18:2468]|   transition: all 0.2s ease;
+[F18:2469]| }
+[F18:2470]| 
+[F18:2471]| .task-urgency:hover {
+[F18:2472]|   background: rgba(255, 255, 255, 0.1);
+[F18:2473]| }
+[F18:2474]| 
+[F18:2475]| .urgency-menu {
+[F18:2476]|   position: absolute;
+[F18:2477]|   top: 100%;
+[F18:2478]|   right: 0;
+[F18:2479]|   z-index: 50;
+[F18:2480]|   min-width: 80px;
+[F18:2481]|   padding: 4px;
+[F18:2482]|   background: rgba(30, 30, 30, 0.95);
+[F18:2483]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:2484]|   border-radius: 8px;
+[F18:2485]|   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+[F18:2486]| }
+[F18:2487]| 
+[F18:2488]| .urgency-option {
+[F18:2489]|   display: flex;
+[F18:2490]|   align-items: center;
+[F18:2491]|   gap: 4px;
+[F18:2492]|   width: 100%;
+[F18:2493]|   padding: 6px 8px;
+[F18:2494]|   border: none;
+[F18:2495]|   border-radius: 4px;
+[F18:2496]|   background: transparent;
+[F18:2497]|   cursor: pointer;
+[F18:2498]|   font-size: 11px;
+[F18:2499]|   transition: all 0.15s ease;
+[F18:2500]| }
+[F18:2501]| 
+[F18:2502]| .urgency-option:hover {
+[F18:2503]|   background: rgba(255, 255, 255, 0.1);
+[F18:2504]| }
+[F18:2505]| 
+[F18:2506]| .urgency-option.selected {
+[F18:2507]|   background: rgba(255, 255, 255, 0.15);
+[F18:2508]| }
+[F18:2509]| 
+[F18:2510]| /* ===== Sort Mode Selector ===== */
+[F18:2511]| .sort-mode-selector {
+[F18:2512]|   margin-left: auto;
+[F18:2513]| }
+[F18:2514]| 
+[F18:2515]| .sort-select-trigger {
+[F18:2516]|   display: flex;
+[F18:2517]|   align-items: center;
+[F18:2518]|   gap: 4px;
+[F18:2519]|   padding: 4px 8px;
+[F18:2520]|   background: rgba(255, 255, 255, 0.05);
+[F18:2521]|   border: 1px solid rgba(255, 255, 255, 0.1);
+[F18:2522]|   border-radius: 6px;
+[F18:2523]|   color: rgba(255, 255, 255, 0.7);
+[F18:2524]|   font-size: 12px;
+[F18:2525]|   cursor: pointer;
+[F18:2526]|   transition: all 0.2s ease;
+[F18:2527]| }
+[F18:2528]| 
+[F18:2529]| .sort-select-trigger:hover {
+[F18:2530]|   background: rgba(255, 255, 255, 0.1);
+[F18:2531]|   border-color: rgba(255, 255, 255, 0.2);
+[F18:2532]| }
+[F18:2533]| 
+[F18:2534]| .sort-option {
+[F18:2535]|   display: flex;
+[F18:2536]|   align-items: center;
+[F18:2537]|   gap: 6px;
+[F18:2538]| }
+[F18:2539]| 
+[F18:2540]| /* ===== Task Group (for non-zone sorting) ===== */
+[F18:2541]| .task-group {
+[F18:2542]|   margin-bottom: 8px;
+[F18:2543]| }
+[F18:2544]| 
+[F18:2545]| .group-label {
+[F18:2546]|   display: flex;
+[F18:2547]|   align-items: center;
+[F18:2548]|   justify-content: space-between;
+[F18:2549]|   padding: 8px 12px;
+[F18:2550]|   margin-bottom: 4px;
+[F18:2551]|   border-left: 3px solid;
+[F18:2552]|   border-radius: 4px;
+[F18:2553]|   font-size: 12px;
+[F18:2554]|   font-weight: 500;
+[F18:2555]| }
+[F18:2556]| 
+[F18:2557]| .group-count {
+[F18:2558]|   font-size: 11px;
+[F18:2559]|   opacity: 0.7;
+[F18:2560]| }
+[F18:2561]| 
+[F18:2562]| /* ===== Settings Section Description ===== */
+[F18:2563]| .settings-section-desc {
+[F18:2564]|   font-size: 11px;
+[F18:2565]|   color: rgba(255, 255, 255, 0.5);
+[F18:2566]|   margin-bottom: 12px;
+[F18:2567]| }
+[F18:2568]| 
+[F18:2569]| .setting-value {
+[F18:2570]|   margin-left: auto;
+[F18:2571]|   font-size: 12px;
+[F18:2572]|   font-weight: 500;
+[F18:2573]|   color: rgba(255, 255, 255, 0.7);
+[F18:2574]| }
 
 ================================================================================
-文件路径: src\App.tsx(F19) (约合大小: 14 KB)
+文件路径: src\App.tsx(F19) (约合大小: 16 KB)
 ================================================================================
 [F19:1]| import { useState, useCallback, useEffect, useRef } from 'react';
 [F19:2]| import { FloatWindow } from '@/components/FloatWindow';
@@ -3709,401 +4035,466 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F19:12]| import { useZones } from '@/hooks/useZones';
 [F19:13]| import { useTasks } from '@/hooks/useTasks';
 [F19:14]| import { useTimer } from '@/hooks/useTimer';
-[F19:15]| import { Toaster } from '@/components/ui/sonner';
-[F19:16]| import { toast } from 'sonner';
-[F19:17]| import type { TimerMode } from '@/types';
-[F19:18]| import './App.css';
-[F19:19]| 
-[F19:20]| function App() {
-[F19:21]|   const {
-[F19:22]|     data,
-[F19:23]|     isLoaded,
-[F19:24]|     updateZones,
-[F19:25]|     updateTasks,
-[F19:26]|     updateSettings,
-[F19:27]|     setCurrentView,
-[F19:28]|     setActiveZoneId,
-[F19:29]| 
-[F19:30]|     archiveCurrentWorkspace,
-[F19:31]|     restoreFromHistory,
-[F19:32]|     createNewWorkspace,
-[F19:33]|     deleteHistoryWorkspace,
-[F19:34]|     renameHistoryWorkspace,
-[F19:35]|     updateHistorySummary,
-[F19:36]|   } = useStorage();
-[F19:37]| 
-[F19:38]|   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
-[F19:39]| 
-[F19:40]|   // 使用ref存储activeTaskId和tasks，确保计时器回调中能获取最新值
-[F19:41]|   const activeTaskIdRef = useRef<string | null>(null);
-[F19:42]|   const tasksRef = useRef<typeof data.currentWorkspace.tasks>([]);
-[F19:43]|   const timerRef = useRef<{ isRunning: boolean; mode: string }>({ isRunning: false, mode: 'idle' });
-[F19:44]| 
-[F19:45]|   // 使用当前工作区的数据
-[F19:46]|   const {
-[F19:47]|     zones,
-[F19:48]|     addZone,
-[F19:49]|     updateZone,
-[F19:50]|     deleteZone,
-[F19:51]|     applyTemplate,
-[F19:52]|     getZoneById,
-[F19:53]|     templates,
-[F19:54]|   } = useZones(
-[F19:55]|     data.currentWorkspace.zones,
-[F19:56]|     data.currentWorkspace.tasks,
-[F19:57]|     updateZones,
-[F19:58]|     updateTasks
-[F19:59]|   );
-[F19:60]| 
-[F19:61]|   const {
-[F19:62]|     tasks,
-[F19:63]|     getTasksByZone,
-[F19:64]|     addTask,
-[F19:65]|     toggleTask,
-[F19:66]|     deleteTask,
-[F19:67]|     updateTask,
-[F19:68]|     toggleExpanded,
-[F19:69]|     reorderTasks,
-[F19:70]|     clearCompleted,
-[F19:71]|     stats,
-[F19:72]|   } = useTasks(data.currentWorkspace.tasks, updateTasks);
-[F19:73]| 
-[F19:74]|   // 同步ref和state（在tasks声明之后）
-[F19:75]|   useEffect(() => {
-[F19:76]|     activeTaskIdRef.current = activeTaskId;
-[F19:77]|   }, [activeTaskId]);
-[F19:78]| 
-[F19:79]|   useEffect(() => {
-[F19:80]|     tasksRef.current = tasks;
-[F19:81]|   }, [tasks]);
-[F19:82]| 
-[F19:83]|   // 处理计时器滴答，累计任务时间
-[F19:84]|   const handleTimerTick = useCallback(() => {
-[F19:85]|     // 使用ref获取最新的activeTaskId、tasks和timer状态，避免闭包问题
-[F19:86]|     const currentActiveTaskId = activeTaskIdRef.current;
-[F19:87]|     const currentTasks = tasksRef.current;
-[F19:88]|     const currentTimer = timerRef.current;
-[F19:89]| 
-[F19:90]|     if (currentActiveTaskId && currentTimer.isRunning && currentTimer.mode === 'work') {
-[F19:91]|       const task = currentTasks.find(t => t.id === currentActiveTaskId);
-[F19:92]|       if (task) {
-[F19:93]|         updateTask(currentActiveTaskId, {
-[F19:94]|           totalWorkTime: (task.totalWorkTime || 0) + 1
-[F19:95]|         });
-[F19:96]|       }
-[F19:97]|     }
-[F19:98]|   }, [updateTask]);
-[F19:99]| 
-[F19:100]|   const handleTimerComplete = useCallback((mode: TimerMode, _duration: number) => {
-[F19:101]|     if (mode === 'work' && activeTaskId) {
-[F19:102]|       const task = tasks.find(t => t.id === activeTaskId);
-[F19:103]|       if (task) {
-[F19:104]|         toast.success('专注完成！', {
-[F19:105]|           description: `任务 "${task.title}" 累计工作 ${Math.floor((task.totalWorkTime || 0) / 60)} 分钟`,
-[F19:106]|         });
-[F19:107]|       }
-[F19:108]|     } else if (mode === 'break' || mode === 'longBreak') {
-[F19:109]|       toast.info('休息结束', {
-[F19:110]|         description: '准备好开始新的专注了吗？',
-[F19:111]|       });
-[F19:112]|     }
-[F19:113]|   }, [activeTaskId, tasks]);
-[F19:114]| 
-[F19:115]|   const timer = useTimer({
-[F19:116]|     workDuration: data.settings.workDuration,
-[F19:117]|     breakDuration: data.settings.breakDuration,
-[F19:118]|     longBreakDuration: data.settings.longBreakDuration,
-[F19:119]|     autoStartBreak: data.settings.autoStartBreak,
-[F19:120]|     soundEnabled: data.settings.soundEnabled,
-[F19:121]|     onComplete: handleTimerComplete,
-[F19:122]|     onTick: handleTimerTick,
-[F19:123]|   });
-[F19:124]| 
-[F19:125]|   // 同步timerRef（在timer声明之后）
-[F19:126]|   useEffect(() => {
-[F19:127]|     timerRef.current = { isRunning: timer.isRunning, mode: timer.mode };
-[F19:128]|   }, [timer.isRunning, timer.mode]);
-[F19:129]| 
-[F19:130]|   // 使用 ref 追踪当前模式，避免无限循环
-[F19:131]|   const currentModeRef = useRef<TimerMode>('work');
-[F19:132]|   useEffect(() => {
-[F19:133]|     currentModeRef.current = timer.mode;
-[F19:134]|   }, [timer.mode]);
+[F19:15]| import { useClipboard } from '@/hooks/useClipboard';
+[F19:16]| import { Toaster } from '@/components/ui/sonner';
+[F19:17]| import { toast } from 'sonner';
+[F19:18]| import type { TimerMode } from '@/types';
+[F19:19]| import './App.css';
+[F19:20]| 
+[F19:21]| function App() {
+[F19:22]|   const {
+[F19:23]|     data,
+[F19:24]|     isLoaded,
+[F19:25]|     updateZones,
+[F19:26]|     updateTasks,
+[F19:27]|     updateSettings,
+[F19:28]|     setCurrentView,
+[F19:29]|     setActiveZoneId,
+[F19:30]| 
+[F19:31]|     archiveCurrentWorkspace,
+[F19:32]|     restoreFromHistory,
+[F19:33]|     createNewWorkspace,
+[F19:34]|     deleteHistoryWorkspace,
+[F19:35]|     renameHistoryWorkspace,
+[F19:36]|     updateHistorySummary,
+[F19:37]|   } = useStorage();
+[F19:38]| 
+[F19:39]|   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+[F19:40]| 
+[F19:41]|   // 使用ref存储activeTaskId和tasks，确保计时器回调中能获取最新值
+[F19:42]|   const activeTaskIdRef = useRef<string | null>(null);
+[F19:43]|   const tasksRef = useRef<typeof data.currentWorkspace.tasks>([]);
+[F19:44]|   const timerRef = useRef<{ isRunning: boolean; mode: string }>({ isRunning: false, mode: 'idle' });
+[F19:45]| 
+[F19:46]|   // 使用当前工作区的数据
+[F19:47]|   const {
+[F19:48]|     zones,
+[F19:49]|     addZone,
+[F19:50]|     updateZone,
+[F19:51]|     deleteZone,
+[F19:52]|     applyTemplate,
+[F19:53]|     getZoneById,
+[F19:54]|     templates,
+[F19:55]|   } = useZones(
+[F19:56]|     data.currentWorkspace.zones,
+[F19:57]|     data.currentWorkspace.tasks,
+[F19:58]|     updateZones,
+[F19:59]|     updateTasks
+[F19:60]|   );
+[F19:61]| 
+[F19:62]|   const {
+[F19:63]|     tasks,
+[F19:64]|     getTasksByZone,
+[F19:65]|     addTask,
+[F19:66]|     toggleTask,
+[F19:67]|     deleteTask,
+[F19:68]|     updateTask,
+[F19:69]|     toggleExpanded,
+[F19:70]|     reorderTasks,
+[F19:71]|     clearCompleted,
+[F19:72]|     stats,
+[F19:73]|   } = useTasks(data.currentWorkspace.tasks, updateTasks);
+[F19:74]| 
+[F19:75]|   // 同步ref和state（在tasks声明之后）
+[F19:76]|   useEffect(() => {
+[F19:77]|     activeTaskIdRef.current = activeTaskId;
+[F19:78]|   }, [activeTaskId]);
+[F19:79]| 
+[F19:80]|   useEffect(() => {
+[F19:81]|     tasksRef.current = tasks;
+[F19:82]|   }, [tasks]);
+[F19:83]| 
+[F19:84]|   // 处理计时器滴答，累计任务时间
+[F19:85]|   const handleTimerTick = useCallback(() => {
+[F19:86]|     // 使用ref获取最新的activeTaskId、tasks和timer状态，避免闭包问题
+[F19:87]|     const currentActiveTaskId = activeTaskIdRef.current;
+[F19:88]|     const currentTasks = tasksRef.current;
+[F19:89]|     const currentTimer = timerRef.current;
+[F19:90]| 
+[F19:91]|     if (currentActiveTaskId && currentTimer.isRunning && currentTimer.mode === 'work') {
+[F19:92]|       const task = currentTasks.find(t => t.id === currentActiveTaskId);
+[F19:93]|       if (task) {
+[F19:94]|         updateTask(currentActiveTaskId, {
+[F19:95]|           totalWorkTime: (task.totalWorkTime || 0) + 1
+[F19:96]|         });
+[F19:97]|       }
+[F19:98]|     }
+[F19:99]|   }, [updateTask]);
+[F19:100]| 
+[F19:101]|   const handleTimerComplete = useCallback((mode: TimerMode, _duration: number) => {
+[F19:102]|     if (mode === 'work' && activeTaskId) {
+[F19:103]|       const task = tasks.find(t => t.id === activeTaskId);
+[F19:104]|       if (task) {
+[F19:105]|         toast.success('专注完成！', {
+[F19:106]|           description: `任务 "${task.title}" 累计工作 ${Math.floor((task.totalWorkTime || 0) / 60)} 分钟`,
+[F19:107]|         });
+[F19:108]|       }
+[F19:109]|     } else if (mode === 'break' || mode === 'longBreak') {
+[F19:110]|       toast.info('休息结束', {
+[F19:111]|         description: '准备好开始新的专注了吗？',
+[F19:112]|       });
+[F19:113]|     }
+[F19:114]|   }, [activeTaskId, tasks]);
+[F19:115]| 
+[F19:116]|   const timer = useTimer({
+[F19:117]|     workDuration: data.settings.workDuration,
+[F19:118]|     breakDuration: data.settings.breakDuration,
+[F19:119]|     longBreakDuration: data.settings.longBreakDuration,
+[F19:120]|     autoStartBreak: data.settings.autoStartBreak,
+[F19:121]|     soundEnabled: data.settings.soundEnabled,
+[F19:122]|     onComplete: handleTimerComplete,
+[F19:123]|     onTick: handleTimerTick,
+[F19:124]|   });
+[F19:125]| 
+[F19:126]|   // 剪贴板功能
+[F19:127]|   const {
+[F19:128]|     copyTask,
+[F19:129]|     copyZone,
+[F19:130]|     pasteTask,
+[F19:131]|     pasteZone,
+[F19:132]|     hasTask,
+[F19:133]|     hasZone,
+[F19:134]|   } = useClipboard();
 [F19:135]| 
-[F19:136]|   // 监听 settings 变化，当 timer 在 idle 状态时同步更新时间，保持当前模式
+[F19:136]|   // 同步timerRef（在timer声明之后）
 [F19:137]|   useEffect(() => {
-[F19:138]|     if (timer.mode === 'idle' && !timer.isRunning) {
-[F19:139]|       // 根据当前模式选择对应的时长
-[F19:140]|       const targetDuration = currentModeRef.current === 'break'
-[F19:141]|         ? data.settings.breakDuration
-[F19:142]|         : currentModeRef.current === 'longBreak'
-[F19:143]|         ? data.settings.longBreakDuration
-[F19:144]|         : data.settings.workDuration;
-[F19:145]| 
-[F19:146]|       if (timer.timeRemaining !== targetDuration) {
-[F19:147]|         timer.updateTime(targetDuration);
-[F19:148]|       }
-[F19:149]|     }
-[F19:150]|   }, [data.settings.workDuration, data.settings.breakDuration, data.settings.longBreakDuration]);
-[F19:151]| 
-[F19:152]|   const handleStartTimer = useCallback(() => {
-[F19:153]|     const incompleteTasksList = tasks.filter((t) => !t.completed);
-[F19:154]|     if (incompleteTasksList.length > 0 && !activeTaskId) {
-[F19:155]|       setActiveTaskId(incompleteTasksList[0].id);
-[F19:156]|       timer.start('work', incompleteTasksList[0].id);
-[F19:157]|     } else {
-[F19:158]|       timer.start('work', activeTaskId);
-[F19:159]|     }
-[F19:160]|   }, [timer, tasks, activeTaskId]);
-[F19:161]| 
-[F19:162]|   const handleSelectTask = useCallback((taskId: string) => {
-[F19:163]|     setActiveTaskId(taskId);
-[F19:164]|     if (timer.mode === 'idle') {
-[F19:165]|       const task = tasks.find(t => t.id === taskId);
-[F19:166]|       toast.info('已选择任务', {
-[F19:167]|         description: task ? `点击"开始专注"为 "${task.title}" 计时` : '点击"开始专注"开始计时',
-[F19:168]|       });
-[F19:169]|     }
-[F19:170]|   }, [timer.mode, tasks]);
-[F19:171]| 
-[F19:172]|   // 窗口尺寸常量
-[F19:173]|   const NORMAL_SIZE = { width: 340, height: 500 };
-[F19:174]|   const COLLAPSED_SIZE = { width: 280, height: 80 };
-[F19:175]| 
-[F19:176]|   const handleToggleCollapse = useCallback(async () => {
-[F19:177]|     const willCollapse = !data.settings.collapsed;
-[F19:178]| 
-[F19:179]|     try {
-[F19:180]|       const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
-[F19:181]|       const win = getCurrentWindow();
-[F19:182]| 
-[F19:183]|       if (willCollapse) {
-[F19:184]|         // 收起时：调整窗口大小
-[F19:185]|         await win.setSize(new LogicalSize(COLLAPSED_SIZE.width, COLLAPSED_SIZE.height));
-[F19:186]|       } else {
-[F19:187]|         // 展开时：恢复窗口大小
-[F19:188]|         await win.setSize(new LogicalSize(NORMAL_SIZE.width, NORMAL_SIZE.height));
-[F19:189]|         await win.setFocus();
-[F19:190]|       }
-[F19:191]|     } catch (e) {
-[F19:192]|       console.error('调整窗口大小失败:', e);
-[F19:193]|     }
+[F19:138]|     timerRef.current = { isRunning: timer.isRunning, mode: timer.mode };
+[F19:139]|   }, [timer.isRunning, timer.mode]);
+[F19:140]| 
+[F19:141]|   // 使用 ref 追踪当前模式，避免无限循环
+[F19:142]|   const currentModeRef = useRef<TimerMode>('work');
+[F19:143]|   useEffect(() => {
+[F19:144]|     currentModeRef.current = timer.mode;
+[F19:145]|   }, [timer.mode]);
+[F19:146]| 
+[F19:147]|   // 监听 settings 变化，当 timer 在 idle 状态时同步更新时间，保持当前模式
+[F19:148]|   useEffect(() => {
+[F19:149]|     if (timer.mode === 'idle' && !timer.isRunning) {
+[F19:150]|       // 根据当前模式选择对应的时长
+[F19:151]|       const targetDuration = currentModeRef.current === 'break'
+[F19:152]|         ? data.settings.breakDuration
+[F19:153]|         : currentModeRef.current === 'longBreak'
+[F19:154]|         ? data.settings.longBreakDuration
+[F19:155]|         : data.settings.workDuration;
+[F19:156]| 
+[F19:157]|       if (timer.timeRemaining !== targetDuration) {
+[F19:158]|         timer.updateTime(targetDuration);
+[F19:159]|       }
+[F19:160]|     }
+[F19:161]|   }, [data.settings.workDuration, data.settings.breakDuration, data.settings.longBreakDuration]);
+[F19:162]| 
+[F19:163]|   // 键盘快捷键监听（Ctrl+C / Ctrl+V）
+[F19:164]|   useEffect(() => {
+[F19:165]|     const handleKeyDown = (e: KeyboardEvent) => {
+[F19:166]|       // 忽略在输入框中的快捷键
+[F19:167]|       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+[F19:168]|         return;
+[F19:169]|       }
+[F19:170]| 
+[F19:171]|       // 获取当前选中的工作区
+[F19:172]|       const currentZone = getZoneById(data.activeZoneId || '') || null;
+[F19:173]| 
+[F19:174]|       // Ctrl+C - 复制
+[F19:175]|       if (e.ctrlKey && e.key === 'c') {
+[F19:176]|         // 优先复制任务（如果选中了任务）
+[F19:177]|         if (activeTaskId) {
+[F19:178]|           const task = tasks.find(t => t.id === activeTaskId);
+[F19:179]|           if (task) {
+[F19:180]|             copyTask(task);
+[F19:181]|             toast.success('任务已复制');
+[F19:182]|             return;
+[F19:183]|           }
+[F19:184]|         }
+[F19:185]|         // 否则复制工作区
+[F19:186]|         if (currentZone) {
+[F19:187]|           const zoneTasks = tasks.filter(t => t.zoneId === currentZone.id);
+[F19:188]|           if (zoneTasks.length > 0) {
+[F19:189]|             copyZone(currentZone, zoneTasks);
+[F19:190]|             toast.success(`工作区 "${currentZone.name}" 已复制`);
+[F19:191]|           }
+[F19:192]|         }
+[F19:193]|       }
 [F19:194]| 
-[F19:195]|     updateSettings({ collapsed: willCollapse });
-[F19:196]|   }, [data.settings.collapsed, updateSettings]);
-[F19:197]| 
-[F19:198]|   const handleArchiveCurrent = useCallback((name: string, summary: string) => {
-[F19:199]|     const id = archiveCurrentWorkspace(name, summary);
-[F19:200]|     toast.success('已存入历史', {
-[F19:201]|       description: `工作区 "${name}" 已保存到历史记录`,
-[F19:202]|     });
-[F19:203]|     return id;
-[F19:204]|   }, [archiveCurrentWorkspace]);
-[F19:205]| 
-[F19:206]|   const handleCreateNewWorkspace = useCallback((name?: string, templateId?: string) => {
-[F19:207]|     createNewWorkspace(name, templateId);
-[F19:208]|     toast.success('新工作区已创建', {
-[F19:209]|       description: templateId ? '使用模板创建了新工作区' : '创建了空白工作区',
-[F19:210]|     });
-[F19:211]|   }, [createNewWorkspace]);
-[F19:212]| 
-[F19:213]|   const handleRestoreFromHistory = useCallback((historyId: string) => {
-[F19:214]|     restoreFromHistory(historyId);
-[F19:215]|     toast.success('已恢复历史工作区');
-[F19:216]|   }, [restoreFromHistory]);
-[F19:217]| 
-[F19:218]|   // Update timer when active task changes
-[F19:219]|   useEffect(() => {
-[F19:220]|     if (timer.currentTaskId && timer.currentTaskId !== activeTaskId) {
-[F19:221]|       setActiveTaskId(timer.currentTaskId);
-[F19:222]|     }
-[F19:223]|   }, [timer.currentTaskId, activeTaskId]);
-[F19:224]| 
-[F19:225]|   if (!isLoaded) {
-[F19:226]|     return (
-[F19:227]|       <div className="loading-screen">
-[F19:228]|         <div className="loading-spinner" />
-[F19:229]|         <span>加载中...</span>
-[F19:230]|       </div>
-[F19:231]|     );
-[F19:232]|   }
-[F19:233]| 
-[F19:234]|   // Show collapse button when collapsed
-[F19:235]|   if (data.settings.collapsed) {
-[F19:236]|     const activeTask = tasks.find(t => t.id === activeTaskId);
-[F19:237]| 
-[F19:238]|     return (
-[F19:239]|       <>
-[F19:240]|         <CollapseButton
-[F19:241]|           pendingTasks={stats.pending}
-[F19:242]|           isTimerRunning={timer.isRunning}
-[F19:243]|           timerMode={timer.mode}
-[F19:244]|           formattedTime={timer.formattedTime}
-[F19:245]|           activeTaskId={activeTaskId}
-[F19:246]|           taskTitle={activeTask?.title || '未选择任务'}
-[F19:247]|           onStart={() => timer.start('work', activeTaskId)}
-[F19:248]|           onPause={timer.pause}
-[F19:249]|           onResume={timer.resume}
-[F19:250]|           onExpand={handleToggleCollapse}
-[F19:251]|         />
-[F19:252]|         <Toaster position="top-center" />
-[F19:253]|       </>
-[F19:254]|     );
-[F19:255]|   }
-[F19:256]| 
-[F19:257]|   const activeZone = getZoneById(data.activeZoneId || '') || null;
-[F19:258]|   const currentZoneTasks = activeZone ? getTasksByZone(activeZone.id) : [];
-[F19:259]| 
-[F19:260]|   return (
-[F19:261]|     <>
-[F19:262]|       <FloatWindow onCollapse={handleToggleCollapse}>
-[F19:263]|         <div className="app-container">
-[F19:264]|           {/* Timer Section */}
-[F19:265]|           <PomodoroTimer
-[F19:266]|             mode={timer.mode}
-[F19:267]|             formattedTime={timer.formattedTime}
-[F19:268]|             timeRemaining={timer.timeRemaining}
-[F19:269]|             isRunning={timer.isRunning}
-[F19:270]|             progress={timer.progress}
-[F19:271]|             completedSessions={timer.completedSessions}
-[F19:272]|             workDuration={data.settings.workDuration}
-[F19:273]|             breakDuration={data.settings.breakDuration}
-[F19:274]|             longBreakDuration={data.settings.longBreakDuration}
-[F19:275]|             onStart={handleStartTimer}
-[F19:276]|             onPause={timer.pause}
-[F19:277]|             onResume={timer.resume}
-[F19:278]|             onStop={timer.stop}
-[F19:279]|             onSkip={timer.skip}
-[F19:280]|             onUpdateTime={(seconds, mode) => {
-[F19:281]|               // 手动修改时间时，同步更新到 settings
-[F19:282]|               if (mode === 'work') {
-[F19:283]|                 updateSettings({ workDuration: seconds });
-[F19:284]|               } else if (mode === 'break') {
-[F19:285]|                 updateSettings({ breakDuration: seconds });
-[F19:286]|               } else if (mode === 'longBreak') {
-[F19:287]|                 updateSettings({ longBreakDuration: seconds });
-[F19:288]|               }
-[F19:289]|               timer.updateTime(seconds);
-[F19:290]|             }}
-[F19:291]|             onSetMode={(newMode) => {
-[F19:292]|               // 切换模式时，更新 timer 的时间
-[F19:293]|               const newDuration = newMode === 'work'
-[F19:294]|                 ? data.settings.workDuration
-[F19:295]|                 : newMode === 'break'
-[F19:296]|                 ? data.settings.breakDuration
-[F19:297]|                 : data.settings.longBreakDuration;
-[F19:298]|               timer.updateTime(newDuration);
-[F19:299]|             }}
-[F19:300]|           />
-[F19:301]| 
-[F19:302]|           {/* Divider */}
-[F19:303]|           <div className="section-divider" />
+[F19:195]|       // Ctrl+V - 粘贴
+[F19:196]|       if (e.ctrlKey && e.key === 'v') {
+[F19:197]|         // 优先粘贴工作区
+[F19:198]|         if (hasZone && currentZone) {
+[F19:199]|           const result = pasteZone(zones);
+[F19:200]|           if (result) {
+[F19:201]|             updateZones([...zones, result.zone]);
+[F19:202]|             updateTasks([...tasks, ...result.tasks]);
+[F19:203]|             toast.success(`已粘贴工作区 "${result.zone.name}"`);
+[F19:204]|           }
+[F19:205]|         } else if (hasTask && currentZone) {
+[F19:206]|           const newTask = pasteTask(currentZone.id);
+[F19:207]|           if (newTask) {
+[F19:208]|             updateTasks([...tasks, newTask]);
+[F19:209]|             toast.success('任务已粘贴');
+[F19:210]|           }
+[F19:211]|         }
+[F19:212]|       }
+[F19:213]|     };
+[F19:214]| 
+[F19:215]|     window.addEventListener('keydown', handleKeyDown);
+[F19:216]|     return () => window.removeEventListener('keydown', handleKeyDown);
+[F19:217]|   }, [activeTaskId, tasks, zones, getZoneById, data.activeZoneId, copyTask, copyZone, pasteTask, pasteZone, hasTask, hasZone, updateZones, updateTasks]);
+[F19:218]| 
+[F19:219]|   const handleStartTimer = useCallback(() => {
+[F19:220]|     const incompleteTasksList = tasks.filter((t) => !t.completed);
+[F19:221]|     if (incompleteTasksList.length > 0 && !activeTaskId) {
+[F19:222]|       setActiveTaskId(incompleteTasksList[0].id);
+[F19:223]|       timer.start('work', incompleteTasksList[0].id);
+[F19:224]|     } else {
+[F19:225]|       timer.start('work', activeTaskId);
+[F19:226]|     }
+[F19:227]|   }, [timer, tasks, activeTaskId]);
+[F19:228]| 
+[F19:229]|   const handleSelectTask = useCallback((taskId: string) => {
+[F19:230]|     setActiveTaskId(taskId);
+[F19:231]|     if (timer.mode === 'idle') {
+[F19:232]|       const task = tasks.find(t => t.id === taskId);
+[F19:233]|       toast.info('已选择任务', {
+[F19:234]|         description: task ? `点击"开始专注"为 "${task.title}" 计时` : '点击"开始专注"开始计时',
+[F19:235]|       });
+[F19:236]|     }
+[F19:237]|   }, [timer.mode, tasks]);
+[F19:238]| 
+[F19:239]|   // 窗口尺寸常量
+[F19:240]|   const NORMAL_SIZE = { width: 750, height: 650 };
+[F19:241]|   const COLLAPSED_SIZE = { width: 280, height: 80 };
+[F19:242]| 
+[F19:243]|   const handleToggleCollapse = useCallback(async () => {
+[F19:244]|     const willCollapse = !data.settings.collapsed;
+[F19:245]| 
+[F19:246]|     try {
+[F19:247]|       const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
+[F19:248]|       const win = getCurrentWindow();
+[F19:249]| 
+[F19:250]|       if (willCollapse) {
+[F19:251]|         // 收起时：调整窗口大小
+[F19:252]|         await win.setSize(new LogicalSize(COLLAPSED_SIZE.width, COLLAPSED_SIZE.height));
+[F19:253]|       } else {
+[F19:254]|         // 展开时：恢复窗口大小
+[F19:255]|         await win.setSize(new LogicalSize(NORMAL_SIZE.width, NORMAL_SIZE.height));
+[F19:256]|         await win.setFocus();
+[F19:257]|       }
+[F19:258]|     } catch (e) {
+[F19:259]|       console.error('调整窗口大小失败:', e);
+[F19:260]|     }
+[F19:261]| 
+[F19:262]|     updateSettings({ collapsed: willCollapse });
+[F19:263]|   }, [data.settings.collapsed, updateSettings]);
+[F19:264]| 
+[F19:265]|   const handleArchiveCurrent = useCallback((name: string, summary: string) => {
+[F19:266]|     const id = archiveCurrentWorkspace(name, summary);
+[F19:267]|     toast.success('已存入历史', {
+[F19:268]|       description: `工作区 "${name}" 已保存到历史记录`,
+[F19:269]|     });
+[F19:270]|     return id;
+[F19:271]|   }, [archiveCurrentWorkspace]);
+[F19:272]| 
+[F19:273]|   const handleCreateNewWorkspace = useCallback((name?: string, templateId?: string) => {
+[F19:274]|     createNewWorkspace(name, templateId);
+[F19:275]|     toast.success('新工作区已创建', {
+[F19:276]|       description: templateId ? '使用模板创建了新工作区' : '创建了空白工作区',
+[F19:277]|     });
+[F19:278]|   }, [createNewWorkspace]);
+[F19:279]| 
+[F19:280]|   const handleRestoreFromHistory = useCallback((historyId: string) => {
+[F19:281]|     restoreFromHistory(historyId);
+[F19:282]|     toast.success('已恢复历史工作区');
+[F19:283]|   }, [restoreFromHistory]);
+[F19:284]| 
+[F19:285]|   // Update timer when active task changes
+[F19:286]|   useEffect(() => {
+[F19:287]|     if (timer.currentTaskId && timer.currentTaskId !== activeTaskId) {
+[F19:288]|       setActiveTaskId(timer.currentTaskId);
+[F19:289]|     }
+[F19:290]|   }, [timer.currentTaskId, activeTaskId]);
+[F19:291]| 
+[F19:292]|   if (!isLoaded) {
+[F19:293]|     return (
+[F19:294]|       <div className="loading-screen">
+[F19:295]|         <div className="loading-spinner" />
+[F19:296]|         <span>加载中...</span>
+[F19:297]|       </div>
+[F19:298]|     );
+[F19:299]|   }
+[F19:300]| 
+[F19:301]|   // Show collapse button when collapsed
+[F19:302]|   if (data.settings.collapsed) {
+[F19:303]|     const activeTask = tasks.find(t => t.id === activeTaskId);
 [F19:304]| 
-[F19:305]|           {/* Main Content - 可调节面板 */}
-[F19:306]|           <ResizablePanelGroup direction="horizontal" className="main-content">
-[F19:307]|             {/* Zone Manager Sidebar */}
-[F19:308]|             <ResizablePanel defaultSize="40%" minSize="5%" maxSize="95%">
-[F19:309]|               <ZoneManager
-[F19:310]|                 zones={zones}
-[F19:311]|                 activeZoneId={data.activeZoneId}
-[F19:312]|                 templates={templates}
-[F19:313]|                 onSelectZone={(zoneId) => {
-[F19:314]|                   setActiveZoneId(zoneId);
-[F19:315]|                   setCurrentView(zoneId === null ? 'global' : 'zones');
-[F19:316]|                 }}
-[F19:317]|                 onAddZone={addZone}
-[F19:318]|                 onUpdateZone={updateZone}
-[F19:319]|                 onDeleteZone={deleteZone}
-[F19:320]|                 onApplyTemplate={applyTemplate}
-[F19:321]|                 onViewChange={(view) => {
-[F19:322]|                   setCurrentView(view);
-[F19:323]|                   if (view === 'global') setActiveZoneId(null);
-[F19:324]|                 }}
-[F19:325]|                 onOpenHistory={() => setCurrentView('history')}
-[F19:326]|                 onOpenSettings={() => setCurrentView('settings')}
-[F19:327]|               />
-[F19:328]|             </ResizablePanel>
-[F19:329]| 
-[F19:330]|             {/* 分隔条 */}
-[F19:331]|             <ResizableHandle className="resize-handle" withHandle />
-[F19:332]| 
-[F19:333]|             {/* Content Area */}
-[F19:334]|             <ResizablePanel defaultSize="60%" minSize="5%">
-[F19:335]|               <div className="content-area">
-[F19:336]|                 {data.currentView === 'history' ? (
-[F19:337]|                   <HistoryManager
-[F19:338]|                     historyWorkspaces={data.historyWorkspaces}
-[F19:339]|                     templates={templates}
-[F19:340]|                     onBack={() => setCurrentView('zones')}
-[F19:341]|                     onRestore={handleRestoreFromHistory}
-[F19:342]|                     onDelete={deleteHistoryWorkspace}
-[F19:343]|                     onRename={renameHistoryWorkspace}
-[F19:344]|                     onUpdateSummary={updateHistorySummary}
-[F19:345]|                     onCreateNewWorkspace={handleCreateNewWorkspace}
-[F19:346]|                     onArchiveCurrent={handleArchiveCurrent}
-[F19:347]|                   />
-[F19:348]|                 ) : data.currentView === 'settings' ? (
-[F19:349]|                   <SettingsPanel
-[F19:350]|                     settings={data.settings}
-[F19:351]|                     onBack={() => setCurrentView('zones')}
-[F19:352]|                     onUpdateSettings={updateSettings}
-[F19:353]|                   />
-[F19:354]|                 ) : data.currentView === 'global' ? (
-[F19:355]|                   <GlobalView
-[F19:356]|                     zones={zones}
-[F19:357]|                     tasks={tasks}
-[F19:358]|                     activeTaskId={activeTaskId}
-[F19:359]|                     isTimerRunning={timer.isRunning}
-[F19:360]|                     onBack={() => {
-[F19:361]|                       setCurrentView('zones');
-[F19:362]|                       if (zones.length > 0) {
-[F19:363]|                         setActiveZoneId(zones[0].id);
-[F19:364]|                       }
-[F19:365]|                     }}
-[F19:366]|                     onToggleTask={toggleTask}
-[F19:367]|                     onDeleteTask={deleteTask}
-[F19:368]|                     onUpdateTask={updateTask}
-[F19:369]|                     onToggleExpanded={toggleExpanded}
-[F19:370]|                     onReorderTasks={reorderTasks}
-[F19:371]|                     onSelectTask={handleSelectTask}
-[F19:372]|                   />
-[F19:373]|                 ) : (
-[F19:374]|                   <TaskList
-[F19:375]|                     zone={activeZone}
-[F19:376]|                     zones={zones}
-[F19:377]|                     tasks={currentZoneTasks}
-[F19:378]|                     activeTaskId={activeTaskId}
-[F19:379]|                     isTimerRunning={timer.isRunning}
-[F19:380]|                     onAddTask={addTask}
-[F19:381]|                     onToggleTask={toggleTask}
-[F19:382]|                     onDeleteTask={deleteTask}
-[F19:383]|                     onUpdateTask={updateTask}
-[F19:384]|                     onToggleExpanded={toggleExpanded}
-[F19:385]|                     onReorderTasks={reorderTasks}
-[F19:386]|                     onSelectTask={handleSelectTask}
-[F19:387]|                     onClearCompleted={clearCompleted}
-[F19:388]|                   />
-[F19:389]|                 )}
-[F19:390]|               </div>
-[F19:391]|             </ResizablePanel>
-[F19:392]|           </ResizablePanelGroup>
-[F19:393]|         </div>
-[F19:394]|       </FloatWindow>
-[F19:395]|       <Toaster
-[F19:396]|         position="top-center"
-[F19:397]|         toastOptions={{
-[F19:398]|           style: {
-[F19:399]|             background: 'rgba(30, 30, 40, 0.95)',
-[F19:400]|             border: '1px solid rgba(255, 255, 255, 0.1)',
-[F19:401]|             color: '#fff',
-[F19:402]|           },
-[F19:403]|         }}
-[F19:404]|       />
-[F19:405]|     </>
-[F19:406]|   );
-[F19:407]| }
-[F19:408]| 
-[F19:409]| export default App;
+[F19:305]|     return (
+[F19:306]|       <>
+[F19:307]|         <CollapseButton
+[F19:308]|           pendingTasks={stats.pending}
+[F19:309]|           isTimerRunning={timer.isRunning}
+[F19:310]|           timerMode={timer.mode}
+[F19:311]|           formattedTime={timer.formattedTime}
+[F19:312]|           activeTaskId={activeTaskId}
+[F19:313]|           taskTitle={activeTask?.title || '未选择任务'}
+[F19:314]|           onStart={() => timer.start('work', activeTaskId)}
+[F19:315]|           onPause={timer.pause}
+[F19:316]|           onResume={timer.resume}
+[F19:317]|           onExpand={handleToggleCollapse}
+[F19:318]|         />
+[F19:319]|         <Toaster position="top-center" />
+[F19:320]|       </>
+[F19:321]|     );
+[F19:322]|   }
+[F19:323]| 
+[F19:324]|   const activeZone = getZoneById(data.activeZoneId || '') || null;
+[F19:325]|   const currentZoneTasks = activeZone ? getTasksByZone(activeZone.id) : [];
+[F19:326]| 
+[F19:327]|   return (
+[F19:328]|     <>
+[F19:329]|       <FloatWindow onCollapse={handleToggleCollapse}>
+[F19:330]|         <div className="app-container">
+[F19:331]|           {/* Timer Section */}
+[F19:332]|           <PomodoroTimer
+[F19:333]|             mode={timer.mode}
+[F19:334]|             formattedTime={timer.formattedTime}
+[F19:335]|             timeRemaining={timer.timeRemaining}
+[F19:336]|             isRunning={timer.isRunning}
+[F19:337]|             progress={timer.progress}
+[F19:338]|             completedSessions={timer.completedSessions}
+[F19:339]|             workDuration={data.settings.workDuration}
+[F19:340]|             breakDuration={data.settings.breakDuration}
+[F19:341]|             longBreakDuration={data.settings.longBreakDuration}
+[F19:342]|             onStart={handleStartTimer}
+[F19:343]|             onPause={timer.pause}
+[F19:344]|             onResume={timer.resume}
+[F19:345]|             onStop={timer.stop}
+[F19:346]|             onSkip={timer.skip}
+[F19:347]|             onUpdateTime={(seconds, mode) => {
+[F19:348]|               // 手动修改时间时，同步更新到 settings
+[F19:349]|               if (mode === 'work') {
+[F19:350]|                 updateSettings({ workDuration: seconds });
+[F19:351]|               } else if (mode === 'break') {
+[F19:352]|                 updateSettings({ breakDuration: seconds });
+[F19:353]|               } else if (mode === 'longBreak') {
+[F19:354]|                 updateSettings({ longBreakDuration: seconds });
+[F19:355]|               }
+[F19:356]|               timer.updateTime(seconds);
+[F19:357]|             }}
+[F19:358]|             onSetMode={(newMode) => {
+[F19:359]|               // 切换模式时，使用 setMode 同时设置模式和对应的时间
+[F19:360]|               timer.setMode(newMode);
+[F19:361]|             }}
+[F19:362]|           />
+[F19:363]| 
+[F19:364]|           {/* Divider */}
+[F19:365]|           <div className="section-divider" />
+[F19:366]| 
+[F19:367]|           {/* Main Content - 可调节面板 */}
+[F19:368]|           <ResizablePanelGroup direction="horizontal" className="main-content">
+[F19:369]|             {/* Zone Manager Sidebar */}
+[F19:370]|             <ResizablePanel defaultSize="40%" minSize="5%" maxSize="95%">
+[F19:371]|               <ZoneManager
+[F19:372]|                 zones={zones}
+[F19:373]|                 activeZoneId={data.activeZoneId}
+[F19:374]|                 templates={templates}
+[F19:375]|                 onSelectZone={(zoneId) => {
+[F19:376]|                   setActiveZoneId(zoneId);
+[F19:377]|                   setCurrentView(zoneId === null ? 'global' : 'zones');
+[F19:378]|                 }}
+[F19:379]|                 onAddZone={addZone}
+[F19:380]|                 onUpdateZone={updateZone}
+[F19:381]|                 onDeleteZone={deleteZone}
+[F19:382]|                 onApplyTemplate={applyTemplate}
+[F19:383]|                 onViewChange={(view) => {
+[F19:384]|                   setCurrentView(view);
+[F19:385]|                   if (view === 'global') setActiveZoneId(null);
+[F19:386]|                 }}
+[F19:387]|                 onOpenHistory={() => setCurrentView('history')}
+[F19:388]|                 onOpenSettings={() => setCurrentView('settings')}
+[F19:389]|               />
+[F19:390]|             </ResizablePanel>
+[F19:391]| 
+[F19:392]|             {/* 分隔条 */}
+[F19:393]|             <ResizableHandle className="resize-handle" withHandle />
+[F19:394]| 
+[F19:395]|             {/* Content Area */}
+[F19:396]|             <ResizablePanel defaultSize="60%" minSize="5%">
+[F19:397]|               <div className="content-area">
+[F19:398]|                 {data.currentView === 'history' ? (
+[F19:399]|                   <HistoryManager
+[F19:400]|                     historyWorkspaces={data.historyWorkspaces}
+[F19:401]|                     templates={templates}
+[F19:402]|                     onBack={() => setCurrentView('zones')}
+[F19:403]|                     onRestore={handleRestoreFromHistory}
+[F19:404]|                     onDelete={deleteHistoryWorkspace}
+[F19:405]|                     onRename={renameHistoryWorkspace}
+[F19:406]|                     onUpdateSummary={updateHistorySummary}
+[F19:407]|                     onCreateNewWorkspace={handleCreateNewWorkspace}
+[F19:408]|                     onArchiveCurrent={handleArchiveCurrent}
+[F19:409]|                   />
+[F19:410]|                 ) : data.currentView === 'settings' ? (
+[F19:411]|                   <SettingsPanel
+[F19:412]|                     settings={data.settings}
+[F19:413]|                     onBack={() => setCurrentView('zones')}
+[F19:414]|                     onUpdateSettings={updateSettings}
+[F19:415]|                     onPreviewMode={timer.setMode}
+[F19:416]|                   />
+[F19:417]|                 ) : data.currentView === 'global' ? (
+[F19:418]|                   <GlobalView
+[F19:419]|                     zones={zones}
+[F19:420]|                     tasks={tasks}
+[F19:421]|                     activeTaskId={activeTaskId}
+[F19:422]|                     isTimerRunning={timer.isRunning}
+[F19:423]|                     sortConfig={data.settings.globalViewSort}
+[F19:424]|                     onBack={() => {
+[F19:425]|                       setCurrentView('zones');
+[F19:426]|                       if (zones.length > 0) {
+[F19:427]|                         setActiveZoneId(zones[0].id);
+[F19:428]|                       }
+[F19:429]|                     }}
+[F19:430]|                     onToggleTask={toggleTask}
+[F19:431]|                     onDeleteTask={deleteTask}
+[F19:432]|                     onUpdateTask={updateTask}
+[F19:433]|                     onToggleExpanded={toggleExpanded}
+[F19:434]|                     onReorderTasks={reorderTasks}
+[F19:435]|                     onSelectTask={handleSelectTask}
+[F19:436]|                     onSortConfigChange={(config) => updateSettings({ globalViewSort: config })}
+[F19:437]|                   />
+[F19:438]|                 ) : (
+[F19:439]|                   <TaskList
+[F19:440]|                     zone={activeZone}
+[F19:441]|                     zones={zones}
+[F19:442]|                     tasks={currentZoneTasks}
+[F19:443]|                     activeTaskId={activeTaskId}
+[F19:444]|                     isTimerRunning={timer.isRunning}
+[F19:445]|                     onAddTask={addTask}
+[F19:446]|                     onToggleTask={toggleTask}
+[F19:447]|                     onDeleteTask={deleteTask}
+[F19:448]|                     onUpdateTask={updateTask}
+[F19:449]|                     onToggleExpanded={toggleExpanded}
+[F19:450]|                     onReorderTasks={reorderTasks}
+[F19:451]|                     onSelectTask={handleSelectTask}
+[F19:452]|                     onClearCompleted={clearCompleted}
+[F19:453]|                   />
+[F19:454]|                 )}
+[F19:455]|               </div>
+[F19:456]|             </ResizablePanel>
+[F19:457]|           </ResizablePanelGroup>
+[F19:458]|         </div>
+[F19:459]|       </FloatWindow>
+[F19:460]|       <Toaster
+[F19:461]|         position="top-center"
+[F19:462]|         toastOptions={{
+[F19:463]|           style: {
+[F19:464]|             background: 'rgba(30, 30, 40, 0.95)',
+[F19:465]|             border: '1px solid rgba(255, 255, 255, 0.1)',
+[F19:466]|             color: '#fff',
+[F19:467]|           },
+[F19:468]|         }}
+[F19:469]|       />
+[F19:470]|     </>
+[F19:471]|   );
+[F19:472]| }
+[F19:473]| 
+[F19:474]| export default App;
 
 ================================================================================
 文件路径: src\index.css(F20) (约合大小: 2 KB)
@@ -4703,9 +5094,9 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F24:165]| }
 
 ================================================================================
-文件路径: src\components\GlobalView.tsx(F25) (约合大小: 9 KB)
+文件路径: src\components\GlobalView.tsx(F25) (约合大小: 17 KB)
 ================================================================================
-[F25:1]| import { useState } from 'react';
+[F25:1]| import { useState, useMemo } from 'react';
 [F25:2]| import {
 [F25:3]|   DndContext,
 [F25:4]|   closestCenter,
@@ -4721,261 +5112,455 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F25:14]|   sortableKeyboardCoordinates,
 [F25:15]|   verticalListSortingStrategy,
 [F25:16]| } from '@dnd-kit/sortable';
-[F25:17]| import { ArrowLeft, CheckCircle2, Globe } from 'lucide-react';
+[F25:17]| import { ArrowLeft, CheckCircle2, Globe, ArrowUpDown, Zap, Flag } from 'lucide-react';
 [F25:18]| import { Button } from '@/components/ui/button';
 [F25:19]| import { ScrollArea } from '@/components/ui/scroll-area';
-[F25:20]| import { TaskItem } from './TaskItem';
-[F25:21]| import type { Task, Zone } from '@/types';
-[F25:22]| 
-[F25:23]| interface GlobalViewProps {
-[F25:24]|   zones: Zone[];
-[F25:25]|   tasks: Task[];
-[F25:26]|   activeTaskId: string | null;
-[F25:27]|   isTimerRunning: boolean;
-[F25:28]|   onBack: () => void;
-[F25:29]|   onToggleTask: (id: string) => void;
-[F25:30]|   onDeleteTask: (id: string) => void;
-[F25:31]|   onUpdateTask: (id: string, updates: Partial<Omit<Task, 'id'>>) => void;
-[F25:32]|   onToggleExpanded: (id: string) => void;
-[F25:33]|   onReorderTasks: (zoneId: string, tasks: Task[]) => void;
-[F25:34]|   onSelectTask: (id: string) => void;
-[F25:35]| }
-[F25:36]| 
-[F25:37]| export function GlobalView({
-[F25:38]|   zones,
-[F25:39]|   tasks,
-[F25:40]|   activeTaskId,
-[F25:41]|   isTimerRunning,
-[F25:42]|   onBack,
-[F25:43]|   onToggleTask,
-[F25:44]|   onDeleteTask,
-[F25:45]|   onUpdateTask,
-[F25:46]|   onToggleExpanded,
-[F25:47]|   onReorderTasks,
-[F25:48]|   onSelectTask,
-[F25:49]| }: GlobalViewProps) {
-[F25:50]|   const [showCompleted, setShowCompleted] = useState(false);
-[F25:51]| 
-[F25:52]|   const sensors = useSensors(
-[F25:53]|     useSensor(PointerSensor),
-[F25:54]|     useSensor(KeyboardSensor, {
-[F25:55]|       coordinateGetter: sortableKeyboardCoordinates,
-[F25:56]|     })
-[F25:57]|   );
-[F25:58]| 
-[F25:59]|   // Get all incomplete tasks sorted by zone and order
-[F25:60]|   const incompleteTasks = tasks
-[F25:61]|     .filter((t) => !t.completed)
-[F25:62]|     .sort((a, b) => {
-[F25:63]|       const zoneA = zones.find((z) => z.id === a.zoneId);
-[F25:64]|       const zoneB = zones.find((z) => z.id === b.zoneId);
-[F25:65]|       if (zoneA?.order !== zoneB?.order) {
-[F25:66]|         return (zoneA?.order || 0) - (zoneB?.order || 0);
-[F25:67]|       }
-[F25:68]|       return a.order - b.order;
-[F25:69]|     });
-[F25:70]| 
-[F25:71]|   const completedTasks = tasks.filter((t) => t.completed);
-[F25:72]| 
-[F25:73]|   const handleDragEnd = (event: DragEndEvent) => {
-[F25:74]|     const { active, over } = event;
-[F25:75]| 
-[F25:76]|     if (over && active.id !== over.id) {
-[F25:77]|       const oldIndex = incompleteTasks.findIndex((t) => t.id === active.id);
-[F25:78]|       const newIndex = incompleteTasks.findIndex((t) => t.id === over.id);
-[F25:79]|       
-[F25:80]|       if (oldIndex !== -1 && newIndex !== -1) {
-[F25:81]|         const reordered = arrayMove(incompleteTasks, oldIndex, newIndex);
-[F25:82]|         // Group by zone and reorder within each zone
-[F25:83]|         const zoneGroups = new Map<string, Task[]>();
-[F25:84]|         reordered.forEach((task) => {
-[F25:85]|           if (!zoneGroups.has(task.zoneId)) {
-[F25:86]|             zoneGroups.set(task.zoneId, []);
-[F25:87]|           }
-[F25:88]|           zoneGroups.get(task.zoneId)!.push(task);
-[F25:89]|         });
-[F25:90]|         
-[F25:91]|         // Update order for each zone
-[F25:92]|         zoneGroups.forEach((zoneTasks, zoneId) => {
-[F25:93]|           onReorderTasks(zoneId, zoneTasks);
-[F25:94]|         });
-[F25:95]|       }
-[F25:96]|     }
-[F25:97]|   };
-[F25:98]| 
-[F25:99]|   const getZoneColor = (zoneId: string) => {
-[F25:100]|     const zone = zones.find((z) => z.id === zoneId);
-[F25:101]|     return zone?.color || '#6b7280';
-[F25:102]|   };
-[F25:103]| 
-[F25:104]|   const getZoneName = (zoneId: string) => {
-[F25:105]|     const zone = zones.find((z) => z.id === zoneId);
-[F25:106]|     return zone?.name || '未知分区';
-[F25:107]|   };
-[F25:108]| 
-[F25:109]|   const stats = {
-[F25:110]|     total: tasks.length,
-[F25:111]|     completed: completedTasks.length,
-[F25:112]|     pending: incompleteTasks.length,
-[F25:113]|     completionRate: tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0,
-[F25:114]|   };
+[F25:20]| import {
+[F25:21]|   Select,
+[F25:22]|   SelectContent,
+[F25:23]|   SelectItem,
+[F25:24]|   SelectTrigger,
+[F25:25]|   SelectValue,
+[F25:26]| } from '@/components/ui/select';
+[F25:27]| import { TaskItem } from './TaskItem';
+[F25:28]| import type { Task, Zone, GlobalViewSortMode, SortConfig, TaskPriority, TaskUrgency } from '@/types';
+[F25:29]| 
+[F25:30]| interface GlobalViewProps {
+[F25:31]|   zones: Zone[];
+[F25:32]|   tasks: Task[];
+[F25:33]|   activeTaskId: string | null;
+[F25:34]|   isTimerRunning: boolean;
+[F25:35]|   sortConfig: SortConfig;
+[F25:36]|   onBack: () => void;
+[F25:37]|   onToggleTask: (id: string) => void;
+[F25:38]|   onDeleteTask: (id: string) => void;
+[F25:39]|   onUpdateTask: (id: string, updates: Partial<Omit<Task, 'id'>>) => void;
+[F25:40]|   onToggleExpanded: (id: string) => void;
+[F25:41]|   onReorderTasks: (zoneId: string, tasks: Task[]) => void;
+[F25:42]|   onSelectTask: (id: string) => void;
+[F25:43]|   onSortConfigChange: (config: SortConfig) => void;
+[F25:44]| }
+[F25:45]| 
+[F25:46]| export function GlobalView({
+[F25:47]|   zones,
+[F25:48]|   tasks,
+[F25:49]|   activeTaskId,
+[F25:50]|   isTimerRunning,
+[F25:51]|   sortConfig,
+[F25:52]|   onBack,
+[F25:53]|   onToggleTask,
+[F25:54]|   onDeleteTask,
+[F25:55]|   onUpdateTask,
+[F25:56]|   onToggleExpanded,
+[F25:57]|   onReorderTasks,
+[F25:58]|   onSelectTask,
+[F25:59]|   onSortConfigChange,
+[F25:60]| }: GlobalViewProps) {
+[F25:61]|   const [showCompleted, setShowCompleted] = useState(false);
+[F25:62]| 
+[F25:63]|   const sensors = useSensors(
+[F25:64]|     useSensor(PointerSensor),
+[F25:65]|     useSensor(KeyboardSensor, {
+[F25:66]|       coordinateGetter: sortableKeyboardCoordinates,
+[F25:67]|     })
+[F25:68]|   );
+[F25:69]| 
+[F25:70]|   // Helper functions for sorting
+[F25:71]|   const priorityOrder: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
+[F25:72]|   const urgencyOrder: Record<TaskUrgency, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
+[F25:73]| 
+[F25:74]|   const calculateWeightedScore = (task: Task): number => {
+[F25:75]|     const pWeight = sortConfig.priorityWeight ?? 0.4;
+[F25:76]|     const uWeight = sortConfig.urgencyWeight ?? 0.6;
+[F25:77]|     const normalizedPriority = (2 - priorityOrder[task.priority]) / 2; // 0-1, high=1
+[F25:78]|     const normalizedUrgency = (3 - urgencyOrder[task.urgency]) / 3; // 0-1, urgent=1
+[F25:79]|     return normalizedPriority * pWeight + normalizedUrgency * uWeight;
+[F25:80]|   };
+[F25:81]| 
+[F25:82]|   // Get all incomplete tasks sorted based on sortConfig
+[F25:83]|   const incompleteTasks = useMemo(() => {
+[F25:84]|     const filtered = tasks.filter((t) => !t.completed);
+[F25:85]| 
+[F25:86]|     return [...filtered].sort((a, b) => {
+[F25:87]|       switch (sortConfig.mode) {
+[F25:88]|         case 'zone': {
+[F25:89]|           const zoneA = zones.find((z) => z.id === a.zoneId);
+[F25:90]|           const zoneB = zones.find((z) => z.id === b.zoneId);
+[F25:91]|           if (zoneA?.order !== zoneB?.order) {
+[F25:92]|             return (zoneA?.order || 0) - (zoneB?.order || 0);
+[F25:93]|           }
+[F25:94]|           return a.order - b.order;
+[F25:95]|         }
+[F25:96]|         case 'priority':
+[F25:97]|           return priorityOrder[a.priority] - priorityOrder[b.priority];
+[F25:98]|         case 'urgency':
+[F25:99]|           return urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
+[F25:100]|         case 'weighted':
+[F25:101]|           return calculateWeightedScore(b) - calculateWeightedScore(a);
+[F25:102]|         default:
+[F25:103]|           return 0;
+[F25:104]|       }
+[F25:105]|     });
+[F25:106]|   }, [tasks, sortConfig, zones]);
+[F25:107]| 
+[F25:108]|   const completedTasks = tasks.filter((t) => t.completed);
+[F25:109]| 
+[F25:110]|   // Group tasks for non-zone sorting modes
+[F25:111]|   const taskGroups = useMemo(() => {
+[F25:112]|     if (sortConfig.mode === 'zone') return null;
+[F25:113]| 
+[F25:114]|     const groups: { title: string; color: string; tasks: Task[] }[] = [];
 [F25:115]| 
-[F25:116]|   return (
-[F25:117]|     <div className="global-view-container">
-[F25:118]|       {/* Header */}
-[F25:119]|       <div className="global-view-header">
-[F25:120]|         <Button
-[F25:121]|           size="icon"
-[F25:122]|           variant="ghost"
-[F25:123]|           className="back-btn"
-[F25:124]|           onClick={onBack}
-[F25:125]|         >
-[F25:126]|           <ArrowLeft size={18} />
-[F25:127]|         </Button>
-[F25:128]|         <div className="global-view-title">
-[F25:129]|           <Globe size={18} className="text-blue-400" />
-[F25:130]|           <span>全局视图</span>
-[F25:131]|           <span className="task-count">({stats.completed}/{stats.total})</span>
-[F25:132]|         </div>
-[F25:133]|       </div>
-[F25:134]| 
-[F25:135]|       {/* Task List */}
-[F25:136]|       <ScrollArea className="task-scroll-area">
-[F25:137]|         <div className="tasks-container">
-[F25:138]|           {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
-[F25:139]|             <div className="empty-state">
-[F25:140]|               <Globe size={48} className="empty-icon" />
-[F25:141]|               <p>暂无任务</p>
-[F25:142]|               <p className="empty-hint">在分区中添加任务，这里会显示所有任务</p>
-[F25:143]|             </div>
-[F25:144]|           ) : (
-[F25:145]|             <>
-[F25:146]|               {/* Zone Labels for Incomplete Tasks */}
-[F25:147]|               <DndContext
-[F25:148]|                 sensors={sensors}
-[F25:149]|                 collisionDetection={closestCenter}
-[F25:150]|                 onDragEnd={handleDragEnd}
-[F25:151]|               >
-[F25:152]|                 <SortableContext
-[F25:153]|                   items={incompleteTasks.map((t) => t.id)}
-[F25:154]|                   strategy={verticalListSortingStrategy}
-[F25:155]|                 >
-[F25:156]|                   {incompleteTasks.map((task, index) => {
-[F25:157]|                     const prevTask = incompleteTasks[index - 1];
-[F25:158]|                     const showZoneLabel = !prevTask || prevTask.zoneId !== task.zoneId;
-[F25:159]|                     
-[F25:160]|                     return (
-[F25:161]|                       <div key={task.id}>
-[F25:162]|                         {showZoneLabel && (
-[F25:163]|                           <div
-[F25:164]|                             className="zone-label"
-[F25:165]|                             style={{
-[F25:166]|                               backgroundColor: `${getZoneColor(task.zoneId)}20`,
-[F25:167]|                               borderLeftColor: getZoneColor(task.zoneId),
-[F25:168]|                             }}
-[F25:169]|                           >
-[F25:170]|                             <div
-[F25:171]|                               className="zone-label-dot"
-[F25:172]|                               style={{ backgroundColor: getZoneColor(task.zoneId) }}
-[F25:173]|                             />
-[F25:174]|                             <span style={{ color: getZoneColor(task.zoneId) }}>
-[F25:175]|                               {getZoneName(task.zoneId)}
-[F25:176]|                             </span>
-[F25:177]|                           </div>
-[F25:178]|                         )}
-[F25:179]|                         <TaskItem
-[F25:180]|                           task={task}
-[F25:181]|                           zoneColor={getZoneColor(task.zoneId)}
-[F25:182]|                           isActive={task.id === activeTaskId}
-[F25:183]|                           isTimerRunning={isTimerRunning && task.id === activeTaskId}
-[F25:184]|                           onToggle={onToggleTask}
-[F25:185]|                           onDelete={onDeleteTask}
-[F25:186]|                           onUpdate={onUpdateTask}
-[F25:187]|                           onToggleExpanded={onToggleExpanded}
-[F25:188]|                           onSelect={onSelectTask}
-[F25:189]|                         />
-[F25:190]|                       </div>
-[F25:191]|                     );
-[F25:192]|                   })}
-[F25:193]|                 </SortableContext>
-[F25:194]|               </DndContext>
-[F25:195]| 
-[F25:196]|               {/* Completed Tasks */}
-[F25:197]|               {completedTasks.length > 0 && (
-[F25:198]|                 <div className="completed-section">
-[F25:199]|                   <button
-[F25:200]|                     className="completed-toggle"
-[F25:201]|                     onClick={() => setShowCompleted(!showCompleted)}
-[F25:202]|                   >
-[F25:203]|                     <CheckCircle2 size={14} className="text-green-400" />
-[F25:204]|                     <span>已完成 ({completedTasks.length})</span>
-[F25:205]|                     <span className={`toggle-arrow ${showCompleted ? 'open' : ''}`}>
-[F25:206]|                       ▼
-[F25:207]|                     </span>
-[F25:208]|                   </button>
-[F25:209]| 
-[F25:210]|                   {showCompleted && (
-[F25:211]|                     <div className="completed-tasks">
-[F25:212]|                       {completedTasks.map((task, index) => {
-[F25:213]|                         const prevTask = completedTasks[index - 1];
-[F25:214]|                         const showZoneLabel = !prevTask || prevTask.zoneId !== task.zoneId;
-[F25:215]|                         
-[F25:216]|                         return (
-[F25:217]|                           <div key={task.id}>
-[F25:218]|                             {showZoneLabel && (
-[F25:219]|                               <div
-[F25:220]|                                 className="zone-label completed"
-[F25:221]|                                 style={{
-[F25:222]|                                   backgroundColor: `${getZoneColor(task.zoneId)}10`,
-[F25:223]|                                   borderLeftColor: getZoneColor(task.zoneId),
-[F25:224]|                                 }}
-[F25:225]|                               >
-[F25:226]|                                 <div
-[F25:227]|                                   className="zone-label-dot"
-[F25:228]|                                   style={{ backgroundColor: getZoneColor(task.zoneId) }}
-[F25:229]|                                 />
-[F25:230]|                                 <span style={{ color: getZoneColor(task.zoneId) }}>
-[F25:231]|                                   {getZoneName(task.zoneId)}
-[F25:232]|                                 </span>
-[F25:233]|                               </div>
-[F25:234]|                             )}
-[F25:235]|                             <TaskItem
-[F25:236]|                               task={task}
-[F25:237]|                               zoneColor={getZoneColor(task.zoneId)}
-[F25:238]|                               isActive={false}
-[F25:239]|                               isTimerRunning={false}
-[F25:240]|                               onToggle={onToggleTask}
-[F25:241]|                               onDelete={onDeleteTask}
-[F25:242]|                               onUpdate={onUpdateTask}
-[F25:243]|                               onToggleExpanded={onToggleExpanded}
-[F25:244]|                               onSelect={onSelectTask}
-[F25:245]|                             />
-[F25:246]|                           </div>
-[F25:247]|                         );
-[F25:248]|                       })}
-[F25:249]|                     </div>
-[F25:250]|                   )}
-[F25:251]|                 </div>
-[F25:252]|               )}
-[F25:253]|             </>
-[F25:254]|           )}
-[F25:255]|         </div>
-[F25:256]|       </ScrollArea>
-[F25:257]| 
-[F25:258]|       {/* Footer Stats */}
-[F25:259]|       <div className="task-list-footer">
-[F25:260]|         <div className="footer-stat">
-[F25:261]|           <span className="stat-label">完成率</span>
-[F25:262]|           <span className="stat-value">{stats.completionRate}%</span>
-[F25:263]|         </div>
-[F25:264]|         <div className="footer-stat">
-[F25:265]|           <span className="stat-label">待办</span>
-[F25:266]|           <span className="stat-value">{stats.pending}</span>
-[F25:267]|         </div>
-[F25:268]|       </div>
-[F25:269]|     </div>
-[F25:270]|   );
-[F25:271]| }
+[F25:116]|     if (sortConfig.mode === 'priority') {
+[F25:117]|       const priorityGroups: Record<TaskPriority, Task[]> = { high: [], medium: [], low: [] };
+[F25:118]|       incompleteTasks.forEach((t) => priorityGroups[t.priority].push(t));
+[F25:119]| 
+[F25:120]|       const priorityLabels: Record<TaskPriority, { title: string; color: string }> = {
+[F25:121]|         high: { title: '高优先级', color: '#ef4444' },
+[F25:122]|         medium: { title: '中优先级', color: '#eab308' },
+[F25:123]|         low: { title: '低优先级', color: '#22c55e' },
+[F25:124]|       };
+[F25:125]| 
+[F25:126]|       (['high', 'medium', 'low'] as TaskPriority[]).forEach((p) => {
+[F25:127]|         if (priorityGroups[p].length > 0) {
+[F25:128]|           groups.push({
+[F25:129]|             title: priorityLabels[p].title,
+[F25:130]|             color: priorityLabels[p].color,
+[F25:131]|             tasks: priorityGroups[p],
+[F25:132]|           });
+[F25:133]|         }
+[F25:134]|       });
+[F25:135]|     } else if (sortConfig.mode === 'urgency') {
+[F25:136]|       const urgencyGroups: Record<TaskUrgency, Task[]> = { urgent: [], high: [], medium: [], low: [] };
+[F25:137]|       incompleteTasks.forEach((t) => urgencyGroups[t.urgency].push(t));
+[F25:138]| 
+[F25:139]|       const urgencyLabels: Record<TaskUrgency, { title: string; color: string }> = {
+[F25:140]|         urgent: { title: '紧急', color: '#dc2626' },
+[F25:141]|         high: { title: '高紧急度', color: '#f97316' },
+[F25:142]|         medium: { title: '中紧急度', color: '#eab308' },
+[F25:143]|         low: { title: '低紧急度', color: '#22c55e' },
+[F25:144]|       };
+[F25:145]| 
+[F25:146]|       (['urgent', 'high', 'medium', 'low'] as TaskUrgency[]).forEach((u) => {
+[F25:147]|         if (urgencyGroups[u].length > 0) {
+[F25:148]|           groups.push({
+[F25:149]|             title: urgencyLabels[u].title,
+[F25:150]|             color: urgencyLabels[u].color,
+[F25:151]|             tasks: urgencyGroups[u],
+[F25:152]|           });
+[F25:153]|         }
+[F25:154]|       });
+[F25:155]|     } else if (sortConfig.mode === 'weighted') {
+[F25:156]|       const scoreGroups: { title: string; color: string; minScore: number; tasks: Task[] }[] = [
+[F25:157]|         { title: '重要且紧急', color: '#dc2626', minScore: 0.75, tasks: [] },
+[F25:158]|         { title: '重要或紧急', color: '#f97316', minScore: 0.5, tasks: [] },
+[F25:159]|         { title: '一般', color: '#eab308', minScore: 0.25, tasks: [] },
+[F25:160]|         { title: '低优先级', color: '#22c55e', minScore: 0, tasks: [] },
+[F25:161]|       ];
+[F25:162]| 
+[F25:163]|       incompleteTasks.forEach((t) => {
+[F25:164]|         const score = calculateWeightedScore(t);
+[F25:165]|         if (score >= 0.75) scoreGroups[0].tasks.push(t);
+[F25:166]|         else if (score >= 0.5) scoreGroups[1].tasks.push(t);
+[F25:167]|         else if (score >= 0.25) scoreGroups[2].tasks.push(t);
+[F25:168]|         else scoreGroups[3].tasks.push(t);
+[F25:169]|       });
+[F25:170]| 
+[F25:171]|       scoreGroups.forEach((g) => {
+[F25:172]|         if (g.tasks.length > 0) {
+[F25:173]|           groups.push({
+[F25:174]|             title: g.title,
+[F25:175]|             color: g.color,
+[F25:176]|             tasks: g.tasks,
+[F25:177]|           });
+[F25:178]|         }
+[F25:179]|       });
+[F25:180]|     }
+[F25:181]| 
+[F25:182]|     return groups;
+[F25:183]|   }, [incompleteTasks, sortConfig.mode]);
+[F25:184]| 
+[F25:185]|   const handleDragEnd = (event: DragEndEvent) => {
+[F25:186]|     const { active, over } = event;
+[F25:187]| 
+[F25:188]|     if (over && active.id !== over.id) {
+[F25:189]|       const oldIndex = incompleteTasks.findIndex((t) => t.id === active.id);
+[F25:190]|       const newIndex = incompleteTasks.findIndex((t) => t.id === over.id);
+[F25:191]|       
+[F25:192]|       if (oldIndex !== -1 && newIndex !== -1) {
+[F25:193]|         const reordered = arrayMove(incompleteTasks, oldIndex, newIndex);
+[F25:194]|         // Group by zone and reorder within each zone
+[F25:195]|         const zoneGroups = new Map<string, Task[]>();
+[F25:196]|         reordered.forEach((task) => {
+[F25:197]|           if (!zoneGroups.has(task.zoneId)) {
+[F25:198]|             zoneGroups.set(task.zoneId, []);
+[F25:199]|           }
+[F25:200]|           zoneGroups.get(task.zoneId)!.push(task);
+[F25:201]|         });
+[F25:202]|         
+[F25:203]|         // Update order for each zone
+[F25:204]|         zoneGroups.forEach((zoneTasks, zoneId) => {
+[F25:205]|           onReorderTasks(zoneId, zoneTasks);
+[F25:206]|         });
+[F25:207]|       }
+[F25:208]|     }
+[F25:209]|   };
+[F25:210]| 
+[F25:211]|   const getZoneColor = (zoneId: string) => {
+[F25:212]|     const zone = zones.find((z) => z.id === zoneId);
+[F25:213]|     return zone?.color || '#6b7280';
+[F25:214]|   };
+[F25:215]| 
+[F25:216]|   const getZoneName = (zoneId: string) => {
+[F25:217]|     const zone = zones.find((z) => z.id === zoneId);
+[F25:218]|     return zone?.name || '未知分区';
+[F25:219]|   };
+[F25:220]| 
+[F25:221]|   const stats = {
+[F25:222]|     total: tasks.length,
+[F25:223]|     completed: completedTasks.length,
+[F25:224]|     pending: incompleteTasks.length,
+[F25:225]|     completionRate: tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0,
+[F25:226]|   };
+[F25:227]| 
+[F25:228]|   return (
+[F25:229]|     <div className="global-view-container">
+[F25:230]|       {/* Header */}
+[F25:231]|       <div className="global-view-header">
+[F25:232]|         <Button
+[F25:233]|           size="icon"
+[F25:234]|           variant="ghost"
+[F25:235]|           className="back-btn"
+[F25:236]|           onClick={onBack}
+[F25:237]|         >
+[F25:238]|           <ArrowLeft size={18} />
+[F25:239]|         </Button>
+[F25:240]|         <div className="global-view-title">
+[F25:241]|           <Globe size={18} className="text-blue-400" />
+[F25:242]|           <span>全局视图</span>
+[F25:243]|           <span className="task-count">({stats.completed}/{stats.total})</span>
+[F25:244]|         </div>
+[F25:245]|         <div className="sort-mode-selector">
+[F25:246]|           <Select
+[F25:247]|             value={sortConfig.mode}
+[F25:248]|             onValueChange={(value: GlobalViewSortMode) => onSortConfigChange({ ...sortConfig, mode: value })}
+[F25:249]|           >
+[F25:250]|             <SelectTrigger className="sort-select-trigger">
+[F25:251]|               <ArrowUpDown size={14} />
+[F25:252]|               <SelectValue placeholder="排序" />
+[F25:253]|             </SelectTrigger>
+[F25:254]|             <SelectContent>
+[F25:255]|               <SelectItem value="zone">
+[F25:256]|                 <div className="sort-option">
+[F25:257]|                   <Globe size={14} />
+[F25:258]|                   <span>按工作区</span>
+[F25:259]|                 </div>
+[F25:260]|               </SelectItem>
+[F25:261]|               <SelectItem value="priority">
+[F25:262]|                 <div className="sort-option">
+[F25:263]|                   <Flag size={14} />
+[F25:264]|                   <span>按优先级</span>
+[F25:265]|                 </div>
+[F25:266]|               </SelectItem>
+[F25:267]|               <SelectItem value="urgency">
+[F25:268]|                 <div className="sort-option">
+[F25:269]|                   <Zap size={14} />
+[F25:270]|                   <span>按紧急度</span>
+[F25:271]|                 </div>
+[F25:272]|               </SelectItem>
+[F25:273]|               <SelectItem value="weighted">
+[F25:274]|                 <div className="sort-option">
+[F25:275]|                   <Flag size={14} />
+[F25:276]|                   <Zap size={14} />
+[F25:277]|                   <span>加权排序</span>
+[F25:278]|                 </div>
+[F25:279]|               </SelectItem>
+[F25:280]|             </SelectContent>
+[F25:281]|           </Select>
+[F25:282]|         </div>
+[F25:283]|       </div>
+[F25:284]| 
+[F25:285]|       {/* Task List */}
+[F25:286]|       <ScrollArea className="task-scroll-area">
+[F25:287]|         <div className="tasks-container">
+[F25:288]|           {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
+[F25:289]|             <div className="empty-state">
+[F25:290]|               <Globe size={48} className="empty-icon" />
+[F25:291]|               <p>暂无任务</p>
+[F25:292]|               <p className="empty-hint">在分区中添加任务，这里会显示所有任务</p>
+[F25:293]|             </div>
+[F25:294]|           ) : (
+[F25:295]|             <>
+[F25:296]|               {/* Task Groups for non-zone sorting or Zone Labels for zone sorting */}
+[F25:297]|               {sortConfig.mode === 'zone' ? (
+[F25:298]|                 // Zone sorting - show zone labels
+[F25:299]|                 <DndContext
+[F25:300]|                   sensors={sensors}
+[F25:301]|                   collisionDetection={closestCenter}
+[F25:302]|                   onDragEnd={handleDragEnd}
+[F25:303]|                 >
+[F25:304]|                   <SortableContext
+[F25:305]|                     items={incompleteTasks.map((t) => t.id)}
+[F25:306]|                     strategy={verticalListSortingStrategy}
+[F25:307]|                   >
+[F25:308]|                     {incompleteTasks.map((task, index) => {
+[F25:309]|                       const prevTask = incompleteTasks[index - 1];
+[F25:310]|                       const showZoneLabel = !prevTask || prevTask.zoneId !== task.zoneId;
+[F25:311]| 
+[F25:312]|                       return (
+[F25:313]|                         <div key={task.id}>
+[F25:314]|                           {showZoneLabel && (
+[F25:315]|                             <div
+[F25:316]|                               className="zone-label"
+[F25:317]|                               style={{
+[F25:318]|                                 backgroundColor: `${getZoneColor(task.zoneId)}20`,
+[F25:319]|                                 borderLeftColor: getZoneColor(task.zoneId),
+[F25:320]|                               }}
+[F25:321]|                             >
+[F25:322]|                               <div
+[F25:323]|                                 className="zone-label-dot"
+[F25:324]|                                 style={{ backgroundColor: getZoneColor(task.zoneId) }}
+[F25:325]|                               />
+[F25:326]|                               <span style={{ color: getZoneColor(task.zoneId) }}>
+[F25:327]|                                 {getZoneName(task.zoneId)}
+[F25:328]|                               </span>
+[F25:329]|                             </div>
+[F25:330]|                           )}
+[F25:331]|                           <TaskItem
+[F25:332]|                             task={task}
+[F25:333]|                             zoneColor={getZoneColor(task.zoneId)}
+[F25:334]|                             isActive={task.id === activeTaskId}
+[F25:335]|                             isTimerRunning={isTimerRunning && task.id === activeTaskId}
+[F25:336]|                             onToggle={onToggleTask}
+[F25:337]|                             onDelete={onDeleteTask}
+[F25:338]|                             onUpdate={onUpdateTask}
+[F25:339]|                             onToggleExpanded={onToggleExpanded}
+[F25:340]|                             onSelect={onSelectTask}
+[F25:341]|                           />
+[F25:342]|                         </div>
+[F25:343]|                       );
+[F25:344]|                     })}
+[F25:345]|                   </SortableContext>
+[F25:346]|                 </DndContext>
+[F25:347]|               ) : (
+[F25:348]|                 // Non-zone sorting - show temporary blocks
+[F25:349]|                 taskGroups?.map((group) => (
+[F25:350]|                   <div key={group.title} className="task-group">
+[F25:351]|                     <div
+[F25:352]|                       className="group-label"
+[F25:353]|                       style={{
+[F25:354]|                         backgroundColor: `${group.color}15`,
+[F25:355]|                         borderLeftColor: group.color,
+[F25:356]|                       }}
+[F25:357]|                     >
+[F25:358]|                       <span style={{ color: group.color }}>{group.title}</span>
+[F25:359]|                       <span className="group-count">({group.tasks.length})</span>
+[F25:360]|                     </div>
+[F25:361]|                     <DndContext
+[F25:362]|                       sensors={sensors}
+[F25:363]|                       collisionDetection={closestCenter}
+[F25:364]|                       onDragEnd={handleDragEnd}
+[F25:365]|                     >
+[F25:366]|                       <SortableContext
+[F25:367]|                         items={group.tasks.map((t) => t.id)}
+[F25:368]|                         strategy={verticalListSortingStrategy}
+[F25:369]|                       >
+[F25:370]|                         {group.tasks.map((task) => (
+[F25:371]|                           <TaskItem
+[F25:372]|                             key={task.id}
+[F25:373]|                             task={task}
+[F25:374]|                             zoneColor={getZoneColor(task.zoneId)}
+[F25:375]|                             isActive={task.id === activeTaskId}
+[F25:376]|                             isTimerRunning={isTimerRunning && task.id === activeTaskId}
+[F25:377]|                             onToggle={onToggleTask}
+[F25:378]|                             onDelete={onDeleteTask}
+[F25:379]|                             onUpdate={onUpdateTask}
+[F25:380]|                             onToggleExpanded={onToggleExpanded}
+[F25:381]|                             onSelect={onSelectTask}
+[F25:382]|                           />
+[F25:383]|                         ))}
+[F25:384]|                       </SortableContext>
+[F25:385]|                     </DndContext>
+[F25:386]|                   </div>
+[F25:387]|                 ))
+[F25:388]|               )}
+[F25:389]| 
+[F25:390]|               {/* Completed Tasks */}
+[F25:391]|               {completedTasks.length > 0 && (
+[F25:392]|                 <div className="completed-section">
+[F25:393]|                   <button
+[F25:394]|                     className="completed-toggle"
+[F25:395]|                     onClick={() => setShowCompleted(!showCompleted)}
+[F25:396]|                   >
+[F25:397]|                     <CheckCircle2 size={14} className="text-green-400" />
+[F25:398]|                     <span>已完成 ({completedTasks.length})</span>
+[F25:399]|                     <span className={`toggle-arrow ${showCompleted ? 'open' : ''}`}>
+[F25:400]|                       ▼
+[F25:401]|                     </span>
+[F25:402]|                   </button>
+[F25:403]| 
+[F25:404]|                   {showCompleted && (
+[F25:405]|                     <div className="completed-tasks">
+[F25:406]|                       {completedTasks.map((task, index) => {
+[F25:407]|                         const prevTask = completedTasks[index - 1];
+[F25:408]|                         const showZoneLabel = !prevTask || prevTask.zoneId !== task.zoneId;
+[F25:409]|                         
+[F25:410]|                         return (
+[F25:411]|                           <div key={task.id}>
+[F25:412]|                             {showZoneLabel && (
+[F25:413]|                               <div
+[F25:414]|                                 className="zone-label completed"
+[F25:415]|                                 style={{
+[F25:416]|                                   backgroundColor: `${getZoneColor(task.zoneId)}10`,
+[F25:417]|                                   borderLeftColor: getZoneColor(task.zoneId),
+[F25:418]|                                 }}
+[F25:419]|                               >
+[F25:420]|                                 <div
+[F25:421]|                                   className="zone-label-dot"
+[F25:422]|                                   style={{ backgroundColor: getZoneColor(task.zoneId) }}
+[F25:423]|                                 />
+[F25:424]|                                 <span style={{ color: getZoneColor(task.zoneId) }}>
+[F25:425]|                                   {getZoneName(task.zoneId)}
+[F25:426]|                                 </span>
+[F25:427]|                               </div>
+[F25:428]|                             )}
+[F25:429]|                             <TaskItem
+[F25:430]|                               task={task}
+[F25:431]|                               zoneColor={getZoneColor(task.zoneId)}
+[F25:432]|                               isActive={false}
+[F25:433]|                               isTimerRunning={false}
+[F25:434]|                               onToggle={onToggleTask}
+[F25:435]|                               onDelete={onDeleteTask}
+[F25:436]|                               onUpdate={onUpdateTask}
+[F25:437]|                               onToggleExpanded={onToggleExpanded}
+[F25:438]|                               onSelect={onSelectTask}
+[F25:439]|                             />
+[F25:440]|                           </div>
+[F25:441]|                         );
+[F25:442]|                       })}
+[F25:443]|                     </div>
+[F25:444]|                   )}
+[F25:445]|                 </div>
+[F25:446]|               )}
+[F25:447]|             </>
+[F25:448]|           )}
+[F25:449]|         </div>
+[F25:450]|       </ScrollArea>
+[F25:451]| 
+[F25:452]|       {/* Footer Stats */}
+[F25:453]|       <div className="task-list-footer">
+[F25:454]|         <div className="footer-stat">
+[F25:455]|           <span className="stat-label">完成率</span>
+[F25:456]|           <span className="stat-value">{stats.completionRate}%</span>
+[F25:457]|         </div>
+[F25:458]|         <div className="footer-stat">
+[F25:459]|           <span className="stat-label">待办</span>
+[F25:460]|           <span className="stat-value">{stats.pending}</span>
+[F25:461]|         </div>
+[F25:462]|       </div>
+[F25:463]|     </div>
+[F25:464]|   );
+[F25:465]| }
 
 ================================================================================
 文件路径: src\components\HistoryManager.tsx(F26) (约合大小: 15 KB)
@@ -5379,10 +5964,10 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F26:397]| }
 
 ================================================================================
-文件路径: src\components\PomodoroTimer.tsx(F27) (约合大小: 6 KB)
+文件路径: src\components\PomodoroTimer.tsx(F27) (约合大小: 9 KB)
 ================================================================================
 [F27:1]| import { useState, useRef, useEffect } from 'react';
-[F27:2]| import { Play, Pause, Square, SkipForward, Coffee, Brain, Timer } from 'lucide-react';
+[F27:2]| import { Play, Pause, Square, SkipForward, Coffee, Brain, Timer, ChevronDown, ChevronUp } from 'lucide-react';
 [F27:3]| import { Button } from '@/components/ui/button';
 [F27:4]| import { Progress } from '@/components/ui/progress';
 [F27:5]| import { Input } from '@/components/ui/input';
@@ -5428,435 +6013,623 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F27:45]|   // 编辑状态
 [F27:46]|   const [isEditing, setIsEditing] = useState(false);
 [F27:47]|   const [editMinutes, setEditMinutes] = useState('');
-[F27:48]|   const inputRef = useRef<HTMLInputElement>(null);
-[F27:49]| 
-[F27:50]|   // 进入编辑模式
-[F27:51]|   const handleTimeClick = () => {
-[F27:52]|     if (isRunning || !onUpdateTime) return;
-[F27:53]|     const currentMins = Math.floor(timeRemaining / 60);
-[F27:54]|     setEditMinutes(currentMins.toString());
-[F27:55]|     setIsEditing(true);
+[F27:48]|   const [isCollapsed, setIsCollapsed] = useState(false);
+[F27:49]|   const inputRef = useRef<HTMLInputElement>(null);
+[F27:50]| 
+[F27:51]|   // 鼠标进入时展开
+[F27:52]|   const handleMouseEnter = () => {
+[F27:53]|     if (isCollapsed) {
+[F27:54]|       setIsCollapsed(false);
+[F27:55]|     }
 [F27:56]|   };
 [F27:57]| 
-[F27:58]|   // 提交修改
-[F27:59]|   const handleTimeSubmit = () => {
-[F27:60]|     setIsEditing(false);
-[F27:61]|     const mins = parseInt(editMinutes);
-[F27:62]|     if (!isNaN(mins) && mins > 0 && onUpdateTime) {
-[F27:63]|       // 传递当前模式和对应的秒数
-[F27:64]|       onUpdateTime(mins * 60, mode === 'idle' ? 'work' : mode);
-[F27:65]|     }
-[F27:66]|   };
-[F27:67]| 
-[F27:68]|   // 自动聚焦
-[F27:69]|   useEffect(() => {
-[F27:70]|     if (isEditing && inputRef.current) {
-[F27:71]|       inputRef.current.focus();
-[F27:72]|       inputRef.current.select();
-[F27:73]|     }
-[F27:74]|   }, [isEditing]);
-[F27:75]| 
-[F27:76]|   const getModeIcon = () => {
-[F27:77]|     switch (mode) {
-[F27:78]|       case 'work':
-[F27:79]|         return <Brain size={16} className="text-blue-400" />;
-[F27:80]|       case 'break':
-[F27:81]|         return <Coffee size={16} className="text-green-400" />;
-[F27:82]|       case 'longBreak':
-[F27:83]|         return <Coffee size={16} className="text-purple-400" />;
-[F27:84]|       default:
-[F27:85]|         return <Timer size={16} className="text-gray-400" />;
-[F27:86]|     }
-[F27:87]|   };
-[F27:88]| 
-[F27:89]|   const getModeText = () => {
-[F27:90]|     switch (mode) {
-[F27:91]|       case 'work':
-[F27:92]|         return '专注中';
-[F27:93]|       case 'break':
-[F27:94]|         return '短休息';
-[F27:95]|       case 'longBreak':
-[F27:96]|         return '长休息';
-[F27:97]|       default:
-[F27:98]|         return '准备开始';
-[F27:99]|     }
-[F27:100]|   };
-[F27:101]| 
-[F27:102]|   const getModeColor = () => {
-[F27:103]|     switch (mode) {
-[F27:104]|       case 'work':
-[F27:105]|         return 'from-blue-500/20 to-blue-600/20 border-blue-500/30';
-[F27:106]|       case 'break':
-[F27:107]|         return 'from-green-500/20 to-green-600/20 border-green-500/30';
-[F27:108]|       case 'longBreak':
-[F27:109]|         return 'from-purple-500/20 to-purple-600/20 border-purple-500/30';
-[F27:110]|       default:
-[F27:111]|         return 'from-gray-500/20 to-gray-600/20 border-gray-500/30';
-[F27:112]|     }
-[F27:113]|   };
-[F27:114]| 
-[F27:115]|   return (
-[F27:116]|     <div className={`timer-container bg-gradient-to-br ${getModeColor()}`}>
-[F27:117]|       {/* Header */}
-[F27:118]|       <div className="timer-header">
-[F27:119]|         <div className="mode-indicator">
-[F27:120]|           {getModeIcon()}
-[F27:121]|           <span className={`mode-text mode-${mode}`}>{getModeText()}</span>
-[F27:122]|         </div>
-[F27:123]|         <div className="session-count">
-[F27:124]|           {[...Array(4)].map((_, i) => (
-[F27:125]|             <div
-[F27:126]|               key={i}
-[F27:127]|               className={`session-dot ${i < completedSessions % 4 ? 'active' : ''}`}
-[F27:128]|             />
-[F27:129]|           ))}
-[F27:130]|         </div>
-[F27:131]|       </div>
-[F27:132]| 
-[F27:133]|       {/* Time display */}
-[F27:134]|       <div className="time-display">
-[F27:135]|         {isEditing ? (
-[F27:136]|           <div className="flex items-center justify-center gap-1">
-[F27:137]|             <Input
-[F27:138]|               ref={inputRef}
-[F27:139]|               type="number"
-[F27:140]|               value={editMinutes}
-[F27:141]|               onChange={(e) => setEditMinutes(e.target.value)}
-[F27:142]|               onBlur={handleTimeSubmit}
-[F27:143]|               onKeyDown={(e) => e.key === 'Enter' && handleTimeSubmit()}
-[F27:144]|               className="w-24 h-12 text-3xl font-bold text-center bg-black/20 border-white/20 text-white"
-[F27:145]|               min={1}
-[F27:146]|               max={120}
-[F27:147]|             />
-[F27:148]|             <span className="text-xl text-white/50">min</span>
-[F27:149]|           </div>
-[F27:150]|         ) : (
-[F27:151]|           <span
-[F27:152]|             className={`time-text ${isRunning ? 'running' : ''} ${!isRunning ? 'cursor-pointer hover:scale-105' : ''}`}
-[F27:153]|             onClick={handleTimeClick}
-[F27:154]|             title={isRunning ? "计时中无法修改" : "点击修改时间"}
-[F27:155]|           >
-[F27:156]|             {formattedTime}
-[F27:157]|           </span>
-[F27:158]|         )}
-[F27:159]|       </div>
-[F27:160]| 
-[F27:161]|       {/* Mode Selector - only show when idle */}
-[F27:162]|       {mode === 'idle' && onSetMode && (
-[F27:163]|         <div className="mode-selector">
-[F27:164]|           <button
-[F27:165]|             className="mode-btn"
-[F27:166]|             onClick={() => onSetMode('work')}
-[F27:167]|             title={`专注 ${Math.floor(workDuration / 60)} 分钟`}
-[F27:168]|           >
-[F27:169]|             <Brain size={14} />
-[F27:170]|             <span>专注</span>
-[F27:171]|           </button>
-[F27:172]|           <button
-[F27:173]|             className="mode-btn"
-[F27:174]|             onClick={() => onSetMode('break')}
-[F27:175]|             title={`短休息 ${Math.floor(breakDuration / 60)} 分钟`}
-[F27:176]|           >
-[F27:177]|             <Coffee size={14} />
-[F27:178]|             <span>休息</span>
-[F27:179]|           </button>
-[F27:180]|           <button
-[F27:181]|             className="mode-btn"
-[F27:182]|             onClick={() => onSetMode('longBreak')}
-[F27:183]|             title={`长休息 ${Math.floor(longBreakDuration / 60)} 分钟`}
-[F27:184]|           >
-[F27:185]|             <Coffee size={14} />
-[F27:186]|             <span>长休息</span>
-[F27:187]|           </button>
-[F27:188]|         </div>
-[F27:189]|       )}
-[F27:190]| 
-[F27:191]|       {/* Progress bar */}
-[F27:192]|       <div className="progress-container">
-[F27:193]|         <Progress
-[F27:194]|           value={progress}
-[F27:195]|           className="timer-progress"
-[F27:196]|         />
-[F27:197]|       </div>
-[F27:198]| 
-[F27:199]|       {/* Controls */}
-[F27:200]|       <div className="timer-controls">
-[F27:201]|         {mode === 'idle' ? (
-[F27:202]|           <Button
-[F27:203]|             size="sm"
-[F27:204]|             className="control-btn-primary"
-[F27:205]|             onClick={onStart}
-[F27:206]|           >
-[F27:207]|             <Play size={16} className="mr-1" />
-[F27:208]|             开始专注
-[F27:209]|           </Button>
-[F27:210]|         ) : (
-[F27:211]|           <>
-[F27:212]|             {isRunning ? (
-[F27:213]|               <Button
-[F27:214]|                 size="sm"
-[F27:215]|                 variant="outline"
-[F27:216]|                 className="control-btn"
-[F27:217]|                 onClick={onPause}
-[F27:218]|               >
-[F27:219]|                 <Pause size={16} />
-[F27:220]|               </Button>
-[F27:221]|             ) : (
-[F27:222]|               <Button
-[F27:223]|                 size="sm"
-[F27:224]|                 variant="outline"
-[F27:225]|                 className="control-btn"
-[F27:226]|                 onClick={onResume}
-[F27:227]|               >
-[F27:228]|                 <Play size={16} />
-[F27:229]|               </Button>
-[F27:230]|             )}
-[F27:231]|             <Button
-[F27:232]|               size="sm"
-[F27:233]|               variant="outline"
-[F27:234]|               className="control-btn"
-[F27:235]|               onClick={onStop}
-[F27:236]|             >
-[F27:237]|               <Square size={16} />
-[F27:238]|             </Button>
-[F27:239]|             <Button
-[F27:240]|               size="sm"
-[F27:241]|               variant="outline"
-[F27:242]|               className="control-btn"
-[F27:243]|               onClick={onSkip}
-[F27:244]|             >
-[F27:245]|               <SkipForward size={16} />
-[F27:246]|             </Button>
-[F27:247]|           </>
-[F27:248]|         )}
-[F27:249]|       </div>
-[F27:250]|     </div>
-[F27:251]|   );
-[F27:252]| }
+[F27:58]|   // 鼠标离开时收起（仅在不运行时收起）
+[F27:59]|   const handleMouseLeave = () => {
+[F27:60]|     // 如果正在编辑时间，取消编辑
+[F27:61]|     if (isEditing) {
+[F27:62]|       setIsEditing(false);
+[F27:63]|       setEditMinutes('');
+[F27:64]|     }
+[F27:65]| 
+[F27:66]|     // 收起计时器（仅在不运行时）
+[F27:67]|     if (!isRunning && !isCollapsed) {
+[F27:68]|       setIsCollapsed(true);
+[F27:69]|     }
+[F27:70]|   };
+[F27:71]| 
+[F27:72]|   // 进入编辑模式
+[F27:73]|   const handleTimeClick = () => {
+[F27:74]|     if (isRunning || !onUpdateTime) return;
+[F27:75]|     const currentMins = Math.floor(timeRemaining / 60);
+[F27:76]|     setEditMinutes(currentMins.toString());
+[F27:77]|     setIsEditing(true);
+[F27:78]|   };
+[F27:79]| 
+[F27:80]|   // 提交修改
+[F27:81]|   const handleTimeSubmit = () => {
+[F27:82]|     setIsEditing(false);
+[F27:83]|     const mins = parseInt(editMinutes);
+[F27:84]|     if (!isNaN(mins) && mins > 0 && onUpdateTime) {
+[F27:85]|       // 传递当前模式和对应的秒数
+[F27:86]|       onUpdateTime(mins * 60, mode === 'idle' ? 'work' : mode);
+[F27:87]|     }
+[F27:88]|   };
+[F27:89]| 
+[F27:90]|   // 自动聚焦
+[F27:91]|   useEffect(() => {
+[F27:92]|     if (isEditing && inputRef.current) {
+[F27:93]|       inputRef.current.focus();
+[F27:94]|       inputRef.current.select();
+[F27:95]|     }
+[F27:96]|   }, [isEditing]);
+[F27:97]| 
+[F27:98]|   const getModeIcon = () => {
+[F27:99]|     switch (mode) {
+[F27:100]|       case 'work':
+[F27:101]|         return <Brain size={16} className="text-blue-400" />;
+[F27:102]|       case 'break':
+[F27:103]|         return <Coffee size={16} className="text-green-400" />;
+[F27:104]|       case 'longBreak':
+[F27:105]|         return <Coffee size={16} className="text-purple-400" />;
+[F27:106]|       default:
+[F27:107]|         return <Timer size={16} className="text-gray-400" />;
+[F27:108]|     }
+[F27:109]|   };
+[F27:110]| 
+[F27:111]|   const getModeText = () => {
+[F27:112]|     switch (mode) {
+[F27:113]|       case 'work':
+[F27:114]|         return '专注中';
+[F27:115]|       case 'break':
+[F27:116]|         return '短休息';
+[F27:117]|       case 'longBreak':
+[F27:118]|         return '长休息';
+[F27:119]|       default:
+[F27:120]|         return '准备开始';
+[F27:121]|     }
+[F27:122]|   };
+[F27:123]| 
+[F27:124]|   const getModeColor = () => {
+[F27:125]|     switch (mode) {
+[F27:126]|       case 'work':
+[F27:127]|         return 'from-blue-500/20 to-blue-600/20 border-blue-500/30';
+[F27:128]|       case 'break':
+[F27:129]|         return 'from-green-500/20 to-green-600/20 border-green-500/30';
+[F27:130]|       case 'longBreak':
+[F27:131]|         return 'from-purple-500/20 to-purple-600/20 border-purple-500/30';
+[F27:132]|       default:
+[F27:133]|         return 'from-gray-500/20 to-gray-600/20 border-gray-500/30';
+[F27:134]|     }
+[F27:135]|   };
+[F27:136]| 
+[F27:137]|   // 收缩状态下的紧凑视图 - 控制按钮独立侧边栏
+[F27:138]|   if (isCollapsed) {
+[F27:139]|     return (
+[F27:140]|       <div className="timer-collapsed-wrapper">
+[F27:141]|         {/* 主计时区域 - 鼠标进入时展开 */}
+[F27:142]|         <div
+[F27:143]|           className={`timer-collapsed-main bg-gradient-to-r ${getModeColor()}`}
+[F27:144]|           onMouseEnter={handleMouseEnter}
+[F27:145]|         >
+[F27:146]|           <button
+[F27:147]|             className="timer-collapse-btn"
+[F27:148]|             onClick={() => setIsCollapsed(false)}
+[F27:149]|             title="展开"
+[F27:150]|           >
+[F27:151]|             <ChevronUp size={14} />
+[F27:152]|           </button>
+[F27:153]|           <div className="timer-collapsed-content">
+[F27:154]|             {getModeIcon()}
+[F27:155]|             <span className="timer-collapsed-time">{formattedTime}</span>
+[F27:156]|           </div>
+[F27:157]|         </div>
+[F27:158]|         {/* 控制按钮区域 - 固定显示，不触发展开 */}
+[F27:159]|         <div className={`timer-collapsed-controls bg-gradient-to-r ${getModeColor()}`}>
+[F27:160]|           {isRunning ? (
+[F27:161]|             <button className="timer-collapsed-btn primary" onClick={onPause} title="暂停">
+[F27:162]|               <Pause size={20} />
+[F27:163]|             </button>
+[F27:164]|           ) : mode !== 'idle' ? (
+[F27:165]|             <button className="timer-collapsed-btn primary" onClick={onResume} title="继续">
+[F27:166]|               <Play size={20} />
+[F27:167]|             </button>
+[F27:168]|           ) : (
+[F27:169]|             <button className="timer-collapsed-btn primary" onClick={onStart} title="开始">
+[F27:170]|               <Play size={20} />
+[F27:171]|             </button>
+[F27:172]|           )}
+[F27:173]|           <button className="timer-collapsed-btn" onClick={onStop} title="重置">
+[F27:174]|             <Square size={20} />
+[F27:175]|           </button>
+[F27:176]|         </div>
+[F27:177]|       </div>
+[F27:178]|     );
+[F27:179]|   }
+[F27:180]| 
+[F27:181]|   return (
+[F27:182]|     <div
+[F27:183]|       className={`timer-container bg-gradient-to-br ${getModeColor()}`}
+[F27:184]|       onMouseEnter={handleMouseEnter}
+[F27:185]|       onMouseLeave={handleMouseLeave}
+[F27:186]|     >
+[F27:187]|       {/* Header */}
+[F27:188]|       <div className="timer-header">
+[F27:189]|         <div className="mode-indicator">
+[F27:190]|           {getModeIcon()}
+[F27:191]|           <span className={`mode-text mode-${mode}`}>{getModeText()}</span>
+[F27:192]|         </div>
+[F27:193]|         <div className="timer-header-actions">
+[F27:194]|           <button
+[F27:195]|             className="timer-collapse-toggle"
+[F27:196]|             onClick={() => setIsCollapsed(true)}
+[F27:197]|             title="收缩"
+[F27:198]|           >
+[F27:199]|             <ChevronDown size={14} />
+[F27:200]|           </button>
+[F27:201]|           <div className="session-count">
+[F27:202]|             {[...Array(4)].map((_, i) => (
+[F27:203]|               <div
+[F27:204]|                 key={i}
+[F27:205]|                 className={`session-dot ${i < completedSessions % 4 ? 'active' : ''}`}
+[F27:206]|               />
+[F27:207]|             ))}
+[F27:208]|           </div>
+[F27:209]|         </div>
+[F27:210]|       </div>
+[F27:211]| 
+[F27:212]|       {/* Time display */}
+[F27:213]|       <div className="time-display">
+[F27:214]|         {isEditing ? (
+[F27:215]|           <div className="flex items-center justify-center gap-1">
+[F27:216]|             <Input
+[F27:217]|               ref={inputRef}
+[F27:218]|               type="number"
+[F27:219]|               value={editMinutes}
+[F27:220]|               onChange={(e) => setEditMinutes(e.target.value)}
+[F27:221]|               onBlur={handleTimeSubmit}
+[F27:222]|               onKeyDown={(e) => e.key === 'Enter' && handleTimeSubmit()}
+[F27:223]|               className="w-24 h-12 text-3xl font-bold text-center bg-black/20 border-white/20 text-white"
+[F27:224]|               min={1}
+[F27:225]|               max={120}
+[F27:226]|             />
+[F27:227]|             <span className="text-xl text-white/50">min</span>
+[F27:228]|           </div>
+[F27:229]|         ) : (
+[F27:230]|           <span
+[F27:231]|             className={`time-text ${isRunning ? 'running' : ''} ${!isRunning ? 'cursor-pointer hover:scale-105' : ''}`}
+[F27:232]|             onClick={handleTimeClick}
+[F27:233]|             title={isRunning ? "计时中无法修改" : "点击修改时间"}
+[F27:234]|           >
+[F27:235]|             {formattedTime}
+[F27:236]|           </span>
+[F27:237]|         )}
+[F27:238]|       </div>
+[F27:239]| 
+[F27:240]|       {/* Mode Selector - only show when idle */}
+[F27:241]|       {mode === 'idle' && onSetMode && (
+[F27:242]|         <div className="mode-selector">
+[F27:243]|           <button
+[F27:244]|             className="mode-btn"
+[F27:245]|             onClick={() => onSetMode('work')}
+[F27:246]|             title={`专注 ${Math.floor(workDuration / 60)} 分钟`}
+[F27:247]|           >
+[F27:248]|             <Brain size={14} />
+[F27:249]|             <span>专注</span>
+[F27:250]|           </button>
+[F27:251]|           <button
+[F27:252]|             className="mode-btn"
+[F27:253]|             onClick={() => onSetMode('break')}
+[F27:254]|             title={`短休息 ${Math.floor(breakDuration / 60)} 分钟`}
+[F27:255]|           >
+[F27:256]|             <Coffee size={14} />
+[F27:257]|             <span>休息</span>
+[F27:258]|           </button>
+[F27:259]|           <button
+[F27:260]|             className="mode-btn"
+[F27:261]|             onClick={() => onSetMode('longBreak')}
+[F27:262]|             title={`长休息 ${Math.floor(longBreakDuration / 60)} 分钟`}
+[F27:263]|           >
+[F27:264]|             <Coffee size={14} />
+[F27:265]|             <span>长休息</span>
+[F27:266]|           </button>
+[F27:267]|         </div>
+[F27:268]|       )}
+[F27:269]| 
+[F27:270]|       {/* Progress bar */}
+[F27:271]|       <div className="progress-container">
+[F27:272]|         <Progress
+[F27:273]|           value={progress}
+[F27:274]|           className="timer-progress"
+[F27:275]|         />
+[F27:276]|       </div>
+[F27:277]| 
+[F27:278]|       {/* Controls */}
+[F27:279]|       <div className="timer-controls">
+[F27:280]|         {mode === 'idle' ? (
+[F27:281]|           <Button
+[F27:282]|             size="sm"
+[F27:283]|             className="control-btn-primary"
+[F27:284]|             onClick={onStart}
+[F27:285]|           >
+[F27:286]|             <Play size={16} className="mr-1" />
+[F27:287]|             开始专注
+[F27:288]|           </Button>
+[F27:289]|         ) : (
+[F27:290]|           <>
+[F27:291]|             {isRunning ? (
+[F27:292]|               <Button
+[F27:293]|                 size="sm"
+[F27:294]|                 variant="outline"
+[F27:295]|                 className="control-btn"
+[F27:296]|                 onClick={onPause}
+[F27:297]|               >
+[F27:298]|                 <Pause size={16} />
+[F27:299]|               </Button>
+[F27:300]|             ) : (
+[F27:301]|               <Button
+[F27:302]|                 size="sm"
+[F27:303]|                 variant="outline"
+[F27:304]|                 className="control-btn"
+[F27:305]|                 onClick={onResume}
+[F27:306]|               >
+[F27:307]|                 <Play size={16} />
+[F27:308]|               </Button>
+[F27:309]|             )}
+[F27:310]|             <Button
+[F27:311]|               size="sm"
+[F27:312]|               variant="outline"
+[F27:313]|               className="control-btn"
+[F27:314]|               onClick={onStop}
+[F27:315]|             >
+[F27:316]|               <Square size={16} />
+[F27:317]|             </Button>
+[F27:318]|             <Button
+[F27:319]|               size="sm"
+[F27:320]|               variant="outline"
+[F27:321]|               className="control-btn"
+[F27:322]|               onClick={onSkip}
+[F27:323]|             >
+[F27:324]|               <SkipForward size={16} />
+[F27:325]|             </Button>
+[F27:326]|           </>
+[F27:327]|         )}
+[F27:328]|       </div>
+[F27:329]|     </div>
+[F27:330]|   );
+[F27:331]| }
 
 ================================================================================
-文件路径: src\components\SettingsPanel.tsx(F28) (约合大小: 6 KB)
+文件路径: src\components\SettingsPanel.tsx(F28) (约合大小: 10 KB)
 ================================================================================
-[F28:1]| import { useState } from 'react';
-[F28:2]| import { ArrowLeft, Settings, Clock, Volume2, RotateCcw } from 'lucide-react';
+[F28:1]| import { useState, useEffect } from 'react';
+[F28:2]| import { ArrowLeft, Settings, Clock, Volume2, RotateCcw, Flag, Zap } from 'lucide-react';
 [F28:3]| import { Button } from '@/components/ui/button';
 [F28:4]| import { Slider } from '@/components/ui/slider';
 [F28:5]| import { Switch } from '@/components/ui/switch';
 [F28:6]| import { Input } from '@/components/ui/input';
-[F28:7]| import type { AppState } from '@/types';
+[F28:7]| import type { AppState, TimerMode, GlobalViewSortMode } from '@/types';
 [F28:8]| import { DEFAULT_SETTINGS } from '@/types';
 [F28:9]| 
 [F28:10]| interface SettingsPanelProps {
 [F28:11]|   settings: AppState['settings'];
 [F28:12]|   onBack: () => void;
 [F28:13]|   onUpdateSettings: (settings: Partial<AppState['settings']>) => void;
-[F28:14]| }
-[F28:15]| 
-[F28:16]| export function SettingsPanel({
-[F28:17]|   settings,
-[F28:18]|   onBack,
-[F28:19]|   onUpdateSettings,
-[F28:20]| }: SettingsPanelProps) {
-[F28:21]|   const [workMinutes, setWorkMinutes] = useState(Math.floor(settings.workDuration / 60));
-[F28:22]|   const [breakMinutes, setBreakMinutes] = useState(Math.floor(settings.breakDuration / 60));
-[F28:23]|   const [longBreakMinutes, setLongBreakMinutes] = useState(Math.floor(settings.longBreakDuration / 60));
-[F28:24]| 
-[F28:25]|   const handleWorkDurationChange = (value: number[]) => {
-[F28:26]|     const minutes = value[0];
-[F28:27]|     setWorkMinutes(minutes);
-[F28:28]|     onUpdateSettings({ workDuration: minutes * 60 });
-[F28:29]|   };
-[F28:30]| 
-[F28:31]|   const handleBreakDurationChange = (value: number[]) => {
-[F28:32]|     const minutes = value[0];
-[F28:33]|     setBreakMinutes(minutes);
-[F28:34]|     onUpdateSettings({ breakDuration: minutes * 60 });
-[F28:35]|   };
-[F28:36]| 
-[F28:37]|   const handleLongBreakDurationChange = (value: number[]) => {
-[F28:38]|     const minutes = value[0];
-[F28:39]|     setLongBreakMinutes(minutes);
-[F28:40]|     onUpdateSettings({ longBreakDuration: minutes * 60 });
-[F28:41]|   };
-[F28:42]| 
-[F28:43]|   const handleReset = () => {
-[F28:44]|     setWorkMinutes(25);
-[F28:45]|     setBreakMinutes(5);
-[F28:46]|     setLongBreakMinutes(15);
-[F28:47]|     onUpdateSettings({
-[F28:48]|       workDuration: DEFAULT_SETTINGS.workDuration,
-[F28:49]|       breakDuration: DEFAULT_SETTINGS.breakDuration,
-[F28:50]|       longBreakDuration: DEFAULT_SETTINGS.longBreakDuration,
-[F28:51]|       autoStartBreak: DEFAULT_SETTINGS.autoStartBreak,
-[F28:52]|       soundEnabled: DEFAULT_SETTINGS.soundEnabled,
-[F28:53]|     });
-[F28:54]|   };
-[F28:55]| 
-[F28:56]|   return (
-[F28:57]|     <div className="settings-panel-container">
-[F28:58]|       {/* Header */}
-[F28:59]|       <div className="settings-panel-header">
-[F28:60]|         <Button
-[F28:61]|           size="icon"
-[F28:62]|           variant="ghost"
-[F28:63]|           className="back-btn"
-[F28:64]|           onClick={onBack}
-[F28:65]|         >
-[F28:66]|           <ArrowLeft size={18} />
-[F28:67]|         </Button>
-[F28:68]|         <div className="settings-panel-title">
-[F28:69]|           <Settings size={18} className="text-blue-400" />
-[F28:70]|           <span>设置</span>
-[F28:71]|         </div>
-[F28:72]|       </div>
-[F28:73]| 
-[F28:74]|       {/* Settings Content */}
-[F28:75]|       <div className="settings-content">
-[F28:76]|         {/* Timer Settings */}
-[F28:77]|         <div className="settings-section">
-[F28:78]|           <h3 className="settings-section-title">
-[F28:79]|             <Clock size={14} className="mr-2" />
-[F28:80]|             计时器设置
-[F28:81]|           </h3>
-[F28:82]| 
-[F28:83]|           {/* Work Duration */}
-[F28:84]|           <div className="setting-item">
-[F28:85]|             <div className="setting-label">
-[F28:86]|               <span>专注时长 (分钟)</span>
-[F28:87]|               <Input
-[F28:88]|                 type="number"
-[F28:89]|                 value={workMinutes}
-[F28:90]|                 onChange={(e) => {
-[F28:91]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
-[F28:92]|                   setWorkMinutes(val);
-[F28:93]|                   onUpdateSettings({ workDuration: val * 60 });
-[F28:94]|                 }}
-[F28:95]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
-[F28:96]|                 min={1}
-[F28:97]|               />
-[F28:98]|             </div>
-[F28:99]|             <Slider
-[F28:100]|               value={[workMinutes]}
-[F28:101]|               onValueChange={handleWorkDurationChange}
-[F28:102]|               min={1}
-[F28:103]|               max={120}
-[F28:104]|               step={1}
-[F28:105]|               className="setting-slider mt-2"
-[F28:106]|             />
-[F28:107]|           </div>
-[F28:108]| 
-[F28:109]|           {/* Break Duration */}
-[F28:110]|           <div className="setting-item">
-[F28:111]|             <div className="setting-label">
-[F28:112]|               <span>短休息时长 (分钟)</span>
-[F28:113]|               <Input
-[F28:114]|                 type="number"
-[F28:115]|                 value={breakMinutes}
-[F28:116]|                 onChange={(e) => {
-[F28:117]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
-[F28:118]|                   setBreakMinutes(val);
-[F28:119]|                   onUpdateSettings({ breakDuration: val * 60 });
-[F28:120]|                 }}
-[F28:121]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
-[F28:122]|                 min={1}
-[F28:123]|               />
-[F28:124]|             </div>
-[F28:125]|             <Slider
-[F28:126]|               value={[breakMinutes]}
-[F28:127]|               onValueChange={handleBreakDurationChange}
-[F28:128]|               min={1}
-[F28:129]|               max={60}
-[F28:130]|               step={1}
-[F28:131]|               className="setting-slider mt-2"
-[F28:132]|             />
-[F28:133]|           </div>
+[F28:14]|   onPreviewMode?: (mode: TimerMode) => void;
+[F28:15]| }
+[F28:16]| 
+[F28:17]| export function SettingsPanel({
+[F28:18]|   settings,
+[F28:19]|   onBack,
+[F28:20]|   onUpdateSettings,
+[F28:21]|   onPreviewMode,
+[F28:22]| }: SettingsPanelProps) {
+[F28:23]|   const [workMinutes, setWorkMinutes] = useState(Math.floor(settings.workDuration / 60));
+[F28:24]|   const [breakMinutes, setBreakMinutes] = useState(Math.floor(settings.breakDuration / 60));
+[F28:25]|   const [longBreakMinutes, setLongBreakMinutes] = useState(Math.floor(settings.longBreakDuration / 60));
+[F28:26]|   const [priorityWeight, setPriorityWeight] = useState(settings.globalViewSort.priorityWeight * 100);
+[F28:27]|   const [urgencyWeight, setUrgencyWeight] = useState(settings.globalViewSort.urgencyWeight * 100);
+[F28:28]| 
+[F28:29]|   // 同步外部 settings 变化到本地状态
+[F28:30]|   useEffect(() => {
+[F28:31]|     setWorkMinutes(Math.floor(settings.workDuration / 60));
+[F28:32]|   }, [settings.workDuration]);
+[F28:33]| 
+[F28:34]|   useEffect(() => {
+[F28:35]|     setBreakMinutes(Math.floor(settings.breakDuration / 60));
+[F28:36]|   }, [settings.breakDuration]);
+[F28:37]| 
+[F28:38]|   useEffect(() => {
+[F28:39]|     setLongBreakMinutes(Math.floor(settings.longBreakDuration / 60));
+[F28:40]|   }, [settings.longBreakDuration]);
+[F28:41]| 
+[F28:42]|   const handleWorkDurationChange = (value: number[]) => {
+[F28:43]|     const minutes = value[0];
+[F28:44]|     setWorkMinutes(minutes);
+[F28:45]|     onUpdateSettings({ workDuration: minutes * 60 });
+[F28:46]|   };
+[F28:47]| 
+[F28:48]|   const handleBreakDurationChange = (value: number[]) => {
+[F28:49]|     const minutes = value[0];
+[F28:50]|     setBreakMinutes(minutes);
+[F28:51]|     onUpdateSettings({ breakDuration: minutes * 60 });
+[F28:52]|   };
+[F28:53]| 
+[F28:54]|   const handleLongBreakDurationChange = (value: number[]) => {
+[F28:55]|     const minutes = value[0];
+[F28:56]|     setLongBreakMinutes(minutes);
+[F28:57]|     onUpdateSettings({ longBreakDuration: minutes * 60 });
+[F28:58]|   };
+[F28:59]| 
+[F28:60]|   // 预览模式 - 只在完成拖动后触发
+[F28:61]|   const handleWorkDurationCommit = () => {
+[F28:62]|     onPreviewMode?.('work');
+[F28:63]|   };
+[F28:64]| 
+[F28:65]|   const handleBreakDurationCommit = () => {
+[F28:66]|     onPreviewMode?.('break');
+[F28:67]|   };
+[F28:68]| 
+[F28:69]|   const handleLongBreakDurationCommit = () => {
+[F28:70]|     onPreviewMode?.('longBreak');
+[F28:71]|   };
+[F28:72]| 
+[F28:73]|   const handlePriorityWeightChange = (value: number[]) => {
+[F28:74]|     const weight = value[0];
+[F28:75]|     setPriorityWeight(weight);
+[F28:76]|     const newUrgencyWeight = 100 - weight;
+[F28:77]|     setUrgencyWeight(newUrgencyWeight);
+[F28:78]|     onUpdateSettings({
+[F28:79]|       globalViewSort: {
+[F28:80]|         mode: settings.globalViewSort.mode as GlobalViewSortMode,
+[F28:81]|         priorityWeight: weight / 100,
+[F28:82]|         urgencyWeight: newUrgencyWeight / 100,
+[F28:83]|       },
+[F28:84]|     });
+[F28:85]|   };
+[F28:86]| 
+[F28:87]|   const handleUrgencyWeightChange = (value: number[]) => {
+[F28:88]|     const weight = value[0];
+[F28:89]|     setUrgencyWeight(weight);
+[F28:90]|     const newPriorityWeight = 100 - weight;
+[F28:91]|     setPriorityWeight(newPriorityWeight);
+[F28:92]|     onUpdateSettings({
+[F28:93]|       globalViewSort: {
+[F28:94]|         mode: settings.globalViewSort.mode as GlobalViewSortMode,
+[F28:95]|         priorityWeight: newPriorityWeight / 100,
+[F28:96]|         urgencyWeight: weight / 100,
+[F28:97]|       },
+[F28:98]|     });
+[F28:99]|   };
+[F28:100]| 
+[F28:101]|   const handleReset = () => {
+[F28:102]|     setWorkMinutes(25);
+[F28:103]|     setBreakMinutes(5);
+[F28:104]|     setLongBreakMinutes(15);
+[F28:105]|     setPriorityWeight(DEFAULT_SETTINGS.globalViewSort.priorityWeight * 100);
+[F28:106]|     setUrgencyWeight(DEFAULT_SETTINGS.globalViewSort.urgencyWeight * 100);
+[F28:107]|     onUpdateSettings({
+[F28:108]|       workDuration: DEFAULT_SETTINGS.workDuration,
+[F28:109]|       breakDuration: DEFAULT_SETTINGS.breakDuration,
+[F28:110]|       longBreakDuration: DEFAULT_SETTINGS.longBreakDuration,
+[F28:111]|       autoStartBreak: DEFAULT_SETTINGS.autoStartBreak,
+[F28:112]|       soundEnabled: DEFAULT_SETTINGS.soundEnabled,
+[F28:113]|       globalViewSort: DEFAULT_SETTINGS.globalViewSort,
+[F28:114]|     });
+[F28:115]|   };
+[F28:116]| 
+[F28:117]|   return (
+[F28:118]|     <div className="settings-panel-container">
+[F28:119]|       {/* Header */}
+[F28:120]|       <div className="settings-panel-header">
+[F28:121]|         <Button
+[F28:122]|           size="icon"
+[F28:123]|           variant="ghost"
+[F28:124]|           className="back-btn"
+[F28:125]|           onClick={onBack}
+[F28:126]|         >
+[F28:127]|           <ArrowLeft size={18} />
+[F28:128]|         </Button>
+[F28:129]|         <div className="settings-panel-title">
+[F28:130]|           <Settings size={18} className="text-blue-400" />
+[F28:131]|           <span>设置</span>
+[F28:132]|         </div>
+[F28:133]|       </div>
 [F28:134]| 
-[F28:135]|           {/* Long Break Duration */}
-[F28:136]|           <div className="setting-item">
-[F28:137]|             <div className="setting-label">
-[F28:138]|               <span>长休息时长 (分钟)</span>
-[F28:139]|               <Input
-[F28:140]|                 type="number"
-[F28:141]|                 value={longBreakMinutes}
-[F28:142]|                 onChange={(e) => {
-[F28:143]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
-[F28:144]|                   setLongBreakMinutes(val);
-[F28:145]|                   onUpdateSettings({ longBreakDuration: val * 60 });
-[F28:146]|                 }}
-[F28:147]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
-[F28:148]|                 min={1}
-[F28:149]|               />
-[F28:150]|             </div>
-[F28:151]|             <Slider
-[F28:152]|               value={[longBreakMinutes]}
-[F28:153]|               onValueChange={handleLongBreakDurationChange}
-[F28:154]|               min={1}
-[F28:155]|               max={90}
-[F28:156]|               step={1}
-[F28:157]|               className="setting-slider mt-2"
-[F28:158]|             />
-[F28:159]|           </div>
-[F28:160]|         </div>
-[F28:161]| 
-[F28:162]|         {/* Other Settings */}
-[F28:163]|         <div className="settings-section">
-[F28:164]|           <h3 className="settings-section-title">
-[F28:165]|             <Volume2 size={14} className="mr-2" />
-[F28:166]|             其他设置
-[F28:167]|           </h3>
-[F28:168]| 
-[F28:169]|           {/* Auto Start Break */}
-[F28:170]|           <div className="setting-item switch">
-[F28:171]|             <div className="setting-label">
-[F28:172]|               <span>自动开始休息</span>
-[F28:173]|               <span className="setting-desc">专注结束后自动开始休息计时</span>
-[F28:174]|             </div>
-[F28:175]|             <Switch
-[F28:176]|               checked={settings.autoStartBreak}
-[F28:177]|               onCheckedChange={(checked) => onUpdateSettings({ autoStartBreak: checked })}
-[F28:178]|             />
-[F28:179]|           </div>
-[F28:180]| 
-[F28:181]|           {/* Sound Enabled */}
-[F28:182]|           <div className="setting-item switch">
-[F28:183]|             <div className="setting-label">
-[F28:184]|               <span>声音提醒</span>
-[F28:185]|               <span className="setting-desc">计时结束时播放提示音</span>
+[F28:135]|       {/* Settings Content */}
+[F28:136]|       <div className="settings-content">
+[F28:137]|         {/* Timer Settings */}
+[F28:138]|         <div className="settings-section">
+[F28:139]|           <h3 className="settings-section-title">
+[F28:140]|             <Clock size={14} className="mr-2" />
+[F28:141]|             计时器设置
+[F28:142]|           </h3>
+[F28:143]| 
+[F28:144]|           {/* Work Duration */}
+[F28:145]|           <div className="setting-item">
+[F28:146]|             <div className="setting-label">
+[F28:147]|               <span>专注时长 (分钟)</span>
+[F28:148]|               <Input
+[F28:149]|                 type="number"
+[F28:150]|                 value={workMinutes}
+[F28:151]|                 onChange={(e) => {
+[F28:152]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
+[F28:153]|                   setWorkMinutes(val);
+[F28:154]|                   onUpdateSettings({ workDuration: val * 60 });
+[F28:155]|                 }}
+[F28:156]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+[F28:157]|                 min={1}
+[F28:158]|               />
+[F28:159]|             </div>
+[F28:160]|             <Slider
+[F28:161]|               value={[workMinutes]}
+[F28:162]|               onValueChange={handleWorkDurationChange}
+[F28:163]|               onValueCommit={handleWorkDurationCommit}
+[F28:164]|               min={1}
+[F28:165]|               max={120}
+[F28:166]|               step={1}
+[F28:167]|               className="setting-slider mt-2"
+[F28:168]|             />
+[F28:169]|           </div>
+[F28:170]| 
+[F28:171]|           {/* Break Duration */}
+[F28:172]|           <div className="setting-item">
+[F28:173]|             <div className="setting-label">
+[F28:174]|               <span>短休息时长 (分钟)</span>
+[F28:175]|               <Input
+[F28:176]|                 type="number"
+[F28:177]|                 value={breakMinutes}
+[F28:178]|                 onChange={(e) => {
+[F28:179]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
+[F28:180]|                   setBreakMinutes(val);
+[F28:181]|                   onUpdateSettings({ breakDuration: val * 60 });
+[F28:182]|                 }}
+[F28:183]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+[F28:184]|                 min={1}
+[F28:185]|               />
 [F28:186]|             </div>
-[F28:187]|             <Switch
-[F28:188]|               checked={settings.soundEnabled}
-[F28:189]|               onCheckedChange={(checked) => onUpdateSettings({ soundEnabled: checked })}
-[F28:190]|             />
-[F28:191]|           </div>
-[F28:192]|         </div>
-[F28:193]| 
-[F28:194]|         {/* Reset Button */}
-[F28:195]|         <div className="settings-footer">
-[F28:196]|           <Button
-[F28:197]|             variant="outline"
-[F28:198]|             size="sm"
-[F28:199]|             className="reset-btn"
-[F28:200]|             onClick={handleReset}
-[F28:201]|           >
-[F28:202]|             <RotateCcw size={14} className="mr-1" />
-[F28:203]|             恢复默认设置
-[F28:204]|           </Button>
-[F28:205]|         </div>
-[F28:206]|       </div>
-[F28:207]|     </div>
-[F28:208]|   );
-[F28:209]| }
+[F28:187]|             <Slider
+[F28:188]|               value={[breakMinutes]}
+[F28:189]|               onValueChange={handleBreakDurationChange}
+[F28:190]|               onValueCommit={handleBreakDurationCommit}
+[F28:191]|               min={1}
+[F28:192]|               max={60}
+[F28:193]|               step={1}
+[F28:194]|               className="setting-slider mt-2"
+[F28:195]|             />
+[F28:196]|           </div>
+[F28:197]| 
+[F28:198]|           {/* Long Break Duration */}
+[F28:199]|           <div className="setting-item">
+[F28:200]|             <div className="setting-label">
+[F28:201]|               <span>长休息时长 (分钟)</span>
+[F28:202]|               <Input
+[F28:203]|                 type="number"
+[F28:204]|                 value={longBreakMinutes}
+[F28:205]|                 onChange={(e) => {
+[F28:206]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
+[F28:207]|                   setLongBreakMinutes(val);
+[F28:208]|                   onUpdateSettings({ longBreakDuration: val * 60 });
+[F28:209]|                 }}
+[F28:210]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+[F28:211]|                 min={1}
+[F28:212]|               />
+[F28:213]|             </div>
+[F28:214]|             <Slider
+[F28:215]|               value={[longBreakMinutes]}
+[F28:216]|               onValueChange={handleLongBreakDurationChange}
+[F28:217]|               onValueCommit={handleLongBreakDurationCommit}
+[F28:218]|               min={1}
+[F28:219]|               max={90}
+[F28:220]|               step={1}
+[F28:221]|               className="setting-slider mt-2"
+[F28:222]|             />
+[F28:223]|           </div>
+[F28:224]|         </div>
+[F28:225]| 
+[F28:226]|         {/* Weighted Sort Settings */}
+[F28:227]|         <div className="settings-section">
+[F28:228]|           <h3 className="settings-section-title">
+[F28:229]|             <Flag size={14} className="mr-2" />
+[F28:230]|             加权排序设置
+[F28:231]|           </h3>
+[F28:232]|           <p className="settings-section-desc">
+[F28:233]|             在全局视图使用加权排序时，优先级和紧急度的权重比例
+[F28:234]|           </p>
+[F28:235]| 
+[F28:236]|           {/* Priority Weight */}
+[F28:237]|           <div className="setting-item">
+[F28:238]|             <div className="setting-label">
+[F28:239]|               <Flag size={14} className="mr-2 text-red-400" />
+[F28:240]|               <span>优先级权重</span>
+[F28:241]|               <span className="setting-value">{priorityWeight}%</span>
+[F28:242]|             </div>
+[F28:243]|             <Slider
+[F28:244]|               value={[priorityWeight]}
+[F28:245]|               onValueChange={handlePriorityWeightChange}
+[F28:246]|               min={0}
+[F28:247]|               max={100}
+[F28:248]|               step={10}
+[F28:249]|               className="setting-slider mt-2"
+[F28:250]|             />
+[F28:251]|           </div>
+[F28:252]| 
+[F28:253]|           {/* Urgency Weight */}
+[F28:254]|           <div className="setting-item">
+[F28:255]|             <div className="setting-label">
+[F28:256]|               <Zap size={14} className="mr-2 text-orange-400" />
+[F28:257]|               <span>紧急度权重</span>
+[F28:258]|               <span className="setting-value">{urgencyWeight}%</span>
+[F28:259]|             </div>
+[F28:260]|             <Slider
+[F28:261]|               value={[urgencyWeight]}
+[F28:262]|               onValueChange={handleUrgencyWeightChange}
+[F28:263]|               min={0}
+[F28:264]|               max={100}
+[F28:265]|               step={10}
+[F28:266]|               className="setting-slider mt-2"
+[F28:267]|             />
+[F28:268]|           </div>
+[F28:269]|         </div>
+[F28:270]| 
+[F28:271]|         {/* Other Settings */}
+[F28:272]|         <div className="settings-section">
+[F28:273]|           <h3 className="settings-section-title">
+[F28:274]|             <Volume2 size={14} className="mr-2" />
+[F28:275]|             其他设置
+[F28:276]|           </h3>
+[F28:277]| 
+[F28:278]|           {/* Auto Start Break */}
+[F28:279]|           <div className="setting-item switch">
+[F28:280]|             <div className="setting-label">
+[F28:281]|               <span>自动开始休息</span>
+[F28:282]|               <span className="setting-desc">专注结束后自动开始休息计时</span>
+[F28:283]|             </div>
+[F28:284]|             <Switch
+[F28:285]|               checked={settings.autoStartBreak}
+[F28:286]|               onCheckedChange={(checked) => onUpdateSettings({ autoStartBreak: checked })}
+[F28:287]|             />
+[F28:288]|           </div>
+[F28:289]| 
+[F28:290]|           {/* Sound Enabled */}
+[F28:291]|           <div className="setting-item switch">
+[F28:292]|             <div className="setting-label">
+[F28:293]|               <span>声音提醒</span>
+[F28:294]|               <span className="setting-desc">计时结束时播放提示音</span>
+[F28:295]|             </div>
+[F28:296]|             <Switch
+[F28:297]|               checked={settings.soundEnabled}
+[F28:298]|               onCheckedChange={(checked) => onUpdateSettings({ soundEnabled: checked })}
+[F28:299]|             />
+[F28:300]|           </div>
+[F28:301]|         </div>
+[F28:302]| 
+[F28:303]|         {/* Reset Button */}
+[F28:304]|         <div className="settings-footer">
+[F28:305]|           <Button
+[F28:306]|             variant="outline"
+[F28:307]|             size="sm"
+[F28:308]|             className="reset-btn"
+[F28:309]|             onClick={handleReset}
+[F28:310]|           >
+[F28:311]|             <RotateCcw size={14} className="mr-1" />
+[F28:312]|             恢复默认设置
+[F28:313]|           </Button>
+[F28:314]|         </div>
+[F28:315]|       </div>
+[F28:316]|     </div>
+[F28:317]|   );
+[F28:318]| }
 
 ================================================================================
-文件路径: src\components\TaskItem.tsx(F29) (约合大小: 6 KB)
+文件路径: src\components\TaskItem.tsx(F29) (约合大小: 9 KB)
 ================================================================================
 [F29:1]| import { useSortable } from '@dnd-kit/sortable';
 [F29:2]| import { CSS } from '@dnd-kit/utilities';
-[F29:3]| import { Check, Trash2, Edit2, GripVertical, ChevronDown, ChevronUp, Flag, RotateCcw, Clock } from 'lucide-react';
+[F29:3]| import { Check, Trash2, Edit2, GripVertical, ChevronDown, ChevronUp, Flag, RotateCcw, Clock, Zap } from 'lucide-react';
 [F29:4]| import { Button } from '@/components/ui/button';
 [F29:5]| import { Input } from '@/components/ui/input';
 [F29:6]| import { useState, useRef, useEffect } from 'react';
-[F29:7]| import type { Task, TaskPriority } from '@/types';
+[F29:7]| import type { Task, TaskPriority, TaskUrgency } from '@/types';
 [F29:8]| import { formatDuration } from '@/types';
 [F29:9]| 
 [F29:10]| interface TaskItemProps {
@@ -5886,219 +6659,297 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F29:34]|   const [editTitle, setEditTitle] = useState(task.title);
 [F29:35]|   const [editDescription, setEditDescription] = useState(task.description);
 [F29:36]|   const [showPriorityMenu, setShowPriorityMenu] = useState(false);
-[F29:37]|   const titleInputRef = useRef<HTMLInputElement>(null);
-[F29:38]| 
-[F29:39]|   const {
-[F29:40]|     attributes,
-[F29:41]|     listeners,
-[F29:42]|     setNodeRef,
-[F29:43]|     transform,
-[F29:44]|     transition,
-[F29:45]|     isDragging,
-[F29:46]|   } = useSortable({ id: task.id });
-[F29:47]| 
-[F29:48]|   useEffect(() => {
-[F29:49]|     if (isEditing && titleInputRef.current) {
-[F29:50]|       titleInputRef.current.focus();
-[F29:51]|     }
-[F29:52]|   }, [isEditing]);
-[F29:53]| 
-[F29:54]|   const style = {
-[F29:55]|     transform: CSS.Transform.toString(transform),
-[F29:56]|     transition,
-[F29:57]|     opacity: isDragging ? 0.5 : 1,
-[F29:58]|   };
-[F29:59]| 
-[F29:60]|   const handleSave = () => {
-[F29:61]|     if (editTitle.trim()) {
-[F29:62]|       onUpdate(task.id, {
-[F29:63]|         title: editTitle.trim(),
-[F29:64]|         description: editDescription.trim(),
-[F29:65]|       });
-[F29:66]|     }
-[F29:67]|     setIsEditing(false);
-[F29:68]|   };
-[F29:69]| 
-[F29:70]|   const handleKeyDown = (e: React.KeyboardEvent) => {
-[F29:71]|     if (e.key === 'Enter') {
-[F29:72]|       handleSave();
-[F29:73]|     } else if (e.key === 'Escape') {
-[F29:74]|       setEditTitle(task.title);
-[F29:75]|       setEditDescription(task.description);
-[F29:76]|       setIsEditing(false);
-[F29:77]|     }
-[F29:78]|   };
-[F29:79]| 
-[F29:80]|   const handleClick = () => {
-[F29:81]|     onSelect?.(task.id);
+[F29:37]|   const [showUrgencyMenu, setShowUrgencyMenu] = useState(false);
+[F29:38]|   const titleInputRef = useRef<HTMLInputElement>(null);
+[F29:39]| 
+[F29:40]|   const {
+[F29:41]|     attributes,
+[F29:42]|     listeners,
+[F29:43]|     setNodeRef,
+[F29:44]|     transform,
+[F29:45]|     transition,
+[F29:46]|     isDragging,
+[F29:47]|   } = useSortable({ id: task.id });
+[F29:48]| 
+[F29:49]|   useEffect(() => {
+[F29:50]|     if (isEditing && titleInputRef.current) {
+[F29:51]|       titleInputRef.current.focus();
+[F29:52]|     }
+[F29:53]|   }, [isEditing]);
+[F29:54]| 
+[F29:55]|   const style = {
+[F29:56]|     transform: CSS.Transform.toString(transform),
+[F29:57]|     transition,
+[F29:58]|     opacity: isDragging ? 0.5 : 1,
+[F29:59]|   };
+[F29:60]| 
+[F29:61]|   const handleSave = () => {
+[F29:62]|     if (editTitle.trim()) {
+[F29:63]|       onUpdate(task.id, {
+[F29:64]|         title: editTitle.trim(),
+[F29:65]|         description: editDescription.trim(),
+[F29:66]|       });
+[F29:67]|     }
+[F29:68]|     setIsEditing(false);
+[F29:69]|   };
+[F29:70]| 
+[F29:71]|   // 处理编辑区域失去焦点 - 使用 setTimeout 延迟判断，给用户切换输入框的时间
+[F29:72]|   const handleBlur = () => {
+[F29:73]|     // 延迟检查，确保用户不是切换到另一个输入框
+[F29:74]|     setTimeout(() => {
+[F29:75]|       // 检查当前是否仍然有焦点在任何输入框上
+[F29:76]|       const activeElement = document.activeElement;
+[F29:77]|       const isFocusInsideForm = activeElement?.closest('.task-edit-form');
+[F29:78]|       if (!isFocusInsideForm) {
+[F29:79]|         handleSave();
+[F29:80]|       }
+[F29:81]|     }, 0);
 [F29:82]|   };
 [F29:83]| 
-[F29:84]|   const handleDoubleClick = () => {
-[F29:85]|     onToggleExpanded(task.id);
-[F29:86]|   };
-[F29:87]| 
-[F29:88]|   const handleResetWorkTime = (e: React.MouseEvent) => {
-[F29:89]|     e.stopPropagation();
-[F29:90]|     onUpdate(task.id, { totalWorkTime: 0 });
-[F29:91]|   };
-[F29:92]| 
-[F29:93]|   const getPriorityColor = (priority: TaskPriority) => {
-[F29:94]|     switch (priority) {
-[F29:95]|       case 'high':
-[F29:96]|         return '#ef4444';
-[F29:97]|       case 'medium':
-[F29:98]|         return '#eab308';
-[F29:99]|       case 'low':
-[F29:100]|         return '#22c55e';
-[F29:101]|     }
-[F29:102]|   };
-[F29:103]| 
-[F29:104]|   const getPriorityLabel = (priority: TaskPriority) => {
-[F29:105]|     switch (priority) {
-[F29:106]|       case 'high':
-[F29:107]|         return '高';
-[F29:108]|       case 'medium':
-[F29:109]|         return '中';
-[F29:110]|       case 'low':
-[F29:111]|         return '低';
-[F29:112]|     }
-[F29:113]|   };
-[F29:114]| 
-[F29:115]|   return (
-[F29:116]|     <div
-[F29:117]|       ref={setNodeRef}
-[F29:118]|       style={style}
-[F29:119]|       className={`task-item ${task.completed ? 'completed' : ''} ${isActive ? 'active' : ''} ${isTimerRunning && isActive ? 'working' : ''}`}
-[F29:120]|     >
-[F29:121]|       {/* Drag Handle */}
-[F29:122]|       <div className="task-drag-handle" {...attributes} {...listeners}>
-[F29:123]|         <GripVertical size={14} className="text-white/30" />
-[F29:124]|       </div>
-[F29:125]| 
-[F29:126]|       {/* Zone Color Indicator */}
-[F29:127]|       <div
-[F29:128]|         className="task-zone-indicator"
-[F29:129]|         style={{ backgroundColor: zoneColor }}
-[F29:130]|       />
-[F29:131]| 
-[F29:132]|       {/* Checkbox */}
-[F29:133]|       <button
-[F29:134]|         className={`task-checkbox ${task.completed ? 'checked' : ''}`}
-[F29:135]|         onClick={() => onToggle(task.id)}
-[F29:136]|       >
-[F29:137]|         {task.completed && <Check size={12} />}
-[F29:138]|       </button>
-[F29:139]| 
-[F29:140]|       {/* Task Content */}
-[F29:141]|       <div className="task-content-wrapper" onClick={handleClick} onDoubleClick={handleDoubleClick}>
-[F29:142]|         {isEditing ? (
-[F29:143]|           <div className="task-edit-form">
-[F29:144]|             <Input
-[F29:145]|               ref={titleInputRef}
-[F29:146]|               value={editTitle}
-[F29:147]|               onChange={(e) => setEditTitle(e.target.value)}
-[F29:148]|               onKeyDown={handleKeyDown}
-[F29:149]|               onBlur={handleSave}
-[F29:150]|               placeholder="任务标题"
-[F29:151]|               className="task-edit-input"
-[F29:152]|             />
-[F29:153]|             <Input
-[F29:154]|               value={editDescription}
-[F29:155]|               onChange={(e) => setEditDescription(e.target.value)}
-[F29:156]|               onKeyDown={handleKeyDown}
-[F29:157]|               onBlur={handleSave}
-[F29:158]|               placeholder="任务描述（可选）"
-[F29:159]|               className="task-edit-input description"
-[F29:160]|             />
-[F29:161]|           </div>
-[F29:162]|         ) : (
-[F29:163]|           <div className="task-content">
-[F29:164]|             <div className="task-header-row">
-[F29:165]|               <span className="task-title">{task.title}</span>
-[F29:166]|               {task.description && (
-[F29:167]|                 <button
-[F29:168]|                   className="task-expand-btn"
-[F29:169]|                   onClick={() => onToggleExpanded(task.id)}
-[F29:170]|                 >
-[F29:171]|                   {task.expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-[F29:172]|                 </button>
-[F29:173]|               )}
-[F29:174]|             </div>
-[F29:175]|             {task.expanded && task.description && (
-[F29:176]|               <div className="task-description">{task.description}</div>
-[F29:177]|             )}
-[F29:178]|             
-[F29:179]|             {/* Work Time Display */}
-[F29:180]|             <div className="task-work-time">
-[F29:181]|               <Clock size={10} className={isTimerRunning && isActive ? 'pulse' : ''} />
-[F29:182]|               <span>累计: {formatDuration(task.totalWorkTime || 0)}</span>
-[F29:183]|               <button
-[F29:184]|                 className="reset-work-time-btn"
-[F29:185]|                 onClick={handleResetWorkTime}
-[F29:186]|                 title="清零累计时间"
-[F29:187]|               >
-[F29:188]|                 <RotateCcw size={10} />
-[F29:189]|               </button>
-[F29:190]|             </div>
-[F29:191]|           </div>
-[F29:192]|         )}
-[F29:193]|       </div>
-[F29:194]| 
-[F29:195]|       {/* Priority */}
-[F29:196]|       <div className="task-priority-wrapper">
-[F29:197]|         <button
-[F29:198]|           className="task-priority"
-[F29:199]|           style={{ color: getPriorityColor(task.priority) }}
-[F29:200]|           onClick={() => setShowPriorityMenu(!showPriorityMenu)}
-[F29:201]|         >
-[F29:202]|           <Flag size={12} />
-[F29:203]|           <span>{getPriorityLabel(task.priority)}</span>
-[F29:204]|         </button>
-[F29:205]|         {showPriorityMenu && (
-[F29:206]|           <div className="priority-menu">
-[F29:207]|             {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
-[F29:208]|               <button
-[F29:209]|                 key={p}
-[F29:210]|                 className={`priority-option ${task.priority === p ? 'selected' : ''}`}
-[F29:211]|                 style={{ color: getPriorityColor(p) }}
-[F29:212]|                 onClick={() => {
-[F29:213]|                   onUpdate(task.id, { priority: p });
-[F29:214]|                   setShowPriorityMenu(false);
-[F29:215]|                 }}
-[F29:216]|               >
-[F29:217]|                 <Flag size={10} />
-[F29:218]|                 <span>{getPriorityLabel(p)}</span>
-[F29:219]|               </button>
-[F29:220]|             ))}
-[F29:221]|           </div>
-[F29:222]|         )}
-[F29:223]|       </div>
-[F29:224]| 
-[F29:225]|       {/* Actions */}
-[F29:226]|       <div className="task-actions">
-[F29:227]|         <Button
-[F29:228]|           size="icon"
-[F29:229]|           variant="ghost"
-[F29:230]|           className="task-action-btn"
-[F29:231]|           onClick={() => setIsEditing(true)}
-[F29:232]|         >
-[F29:233]|           <Edit2 size={12} />
-[F29:234]|         </Button>
-[F29:235]|         <Button
-[F29:236]|           size="icon"
-[F29:237]|           variant="ghost"
-[F29:238]|           className="task-action-btn delete"
-[F29:239]|           onClick={() => onDelete(task.id)}
-[F29:240]|         >
-[F29:241]|           <Trash2 size={12} />
-[F29:242]|         </Button>
-[F29:243]|       </div>
-[F29:244]|     </div>
-[F29:245]|   );
-[F29:246]| }
+[F29:84]|   const handleKeyDown = (e: React.KeyboardEvent) => {
+[F29:85]|     if (e.key === 'Enter') {
+[F29:86]|       handleSave();
+[F29:87]|     } else if (e.key === 'Escape') {
+[F29:88]|       setEditTitle(task.title);
+[F29:89]|       setEditDescription(task.description);
+[F29:90]|       setIsEditing(false);
+[F29:91]|     }
+[F29:92]|   };
+[F29:93]| 
+[F29:94]|   const handleClick = () => {
+[F29:95]|     // 编辑模式下不触发任务选择
+[F29:96]|     if (!isEditing) {
+[F29:97]|       onSelect?.(task.id);
+[F29:98]|     }
+[F29:99]|   };
+[F29:100]| 
+[F29:101]|   const handleDoubleClick = () => {
+[F29:102]|     // 编辑模式下不触发展开/收缩
+[F29:103]|     if (!isEditing) {
+[F29:104]|       onToggleExpanded(task.id);
+[F29:105]|     }
+[F29:106]|   };
+[F29:107]| 
+[F29:108]|   const handleResetWorkTime = (e: React.MouseEvent) => {
+[F29:109]|     e.stopPropagation();
+[F29:110]|     onUpdate(task.id, { totalWorkTime: 0 });
+[F29:111]|   };
+[F29:112]| 
+[F29:113]|   const getPriorityColor = (priority: TaskPriority) => {
+[F29:114]|     switch (priority) {
+[F29:115]|       case 'high':
+[F29:116]|         return '#ef4444';
+[F29:117]|       case 'medium':
+[F29:118]|         return '#eab308';
+[F29:119]|       case 'low':
+[F29:120]|         return '#22c55e';
+[F29:121]|     }
+[F29:122]|   };
+[F29:123]| 
+[F29:124]|   const getPriorityLabel = (priority: TaskPriority) => {
+[F29:125]|     switch (priority) {
+[F29:126]|       case 'high':
+[F29:127]|         return '高';
+[F29:128]|       case 'medium':
+[F29:129]|         return '中';
+[F29:130]|       case 'low':
+[F29:131]|         return '低';
+[F29:132]|     }
+[F29:133]|   };
+[F29:134]| 
+[F29:135]|   const getUrgencyColor = (urgency: TaskUrgency) => {
+[F29:136]|     switch (urgency) {
+[F29:137]|       case 'urgent':
+[F29:138]|         return '#dc2626';
+[F29:139]|       case 'high':
+[F29:140]|         return '#f97316';
+[F29:141]|       case 'medium':
+[F29:142]|         return '#eab308';
+[F29:143]|       case 'low':
+[F29:144]|         return '#22c55e';
+[F29:145]|     }
+[F29:146]|   };
+[F29:147]| 
+[F29:148]|   const getUrgencyLabel = (urgency: TaskUrgency) => {
+[F29:149]|     switch (urgency) {
+[F29:150]|       case 'urgent':
+[F29:151]|         return '急';
+[F29:152]|       case 'high':
+[F29:153]|         return '高';
+[F29:154]|       case 'medium':
+[F29:155]|         return '中';
+[F29:156]|       case 'low':
+[F29:157]|         return '低';
+[F29:158]|     }
+[F29:159]|   };
+[F29:160]| 
+[F29:161]|   return (
+[F29:162]|     <div
+[F29:163]|       ref={setNodeRef}
+[F29:164]|       style={style}
+[F29:165]|       className={`task-item ${task.completed ? 'completed' : ''} ${isActive ? 'active' : ''} ${isTimerRunning && isActive ? 'working' : ''}`}
+[F29:166]|     >
+[F29:167]|       {/* Drag Handle */}
+[F29:168]|       <div className="task-drag-handle" {...attributes} {...listeners}>
+[F29:169]|         <GripVertical size={14} className="text-white/30" />
+[F29:170]|       </div>
+[F29:171]| 
+[F29:172]|       {/* Zone Color Indicator */}
+[F29:173]|       <div
+[F29:174]|         className="task-zone-indicator"
+[F29:175]|         style={{ backgroundColor: zoneColor }}
+[F29:176]|       />
+[F29:177]| 
+[F29:178]|       {/* Checkbox */}
+[F29:179]|       <button
+[F29:180]|         className={`task-checkbox ${task.completed ? 'checked' : ''}`}
+[F29:181]|         onClick={() => onToggle(task.id)}
+[F29:182]|       >
+[F29:183]|         {task.completed && <Check size={12} />}
+[F29:184]|       </button>
+[F29:185]| 
+[F29:186]|       {/* Task Content */}
+[F29:187]|       <div className="task-content-wrapper" onClick={handleClick} onDoubleClick={handleDoubleClick}>
+[F29:188]|         {isEditing ? (
+[F29:189]|           <div className="task-edit-form">
+[F29:190]|             <Input
+[F29:191]|               ref={titleInputRef}
+[F29:192]|               value={editTitle}
+[F29:193]|               onChange={(e) => setEditTitle(e.target.value)}
+[F29:194]|               onKeyDown={handleKeyDown}
+[F29:195]|               onBlur={handleBlur}
+[F29:196]|               placeholder="任务标题"
+[F29:197]|               className="task-edit-input"
+[F29:198]|             />
+[F29:199]|             <Input
+[F29:200]|               value={editDescription}
+[F29:201]|               onChange={(e) => setEditDescription(e.target.value)}
+[F29:202]|               onKeyDown={handleKeyDown}
+[F29:203]|               onBlur={handleBlur}
+[F29:204]|               placeholder="任务描述（可选）"
+[F29:205]|               className="task-edit-input description"
+[F29:206]|             />
+[F29:207]|           </div>
+[F29:208]|         ) : (
+[F29:209]|           <div className="task-content">
+[F29:210]|             <div className="task-header-row">
+[F29:211]|               <span className="task-title">{task.title}</span>
+[F29:212]|               {task.description && (
+[F29:213]|                 <button
+[F29:214]|                   className="task-expand-btn"
+[F29:215]|                   onClick={(e) => {
+[F29:216]|                     e.stopPropagation();
+[F29:217]|                     onToggleExpanded(task.id);
+[F29:218]|                   }}
+[F29:219]|                 >
+[F29:220]|                   {task.expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+[F29:221]|                 </button>
+[F29:222]|               )}
+[F29:223]|             </div>
+[F29:224]|             {task.expanded && task.description && (
+[F29:225]|               <div className="task-description">{task.description}</div>
+[F29:226]|             )}
+[F29:227]|             
+[F29:228]|             {/* Work Time Display */}
+[F29:229]|             <div className="task-work-time">
+[F29:230]|               <Clock size={10} className={isTimerRunning && isActive ? 'pulse' : ''} />
+[F29:231]|               <span>累计: {formatDuration(task.totalWorkTime || 0)}</span>
+[F29:232]|               <button
+[F29:233]|                 className="reset-work-time-btn"
+[F29:234]|                 onClick={handleResetWorkTime}
+[F29:235]|                 title="清零累计时间"
+[F29:236]|               >
+[F29:237]|                 <RotateCcw size={10} />
+[F29:238]|               </button>
+[F29:239]|             </div>
+[F29:240]|           </div>
+[F29:241]|         )}
+[F29:242]|       </div>
+[F29:243]| 
+[F29:244]|       {/* Priority and Urgency */}
+[F29:245]|       <div className="task-priority-wrapper">
+[F29:246]|         {/* Urgency */}
+[F29:247]|         <button
+[F29:248]|           className="task-urgency"
+[F29:249]|           style={{ color: getUrgencyColor(task.urgency) }}
+[F29:250]|           onClick={() => setShowUrgencyMenu(!showUrgencyMenu)}
+[F29:251]|         >
+[F29:252]|           <Zap size={12} />
+[F29:253]|           <span>{getUrgencyLabel(task.urgency)}</span>
+[F29:254]|         </button>
+[F29:255]|         {showUrgencyMenu && (
+[F29:256]|           <div className="urgency-menu">
+[F29:257]|             {(['urgent', 'high', 'medium', 'low'] as TaskUrgency[]).map((u) => (
+[F29:258]|               <button
+[F29:259]|                 key={u}
+[F29:260]|                 className={`urgency-option ${task.urgency === u ? 'selected' : ''}`}
+[F29:261]|                 style={{ color: getUrgencyColor(u) }}
+[F29:262]|                 onClick={() => {
+[F29:263]|                   onUpdate(task.id, { urgency: u });
+[F29:264]|                   setShowUrgencyMenu(false);
+[F29:265]|                 }}
+[F29:266]|               >
+[F29:267]|                 <Zap size={10} />
+[F29:268]|                 <span>{getUrgencyLabel(u)}</span>
+[F29:269]|               </button>
+[F29:270]|             ))}
+[F29:271]|           </div>
+[F29:272]|         )}
+[F29:273]| 
+[F29:274]|         {/* Priority */}
+[F29:275]|         <button
+[F29:276]|           className="task-priority"
+[F29:277]|           style={{ color: getPriorityColor(task.priority) }}
+[F29:278]|           onClick={() => setShowPriorityMenu(!showPriorityMenu)}
+[F29:279]|         >
+[F29:280]|           <Flag size={12} />
+[F29:281]|           <span>{getPriorityLabel(task.priority)}</span>
+[F29:282]|         </button>
+[F29:283]|         {showPriorityMenu && (
+[F29:284]|           <div className="priority-menu">
+[F29:285]|             {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
+[F29:286]|               <button
+[F29:287]|                 key={p}
+[F29:288]|                 className={`priority-option ${task.priority === p ? 'selected' : ''}`}
+[F29:289]|                 style={{ color: getPriorityColor(p) }}
+[F29:290]|                 onClick={() => {
+[F29:291]|                   onUpdate(task.id, { priority: p });
+[F29:292]|                   setShowPriorityMenu(false);
+[F29:293]|                 }}
+[F29:294]|               >
+[F29:295]|                 <Flag size={10} />
+[F29:296]|                 <span>{getPriorityLabel(p)}</span>
+[F29:297]|               </button>
+[F29:298]|             ))}
+[F29:299]|           </div>
+[F29:300]|         )}
+[F29:301]|       </div>
+[F29:302]| 
+[F29:303]|       {/* Actions */}
+[F29:304]|       <div className="task-actions">
+[F29:305]|         <Button
+[F29:306]|           size="icon"
+[F29:307]|           variant="ghost"
+[F29:308]|           className="task-action-btn"
+[F29:309]|           onClick={() => setIsEditing(true)}
+[F29:310]|         >
+[F29:311]|           <Edit2 size={12} />
+[F29:312]|         </Button>
+[F29:313]|         <Button
+[F29:314]|           size="icon"
+[F29:315]|           variant="ghost"
+[F29:316]|           className="task-action-btn delete"
+[F29:317]|           onClick={() => onDelete(task.id)}
+[F29:318]|         >
+[F29:319]|           <Trash2 size={12} />
+[F29:320]|         </Button>
+[F29:321]|       </div>
+[F29:322]|     </div>
+[F29:323]|   );
+[F29:324]| }
 
 ================================================================================
-文件路径: src\components\TaskList.tsx(F30) (约合大小: 8 KB)
+文件路径: src\components\TaskList.tsx(F30) (约合大小: 10 KB)
 ================================================================================
 [F30:1]| import { useState, useRef } from 'react';
 [F30:2]| import {
@@ -6116,12 +6967,12 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F30:14]|   sortableKeyboardCoordinates,
 [F30:15]|   verticalListSortingStrategy,
 [F30:16]| } from '@dnd-kit/sortable';
-[F30:17]| import { Plus, CheckCircle2, Circle, Trash2 } from 'lucide-react';
+[F30:17]| import { Plus, CheckCircle2, Circle, Trash2, ChevronDown, Zap } from 'lucide-react';
 [F30:18]| import { Button } from '@/components/ui/button';
 [F30:19]| import { Input } from '@/components/ui/input';
 [F30:20]| import { ScrollArea } from '@/components/ui/scroll-area';
 [F30:21]| import { TaskItem } from './TaskItem';
-[F30:22]| import type { Task, TaskPriority, Zone } from '@/types';
+[F30:22]| import type { Task, TaskPriority, TaskUrgency, Zone } from '@/types';
 [F30:23]| 
 [F30:24]| interface TaskListProps {
 [F30:25]|   zone: Zone | null;
@@ -6129,7 +6980,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F30:27]|   tasks: Task[];
 [F30:28]|   activeTaskId: string | null;
 [F30:29]|   isTimerRunning: boolean;
-[F30:30]|   onAddTask: (zoneId: string, title: string, description: string, priority?: TaskPriority) => void;
+[F30:30]|   onAddTask: (zoneId: string, title: string, description: string, priority?: TaskPriority, urgency?: TaskUrgency) => void;
 [F30:31]|   onToggleTask: (id: string) => void;
 [F30:32]|   onDeleteTask: (id: string) => void;
 [F30:33]|   onUpdateTask: (id: string, updates: Partial<Omit<Task, 'id'>>) => void;
@@ -6157,225 +7008,267 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F30:55]|   const [newTaskTitle, setNewTaskTitle] = useState('');
 [F30:56]|   const [newTaskDescription, setNewTaskDescription] = useState('');
 [F30:57]|   const [selectedPriority, setSelectedPriority] = useState<TaskPriority>('medium');
-[F30:58]|   const [showCompleted, setShowCompleted] = useState(false);
-[F30:59]|   const inputRef = useRef<HTMLInputElement>(null);
-[F30:60]| 
-[F30:61]|   const sensors = useSensors(
-[F30:62]|     useSensor(PointerSensor),
-[F30:63]|     useSensor(KeyboardSensor, {
-[F30:64]|       coordinateGetter: sortableKeyboardCoordinates,
-[F30:65]|     })
-[F30:66]|   );
-[F30:67]| 
-[F30:68]|   const incompleteTasks = tasks.filter((t) => !t.completed);
-[F30:69]|   const completedTasks = tasks.filter((t) => t.completed);
-[F30:70]| 
-[F30:71]|   const handleAddTask = () => {
-[F30:72]|     if (newTaskTitle.trim() && zone) {
-[F30:73]|       onAddTask(zone.id, newTaskTitle.trim(), newTaskDescription.trim(), selectedPriority);
-[F30:74]|       setNewTaskTitle('');
-[F30:75]|       setNewTaskDescription('');
-[F30:76]|       inputRef.current?.focus();
-[F30:77]|     }
-[F30:78]|   };
-[F30:79]| 
-[F30:80]|   const handleKeyDown = (e: React.KeyboardEvent) => {
-[F30:81]|     if (e.key === 'Enter' && !e.shiftKey) {
-[F30:82]|       e.preventDefault();
-[F30:83]|       handleAddTask();
-[F30:84]|     }
-[F30:85]|   };
-[F30:86]| 
-[F30:87]|   const handleDragEnd = (event: DragEndEvent) => {
-[F30:88]|     const { active, over } = event;
-[F30:89]| 
-[F30:90]|     if (over && active.id !== over.id) {
-[F30:91]|       const oldIndex = incompleteTasks.findIndex((t) => t.id === active.id);
-[F30:92]|       const newIndex = incompleteTasks.findIndex((t) => t.id === over.id);
-[F30:93]|       
-[F30:94]|       if (oldIndex !== -1 && newIndex !== -1) {
-[F30:95]|         const reordered = arrayMove(incompleteTasks, oldIndex, newIndex);
-[F30:96]|         onReorderTasks(zone?.id || '', reordered);
-[F30:97]|       }
-[F30:98]|     }
-[F30:99]|   };
-[F30:100]| 
-[F30:101]|   const getZoneColor = (zoneId: string) => {
-[F30:102]|     const z = zones.find((z) => z.id === zoneId);
-[F30:103]|     return z?.color || '#6b7280';
-[F30:104]|   };
-[F30:105]| 
-[F30:106]|   const stats = {
-[F30:107]|     total: tasks.length,
-[F30:108]|     completed: completedTasks.length,
-[F30:109]|     pending: incompleteTasks.length,
-[F30:110]|     completionRate: tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0,
-[F30:111]|   };
-[F30:112]| 
-[F30:113]|   if (!zone) {
-[F30:114]|     return (
-[F30:115]|       <div className="task-list-empty">
-[F30:116]|         <p>请选择一个工作分区</p>
-[F30:117]|       </div>
-[F30:118]|     );
-[F30:119]|   }
-[F30:120]| 
-[F30:121]|   return (
-[F30:122]|     <div className="task-list-container">
-[F30:123]|       {/* Header */}
-[F30:124]|       <div className="task-list-header">
-[F30:125]|         <div className="task-list-title">
-[F30:126]|           <div
-[F30:127]|             className="zone-color-badge"
-[F30:128]|             style={{ backgroundColor: zone.color }}
-[F30:129]|           />
-[F30:130]|           <span>{zone.name}</span>
-[F30:131]|           <span className="task-count">
-[F30:132]|             ({stats.completed}/{stats.total})
-[F30:133]|           </span>
-[F30:134]|         </div>
-[F30:135]|       </div>
-[F30:136]| 
-[F30:137]|       {/* Add Task */}
-[F30:138]|       <div className="add-task-container">
-[F30:139]|         <div className="priority-selector">
-[F30:140]|           {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
-[F30:141]|             <button
-[F30:142]|               key={p}
-[F30:143]|               className={`priority-btn ${selectedPriority === p ? 'active' : ''} priority-${p}`}
-[F30:144]|               onClick={() => setSelectedPriority(p)}
-[F30:145]|             >
-[F30:146]|               <div className={`priority-dot ${p}`} />
-[F30:147]|             </button>
-[F30:148]|           ))}
-[F30:149]|         </div>
-[F30:150]|         <div className="add-task-inputs">
-[F30:151]|           <Input
-[F30:152]|             ref={inputRef}
-[F30:153]|             value={newTaskTitle}
-[F30:154]|             onChange={(e) => setNewTaskTitle(e.target.value)}
-[F30:155]|             onKeyDown={handleKeyDown}
-[F30:156]|             placeholder="任务标题..."
-[F30:157]|             className="add-task-title-input"
-[F30:158]|           />
-[F30:159]|           <Input
-[F30:160]|             value={newTaskDescription}
-[F30:161]|             onChange={(e) => setNewTaskDescription(e.target.value)}
-[F30:162]|             onKeyDown={handleKeyDown}
-[F30:163]|             placeholder="描述（可选，Shift+Enter 换行）..."
-[F30:164]|             className="add-task-desc-input"
-[F30:165]|           />
-[F30:166]|         </div>
-[F30:167]|         <Button
-[F30:168]|           size="icon"
-[F30:169]|           className="add-task-btn"
-[F30:170]|           onClick={handleAddTask}
-[F30:171]|           disabled={!newTaskTitle.trim()}
-[F30:172]|         >
-[F30:173]|           <Plus size={18} />
-[F30:174]|         </Button>
-[F30:175]|       </div>
-[F30:176]| 
-[F30:177]|       {/* Task List */}
-[F30:178]|       <ScrollArea className="task-scroll-area">
-[F30:179]|         <div className="tasks-container">
-[F30:180]|           {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
-[F30:181]|             <div className="empty-state">
-[F30:182]|               <Circle size={48} className="empty-icon" />
-[F30:183]|               <p>暂无任务，添加一个开始专注吧！</p>
-[F30:184]|               <p className="empty-hint">双击任务可展开/收缩描述</p>
-[F30:185]|             </div>
-[F30:186]|           ) : (
-[F30:187]|             <>
-[F30:188]|               {/* Draggable Incomplete Tasks */}
-[F30:189]|               <DndContext
-[F30:190]|                 sensors={sensors}
-[F30:191]|                 collisionDetection={closestCenter}
-[F30:192]|                 onDragEnd={handleDragEnd}
-[F30:193]|               >
-[F30:194]|                 <SortableContext
-[F30:195]|                   items={incompleteTasks.map((t) => t.id)}
-[F30:196]|                   strategy={verticalListSortingStrategy}
-[F30:197]|                 >
-[F30:198]|                   {incompleteTasks.map((task) => (
-[F30:199]|                     <TaskItem
-[F30:200]|                       key={task.id}
-[F30:201]|                       task={task}
-[F30:202]|                       zoneColor={getZoneColor(task.zoneId)}
-[F30:203]|                       isActive={task.id === activeTaskId}
-[F30:204]|                       isTimerRunning={isTimerRunning && task.id === activeTaskId}
-[F30:205]|                       onToggle={onToggleTask}
-[F30:206]|                       onDelete={onDeleteTask}
-[F30:207]|                       onUpdate={onUpdateTask}
-[F30:208]|                       onToggleExpanded={onToggleExpanded}
-[F30:209]|                       onSelect={onSelectTask}
-[F30:210]|                     />
-[F30:211]|                   ))}
-[F30:212]|                 </SortableContext>
-[F30:213]|               </DndContext>
-[F30:214]| 
-[F30:215]|               {/* Completed Tasks */}
-[F30:216]|               {completedTasks.length > 0 && (
-[F30:217]|                 <div className="completed-section">
-[F30:218]|                   <button
-[F30:219]|                     className="completed-toggle"
-[F30:220]|                     onClick={() => setShowCompleted(!showCompleted)}
-[F30:221]|                   >
-[F30:222]|                     <CheckCircle2 size={14} className="text-green-400" />
-[F30:223]|                     <span>已完成 ({completedTasks.length})</span>
-[F30:224]|                     <span className={`toggle-arrow ${showCompleted ? 'open' : ''}`}>
-[F30:225]|                       ▼
-[F30:226]|                     </span>
-[F30:227]|                   </button>
-[F30:228]| 
-[F30:229]|                   {showCompleted && (
-[F30:230]|                     <div className="completed-tasks">
-[F30:231]|                       {completedTasks.map((task) => (
-[F30:232]|                         <TaskItem
-[F30:233]|                           key={task.id}
-[F30:234]|                           task={task}
-[F30:235]|                           zoneColor={getZoneColor(task.zoneId)}
-[F30:236]|                           isActive={false}
-[F30:237]|                           isTimerRunning={false}
-[F30:238]|                           onToggle={onToggleTask}
-[F30:239]|                           onDelete={onDeleteTask}
-[F30:240]|                           onUpdate={onUpdateTask}
-[F30:241]|                           onToggleExpanded={onToggleExpanded}
-[F30:242]|                           onSelect={onSelectTask}
-[F30:243]|                         />
-[F30:244]|                       ))}
-[F30:245]|                       <Button
-[F30:246]|                         variant="ghost"
-[F30:247]|                         size="sm"
-[F30:248]|                         className="clear-completed-btn"
-[F30:249]|                         onClick={onClearCompleted}
-[F30:250]|                       >
-[F30:251]|                         <Trash2 size={14} className="mr-1" />
-[F30:252]|                         清除已完成
-[F30:253]|                       </Button>
-[F30:254]|                     </div>
-[F30:255]|                   )}
-[F30:256]|                 </div>
-[F30:257]|               )}
-[F30:258]|             </>
-[F30:259]|           )}
-[F30:260]|         </div>
-[F30:261]|       </ScrollArea>
-[F30:262]| 
-[F30:263]|       {/* Footer Stats */}
-[F30:264]|       <div className="task-list-footer">
-[F30:265]|         <div className="footer-stat">
-[F30:266]|           <span className="stat-label">完成率</span>
-[F30:267]|           <span className="stat-value">{stats.completionRate}%</span>
-[F30:268]|         </div>
-[F30:269]|         <div className="footer-stat">
-[F30:270]|           <span className="stat-label">待办</span>
-[F30:271]|           <span className="stat-value">{stats.pending}</span>
-[F30:272]|         </div>
-[F30:273]|       </div>
-[F30:274]|     </div>
-[F30:275]|   );
-[F30:276]| }
+[F30:58]|   const [selectedUrgency, setSelectedUrgency] = useState<TaskUrgency>('low');
+[F30:59]|   const [showCompleted, setShowCompleted] = useState(false);
+[F30:60]|   const [isAddingTask, setIsAddingTask] = useState(false);
+[F30:61]|   const inputRef = useRef<HTMLInputElement>(null);
+[F30:62]| 
+[F30:63]|   const sensors = useSensors(
+[F30:64]|     useSensor(PointerSensor),
+[F30:65]|     useSensor(KeyboardSensor, {
+[F30:66]|       coordinateGetter: sortableKeyboardCoordinates,
+[F30:67]|     })
+[F30:68]|   );
+[F30:69]| 
+[F30:70]|   const incompleteTasks = tasks.filter((t) => !t.completed);
+[F30:71]|   const completedTasks = tasks.filter((t) => t.completed);
+[F30:72]| 
+[F30:73]|   const handleAddTask = () => {
+[F30:74]|     if (newTaskTitle.trim() && zone) {
+[F30:75]|       onAddTask(zone.id, newTaskTitle.trim(), newTaskDescription.trim(), selectedPriority, selectedUrgency);
+[F30:76]|       setNewTaskTitle('');
+[F30:77]|       setNewTaskDescription('');
+[F30:78]|       inputRef.current?.focus();
+[F30:79]|     }
+[F30:80]|   };
+[F30:81]| 
+[F30:82]|   const handleKeyDown = (e: React.KeyboardEvent) => {
+[F30:83]|     if (e.key === 'Enter' && !e.shiftKey) {
+[F30:84]|       e.preventDefault();
+[F30:85]|       handleAddTask();
+[F30:86]|     }
+[F30:87]|   };
+[F30:88]| 
+[F30:89]|   const handleDragEnd = (event: DragEndEvent) => {
+[F30:90]|     const { active, over } = event;
+[F30:91]| 
+[F30:92]|     if (over && active.id !== over.id) {
+[F30:93]|       const oldIndex = incompleteTasks.findIndex((t) => t.id === active.id);
+[F30:94]|       const newIndex = incompleteTasks.findIndex((t) => t.id === over.id);
+[F30:95]|       
+[F30:96]|       if (oldIndex !== -1 && newIndex !== -1) {
+[F30:97]|         const reordered = arrayMove(incompleteTasks, oldIndex, newIndex);
+[F30:98]|         onReorderTasks(zone?.id || '', reordered);
+[F30:99]|       }
+[F30:100]|     }
+[F30:101]|   };
+[F30:102]| 
+[F30:103]|   const getZoneColor = (zoneId: string) => {
+[F30:104]|     const z = zones.find((z) => z.id === zoneId);
+[F30:105]|     return z?.color || '#6b7280';
+[F30:106]|   };
+[F30:107]| 
+[F30:108]|   const stats = {
+[F30:109]|     total: tasks.length,
+[F30:110]|     completed: completedTasks.length,
+[F30:111]|     pending: incompleteTasks.length,
+[F30:112]|     completionRate: tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0,
+[F30:113]|   };
+[F30:114]| 
+[F30:115]|   if (!zone) {
+[F30:116]|     return (
+[F30:117]|       <div className="task-list-empty">
+[F30:118]|         <p>请选择一个工作分区</p>
+[F30:119]|       </div>
+[F30:120]|     );
+[F30:121]|   }
+[F30:122]| 
+[F30:123]|   return (
+[F30:124]|     <div className="task-list-container">
+[F30:125]|       {/* Header */}
+[F30:126]|       <div className="task-list-header">
+[F30:127]|         <div className="task-list-title">
+[F30:128]|           <div
+[F30:129]|             className="zone-color-badge"
+[F30:130]|             style={{ backgroundColor: zone.color }}
+[F30:131]|           />
+[F30:132]|           <span>{zone.name}</span>
+[F30:133]|           <span className="task-count">
+[F30:134]|             ({stats.completed}/{stats.total})
+[F30:135]|           </span>
+[F30:136]|         </div>
+[F30:137]|       </div>
+[F30:138]| 
+[F30:139]|       {/* Add Task */}
+[F30:140]|       {isAddingTask ? (
+[F30:141]|         <div className="add-task-container">
+[F30:142]|           <div className="priority-urgency-row">
+[F30:143]|             <div className="priority-selector">
+[F30:144]|               {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
+[F30:145]|                 <button
+[F30:146]|                   key={p}
+[F30:147]|                   className={`priority-btn ${selectedPriority === p ? 'active' : ''} priority-${p}`}
+[F30:148]|                   onClick={() => setSelectedPriority(p)}
+[F30:149]|                 >
+[F30:150]|                   <div className={`priority-dot ${p}`} />
+[F30:151]|                 </button>
+[F30:152]|               ))}
+[F30:153]|             </div>
+[F30:154]|             <div className="urgency-selector">
+[F30:155]|               {(['urgent', 'high', 'medium', 'low'] as TaskUrgency[]).map((u) => (
+[F30:156]|                 <button
+[F30:157]|                   key={u}
+[F30:158]|                   className={`urgency-btn ${selectedUrgency === u ? 'active' : ''} urgency-${u}`}
+[F30:159]|                   onClick={() => setSelectedUrgency(u)}
+[F30:160]|                 >
+[F30:161]|                   <Zap size={10} />
+[F30:162]|                 </button>
+[F30:163]|               ))}
+[F30:164]|             </div>
+[F30:165]|           </div>
+[F30:166]|           <div className="add-task-inputs">
+[F30:167]|             <Input
+[F30:168]|               ref={inputRef}
+[F30:169]|               value={newTaskTitle}
+[F30:170]|               onChange={(e) => setNewTaskTitle(e.target.value)}
+[F30:171]|               onKeyDown={handleKeyDown}
+[F30:172]|               placeholder="任务标题..."
+[F30:173]|               className="add-task-title-input"
+[F30:174]|             />
+[F30:175]|             <Input
+[F30:176]|               value={newTaskDescription}
+[F30:177]|               onChange={(e) => setNewTaskDescription(e.target.value)}
+[F30:178]|               onKeyDown={handleKeyDown}
+[F30:179]|               placeholder="描述（可选，Shift+Enter 换行）..."
+[F30:180]|               className="add-task-desc-input"
+[F30:181]|             />
+[F30:182]|           </div>
+[F30:183]|           <div className="add-task-actions">
+[F30:184]|             <Button
+[F30:185]|               size="icon"
+[F30:186]|               className="add-task-btn"
+[F30:187]|               onClick={() => {
+[F30:188]|                 handleAddTask();
+[F30:189]|                 setIsAddingTask(false);
+[F30:190]|               }}
+[F30:191]|               disabled={!newTaskTitle.trim()}
+[F30:192]|             >
+[F30:193]|               <Plus size={18} />
+[F30:194]|             </Button>
+[F30:195]|             <Button
+[F30:196]|               size="icon"
+[F30:197]|               variant="ghost"
+[F30:198]|               className="cancel-task-btn"
+[F30:199]|               onClick={() => {
+[F30:200]|                 setIsAddingTask(false);
+[F30:201]|                 setNewTaskTitle('');
+[F30:202]|                 setNewTaskDescription('');
+[F30:203]|               }}
+[F30:204]|             >
+[F30:205]|               <ChevronDown size={18} />
+[F30:206]|             </Button>
+[F30:207]|           </div>
+[F30:208]|         </div>
+[F30:209]|       ) : (
+[F30:210]|         <button
+[F30:211]|           className="add-task-collapsed"
+[F30:212]|           onClick={() => setIsAddingTask(true)}
+[F30:213]|         >
+[F30:214]|           <Plus size={16} />
+[F30:215]|           <span>添加任务</span>
+[F30:216]|         </button>
+[F30:217]|       )}
+[F30:218]| 
+[F30:219]|       {/* Task List */}
+[F30:220]|       <ScrollArea className="task-scroll-area">
+[F30:221]|         <div className="tasks-container">
+[F30:222]|           {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
+[F30:223]|             <div className="empty-state">
+[F30:224]|               <Circle size={48} className="empty-icon" />
+[F30:225]|               <p>暂无任务，添加一个开始专注吧！</p>
+[F30:226]|               <p className="empty-hint">双击任务可展开/收缩描述</p>
+[F30:227]|             </div>
+[F30:228]|           ) : (
+[F30:229]|             <>
+[F30:230]|               {/* Draggable Incomplete Tasks */}
+[F30:231]|               <DndContext
+[F30:232]|                 sensors={sensors}
+[F30:233]|                 collisionDetection={closestCenter}
+[F30:234]|                 onDragEnd={handleDragEnd}
+[F30:235]|               >
+[F30:236]|                 <SortableContext
+[F30:237]|                   items={incompleteTasks.map((t) => t.id)}
+[F30:238]|                   strategy={verticalListSortingStrategy}
+[F30:239]|                 >
+[F30:240]|                   {incompleteTasks.map((task) => (
+[F30:241]|                     <TaskItem
+[F30:242]|                       key={task.id}
+[F30:243]|                       task={task}
+[F30:244]|                       zoneColor={getZoneColor(task.zoneId)}
+[F30:245]|                       isActive={task.id === activeTaskId}
+[F30:246]|                       isTimerRunning={isTimerRunning && task.id === activeTaskId}
+[F30:247]|                       onToggle={onToggleTask}
+[F30:248]|                       onDelete={onDeleteTask}
+[F30:249]|                       onUpdate={onUpdateTask}
+[F30:250]|                       onToggleExpanded={onToggleExpanded}
+[F30:251]|                       onSelect={onSelectTask}
+[F30:252]|                     />
+[F30:253]|                   ))}
+[F30:254]|                 </SortableContext>
+[F30:255]|               </DndContext>
+[F30:256]| 
+[F30:257]|               {/* Completed Tasks */}
+[F30:258]|               {completedTasks.length > 0 && (
+[F30:259]|                 <div className="completed-section">
+[F30:260]|                   <button
+[F30:261]|                     className="completed-toggle"
+[F30:262]|                     onClick={() => setShowCompleted(!showCompleted)}
+[F30:263]|                   >
+[F30:264]|                     <CheckCircle2 size={14} className="text-green-400" />
+[F30:265]|                     <span>已完成 ({completedTasks.length})</span>
+[F30:266]|                     <span className={`toggle-arrow ${showCompleted ? 'open' : ''}`}>
+[F30:267]|                       ▼
+[F30:268]|                     </span>
+[F30:269]|                   </button>
+[F30:270]| 
+[F30:271]|                   {showCompleted && (
+[F30:272]|                     <div className="completed-tasks">
+[F30:273]|                       {completedTasks.map((task) => (
+[F30:274]|                         <TaskItem
+[F30:275]|                           key={task.id}
+[F30:276]|                           task={task}
+[F30:277]|                           zoneColor={getZoneColor(task.zoneId)}
+[F30:278]|                           isActive={false}
+[F30:279]|                           isTimerRunning={false}
+[F30:280]|                           onToggle={onToggleTask}
+[F30:281]|                           onDelete={onDeleteTask}
+[F30:282]|                           onUpdate={onUpdateTask}
+[F30:283]|                           onToggleExpanded={onToggleExpanded}
+[F30:284]|                           onSelect={onSelectTask}
+[F30:285]|                         />
+[F30:286]|                       ))}
+[F30:287]|                       <Button
+[F30:288]|                         variant="ghost"
+[F30:289]|                         size="sm"
+[F30:290]|                         className="clear-completed-btn"
+[F30:291]|                         onClick={onClearCompleted}
+[F30:292]|                       >
+[F30:293]|                         <Trash2 size={14} className="mr-1" />
+[F30:294]|                         清除已完成
+[F30:295]|                       </Button>
+[F30:296]|                     </div>
+[F30:297]|                   )}
+[F30:298]|                 </div>
+[F30:299]|               )}
+[F30:300]|             </>
+[F30:301]|           )}
+[F30:302]|         </div>
+[F30:303]|       </ScrollArea>
+[F30:304]| 
+[F30:305]|       {/* Footer Stats */}
+[F30:306]|       <div className="task-list-footer">
+[F30:307]|         <div className="footer-stat">
+[F30:308]|           <span className="stat-label">完成率</span>
+[F30:309]|           <span className="stat-value">{stats.completionRate}%</span>
+[F30:310]|         </div>
+[F30:311]|         <div className="footer-stat">
+[F30:312]|           <span className="stat-label">待办</span>
+[F30:313]|           <span className="stat-value">{stats.pending}</span>
+[F30:314]|         </div>
+[F30:315]|       </div>
+[F30:316]|     </div>
+[F30:317]|   );
+[F30:318]| }
 
 ================================================================================
 文件路径: src\components\ZoneManager.tsx(F31) (约合大小: 9 KB)
@@ -12544,25 +13437,33 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F78:10]|   ...props
 [F78:11]| }: React.ComponentProps<typeof SwitchPrimitive.Root>) {
 [F78:12]|   return (
-[F78:13]|     <SwitchPrimitive.Root
-[F78:14]|       data-slot="switch"
+[F78:13]|     // Root 按钮部分
+[F78:14]|     <SwitchPrimitive.Root
 [F78:15]|       className={cn(
-[F78:16]|         "peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
-[F78:17]|         className
-[F78:18]|       )}
-[F78:19]|       {...props}
-[F78:20]|     >
-[F78:21]|       <SwitchPrimitive.Thumb
-[F78:22]|         data-slot="switch-thumb"
-[F78:23]|         className={cn(
-[F78:24]|           "bg-background dark:data-[state=unchecked]:bg-foreground dark:data-[state=checked]:bg-primary-foreground pointer-events-none block size-4 rounded-full ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0"
-[F78:25]|         )}
-[F78:26]|       />
-[F78:27]|     </SwitchPrimitive.Root>
-[F78:28]|   )
-[F78:29]| }
-[F78:30]| 
-[F78:31]| export { Switch }
+[F78:16]|         "peer inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
+[F78:17]|         // 关闭时的底色：深灰色
+[F78:18]|         "data-[state=unchecked]:bg-slate-700",
+[F78:19]|         // 开启时的底色：蓝色（比白色更像“开启”）
+[F78:20]|         "data-[state=checked]:bg-blue-600", 
+[F78:21]|         className
+[F78:22]|       )}
+[F78:23]|       {...props}
+[F78:24]|     >
+[F78:25]|       {/* Thumb 滑块部分 */}
+[F78:26]|       <SwitchPrimitive.Thumb
+[F78:27]|         className={cn(
+[F78:28]|           "pointer-events-none block size-4 rounded-full ring-0 transition-transform",
+[F78:29]|           // 开启时：滑块是纯白
+[F78:30]|           "data-[state=checked]:bg-white data-[state=checked]:translate-x-[calc(100%-2px)]",
+[F78:31]|           // 关闭时：滑块是淡灰色，且回到原位
+[F78:32]|           "data-[state=unchecked]:bg-slate-400 data-[state=unchecked]:translate-x-0"
+[F78:33]|         )}
+[F78:34]|       />
+[F78:35]|     </SwitchPrimitive.Root>
+[F78:36]|   )
+[F78:37]| }
+[F78:38]| 
+[F78:39]| export { Switch }
 
 ================================================================================
 文件路径: src\components\ui\table.tsx(F79) (约合大小: 2 KB)
@@ -12997,1081 +13898,1189 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F85:19]| }
 
 ================================================================================
-文件路径: src\hooks\useStorage.ts(F86) (约合大小: 7 KB)
+文件路径: src\hooks\useClipboard.ts(F86) (约合大小: 2 KB)
 ================================================================================
-[F86:1]| import { useState, useEffect, useCallback } from 'react';
-[F86:2]| import type { AppState, CurrentWorkspace, HistoryWorkspace, Zone, Task } from '@/types';
-[F86:3]| import { DEFAULT_SETTINGS } from '@/types';
-[F86:4]| 
-[F86:5]| const STORAGE_KEY = 'floating-todo-data-v3';
+[F86:1]| import { useState, useCallback } from 'react';
+[F86:2]| import type { Task, Zone, ClipboardData } from '@/types';
+[F86:3]| 
+[F86:4]| export function useClipboard() {
+[F86:5]|   const [clipboard, setClipboard] = useState<ClipboardData | null>(null);
 [F86:6]| 
-[F86:7]| // 创建新的空工作区
-[F86:8]| const createNewWorkspace = (name: string = '当前工作'): CurrentWorkspace => ({
-[F86:9]|   id: `workspace-${Date.now()}`,
-[F86:10]|   name,
-[F86:11]|   zones: [
-[F86:12]|     { id: `zone-${Date.now()}`, name: '默认', color: '#3b82f6', order: 0, createdAt: Date.now() },
-[F86:13]|   ],
-[F86:14]|   tasks: [],
-[F86:15]|   sessions: [],
-[F86:16]|   createdAt: Date.now(),
-[F86:17]|   lastModified: Date.now(),
-[F86:18]| });
-[F86:19]| 
-[F86:20]| const defaultState: AppState = {
-[F86:21]|   currentView: 'zones',
-[F86:22]|   activeZoneId: null,
-[F86:23]|   activeHistoryId: null,
-[F86:24]|   currentWorkspace: createNewWorkspace(),
-[F86:25]|   historyWorkspaces: [],
-[F86:26]|   settings: DEFAULT_SETTINGS,
-[F86:27]| };
-[F86:28]| 
-[F86:29]| export function useStorage() {
-[F86:30]|   const [data, setData] = useState<AppState>(defaultState);
-[F86:31]|   const [isLoaded, setIsLoaded] = useState(false);
-[F86:32]| 
-[F86:33]|   // Load data from localStorage on mount
-[F86:34]|   useEffect(() => {
-[F86:35]|     try {
-[F86:36]|       const stored = localStorage.getItem(STORAGE_KEY);
-[F86:37]|       if (stored) {
-[F86:38]|         const parsed = JSON.parse(stored);
-[F86:39]|         // Merge with default state to ensure all fields exist
-[F86:40]|         setData({
-[F86:41]|           ...defaultState,
-[F86:42]|           ...parsed,
-[F86:43]|           currentWorkspace: {
-[F86:44]|             ...defaultState.currentWorkspace,
-[F86:45]|             ...parsed.currentWorkspace,
-[F86:46]|           },
-[F86:47]|           settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
-[F86:48]|         });
-[F86:49]|       }
-[F86:50]|     } catch (error) {
-[F86:51]|       console.error('Failed to load data:', error);
-[F86:52]|     }
-[F86:53]|     setIsLoaded(true);
-[F86:54]|   }, []);
-[F86:55]| 
-[F86:56]|   // Save data to localStorage whenever it changes
-[F86:57]|   useEffect(() => {
-[F86:58]|     if (isLoaded) {
-[F86:59]|       try {
-[F86:60]|         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-[F86:61]|       } catch (error) {
-[F86:62]|         console.error('Failed to save data:', error);
-[F86:63]|       }
-[F86:64]|     }
-[F86:65]|   }, [data, isLoaded]);
-[F86:66]| 
-[F86:67]|   // 更新当前工作区的 zones
-[F86:68]|   const updateZones = useCallback((zones: Zone[]) => {
-[F86:69]|     setData((prev) => ({
-[F86:70]|       ...prev,
-[F86:71]|       currentWorkspace: {
-[F86:72]|         ...prev.currentWorkspace,
-[F86:73]|         zones,
-[F86:74]|         lastModified: Date.now(),
-[F86:75]|       },
-[F86:76]|     }));
-[F86:77]|   }, []);
-[F86:78]| 
-[F86:79]|   // 更新当前工作区的 tasks
-[F86:80]|   const updateTasks = useCallback((tasks: Task[]) => {
-[F86:81]|     setData((prev) => ({
-[F86:82]|       ...prev,
-[F86:83]|       currentWorkspace: {
-[F86:84]|         ...prev.currentWorkspace,
-[F86:85]|         tasks,
-[F86:86]|         lastModified: Date.now(),
-[F86:87]|       },
-[F86:88]|     }));
-[F86:89]|   }, []);
-[F86:90]| 
-[F86:91]|   // 更新历史工作区列表
-[F86:92]|   const updateHistoryWorkspaces = useCallback((historyWorkspaces: HistoryWorkspace[]) => {
-[F86:93]|     setData((prev) => ({ ...prev, historyWorkspaces }));
-[F86:94]|   }, []);
-[F86:95]| 
-[F86:96]|   // 更新设置
-[F86:97]|   const updateSettings = useCallback((settings: Partial<AppState['settings']>) => {
-[F86:98]|     setData((prev) => ({ ...prev, settings: { ...prev.settings, ...settings } }));
-[F86:99]|   }, []);
-[F86:100]| 
-[F86:101]|   // 设置当前视图
-[F86:102]|   const setCurrentView = useCallback((view: AppState['currentView']) => {
-[F86:103]|     setData((prev) => ({ ...prev, currentView: view }));
-[F86:104]|   }, []);
-[F86:105]| 
-[F86:106]|   // 设置当前活动分区
-[F86:107]|   const setActiveZoneId = useCallback((zoneId: string | null) => {
-[F86:108]|     setData((prev) => ({ ...prev, activeZoneId: zoneId }));
-[F86:109]|   }, []);
-[F86:110]| 
-[F86:111]|   // 设置当前查看的历史工作区
-[F86:112]|   const setActiveHistoryId = useCallback((historyId: string | null) => {
-[F86:113]|     setData((prev) => ({ ...prev, activeHistoryId: historyId }));
-[F86:114]|   }, []);
-[F86:115]| 
-[F86:116]|   // 将当前工作区存入历史
-[F86:117]|   const archiveCurrentWorkspace = useCallback((name?: string, summary?: string) => {
-[F86:118]|     const historyWorkspace: HistoryWorkspace = {
-[F86:119]|       id: `history-${Date.now()}`,
-[F86:120]|       name: name || data.currentWorkspace.name,
-[F86:121]|       summary: summary || `包含 ${data.currentWorkspace.zones.length} 个分区，${data.currentWorkspace.tasks.length} 个任务`,
-[F86:122]|       createdAt: Date.now(),
-[F86:123]|       lastModified: Date.now(),
-[F86:124]|       zones: data.currentWorkspace.zones.map(z => ({ ...z })),
-[F86:125]|       tasks: data.currentWorkspace.tasks.map(t => ({ ...t })),
-[F86:126]|       sessions: data.currentWorkspace.sessions.map(s => ({ ...s })),
-[F86:127]|     };
-[F86:128]| 
-[F86:129]|     setData((prev) => ({
-[F86:130]|       ...prev,
-[F86:131]|       historyWorkspaces: [historyWorkspace, ...prev.historyWorkspaces],
-[F86:132]|     }));
-[F86:133]| 
-[F86:134]|     return historyWorkspace.id;
-[F86:135]|   }, [data.currentWorkspace]);
-[F86:136]| 
-[F86:137]|   // 从历史工作区恢复到当前
-[F86:138]|   const restoreFromHistory = useCallback((historyId: string) => {
-[F86:139]|     const historyWorkspace = data.historyWorkspaces.find(h => h.id === historyId);
-[F86:140]|     if (!historyWorkspace) return false;
-[F86:141]| 
-[F86:142]|     setData((prev) => ({
-[F86:143]|       ...prev,
-[F86:144]|       currentWorkspace: {
-[F86:145]|         id: `workspace-${Date.now()}`,
-[F86:146]|         name: historyWorkspace.name,
-[F86:147]|         zones: historyWorkspace.zones.map(z => ({ ...z })),
-[F86:148]|         tasks: historyWorkspace.tasks.map(t => ({ ...t })),
-[F86:149]|         sessions: historyWorkspace.sessions.map(s => ({ ...s })),
-[F86:150]|         createdAt: Date.now(),
-[F86:151]|         lastModified: Date.now(),
-[F86:152]|       },
-[F86:153]|       activeZoneId: historyWorkspace.zones.length > 0 ? historyWorkspace.zones[0].id : null,
-[F86:154]|       activeHistoryId: historyId,
-[F86:155]|     }));
-[F86:156]| 
-[F86:157]|     return true;
-[F86:158]|   }, [data.historyWorkspaces]);
-[F86:159]| 
-[F86:160]|   // 创建新工作区（自动存档当前）
-[F86:161]|   const createNewWorkspace = useCallback((name?: string, templateId?: string) => {
-[F86:162]|     // 先存档当前工作区（如果有任务）
-[F86:163]|     if (data.currentWorkspace.tasks.length > 0) {
-[F86:164]|       const historyWorkspace: HistoryWorkspace = {
-[F86:165]|         id: `history-${Date.now()}`,
-[F86:166]|         name: data.currentWorkspace.name || '未命名工作区',
-[F86:167]|         summary: `包含 ${data.currentWorkspace.zones.length} 个分区，${data.currentWorkspace.tasks.length} 个任务`,
-[F86:168]|         createdAt: Date.now(),
-[F86:169]|         lastModified: Date.now(),
-[F86:170]|         zones: data.currentWorkspace.zones.map(z => ({ ...z })),
-[F86:171]|         tasks: data.currentWorkspace.tasks.map(t => ({ ...t })),
-[F86:172]|         sessions: data.currentWorkspace.sessions.map(s => ({ ...s })),
-[F86:173]|       };
-[F86:174]| 
-[F86:175]|       setData((prev) => ({
-[F86:176]|         ...prev,
-[F86:177]|         historyWorkspaces: [historyWorkspace, ...prev.historyWorkspaces],
-[F86:178]|         currentWorkspace: {
-[F86:179]|           id: `workspace-${Date.now() + 1}`,
-[F86:180]|           name: name || '新工作区',
-[F86:181]|           zones: templateId ? [] : [{ id: `zone-${Date.now() + 1}`, name: '默认', color: '#3b82f6', order: 0, createdAt: Date.now() }],
-[F86:182]|           tasks: [],
-[F86:183]|           sessions: [],
-[F86:184]|           createdAt: Date.now(),
-[F86:185]|           lastModified: Date.now(),
-[F86:186]|         },
-[F86:187]|         activeZoneId: null,
-[F86:188]|         activeHistoryId: null,
-[F86:189]|       }));
-[F86:190]|     } else {
-[F86:191]|       // 如果没有任务，直接创建新工作区
-[F86:192]|       setData((prev) => ({
-[F86:193]|         ...prev,
-[F86:194]|         currentWorkspace: {
-[F86:195]|           id: `workspace-${Date.now()}`,
-[F86:196]|           name: name || '新工作区',
-[F86:197]|           zones: [{ id: `zone-${Date.now()}`, name: '默认', color: '#3b82f6', order: 0, createdAt: Date.now() }],
-[F86:198]|           tasks: [],
-[F86:199]|           sessions: [],
-[F86:200]|           createdAt: Date.now(),
-[F86:201]|           lastModified: Date.now(),
-[F86:202]|         },
-[F86:203]|         activeZoneId: null,
-[F86:204]|         activeHistoryId: null,
-[F86:205]|       }));
-[F86:206]|     }
-[F86:207]|   }, [data.currentWorkspace]);
-[F86:208]| 
-[F86:209]|   // 删除历史工作区
-[F86:210]|   const deleteHistoryWorkspace = useCallback((historyId: string) => {
-[F86:211]|     setData((prev) => ({
-[F86:212]|       ...prev,
-[F86:213]|       historyWorkspaces: prev.historyWorkspaces.filter(h => h.id !== historyId),
-[F86:214]|     }));
-[F86:215]|   }, []);
-[F86:216]| 
-[F86:217]|   // 重命名历史工作区
-[F86:218]|   const renameHistoryWorkspace = useCallback((historyId: string, newName: string) => {
-[F86:219]|     setData((prev) => ({
-[F86:220]|       ...prev,
-[F86:221]|       historyWorkspaces: prev.historyWorkspaces.map(h =>
-[F86:222]|         h.id === historyId ? { ...h, name: newName.trim() } : h
-[F86:223]|       ),
-[F86:224]|     }));
-[F86:225]|   }, []);
-[F86:226]| 
-[F86:227]|   // 更新历史工作区的摘要
-[F86:228]|   const updateHistorySummary = useCallback((historyId: string, summary: string) => {
-[F86:229]|     setData((prev) => ({
-[F86:230]|       ...prev,
-[F86:231]|       historyWorkspaces: prev.historyWorkspaces.map(h =>
-[F86:232]|         h.id === historyId ? { ...h, summary: summary.trim() } : h
-[F86:233]|       ),
-[F86:234]|     }));
-[F86:235]|   }, []);
-[F86:236]| 
-[F86:237]|   return {
-[F86:238]|     data,
-[F86:239]|     isLoaded,
-[F86:240]|     updateZones,
-[F86:241]|     updateTasks,
-[F86:242]|     updateSettings,
-[F86:243]|     setCurrentView,
-[F86:244]|     setActiveZoneId,
-[F86:245]|     setActiveHistoryId,
-[F86:246]|     archiveCurrentWorkspace,
-[F86:247]|     restoreFromHistory,
-[F86:248]|     createNewWorkspace,
-[F86:249]|     deleteHistoryWorkspace,
-[F86:250]|     renameHistoryWorkspace,
-[F86:251]|     updateHistorySummary,
-[F86:252]|     updateHistoryWorkspaces,
-[F86:253]|   };
-[F86:254]| }
+[F86:7]|   // 复制任务
+[F86:8]|   const copyTask = useCallback((task: Task) => {
+[F86:9]|     setClipboard({
+[F86:10]|       type: 'task',
+[F86:11]|       data: { ...task },
+[F86:12]|       timestamp: Date.now(),
+[F86:13]|     });
+[F86:14]|   }, []);
+[F86:15]| 
+[F86:16]|   // 复制工作区（含任务）
+[F86:17]|   const copyZone = useCallback((zone: Zone, tasks: Task[]) => {
+[F86:18]|     setClipboard({
+[F86:19]|       type: 'zone',
+[F86:20]|       data: { zone: { ...zone }, tasks: tasks.map((t) => ({ ...t })) },
+[F86:21]|       timestamp: Date.now(),
+[F86:22]|     });
+[F86:23]|   }, []);
+[F86:24]| 
+[F86:25]|   // 粘贴任务到工作区
+[F86:26]|   const pasteTask = useCallback((zoneId: string): Task | null => {
+[F86:27]|     if (!clipboard || clipboard.type !== 'task') return null;
+[F86:28]|     const task = clipboard.data as Task;
+[F86:29]|     return {
+[F86:30]|       ...task,
+[F86:31]|       id: `task-${Date.now()}`,
+[F86:32]|       zoneId,
+[F86:33]|       order: 0, // 会在 addTask 中计算
+[F86:34]|       createdAt: Date.now(),
+[F86:35]|       completed: false,
+[F86:36]|       completedAt: undefined,
+[F86:37]|       totalWorkTime: 0,
+[F86:38]|     };
+[F86:39]|   }, [clipboard]);
+[F86:40]| 
+[F86:41]|   // 粘贴工作区
+[F86:42]|   const pasteZone = useCallback((zones: Zone[]): { zone: Zone; tasks: Task[] } | null => {
+[F86:43]|     if (!clipboard || clipboard.type !== 'zone') return null;
+[F86:44]|     const data = clipboard.data as { zone: Zone; tasks: Task[] };
+[F86:45]|     const newZoneId = `zone-${Date.now()}`;
+[F86:46]|     const maxOrder = zones.length > 0 ? Math.max(...zones.map((z) => z.order)) : -1;
+[F86:47]| 
+[F86:48]|     return {
+[F86:49]|       zone: {
+[F86:50]|         ...data.zone,
+[F86:51]|         id: newZoneId,
+[F86:52]|         name: `${data.zone.name} (副本)`,
+[F86:53]|         order: maxOrder + 1,
+[F86:54]|       },
+[F86:55]|       tasks: data.tasks.map((task, index) => ({
+[F86:56]|         ...task,
+[F86:57]|         id: `task-${Date.now()}-${index}`,
+[F86:58]|         zoneId: newZoneId,
+[F86:59]|         order: index,
+[F86:60]|         createdAt: Date.now(),
+[F86:61]|         completed: false,
+[F86:62]|         completedAt: undefined,
+[F86:63]|         totalWorkTime: 0,
+[F86:64]|       })),
+[F86:65]|     };
+[F86:66]|   }, [clipboard]);
+[F86:67]| 
+[F86:68]|   return {
+[F86:69]|     clipboard,
+[F86:70]|     copyTask,
+[F86:71]|     copyZone,
+[F86:72]|     pasteTask,
+[F86:73]|     pasteZone,
+[F86:74]|     hasTask: clipboard?.type === 'task',
+[F86:75]|     hasZone: clipboard?.type === 'zone',
+[F86:76]|   };
+[F86:77]| }
 
 ================================================================================
-文件路径: src\hooks\useTasks.ts(F87) (约合大小: 4 KB)
+文件路径: src\hooks\useStorage.ts(F87) (约合大小: 7 KB)
 ================================================================================
-[F87:1]| import { useCallback, useMemo } from 'react';
-[F87:2]| import type { Task, TaskPriority } from '@/types';
-[F87:3]| 
-[F87:4]| export function useTasks(tasks: Task[], onUpdateTasks: (tasks: Task[]) => void) {
-[F87:5]|   // Get all tasks sorted
-[F87:6]|   const allTasks = useMemo(() => {
-[F87:7]|     return [...tasks].sort((a, b) => a.order - b.order);
-[F87:8]|   }, [tasks]);
-[F87:9]| 
-[F87:10]|   // Get tasks for a specific zone
-[F87:11]|   const getTasksByZone = useCallback((zoneId: string) => {
-[F87:12]|     return tasks
-[F87:13]|       .filter((t) => t.zoneId === zoneId)
-[F87:14]|       .sort((a, b) => a.order - b.order);
-[F87:15]|   }, [tasks]);
-[F87:16]| 
-[F87:17]|   // Get incomplete tasks
-[F87:18]|   const incompleteTasks = useMemo(() => {
-[F87:19]|     return tasks.filter((t) => !t.completed);
-[F87:20]|   }, [tasks]);
-[F87:21]| 
-[F87:22]|   // Get completed tasks
-[F87:23]|   const completedTasks = useMemo(() => {
-[F87:24]|     return tasks.filter((t) => t.completed);
-[F87:25]|   }, [tasks]);
-[F87:26]| 
-[F87:27]|   // Add a new task
-[F87:28]|   const addTask = useCallback((
-[F87:29]|     zoneId: string,
-[F87:30]|     title: string,
-[F87:31]|     description: string = '',
-[F87:32]|     priority: TaskPriority = 'medium'
-[F87:33]|   ) => {
-[F87:34]|     const zoneTasks = getTasksByZone(zoneId);
-[F87:35]|     const maxOrder = zoneTasks.length > 0 ? Math.max(...zoneTasks.map((t) => t.order)) : -1;
-[F87:36]|     
-[F87:37]|     const newTask: Task = {
-[F87:38]|       id: `task-${Date.now()}`,
-[F87:39]|       zoneId,
-[F87:40]|       title: title.trim(),
-[F87:41]|       description: description.trim(),
-[F87:42]|       completed: false,
-[F87:43]|       priority,
-[F87:44]|       order: maxOrder + 1,
-[F87:45]|       createdAt: Date.now(),
-[F87:46]|       expanded: false,
-[F87:47]|       totalWorkTime: 0,
-[F87:48]|     };
-[F87:49]|     onUpdateTasks([...tasks, newTask]);
-[F87:50]|     return newTask.id;
-[F87:51]|   }, [tasks, getTasksByZone, onUpdateTasks]);
-[F87:52]| 
-[F87:53]|   // Toggle task completion
-[F87:54]|   const toggleTask = useCallback((id: string) => {
-[F87:55]|     onUpdateTasks(
-[F87:56]|       tasks.map((task) =>
-[F87:57]|         task.id === id
-[F87:58]|           ? { ...task, completed: !task.completed, completedAt: !task.completed ? Date.now() : undefined }
-[F87:59]|           : task
-[F87:60]|       )
-[F87:61]|     );
-[F87:62]|   }, [tasks, onUpdateTasks]);
-[F87:63]| 
-[F87:64]|   // Delete a task
-[F87:65]|   const deleteTask = useCallback((id: string) => {
-[F87:66]|     onUpdateTasks(tasks.filter((task) => task.id !== id));
-[F87:67]|   }, [tasks, onUpdateTasks]);
-[F87:68]| 
-[F87:69]|   // Update task
-[F87:70]|   const updateTask = useCallback((id: string, updates: Partial<Omit<Task, 'id'>>) => {
-[F87:71]|     onUpdateTasks(
-[F87:72]|       tasks.map((task) =>
-[F87:73]|         task.id === id ? { ...task, ...updates } : task
-[F87:74]|       )
-[F87:75]|     );
-[F87:76]|   }, [tasks, onUpdateTasks]);
-[F87:77]| 
-[F87:78]|   // Toggle task expanded state
-[F87:79]|   const toggleExpanded = useCallback((id: string) => {
-[F87:80]|     onUpdateTasks(
-[F87:81]|       tasks.map((task) =>
-[F87:82]|         task.id === id ? { ...task, expanded: !task.expanded } : task
-[F87:83]|       )
-[F87:84]|     );
-[F87:85]|   }, [tasks, onUpdateTasks]);
-[F87:86]| 
-[F87:87]|   // Set task priority
-[F87:88]|   const setTaskPriority = useCallback((id: string, priority: TaskPriority) => {
-[F87:89]|     onUpdateTasks(
-[F87:90]|       tasks.map((task) =>
-[F87:91]|         task.id === id ? { ...task, priority } : task
-[F87:92]|       )
-[F87:93]|     );
-[F87:94]|   }, [tasks, onUpdateTasks]);
+[F87:1]| import { useState, useEffect, useCallback } from 'react';
+[F87:2]| import type { AppState, CurrentWorkspace, HistoryWorkspace, Zone, Task } from '@/types';
+[F87:3]| import { DEFAULT_SETTINGS } from '@/types';
+[F87:4]| 
+[F87:5]| const STORAGE_KEY = 'floating-todo-data-v3';
+[F87:6]| 
+[F87:7]| // 创建新的空工作区
+[F87:8]| const createNewWorkspace = (name: string = '当前工作'): CurrentWorkspace => ({
+[F87:9]|   id: `workspace-${Date.now()}`,
+[F87:10]|   name,
+[F87:11]|   zones: [
+[F87:12]|     { id: `zone-${Date.now()}`, name: '默认', color: '#3b82f6', order: 0, createdAt: Date.now() },
+[F87:13]|   ],
+[F87:14]|   tasks: [],
+[F87:15]|   sessions: [],
+[F87:16]|   createdAt: Date.now(),
+[F87:17]|   lastModified: Date.now(),
+[F87:18]| });
+[F87:19]| 
+[F87:20]| const defaultState: AppState = {
+[F87:21]|   currentView: 'zones',
+[F87:22]|   activeZoneId: null,
+[F87:23]|   activeHistoryId: null,
+[F87:24]|   currentWorkspace: createNewWorkspace(),
+[F87:25]|   historyWorkspaces: [],
+[F87:26]|   settings: DEFAULT_SETTINGS,
+[F87:27]| };
+[F87:28]| 
+[F87:29]| export function useStorage() {
+[F87:30]|   const [data, setData] = useState<AppState>(defaultState);
+[F87:31]|   const [isLoaded, setIsLoaded] = useState(false);
+[F87:32]| 
+[F87:33]|   // Load data from localStorage on mount
+[F87:34]|   useEffect(() => {
+[F87:35]|     try {
+[F87:36]|       const stored = localStorage.getItem(STORAGE_KEY);
+[F87:37]|       if (stored) {
+[F87:38]|         const parsed = JSON.parse(stored);
+[F87:39]|         // Merge with default state to ensure all fields exist
+[F87:40]|         setData({
+[F87:41]|           ...defaultState,
+[F87:42]|           ...parsed,
+[F87:43]|           currentWorkspace: {
+[F87:44]|             ...defaultState.currentWorkspace,
+[F87:45]|             ...parsed.currentWorkspace,
+[F87:46]|           },
+[F87:47]|           settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
+[F87:48]|         });
+[F87:49]|       }
+[F87:50]|     } catch (error) {
+[F87:51]|       console.error('Failed to load data:', error);
+[F87:52]|     }
+[F87:53]|     setIsLoaded(true);
+[F87:54]|   }, []);
+[F87:55]| 
+[F87:56]|   // Save data to localStorage whenever it changes
+[F87:57]|   useEffect(() => {
+[F87:58]|     if (isLoaded) {
+[F87:59]|       try {
+[F87:60]|         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+[F87:61]|       } catch (error) {
+[F87:62]|         console.error('Failed to save data:', error);
+[F87:63]|       }
+[F87:64]|     }
+[F87:65]|   }, [data, isLoaded]);
+[F87:66]| 
+[F87:67]|   // 更新当前工作区的 zones
+[F87:68]|   const updateZones = useCallback((zones: Zone[]) => {
+[F87:69]|     setData((prev) => ({
+[F87:70]|       ...prev,
+[F87:71]|       currentWorkspace: {
+[F87:72]|         ...prev.currentWorkspace,
+[F87:73]|         zones,
+[F87:74]|         lastModified: Date.now(),
+[F87:75]|       },
+[F87:76]|     }));
+[F87:77]|   }, []);
+[F87:78]| 
+[F87:79]|   // 更新当前工作区的 tasks
+[F87:80]|   const updateTasks = useCallback((tasks: Task[]) => {
+[F87:81]|     setData((prev) => ({
+[F87:82]|       ...prev,
+[F87:83]|       currentWorkspace: {
+[F87:84]|         ...prev.currentWorkspace,
+[F87:85]|         tasks,
+[F87:86]|         lastModified: Date.now(),
+[F87:87]|       },
+[F87:88]|     }));
+[F87:89]|   }, []);
+[F87:90]| 
+[F87:91]|   // 更新历史工作区列表
+[F87:92]|   const updateHistoryWorkspaces = useCallback((historyWorkspaces: HistoryWorkspace[]) => {
+[F87:93]|     setData((prev) => ({ ...prev, historyWorkspaces }));
+[F87:94]|   }, []);
 [F87:95]| 
-[F87:96]|   // Move task to different zone
-[F87:97]|   const moveTaskToZone = useCallback((taskId: string, newZoneId: string) => {
-[F87:98]|     const targetZoneTasks = getTasksByZone(newZoneId);
-[F87:99]|     const maxOrder = targetZoneTasks.length > 0 ? Math.max(...targetZoneTasks.map((t) => t.order)) : -1;
-[F87:100]|     
-[F87:101]|     onUpdateTasks(
-[F87:102]|       tasks.map((task) =>
-[F87:103]|         task.id === taskId ? { ...task, zoneId: newZoneId, order: maxOrder + 1 } : task
-[F87:104]|       )
-[F87:105]|     );
-[F87:106]|   }, [tasks, getTasksByZone, onUpdateTasks]);
-[F87:107]| 
-[F87:108]|   // Reorder tasks within a zone
-[F87:109]|   const reorderTasks = useCallback((zoneId: string, newOrder: Task[]) => {
-[F87:110]|     const otherTasks = tasks.filter((t) => t.zoneId !== zoneId);
-[F87:111]|     const reorderedTasks = newOrder.map((task, index) => ({
-[F87:112]|       ...task,
-[F87:113]|       order: index,
-[F87:114]|     }));
-[F87:115]|     onUpdateTasks([...otherTasks, ...reorderedTasks]);
-[F87:116]|   }, [tasks, onUpdateTasks]);
-[F87:117]| 
-[F87:118]|   // Clear completed tasks
-[F87:119]|   const clearCompleted = useCallback(() => {
-[F87:120]|     onUpdateTasks(tasks.filter((task) => !task.completed));
-[F87:121]|   }, [tasks, onUpdateTasks]);
-[F87:122]| 
-[F87:123]|   // Get task stats
-[F87:124]|   const stats = useMemo(() => {
-[F87:125]|     const total = tasks.length;
-[F87:126]|     const completed = tasks.filter((t) => t.completed).length;
-[F87:127]|     const pending = total - completed;
-[F87:128]|     const highPriority = tasks.filter((t) => t.priority === 'high' && !t.completed).length;
-[F87:129]|     
-[F87:130]|     return {
-[F87:131]|       total,
-[F87:132]|       completed,
-[F87:133]|       pending,
-[F87:134]|       highPriority,
-[F87:135]|       completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
-[F87:136]|     };
-[F87:137]|   }, [tasks]);
-[F87:138]| 
-[F87:139]|   // Get stats for a specific zone
-[F87:140]|   const getZoneStats = useCallback((zoneId: string) => {
-[F87:141]|     const zoneTasks = getTasksByZone(zoneId);
-[F87:142]|     const total = zoneTasks.length;
-[F87:143]|     const completed = zoneTasks.filter((t) => t.completed).length;
-[F87:144]|     const pending = total - completed;
-[F87:145]|     
-[F87:146]|     return {
-[F87:147]|       total,
-[F87:148]|       completed,
-[F87:149]|       pending,
-[F87:150]|       completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
-[F87:151]|     };
-[F87:152]|   }, [getTasksByZone]);
-[F87:153]| 
-[F87:154]|   return {
-[F87:155]|     tasks: allTasks,
-[F87:156]|     getTasksByZone,
-[F87:157]|     incompleteTasks,
-[F87:158]|     completedTasks,
-[F87:159]|     addTask,
-[F87:160]|     toggleTask,
-[F87:161]|     deleteTask,
-[F87:162]|     updateTask,
-[F87:163]|     toggleExpanded,
-[F87:164]|     setTaskPriority,
-[F87:165]|     moveTaskToZone,
-[F87:166]|     reorderTasks,
-[F87:167]|     clearCompleted,
-[F87:168]|     stats,
-[F87:169]|     getZoneStats,
-[F87:170]|   };
-[F87:171]| }
+[F87:96]|   // 更新设置
+[F87:97]|   const updateSettings = useCallback((settings: Partial<AppState['settings']>) => {
+[F87:98]|     setData((prev) => ({ ...prev, settings: { ...prev.settings, ...settings } }));
+[F87:99]|   }, []);
+[F87:100]| 
+[F87:101]|   // 设置当前视图
+[F87:102]|   const setCurrentView = useCallback((view: AppState['currentView']) => {
+[F87:103]|     setData((prev) => ({ ...prev, currentView: view }));
+[F87:104]|   }, []);
+[F87:105]| 
+[F87:106]|   // 设置当前活动分区
+[F87:107]|   const setActiveZoneId = useCallback((zoneId: string | null) => {
+[F87:108]|     setData((prev) => ({ ...prev, activeZoneId: zoneId }));
+[F87:109]|   }, []);
+[F87:110]| 
+[F87:111]|   // 设置当前查看的历史工作区
+[F87:112]|   const setActiveHistoryId = useCallback((historyId: string | null) => {
+[F87:113]|     setData((prev) => ({ ...prev, activeHistoryId: historyId }));
+[F87:114]|   }, []);
+[F87:115]| 
+[F87:116]|   // 将当前工作区存入历史
+[F87:117]|   const archiveCurrentWorkspace = useCallback((name?: string, summary?: string) => {
+[F87:118]|     const historyWorkspace: HistoryWorkspace = {
+[F87:119]|       id: `history-${Date.now()}`,
+[F87:120]|       name: name || data.currentWorkspace.name,
+[F87:121]|       summary: summary || `包含 ${data.currentWorkspace.zones.length} 个分区，${data.currentWorkspace.tasks.length} 个任务`,
+[F87:122]|       createdAt: Date.now(),
+[F87:123]|       lastModified: Date.now(),
+[F87:124]|       zones: data.currentWorkspace.zones.map(z => ({ ...z })),
+[F87:125]|       tasks: data.currentWorkspace.tasks.map(t => ({ ...t })),
+[F87:126]|       sessions: data.currentWorkspace.sessions.map(s => ({ ...s })),
+[F87:127]|     };
+[F87:128]| 
+[F87:129]|     setData((prev) => ({
+[F87:130]|       ...prev,
+[F87:131]|       historyWorkspaces: [historyWorkspace, ...prev.historyWorkspaces],
+[F87:132]|     }));
+[F87:133]| 
+[F87:134]|     return historyWorkspace.id;
+[F87:135]|   }, [data.currentWorkspace]);
+[F87:136]| 
+[F87:137]|   // 从历史工作区恢复到当前
+[F87:138]|   const restoreFromHistory = useCallback((historyId: string) => {
+[F87:139]|     const historyWorkspace = data.historyWorkspaces.find(h => h.id === historyId);
+[F87:140]|     if (!historyWorkspace) return false;
+[F87:141]| 
+[F87:142]|     setData((prev) => ({
+[F87:143]|       ...prev,
+[F87:144]|       currentWorkspace: {
+[F87:145]|         id: `workspace-${Date.now()}`,
+[F87:146]|         name: historyWorkspace.name,
+[F87:147]|         zones: historyWorkspace.zones.map(z => ({ ...z })),
+[F87:148]|         tasks: historyWorkspace.tasks.map(t => ({ ...t })),
+[F87:149]|         sessions: historyWorkspace.sessions.map(s => ({ ...s })),
+[F87:150]|         createdAt: Date.now(),
+[F87:151]|         lastModified: Date.now(),
+[F87:152]|       },
+[F87:153]|       activeZoneId: historyWorkspace.zones.length > 0 ? historyWorkspace.zones[0].id : null,
+[F87:154]|       activeHistoryId: historyId,
+[F87:155]|     }));
+[F87:156]| 
+[F87:157]|     return true;
+[F87:158]|   }, [data.historyWorkspaces]);
+[F87:159]| 
+[F87:160]|   // 创建新工作区（自动存档当前）
+[F87:161]|   const createNewWorkspace = useCallback((name?: string, templateId?: string) => {
+[F87:162]|     // 先存档当前工作区（如果有任务）
+[F87:163]|     if (data.currentWorkspace.tasks.length > 0) {
+[F87:164]|       const historyWorkspace: HistoryWorkspace = {
+[F87:165]|         id: `history-${Date.now()}`,
+[F87:166]|         name: data.currentWorkspace.name || '未命名工作区',
+[F87:167]|         summary: `包含 ${data.currentWorkspace.zones.length} 个分区，${data.currentWorkspace.tasks.length} 个任务`,
+[F87:168]|         createdAt: Date.now(),
+[F87:169]|         lastModified: Date.now(),
+[F87:170]|         zones: data.currentWorkspace.zones.map(z => ({ ...z })),
+[F87:171]|         tasks: data.currentWorkspace.tasks.map(t => ({ ...t })),
+[F87:172]|         sessions: data.currentWorkspace.sessions.map(s => ({ ...s })),
+[F87:173]|       };
+[F87:174]| 
+[F87:175]|       setData((prev) => ({
+[F87:176]|         ...prev,
+[F87:177]|         historyWorkspaces: [historyWorkspace, ...prev.historyWorkspaces],
+[F87:178]|         currentWorkspace: {
+[F87:179]|           id: `workspace-${Date.now() + 1}`,
+[F87:180]|           name: name || '新工作区',
+[F87:181]|           zones: templateId ? [] : [{ id: `zone-${Date.now() + 1}`, name: '默认', color: '#3b82f6', order: 0, createdAt: Date.now() }],
+[F87:182]|           tasks: [],
+[F87:183]|           sessions: [],
+[F87:184]|           createdAt: Date.now(),
+[F87:185]|           lastModified: Date.now(),
+[F87:186]|         },
+[F87:187]|         activeZoneId: null,
+[F87:188]|         activeHistoryId: null,
+[F87:189]|       }));
+[F87:190]|     } else {
+[F87:191]|       // 如果没有任务，直接创建新工作区
+[F87:192]|       setData((prev) => ({
+[F87:193]|         ...prev,
+[F87:194]|         currentWorkspace: {
+[F87:195]|           id: `workspace-${Date.now()}`,
+[F87:196]|           name: name || '新工作区',
+[F87:197]|           zones: [{ id: `zone-${Date.now()}`, name: '默认', color: '#3b82f6', order: 0, createdAt: Date.now() }],
+[F87:198]|           tasks: [],
+[F87:199]|           sessions: [],
+[F87:200]|           createdAt: Date.now(),
+[F87:201]|           lastModified: Date.now(),
+[F87:202]|         },
+[F87:203]|         activeZoneId: null,
+[F87:204]|         activeHistoryId: null,
+[F87:205]|       }));
+[F87:206]|     }
+[F87:207]|   }, [data.currentWorkspace]);
+[F87:208]| 
+[F87:209]|   // 删除历史工作区
+[F87:210]|   const deleteHistoryWorkspace = useCallback((historyId: string) => {
+[F87:211]|     setData((prev) => ({
+[F87:212]|       ...prev,
+[F87:213]|       historyWorkspaces: prev.historyWorkspaces.filter(h => h.id !== historyId),
+[F87:214]|     }));
+[F87:215]|   }, []);
+[F87:216]| 
+[F87:217]|   // 重命名历史工作区
+[F87:218]|   const renameHistoryWorkspace = useCallback((historyId: string, newName: string) => {
+[F87:219]|     setData((prev) => ({
+[F87:220]|       ...prev,
+[F87:221]|       historyWorkspaces: prev.historyWorkspaces.map(h =>
+[F87:222]|         h.id === historyId ? { ...h, name: newName.trim() } : h
+[F87:223]|       ),
+[F87:224]|     }));
+[F87:225]|   }, []);
+[F87:226]| 
+[F87:227]|   // 更新历史工作区的摘要
+[F87:228]|   const updateHistorySummary = useCallback((historyId: string, summary: string) => {
+[F87:229]|     setData((prev) => ({
+[F87:230]|       ...prev,
+[F87:231]|       historyWorkspaces: prev.historyWorkspaces.map(h =>
+[F87:232]|         h.id === historyId ? { ...h, summary: summary.trim() } : h
+[F87:233]|       ),
+[F87:234]|     }));
+[F87:235]|   }, []);
+[F87:236]| 
+[F87:237]|   return {
+[F87:238]|     data,
+[F87:239]|     isLoaded,
+[F87:240]|     updateZones,
+[F87:241]|     updateTasks,
+[F87:242]|     updateSettings,
+[F87:243]|     setCurrentView,
+[F87:244]|     setActiveZoneId,
+[F87:245]|     setActiveHistoryId,
+[F87:246]|     archiveCurrentWorkspace,
+[F87:247]|     restoreFromHistory,
+[F87:248]|     createNewWorkspace,
+[F87:249]|     deleteHistoryWorkspace,
+[F87:250]|     renameHistoryWorkspace,
+[F87:251]|     updateHistorySummary,
+[F87:252]|     updateHistoryWorkspaces,
+[F87:253]|   };
+[F87:254]| }
 
 ================================================================================
-文件路径: src\hooks\useTimer.ts(F88) (约合大小: 9 KB)
+文件路径: src\hooks\useTasks.ts(F88) (约合大小: 5 KB)
 ================================================================================
-[F88:1]| import { useState, useEffect, useCallback, useRef } from 'react';
-[F88:2]| import type { TimerMode, TimerState } from '@/types';
+[F88:1]| import { useCallback, useMemo } from 'react';
+[F88:2]| import type { Task, TaskPriority, TaskUrgency } from '@/types';
 [F88:3]| 
-[F88:4]| interface UseTimerProps {
-[F88:5]|   workDuration: number;
-[F88:6]|   breakDuration: number;
-[F88:7]|   longBreakDuration: number;
-[F88:8]|   autoStartBreak: boolean;
-[F88:9]|   soundEnabled: boolean;
-[F88:10]|   onComplete?: (mode: TimerMode, duration: number) => void;
-[F88:11]|   onTick?: (elapsedSeconds: number) => void; // 每秒回调，用于累计时间
-[F88:12]| }
-[F88:13]| 
-[F88:14]| export function useTimer({
-[F88:15]|   workDuration,
-[F88:16]|   breakDuration,
-[F88:17]|   longBreakDuration,
-[F88:18]|   autoStartBreak,
-[F88:19]|   soundEnabled,
-[F88:20]|   onComplete,
-[F88:21]|   onTick,
-[F88:22]| }: UseTimerProps) {
-[F88:23]|   const [state, setState] = useState<TimerState>({
-[F88:24]|     mode: 'idle',
-[F88:25]|     timeRemaining: workDuration,
-[F88:26]|     isRunning: false,
-[F88:27]|     currentTaskId: null,
-[F88:28]|   });
-[F88:29]| 
-[F88:30]|   const [completedSessions, setCompletedSessions] = useState(0);
-[F88:31]|   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-[F88:32]|   const tickCountRef = useRef(0);
-[F88:33]| 
-[F88:34]|   // 辅助函数：安全清除定时器
-[F88:35]|   const clearIntervalSafe = useCallback(() => {
-[F88:36]|     if (intervalRef.current) {
-[F88:37]|       clearInterval(intervalRef.current);
-[F88:38]|       intervalRef.current = null;
-[F88:39]|     }
-[F88:40]|   }, []);
-[F88:41]| 
-[F88:42]|   // Play notification sound using Web Audio API
-[F88:43]|   const playSound = useCallback(() => {
-[F88:44]|     if (!soundEnabled) return;
-[F88:45]| 
-[F88:46]|     try {
-[F88:47]|       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-[F88:48]|       const oscillator = audioContext.createOscillator();
-[F88:49]|       const gainNode = audioContext.createGain();
-[F88:50]| 
-[F88:51]|       oscillator.connect(gainNode);
-[F88:52]|       gainNode.connect(audioContext.destination);
-[F88:53]| 
-[F88:54]|       oscillator.frequency.value = 800;
-[F88:55]|       oscillator.type = 'sine';
-[F88:56]| 
-[F88:57]|       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-[F88:58]|       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-[F88:59]| 
-[F88:60]|       oscillator.start(audioContext.currentTime);
-[F88:61]|       oscillator.stop(audioContext.currentTime + 0.5);
-[F88:62]|     } catch (error) {
-[F88:63]|       console.error('Failed to play sound:', error);
-[F88:64]|     }
-[F88:65]|   }, [soundEnabled]);
-[F88:66]| 
-[F88:67]|   // Clear interval on unmount
-[F88:68]|   useEffect(() => {
-[F88:69]|     return () => clearIntervalSafe();
-[F88:70]|   }, [clearIntervalSafe]);
-[F88:71]| 
-[F88:72]|   const start = useCallback((mode: TimerMode = 'work', taskId: string | null = null) => {
-[F88:73]|     // 防御性清除：先清除可能存在的旧定时器
-[F88:74]|     if (intervalRef.current) {
-[F88:75]|       clearInterval(intervalRef.current);
-[F88:76]|       intervalRef.current = null;
-[F88:77]|     }
-[F88:78]| 
-[F88:79]|     const duration = mode === 'work' ? workDuration : mode === 'break' ? breakDuration : longBreakDuration;
-[F88:80]|     tickCountRef.current = 0;
-[F88:81]| 
-[F88:82]|     // 先创建 interval 并立即赋值，确保在 setState 之前 interval 就已经开始
-[F88:83]|     const newInterval = setInterval(() => {
-[F88:84]|       setState((prev) => {
-[F88:85]|         tickCountRef.current++;
-[F88:86]|         onTick?.(tickCountRef.current);
-[F88:87]| 
-[F88:88]|         if (prev.timeRemaining <= 1) {
-[F88:89]|           // 计时完成
-[F88:90]|           playSound();
-[F88:91]|           onComplete?.(prev.mode, duration);
-[F88:92]| 
-[F88:93]|           // 清除定时器，防止僵尸定时器
-[F88:94]|           if (intervalRef.current) {
-[F88:95]|             clearInterval(intervalRef.current);
-[F88:96]|             intervalRef.current = null;
-[F88:97]|           }
-[F88:98]| 
-[F88:99]|           if (prev.mode === 'work') {
-[F88:100]|             setCompletedSessions((s) => s + 1);
-[F88:101]|             if (autoStartBreak) {
-[F88:102]|               const nextMode = (completedSessions + 1) % 4 === 0 ? 'longBreak' : 'break';
-[F88:103]|               const nextDuration = nextMode === 'longBreak' ? longBreakDuration : breakDuration;
-[F88:104]|               tickCountRef.current = 0;
-[F88:105]| 
-[F88:106]|               // 自动开始下一段计时
-[F88:107]|               setState({
-[F88:108]|                 mode: nextMode,
-[F88:109]|                 timeRemaining: nextDuration,
-[F88:110]|                 isRunning: true,
-[F88:111]|                 currentTaskId: null,
-[F88:112]|                 currentSessionStartTime: Date.now(),
-[F88:113]|               });
-[F88:114]| 
-[F88:115]|               // 立即启动新的定时器
-[F88:116]|               const autoBreakInterval = setInterval(() => {
-[F88:117]|                 setState((innerPrev) => {
-[F88:118]|                   tickCountRef.current++;
-[F88:119]|                   onTick?.(tickCountRef.current);
-[F88:120]| 
-[F88:121]|                   if (innerPrev.timeRemaining <= 1) {
-[F88:122]|                     playSound();
-[F88:123]|                     onComplete?.(innerPrev.mode, innerPrev.mode === 'work' ? workDuration : innerPrev.mode === 'break' ? breakDuration : longBreakDuration);
-[F88:124]| 
-[F88:125]|                     if (intervalRef.current) {
-[F88:126]|                       clearInterval(intervalRef.current);
-[F88:127]|                       intervalRef.current = null;
-[F88:128]|                     }
-[F88:129]| 
-[F88:130]|                     if (innerPrev.mode === 'work') {
-[F88:131]|                       setCompletedSessions((s) => s + 1);
-[F88:132]|                     }
+[F88:4]| export function useTasks(tasks: Task[], onUpdateTasks: (tasks: Task[]) => void) {
+[F88:5]|   // Get all tasks sorted
+[F88:6]|   const allTasks = useMemo(() => {
+[F88:7]|     return [...tasks].sort((a, b) => a.order - b.order);
+[F88:8]|   }, [tasks]);
+[F88:9]| 
+[F88:10]|   // Get tasks for a specific zone
+[F88:11]|   const getTasksByZone = useCallback((zoneId: string) => {
+[F88:12]|     return tasks
+[F88:13]|       .filter((t) => t.zoneId === zoneId)
+[F88:14]|       .sort((a, b) => a.order - b.order);
+[F88:15]|   }, [tasks]);
+[F88:16]| 
+[F88:17]|   // Get incomplete tasks
+[F88:18]|   const incompleteTasks = useMemo(() => {
+[F88:19]|     return tasks.filter((t) => !t.completed);
+[F88:20]|   }, [tasks]);
+[F88:21]| 
+[F88:22]|   // Get completed tasks
+[F88:23]|   const completedTasks = useMemo(() => {
+[F88:24]|     return tasks.filter((t) => t.completed);
+[F88:25]|   }, [tasks]);
+[F88:26]| 
+[F88:27]|   // Add a new task
+[F88:28]|   const addTask = useCallback((
+[F88:29]|     zoneId: string,
+[F88:30]|     title: string,
+[F88:31]|     description: string = '',
+[F88:32]|     priority: TaskPriority = 'medium',
+[F88:33]|     urgency: TaskUrgency = 'low'
+[F88:34]|   ) => {
+[F88:35]|     const zoneTasks = getTasksByZone(zoneId);
+[F88:36]|     const maxOrder = zoneTasks.length > 0 ? Math.max(...zoneTasks.map((t) => t.order)) : -1;
+[F88:37]| 
+[F88:38]|     const newTask: Task = {
+[F88:39]|       id: `task-${Date.now()}`,
+[F88:40]|       zoneId,
+[F88:41]|       title: title.trim(),
+[F88:42]|       description: description.trim(),
+[F88:43]|       completed: false,
+[F88:44]|       priority,
+[F88:45]|       urgency,
+[F88:46]|       order: maxOrder + 1,
+[F88:47]|       createdAt: Date.now(),
+[F88:48]|       expanded: false,
+[F88:49]|       totalWorkTime: 0,
+[F88:50]|     };
+[F88:51]|     onUpdateTasks([...tasks, newTask]);
+[F88:52]|     return newTask.id;
+[F88:53]|   }, [tasks, getTasksByZone, onUpdateTasks]);
+[F88:54]| 
+[F88:55]|   // Toggle task completion
+[F88:56]|   const toggleTask = useCallback((id: string) => {
+[F88:57]|     onUpdateTasks(
+[F88:58]|       tasks.map((task) =>
+[F88:59]|         task.id === id
+[F88:60]|           ? { ...task, completed: !task.completed, completedAt: !task.completed ? Date.now() : undefined }
+[F88:61]|           : task
+[F88:62]|       )
+[F88:63]|     );
+[F88:64]|   }, [tasks, onUpdateTasks]);
+[F88:65]| 
+[F88:66]|   // Delete a task
+[F88:67]|   const deleteTask = useCallback((id: string) => {
+[F88:68]|     onUpdateTasks(tasks.filter((task) => task.id !== id));
+[F88:69]|   }, [tasks, onUpdateTasks]);
+[F88:70]| 
+[F88:71]|   // Update task
+[F88:72]|   const updateTask = useCallback((id: string, updates: Partial<Omit<Task, 'id'>>) => {
+[F88:73]|     onUpdateTasks(
+[F88:74]|       tasks.map((task) =>
+[F88:75]|         task.id === id ? { ...task, ...updates } : task
+[F88:76]|       )
+[F88:77]|     );
+[F88:78]|   }, [tasks, onUpdateTasks]);
+[F88:79]| 
+[F88:80]|   // Toggle task expanded state
+[F88:81]|   const toggleExpanded = useCallback((id: string) => {
+[F88:82]|     onUpdateTasks(
+[F88:83]|       tasks.map((task) =>
+[F88:84]|         task.id === id ? { ...task, expanded: !task.expanded } : task
+[F88:85]|       )
+[F88:86]|     );
+[F88:87]|   }, [tasks, onUpdateTasks]);
+[F88:88]| 
+[F88:89]|   // Set task priority
+[F88:90]|   const setTaskPriority = useCallback((id: string, priority: TaskPriority) => {
+[F88:91]|     onUpdateTasks(
+[F88:92]|       tasks.map((task) =>
+[F88:93]|         task.id === id ? { ...task, priority } : task
+[F88:94]|       )
+[F88:95]|     );
+[F88:96]|   }, [tasks, onUpdateTasks]);
+[F88:97]| 
+[F88:98]|   // Set task urgency
+[F88:99]|   const setTaskUrgency = useCallback((id: string, urgency: TaskUrgency) => {
+[F88:100]|     onUpdateTasks(
+[F88:101]|       tasks.map((task) =>
+[F88:102]|         task.id === id ? { ...task, urgency } : task
+[F88:103]|       )
+[F88:104]|     );
+[F88:105]|   }, [tasks, onUpdateTasks]);
+[F88:106]| 
+[F88:107]|   // Move task to different zone
+[F88:108]|   const moveTaskToZone = useCallback((taskId: string, newZoneId: string) => {
+[F88:109]|     const targetZoneTasks = getTasksByZone(newZoneId);
+[F88:110]|     const maxOrder = targetZoneTasks.length > 0 ? Math.max(...targetZoneTasks.map((t) => t.order)) : -1;
+[F88:111]|     
+[F88:112]|     onUpdateTasks(
+[F88:113]|       tasks.map((task) =>
+[F88:114]|         task.id === taskId ? { ...task, zoneId: newZoneId, order: maxOrder + 1 } : task
+[F88:115]|       )
+[F88:116]|     );
+[F88:117]|   }, [tasks, getTasksByZone, onUpdateTasks]);
+[F88:118]| 
+[F88:119]|   // Reorder tasks within a zone
+[F88:120]|   const reorderTasks = useCallback((zoneId: string, newOrder: Task[]) => {
+[F88:121]|     const otherTasks = tasks.filter((t) => t.zoneId !== zoneId);
+[F88:122]|     const reorderedTasks = newOrder.map((task, index) => ({
+[F88:123]|       ...task,
+[F88:124]|       order: index,
+[F88:125]|     }));
+[F88:126]|     onUpdateTasks([...otherTasks, ...reorderedTasks]);
+[F88:127]|   }, [tasks, onUpdateTasks]);
+[F88:128]| 
+[F88:129]|   // Clear completed tasks
+[F88:130]|   const clearCompleted = useCallback(() => {
+[F88:131]|     onUpdateTasks(tasks.filter((task) => !task.completed));
+[F88:132]|   }, [tasks, onUpdateTasks]);
 [F88:133]| 
-[F88:134]|                     return {
-[F88:135]|                       ...innerPrev,
-[F88:136]|                       mode: 'idle',
-[F88:137]|                       timeRemaining: workDuration,
-[F88:138]|                       isRunning: false,
-[F88:139]|                       currentTaskId: null,
-[F88:140]|                       currentSessionStartTime: undefined,
-[F88:141]|                     };
-[F88:142]|                   }
-[F88:143]|                   return { ...innerPrev, timeRemaining: innerPrev.timeRemaining - 1 };
-[F88:144]|                 });
-[F88:145]|               }, 1000);
-[F88:146]|               intervalRef.current = autoBreakInterval;
-[F88:147]| 
-[F88:148]|               return prev; // 状态已在上面更新
-[F88:149]|             }
-[F88:150]|           }
+[F88:134]|   // Get task stats
+[F88:135]|   const stats = useMemo(() => {
+[F88:136]|     const total = tasks.length;
+[F88:137]|     const completed = tasks.filter((t) => t.completed).length;
+[F88:138]|     const pending = total - completed;
+[F88:139]|     const highPriority = tasks.filter((t) => t.priority === 'high' && !t.completed).length;
+[F88:140]|     const urgent = tasks.filter((t) => t.urgency === 'urgent' && !t.completed).length;
+[F88:141]| 
+[F88:142]|     return {
+[F88:143]|       total,
+[F88:144]|       completed,
+[F88:145]|       pending,
+[F88:146]|       highPriority,
+[F88:147]|       urgent,
+[F88:148]|       completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+[F88:149]|     };
+[F88:150]|   }, [tasks]);
 [F88:151]| 
-[F88:152]|           return {
-[F88:153]|             ...prev,
-[F88:154]|             mode: 'idle',
-[F88:155]|             timeRemaining: workDuration,
-[F88:156]|             isRunning: false,
-[F88:157]|             currentTaskId: null,
-[F88:158]|             currentSessionStartTime: undefined,
-[F88:159]|           };
-[F88:160]|         }
-[F88:161]|         return { ...prev, timeRemaining: prev.timeRemaining - 1 };
-[F88:162]|       });
-[F88:163]|     }, 1000);
-[F88:164]| 
-[F88:165]|     // 立即赋值给 intervalRef（在 setState 之前）
-[F88:166]|     intervalRef.current = newInterval;
-[F88:167]| 
-[F88:168]|     // 然后更新状态
-[F88:169]|     setState({
-[F88:170]|       mode,
-[F88:171]|       timeRemaining: duration,
-[F88:172]|       isRunning: true,
-[F88:173]|       currentTaskId: taskId,
-[F88:174]|       currentSessionStartTime: Date.now(),
-[F88:175]|     });
-[F88:176]|   }, [workDuration, breakDuration, longBreakDuration, autoStartBreak, completedSessions, playSound, onComplete, onTick]);
-[F88:177]| 
-[F88:178]|   const pause = useCallback(() => {
-[F88:179]|     // 防御性清除：确保清除 interval
-[F88:180]|     if (intervalRef.current) {
-[F88:181]|       clearInterval(intervalRef.current);
-[F88:182]|       intervalRef.current = null;
-[F88:183]|     }
-[F88:184]|     setState((prev) => ({ ...prev, isRunning: false }));
-[F88:185]|   }, []);
-[F88:186]| 
-[F88:187]|   const resume = useCallback(() => {
-[F88:188]|     // 1. 防御性清除：先清除可能存在的旧定时器
-[F88:189]|     if (intervalRef.current) {
-[F88:190]|       clearInterval(intervalRef.current);
-[F88:191]|       intervalRef.current = null;
-[F88:192]|     }
-[F88:193]| 
-[F88:194]|     // 2. 使用函数式更新来检查最新状态并创建 interval
-[F88:195]|     setState((prev) => {
-[F88:196]|       // 如果已经在运行或者处于 idle 状态，则不执行任何操作
-[F88:197]|       if (prev.isRunning || prev.mode === 'idle') {
-[F88:198]|         return prev;
-[F88:199]|       }
-[F88:200]| 
-[F88:201]|       // 3. 先创建 interval 并立即赋值，确保在 setState 之前 interval 就已经开始
-[F88:202]|       const newInterval = setInterval(() => {
-[F88:203]|         setState((innerPrev) => {
-[F88:204]|           tickCountRef.current++;
-[F88:205]|           onTick?.(tickCountRef.current);
-[F88:206]| 
-[F88:207]|           if (innerPrev.timeRemaining <= 1) {
-[F88:208]|             playSound();
-[F88:209]|             onComplete?.(innerPrev.mode, innerPrev.mode === 'work' ? workDuration : innerPrev.mode === 'break' ? breakDuration : longBreakDuration);
-[F88:210]| 
-[F88:211]|             // 清除定时器，防止僵尸定时器
-[F88:212]|             if (intervalRef.current) {
-[F88:213]|               clearInterval(intervalRef.current);
-[F88:214]|               intervalRef.current = null;
-[F88:215]|             }
-[F88:216]| 
-[F88:217]|             if (innerPrev.mode === 'work') {
-[F88:218]|               setCompletedSessions((s) => s + 1);
-[F88:219]|             }
-[F88:220]| 
-[F88:221]|             return {
-[F88:222]|               ...innerPrev,
-[F88:223]|               mode: 'idle',
-[F88:224]|               timeRemaining: workDuration,
-[F88:225]|               isRunning: false,
-[F88:226]|               currentTaskId: null,
-[F88:227]|               currentSessionStartTime: undefined,
-[F88:228]|             };
-[F88:229]|           }
-[F88:230]|           return { ...innerPrev, timeRemaining: innerPrev.timeRemaining - 1 };
-[F88:231]|         });
-[F88:232]|       }, 1000);
-[F88:233]| 
-[F88:234]|       // 立即赋值给 intervalRef
-[F88:235]|       intervalRef.current = newInterval;
-[F88:236]| 
-[F88:237]|       // 4. 返回更新后的状态
-[F88:238]|       return { ...prev, isRunning: true };
-[F88:239]|     });
-[F88:240]|   }, [workDuration, breakDuration, longBreakDuration, playSound, onComplete, onTick]);
-[F88:241]| 
-[F88:242]|   const stop = useCallback(() => {
-[F88:243]|     clearIntervalSafe();
-[F88:244]|     setState({
-[F88:245]|       mode: 'idle',
-[F88:246]|       timeRemaining: workDuration,
-[F88:247]|       isRunning: false,
-[F88:248]|       currentTaskId: null,
-[F88:249]|       currentSessionStartTime: undefined,
-[F88:250]|     });
-[F88:251]|     tickCountRef.current = 0;
-[F88:252]|   }, [workDuration, clearIntervalSafe]);
-[F88:253]| 
-[F88:254]|   const reset = useCallback(() => {
-[F88:255]|     stop();
-[F88:256]|     setCompletedSessions(0);
-[F88:257]|   }, [stop]);
-[F88:258]| 
-[F88:259]|   const skip = useCallback(() => {
-[F88:260]|     clearIntervalSafe();
-[F88:261]| 
-[F88:262]|     if (state.mode === 'work') {
-[F88:263]|       const nextMode = (completedSessions + 1) % 4 === 0 ? 'longBreak' : 'break';
-[F88:264]|       const nextDuration = nextMode === 'longBreak' ? longBreakDuration : breakDuration;
-[F88:265]|       tickCountRef.current = 0;
-[F88:266]|       setState({
-[F88:267]|         mode: nextMode,
-[F88:268]|         timeRemaining: nextDuration,
-[F88:269]|         isRunning: autoStartBreak,
-[F88:270]|         currentTaskId: null,
-[F88:271]|         currentSessionStartTime: autoStartBreak ? Date.now() : undefined,
-[F88:272]|       });
-[F88:273]|       if (autoStartBreak) {
-[F88:274]|         start(nextMode);
-[F88:275]|       }
-[F88:276]|     } else {
-[F88:277]|       setState({
-[F88:278]|         mode: 'idle',
-[F88:279]|         timeRemaining: workDuration,
-[F88:280]|         isRunning: false,
-[F88:281]|         currentTaskId: null,
-[F88:282]|         currentSessionStartTime: undefined,
-[F88:283]|       });
-[F88:284]|     }
-[F88:285]|   }, [state.mode, completedSessions, workDuration, breakDuration, longBreakDuration, autoStartBreak, start, clearIntervalSafe]);
-[F88:286]| 
-[F88:287]|   const updateTime = useCallback((newTimeInSeconds: number) => {
-[F88:288]|     setState(prev => ({
-[F88:289]|       ...prev,
-[F88:290]|       timeRemaining: newTimeInSeconds,
-[F88:291]|     }));
-[F88:292]|   }, []);
-[F88:293]| 
-[F88:294]|   const formatTime = useCallback((seconds: number): string => {
-[F88:295]|     const mins = Math.floor(seconds / 60);
-[F88:296]|     const secs = seconds % 60;
-[F88:297]|     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-[F88:298]|   }, []);
-[F88:299]| 
-[F88:300]|   return {
-[F88:301]|     ...state,
-[F88:302]|     formattedTime: formatTime(state.timeRemaining),
-[F88:303]|     completedSessions,
-[F88:304]|     start,
-[F88:305]|     pause,
-[F88:306]|     resume,
-[F88:307]|     stop,
-[F88:308]|     reset,
-[F88:309]|     skip,
-[F88:310]|     updateTime,
-[F88:311]|     progress: state.mode === 'work'
-[F88:312]|       ? ((workDuration - state.timeRemaining) / workDuration) * 100
-[F88:313]|       : state.mode === 'break'
-[F88:314]|       ? ((breakDuration - state.timeRemaining) / breakDuration) * 100
-[F88:315]|       : state.mode === 'longBreak'
-[F88:316]|       ? ((longBreakDuration - state.timeRemaining) / longBreakDuration) * 100
-[F88:317]|       : 0,
-[F88:318]|   };
-[F88:319]| }
+[F88:152]|   // Get stats for a specific zone
+[F88:153]|   const getZoneStats = useCallback((zoneId: string) => {
+[F88:154]|     const zoneTasks = getTasksByZone(zoneId);
+[F88:155]|     const total = zoneTasks.length;
+[F88:156]|     const completed = zoneTasks.filter((t) => t.completed).length;
+[F88:157]|     const pending = total - completed;
+[F88:158]|     
+[F88:159]|     return {
+[F88:160]|       total,
+[F88:161]|       completed,
+[F88:162]|       pending,
+[F88:163]|       completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+[F88:164]|     };
+[F88:165]|   }, [getTasksByZone]);
+[F88:166]| 
+[F88:167]|   return {
+[F88:168]|     tasks: allTasks,
+[F88:169]|     getTasksByZone,
+[F88:170]|     incompleteTasks,
+[F88:171]|     completedTasks,
+[F88:172]|     addTask,
+[F88:173]|     toggleTask,
+[F88:174]|     deleteTask,
+[F88:175]|     updateTask,
+[F88:176]|     toggleExpanded,
+[F88:177]|     setTaskPriority,
+[F88:178]|     setTaskUrgency,
+[F88:179]|     moveTaskToZone,
+[F88:180]|     reorderTasks,
+[F88:181]|     clearCompleted,
+[F88:182]|     stats,
+[F88:183]|     getZoneStats,
+[F88:184]|   };
+[F88:185]| }
 
 ================================================================================
-文件路径: src\hooks\useZones.ts(F89) (约合大小: 3 KB)
+文件路径: src\hooks\useTimer.ts(F89) (约合大小: 9 KB)
 ================================================================================
-[F89:1]| import { useCallback, useMemo } from 'react';
-[F89:2]| import type { Zone, Task } from '@/types';
-[F89:3]| import { PREDEFINED_TEMPLATES } from '@/types';
-[F89:4]| 
-[F89:5]| export function useZones(
-[F89:6]|   zones: Zone[],
-[F89:7]|   tasks: Task[],
-[F89:8]|   onUpdateZones: (zones: Zone[]) => void,
-[F89:9]|   onUpdateTasks: (tasks: Task[]) => void
-[F89:10]| ) {
-[F89:11]|   // Get zones sorted by order
-[F89:12]|   const sortedZones = useMemo(() => {
-[F89:13]|     return [...zones].sort((a, b) => a.order - b.order);
-[F89:14]|   }, [zones]);
-[F89:15]| 
-[F89:16]|   // Get tasks for a specific zone
-[F89:17]|   const getZoneTasks = useCallback((zoneId: string) => {
-[F89:18]|     return tasks
-[F89:19]|       .filter((t) => t.zoneId === zoneId)
-[F89:20]|       .sort((a, b) => a.order - b.order);
-[F89:21]|   }, [tasks]);
-[F89:22]| 
-[F89:23]|   // Add a new zone
-[F89:24]|   const addZone = useCallback((name: string, color: string) => {
-[F89:25]|     const maxOrder = zones.length > 0 ? Math.max(...zones.map((z) => z.order)) : -1;
-[F89:26]|     const newZone: Zone = {
-[F89:27]|       id: Date.now().toString(),
-[F89:28]|       name: name.trim(),
-[F89:29]|       color,
-[F89:30]|       order: maxOrder + 1,
-[F89:31]|       createdAt: Date.now(),
-[F89:32]|     };
-[F89:33]|     onUpdateZones([...zones, newZone]);
-[F89:34]|     return newZone.id;
-[F89:35]|   }, [zones, onUpdateZones]);
-[F89:36]| 
-[F89:37]|   // Update a zone
-[F89:38]|   const updateZone = useCallback((id: string, updates: Partial<Omit<Zone, 'id'>>) => {
-[F89:39]|     onUpdateZones(
-[F89:40]|       zones.map((zone) =>
-[F89:41]|         zone.id === id ? { ...zone, ...updates } : zone
-[F89:42]|       )
-[F89:43]|     );
-[F89:44]|   }, [zones, onUpdateZones]);
+[F89:1]| import { useState, useEffect, useCallback, useRef } from 'react';
+[F89:2]| import type { TimerMode, TimerState } from '@/types';
+[F89:3]| 
+[F89:4]| interface UseTimerProps {
+[F89:5]|   workDuration: number;
+[F89:6]|   breakDuration: number;
+[F89:7]|   longBreakDuration: number;
+[F89:8]|   autoStartBreak: boolean;
+[F89:9]|   soundEnabled: boolean;
+[F89:10]|   onComplete?: (mode: TimerMode, duration: number) => void;
+[F89:11]|   onTick?: (elapsedSeconds: number) => void; // 每秒回调，用于累计时间
+[F89:12]| }
+[F89:13]| 
+[F89:14]| export function useTimer({
+[F89:15]|   workDuration,
+[F89:16]|   breakDuration,
+[F89:17]|   longBreakDuration,
+[F89:18]|   autoStartBreak,
+[F89:19]|   soundEnabled,
+[F89:20]|   onComplete,
+[F89:21]|   onTick,
+[F89:22]| }: UseTimerProps) {
+[F89:23]|   const [state, setState] = useState<TimerState>({
+[F89:24]|     mode: 'idle',
+[F89:25]|     timeRemaining: workDuration,
+[F89:26]|     isRunning: false,
+[F89:27]|     currentTaskId: null,
+[F89:28]|   });
+[F89:29]| 
+[F89:30]|   const [completedSessions, setCompletedSessions] = useState(0);
+[F89:31]|   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+[F89:32]|   const tickCountRef = useRef(0);
+[F89:33]| 
+[F89:34]|   // 辅助函数：安全清除定时器
+[F89:35]|   const clearIntervalSafe = useCallback(() => {
+[F89:36]|     if (intervalRef.current) {
+[F89:37]|       clearInterval(intervalRef.current);
+[F89:38]|       intervalRef.current = null;
+[F89:39]|     }
+[F89:40]|   }, []);
+[F89:41]| 
+[F89:42]|   // Play notification sound using Web Audio API
+[F89:43]|   const playSound = useCallback(() => {
+[F89:44]|     if (!soundEnabled) return;
 [F89:45]| 
-[F89:46]|   // Delete a zone
-[F89:47]|   const deleteZone = useCallback((id: string) => {
-[F89:48]|     // Move all tasks from this zone to the default zone or delete them
-[F89:49]|     const remainingZones = zones.filter((z) => z.id !== id);
-[F89:50]|     if (remainingZones.length === 0) {
-[F89:51]|       // Create a default zone if no zones left
-[F89:52]|       const defaultZone: Zone = {
-[F89:53]|         id: 'default',
-[F89:54]|         name: '默认',
-[F89:55]|         color: '#3b82f6',
-[F89:56]|         order: 0,
-[F89:57]|         createdAt: Date.now(),
-[F89:58]|       };
-[F89:59]|       onUpdateZones([defaultZone]);
-[F89:60]|       // Move tasks to default zone
-[F89:61]|       onUpdateTasks(tasks.map((t) => (t.zoneId === id ? { ...t, zoneId: 'default' } : t)));
-[F89:62]|     } else {
-[F89:63]|       onUpdateZones(remainingZones);
-[F89:64]|       // Delete tasks in the deleted zone
-[F89:65]|       onUpdateTasks(tasks.filter((t) => t.zoneId !== id));
-[F89:66]|     }
-[F89:67]|   }, [zones, tasks, onUpdateZones, onUpdateTasks]);
-[F89:68]| 
-[F89:69]|   // Reorder zones
-[F89:70]|   const reorderZones = useCallback((newOrder: Zone[]) => {
-[F89:71]|     const updatedZones = newOrder.map((zone, index) => ({
-[F89:72]|       ...zone,
-[F89:73]|       order: index,
-[F89:74]|     }));
-[F89:75]|     onUpdateZones(updatedZones);
-[F89:76]|   }, [onUpdateZones]);
-[F89:77]| 
-[F89:78]|   // Apply a template
-[F89:79]|   const applyTemplate = useCallback((templateId: string) => {
-[F89:80]|     const template = PREDEFINED_TEMPLATES.find((t) => t.id === templateId);
-[F89:81]|     if (!template) return;
-[F89:82]| 
-[F89:83]|     // Create new zones from template
-[F89:84]|     const newZones: Zone[] = template.zones.map((zone, index) => ({
-[F89:85]|       id: `zone-${Date.now()}-${index}`,
-[F89:86]|       name: zone.name,
-[F89:87]|       color: zone.color,
-[F89:88]|       order: index,
-[F89:89]|       createdAt: Date.now(),
-[F89:90]|     }));
+[F89:46]|     try {
+[F89:47]|       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+[F89:48]|       const oscillator = audioContext.createOscillator();
+[F89:49]|       const gainNode = audioContext.createGain();
+[F89:50]| 
+[F89:51]|       oscillator.connect(gainNode);
+[F89:52]|       gainNode.connect(audioContext.destination);
+[F89:53]| 
+[F89:54]|       oscillator.frequency.value = 800;
+[F89:55]|       oscillator.type = 'sine';
+[F89:56]| 
+[F89:57]|       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+[F89:58]|       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+[F89:59]| 
+[F89:60]|       oscillator.start(audioContext.currentTime);
+[F89:61]|       oscillator.stop(audioContext.currentTime + 0.5);
+[F89:62]|     } catch (error) {
+[F89:63]|       console.error('Failed to play sound:', error);
+[F89:64]|     }
+[F89:65]|   }, [soundEnabled]);
+[F89:66]| 
+[F89:67]|   // Clear interval on unmount
+[F89:68]|   useEffect(() => {
+[F89:69]|     return () => clearIntervalSafe();
+[F89:70]|   }, [clearIntervalSafe]);
+[F89:71]| 
+[F89:72]|   const start = useCallback((mode: TimerMode = 'work', taskId: string | null = null) => {
+[F89:73]|     // 防御性清除：先清除可能存在的旧定时器
+[F89:74]|     if (intervalRef.current) {
+[F89:75]|       clearInterval(intervalRef.current);
+[F89:76]|       intervalRef.current = null;
+[F89:77]|     }
+[F89:78]| 
+[F89:79]|     const duration = mode === 'work' ? workDuration : mode === 'break' ? breakDuration : longBreakDuration;
+[F89:80]|     tickCountRef.current = 0;
+[F89:81]| 
+[F89:82]|     // 在 setState 外部创建定时器
+[F89:83]|     const newInterval = setInterval(() => {
+[F89:84]|       setState((prev) => {
+[F89:85]|         tickCountRef.current++;
+[F89:86]|         onTick?.(tickCountRef.current);
+[F89:87]| 
+[F89:88]|         if (prev.timeRemaining <= 1) {
+[F89:89]|           // 计时完成
+[F89:90]|           playSound();
 [F89:91]| 
-[F89:92]|     onUpdateZones(newZones);
-[F89:93]|     onUpdateTasks([]); // Clear tasks for new workspace
-[F89:94]|   }, [onUpdateZones, onUpdateTasks]);
-[F89:95]| 
-[F89:96]|   // Get zone by id
-[F89:97]|   const getZoneById = useCallback((id: string) => {
-[F89:98]|     return zones.find((z) => z.id === id);
-[F89:99]|   }, [zones]);
-[F89:100]| 
-[F89:101]|   return {
-[F89:102]|     zones: sortedZones,
-[F89:103]|     getZoneTasks,
-[F89:104]|     addZone,
-[F89:105]|     updateZone,
-[F89:106]|     deleteZone,
-[F89:107]|     reorderZones,
-[F89:108]|     applyTemplate,
-[F89:109]|     getZoneById,
-[F89:110]|     templates: PREDEFINED_TEMPLATES,
-[F89:111]|   };
-[F89:112]| }
+[F89:92]|           // 清除定时器，防止僵尸定时器
+[F89:93]|           if (intervalRef.current) {
+[F89:94]|             clearInterval(intervalRef.current);
+[F89:95]|             intervalRef.current = null;
+[F89:96]|           }
+[F89:97]| 
+[F89:98]|           const completedMode = prev.mode;
+[F89:99]| 
+[F89:100]|           if (prev.mode === 'work') {
+[F89:101]|             setCompletedSessions((s) => s + 1);
+[F89:102]|           }
+[F89:103]| 
+[F89:104]|           onComplete?.(prev.mode, duration);
+[F89:105]| 
+[F89:106]|           // 处理 autoStartBreak：直接在定时器外部启动，不嵌套
+[F89:107]|           if (completedMode === 'work' && autoStartBreak) {
+[F89:108]|             // 使用 setTimeout 延迟一下，避免在 setState 中触发其他 setState
+[F89:109]|             setTimeout(() => {
+[F89:110]|               const nextMode = (completedSessions + 1) % 4 === 0 ? 'longBreak' : 'break';
+[F89:111]|               start(nextMode, null);
+[F89:112]|             }, 0);
+[F89:113]|           }
+[F89:114]| 
+[F89:115]|           return {
+[F89:116]|             ...prev,
+[F89:117]|             mode: 'idle',
+[F89:118]|             timeRemaining: workDuration,
+[F89:119]|             isRunning: false,
+[F89:120]|             currentTaskId: null,
+[F89:121]|             currentSessionStartTime: undefined,
+[F89:122]|           };
+[F89:123]|         }
+[F89:124]|         return { ...prev, timeRemaining: prev.timeRemaining - 1 };
+[F89:125]|       });
+[F89:126]|     }, 1000);
+[F89:127]| 
+[F89:128]|     // 立即赋值给 intervalRef（在 setState 之前）
+[F89:129]|     intervalRef.current = newInterval;
+[F89:130]| 
+[F89:131]|     // 然后更新状态
+[F89:132]|     setState({
+[F89:133]|       mode,
+[F89:134]|       timeRemaining: duration,
+[F89:135]|       isRunning: true,
+[F89:136]|       currentTaskId: taskId,
+[F89:137]|       currentSessionStartTime: Date.now(),
+[F89:138]|     });
+[F89:139]|   }, [workDuration, breakDuration, longBreakDuration, autoStartBreak, completedSessions, playSound, onComplete, onTick]);
+[F89:140]| 
+[F89:141]|   const pause = useCallback(() => {
+[F89:142]|     // 防御性清除：确保清除 interval
+[F89:143]|     if (intervalRef.current) {
+[F89:144]|       clearInterval(intervalRef.current);
+[F89:145]|       intervalRef.current = null;
+[F89:146]|     }
+[F89:147]|     setState((prev) => ({ ...prev, isRunning: false }));
+[F89:148]|   }, []);
+[F89:149]| 
+[F89:150]|   const resume = useCallback(() => {
+[F89:151]|     // 1. 防御性检查：如果已经在运行或处于空闲态，直接返回
+[F89:152]|     if (state.isRunning || state.mode === 'idle') {
+[F89:153]|       return;
+[F89:154]|     }
+[F89:155]| 
+[F89:156]|     // 2. 确保清理旧定时器（防止意外重复）
+[F89:157]|     if (intervalRef.current) {
+[F89:158]|       clearInterval(intervalRef.current);
+[F89:159]|       intervalRef.current = null;
+[F89:160]|     }
+[F89:161]| 
+[F89:162]|     // 3. 在 setState 外部创建定时器
+[F89:163]|     const newInterval = setInterval(() => {
+[F89:164]|       setState((innerPrev) => {
+[F89:165]|         tickCountRef.current++;
+[F89:166]|         onTick?.(tickCountRef.current);
+[F89:167]| 
+[F89:168]|         if (innerPrev.timeRemaining <= 1) {
+[F89:169]|           // 计时完成
+[F89:170]|           playSound();
+[F89:171]|           onComplete?.(innerPrev.mode, innerPrev.mode === 'work' ? workDuration : innerPrev.mode === 'break' ? breakDuration : longBreakDuration);
+[F89:172]| 
+[F89:173]|           // 清除定时器
+[F89:174]|           if (intervalRef.current) {
+[F89:175]|             clearInterval(intervalRef.current);
+[F89:176]|             intervalRef.current = null;
+[F89:177]|           }
+[F89:178]| 
+[F89:179]|           if (innerPrev.mode === 'work') {
+[F89:180]|             setCompletedSessions((s) => s + 1);
+[F89:181]|           }
+[F89:182]| 
+[F89:183]|           return {
+[F89:184]|             ...innerPrev,
+[F89:185]|             mode: 'idle',
+[F89:186]|             timeRemaining: workDuration,
+[F89:187]|             isRunning: false,
+[F89:188]|             currentTaskId: null,
+[F89:189]|             currentSessionStartTime: undefined,
+[F89:190]|           };
+[F89:191]|         }
+[F89:192]|         return { ...innerPrev, timeRemaining: innerPrev.timeRemaining - 1 };
+[F89:193]|       });
+[F89:194]|     }, 1000);
+[F89:195]| 
+[F89:196]|     // 4. 保存引用
+[F89:197]|     intervalRef.current = newInterval;
+[F89:198]| 
+[F89:199]|     // 5. 更新状态
+[F89:200]|     setState((prev) => ({ ...prev, isRunning: true }));
+[F89:201]|   }, [state.isRunning, state.mode, workDuration, breakDuration, longBreakDuration, playSound, onComplete, onTick]);
+[F89:202]| 
+[F89:203]|   const stop = useCallback(() => {
+[F89:204]|     clearIntervalSafe();
+[F89:205]|     setState({
+[F89:206]|       mode: 'idle',
+[F89:207]|       timeRemaining: workDuration,
+[F89:208]|       isRunning: false,
+[F89:209]|       currentTaskId: null,
+[F89:210]|       currentSessionStartTime: undefined,
+[F89:211]|     });
+[F89:212]|     tickCountRef.current = 0;
+[F89:213]|   }, [workDuration, clearIntervalSafe]);
+[F89:214]| 
+[F89:215]|   const reset = useCallback(() => {
+[F89:216]|     stop();
+[F89:217]|     setCompletedSessions(0);
+[F89:218]|   }, [stop]);
+[F89:219]| 
+[F89:220]|   const skip = useCallback(() => {
+[F89:221]|     clearIntervalSafe();
+[F89:222]| 
+[F89:223]|     if (state.mode === 'work') {
+[F89:224]|       const nextMode = (completedSessions + 1) % 4 === 0 ? 'longBreak' : 'break';
+[F89:225]|       const nextDuration = nextMode === 'longBreak' ? longBreakDuration : breakDuration;
+[F89:226]|       tickCountRef.current = 0;
+[F89:227]|       setState({
+[F89:228]|         mode: nextMode,
+[F89:229]|         timeRemaining: nextDuration,
+[F89:230]|         isRunning: autoStartBreak,
+[F89:231]|         currentTaskId: null,
+[F89:232]|         currentSessionStartTime: autoStartBreak ? Date.now() : undefined,
+[F89:233]|       });
+[F89:234]|       if (autoStartBreak) {
+[F89:235]|         start(nextMode);
+[F89:236]|       }
+[F89:237]|     } else {
+[F89:238]|       setState({
+[F89:239]|         mode: 'idle',
+[F89:240]|         timeRemaining: workDuration,
+[F89:241]|         isRunning: false,
+[F89:242]|         currentTaskId: null,
+[F89:243]|         currentSessionStartTime: undefined,
+[F89:244]|       });
+[F89:245]|     }
+[F89:246]|   }, [state.mode, completedSessions, workDuration, breakDuration, longBreakDuration, autoStartBreak, start, clearIntervalSafe]);
+[F89:247]| 
+[F89:248]|   const updateTime = useCallback((newTimeInSeconds: number) => {
+[F89:249]|     setState(prev => ({
+[F89:250]|       ...prev,
+[F89:251]|       timeRemaining: newTimeInSeconds,
+[F89:252]|     }));
+[F89:253]|   }, []);
+[F89:254]| 
+[F89:255]|   const formatTime = useCallback((seconds: number): string => {
+[F89:256]|     const mins = Math.floor(seconds / 60);
+[F89:257]|     const secs = seconds % 60;
+[F89:258]|     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+[F89:259]|   }, []);
+[F89:260]| 
+[F89:261]|   // 设置模式（用于设置面板预览）
+[F89:262]|   const setMode = useCallback((newMode: TimerMode) => {
+[F89:263]|     // 如果正在运行，不允许切换模式（保护机制）
+[F89:264]|     if (state.isRunning) return;
+[F89:265]| 
+[F89:266]|     // 清除可能存在的定时器
+[F89:267]|     if (intervalRef.current) {
+[F89:268]|       clearInterval(intervalRef.current);
+[F89:269]|       intervalRef.current = null;
+[F89:270]|     }
+[F89:271]| 
+[F89:272]|     // 根据模式获取对应的时长
+[F89:273]|     const duration = newMode === 'work'
+[F89:274]|       ? workDuration
+[F89:275]|       : newMode === 'break'
+[F89:276]|       ? breakDuration
+[F89:277]|       : longBreakDuration;
+[F89:278]| 
+[F89:279]|     tickCountRef.current = 0;
+[F89:280]| 
+[F89:281]|     setState({
+[F89:282]|       mode: newMode,
+[F89:283]|       timeRemaining: duration,
+[F89:284]|       isRunning: false,
+[F89:285]|       currentTaskId: null,
+[F89:286]|       currentSessionStartTime: undefined,
+[F89:287]|     });
+[F89:288]|   }, [state.isRunning, workDuration, breakDuration, longBreakDuration]);
+[F89:289]| 
+[F89:290]|   return {
+[F89:291]|     ...state,
+[F89:292]|     formattedTime: formatTime(state.timeRemaining),
+[F89:293]|     completedSessions,
+[F89:294]|     start,
+[F89:295]|     pause,
+[F89:296]|     resume,
+[F89:297]|     stop,
+[F89:298]|     reset,
+[F89:299]|     skip,
+[F89:300]|     updateTime,
+[F89:301]|     setMode,
+[F89:302]|     progress: state.mode === 'work'
+[F89:303]|       ? ((workDuration - state.timeRemaining) / workDuration) * 100
+[F89:304]|       : state.mode === 'break'
+[F89:305]|       ? ((breakDuration - state.timeRemaining) / breakDuration) * 100
+[F89:306]|       : state.mode === 'longBreak'
+[F89:307]|       ? ((longBreakDuration - state.timeRemaining) / longBreakDuration) * 100
+[F89:308]|       : 0,
+[F89:309]|   };
+[F89:310]| }
 
 ================================================================================
-文件路径: src\lib\utils.ts(F90) (约合大小: 0 KB)
+文件路径: src\hooks\useZones.ts(F90) (约合大小: 3 KB)
 ================================================================================
-[F90:1]| import { clsx, type ClassValue } from "clsx"
-[F90:2]| import { twMerge } from "tailwind-merge"
-[F90:3]| 
-[F90:4]| export function cn(...inputs: ClassValue[]) {
-[F90:5]|   return twMerge(clsx(inputs))
-[F90:6]| }
+[F90:1]| import { useCallback, useMemo } from 'react';
+[F90:2]| import type { Zone, Task } from '@/types';
+[F90:3]| import { PREDEFINED_TEMPLATES } from '@/types';
+[F90:4]| 
+[F90:5]| export function useZones(
+[F90:6]|   zones: Zone[],
+[F90:7]|   tasks: Task[],
+[F90:8]|   onUpdateZones: (zones: Zone[]) => void,
+[F90:9]|   onUpdateTasks: (tasks: Task[]) => void
+[F90:10]| ) {
+[F90:11]|   // Get zones sorted by order
+[F90:12]|   const sortedZones = useMemo(() => {
+[F90:13]|     return [...zones].sort((a, b) => a.order - b.order);
+[F90:14]|   }, [zones]);
+[F90:15]| 
+[F90:16]|   // Get tasks for a specific zone
+[F90:17]|   const getZoneTasks = useCallback((zoneId: string) => {
+[F90:18]|     return tasks
+[F90:19]|       .filter((t) => t.zoneId === zoneId)
+[F90:20]|       .sort((a, b) => a.order - b.order);
+[F90:21]|   }, [tasks]);
+[F90:22]| 
+[F90:23]|   // Add a new zone
+[F90:24]|   const addZone = useCallback((name: string, color: string) => {
+[F90:25]|     const maxOrder = zones.length > 0 ? Math.max(...zones.map((z) => z.order)) : -1;
+[F90:26]|     const newZone: Zone = {
+[F90:27]|       id: Date.now().toString(),
+[F90:28]|       name: name.trim(),
+[F90:29]|       color,
+[F90:30]|       order: maxOrder + 1,
+[F90:31]|       createdAt: Date.now(),
+[F90:32]|     };
+[F90:33]|     onUpdateZones([...zones, newZone]);
+[F90:34]|     return newZone.id;
+[F90:35]|   }, [zones, onUpdateZones]);
+[F90:36]| 
+[F90:37]|   // Update a zone
+[F90:38]|   const updateZone = useCallback((id: string, updates: Partial<Omit<Zone, 'id'>>) => {
+[F90:39]|     onUpdateZones(
+[F90:40]|       zones.map((zone) =>
+[F90:41]|         zone.id === id ? { ...zone, ...updates } : zone
+[F90:42]|       )
+[F90:43]|     );
+[F90:44]|   }, [zones, onUpdateZones]);
+[F90:45]| 
+[F90:46]|   // Delete a zone
+[F90:47]|   const deleteZone = useCallback((id: string) => {
+[F90:48]|     // Move all tasks from this zone to the default zone or delete them
+[F90:49]|     const remainingZones = zones.filter((z) => z.id !== id);
+[F90:50]|     if (remainingZones.length === 0) {
+[F90:51]|       // Create a default zone if no zones left
+[F90:52]|       const defaultZone: Zone = {
+[F90:53]|         id: 'default',
+[F90:54]|         name: '默认',
+[F90:55]|         color: '#3b82f6',
+[F90:56]|         order: 0,
+[F90:57]|         createdAt: Date.now(),
+[F90:58]|       };
+[F90:59]|       onUpdateZones([defaultZone]);
+[F90:60]|       // Move tasks to default zone
+[F90:61]|       onUpdateTasks(tasks.map((t) => (t.zoneId === id ? { ...t, zoneId: 'default' } : t)));
+[F90:62]|     } else {
+[F90:63]|       onUpdateZones(remainingZones);
+[F90:64]|       // Delete tasks in the deleted zone
+[F90:65]|       onUpdateTasks(tasks.filter((t) => t.zoneId !== id));
+[F90:66]|     }
+[F90:67]|   }, [zones, tasks, onUpdateZones, onUpdateTasks]);
+[F90:68]| 
+[F90:69]|   // Reorder zones
+[F90:70]|   const reorderZones = useCallback((newOrder: Zone[]) => {
+[F90:71]|     const updatedZones = newOrder.map((zone, index) => ({
+[F90:72]|       ...zone,
+[F90:73]|       order: index,
+[F90:74]|     }));
+[F90:75]|     onUpdateZones(updatedZones);
+[F90:76]|   }, [onUpdateZones]);
+[F90:77]| 
+[F90:78]|   // Apply a template
+[F90:79]|   const applyTemplate = useCallback((templateId: string) => {
+[F90:80]|     const template = PREDEFINED_TEMPLATES.find((t) => t.id === templateId);
+[F90:81]|     if (!template) return;
+[F90:82]| 
+[F90:83]|     // Create new zones from template
+[F90:84]|     const newZones: Zone[] = template.zones.map((zone, index) => ({
+[F90:85]|       id: `zone-${Date.now()}-${index}`,
+[F90:86]|       name: zone.name,
+[F90:87]|       color: zone.color,
+[F90:88]|       order: index,
+[F90:89]|       createdAt: Date.now(),
+[F90:90]|     }));
+[F90:91]| 
+[F90:92]|     onUpdateZones(newZones);
+[F90:93]|     onUpdateTasks([]); // Clear tasks for new workspace
+[F90:94]|   }, [onUpdateZones, onUpdateTasks]);
+[F90:95]| 
+[F90:96]|   // Get zone by id
+[F90:97]|   const getZoneById = useCallback((id: string) => {
+[F90:98]|     return zones.find((z) => z.id === id);
+[F90:99]|   }, [zones]);
+[F90:100]| 
+[F90:101]|   return {
+[F90:102]|     zones: sortedZones,
+[F90:103]|     getZoneTasks,
+[F90:104]|     addZone,
+[F90:105]|     updateZone,
+[F90:106]|     deleteZone,
+[F90:107]|     reorderZones,
+[F90:108]|     applyTemplate,
+[F90:109]|     getZoneById,
+[F90:110]|     templates: PREDEFINED_TEMPLATES,
+[F90:111]|   };
+[F90:112]| }
 
 ================================================================================
-文件路径: src\types\index.ts(F91) (约合大小: 4 KB)
+文件路径: src\lib\utils.ts(F91) (约合大小: 0 KB)
 ================================================================================
-[F91:1]| export type TaskPriority = 'low' | 'medium' | 'high';
-[F91:2]| export type TimerMode = 'work' | 'break' | 'longBreak' | 'idle';
+[F91:1]| import { clsx, type ClassValue } from "clsx"
+[F91:2]| import { twMerge } from "tailwind-merge"
 [F91:3]| 
-[F91:4]| export interface Task {
-[F91:5]|   id: string;
-[F91:6]|   zoneId: string;
-[F91:7]|   title: string;
-[F91:8]|   description: string;
-[F91:9]|   completed: boolean;
-[F91:10]|   priority: TaskPriority;
-[F91:11]|   order: number;
-[F91:12]|   createdAt: number;
-[F91:13]|   completedAt?: number;
-[F91:14]|   expanded: boolean;
-[F91:15]|   totalWorkTime: number; // 累计工作时间（秒）
-[F91:16]| }
-[F91:17]| 
-[F91:18]| export interface Zone {
-[F91:19]|   id: string;
-[F91:20]|   name: string;
-[F91:21]|   color: string;
-[F91:22]|   order: number;
-[F91:23]|   createdAt: number;
-[F91:24]| }
-[F91:25]| 
-[F91:26]| // 历史工作区（替代原来的 Archive）
-[F91:27]| export interface HistoryWorkspace {
-[F91:28]|   id: string;
-[F91:29]|   name: string;
-[F91:30]|   summary: string;
-[F91:31]|   createdAt: number;
-[F91:32]|   lastModified: number;
-[F91:33]|   zones: Zone[];
-[F91:34]|   tasks: Task[];
-[F91:35]|   sessions: PomodoroSession[];
-[F91:36]| }
-[F91:37]| 
-[F91:38]| // 当前工作区
-[F91:39]| export interface CurrentWorkspace {
-[F91:40]|   id: string;
-[F91:41]|   name: string;
-[F91:42]|   zones: Zone[];
-[F91:43]|   tasks: Task[];
-[F91:44]|   sessions: PomodoroSession[];
-[F91:45]|   createdAt: number;
-[F91:46]|   lastModified: number;
-[F91:47]| }
-[F91:48]| 
-[F91:49]| export interface Template {
-[F91:50]|   id: string;
-[F91:51]|   name: string;
-[F91:52]|   description: string;
-[F91:53]|   icon: string;
-[F91:54]|   zones: Omit<Zone, 'id' | 'createdAt'>[];
-[F91:55]| }
-[F91:56]| 
-[F91:57]| export interface PomodoroSession {
-[F91:58]|   id: string;
-[F91:59]|   taskId: string;
-[F91:60]|   startTime: number;
-[F91:61]|   endTime?: number;
-[F91:62]|   completed: boolean;
-[F91:63]| }
-[F91:64]| 
-[F91:65]| export interface AppState {
-[F91:66]|   currentView: 'zones' | 'global' | 'history' | 'settings';
-[F91:67]|   activeZoneId: string | null;
-[F91:68]|   activeHistoryId: string | null; // 当前查看的历史工作区ID
-[F91:69]|   // 当前工作区
-[F91:70]|   currentWorkspace: CurrentWorkspace;
-[F91:71]|   // 历史工作区列表
-[F91:72]|   historyWorkspaces: HistoryWorkspace[];
-[F91:73]|   // 设置
-[F91:74]|   settings: {
-[F91:75]|     workDuration: number;
-[F91:76]|     breakDuration: number;
-[F91:77]|     longBreakDuration: number;
-[F91:78]|     autoStartBreak: boolean;
-[F91:79]|     soundEnabled: boolean;
-[F91:80]|     collapsed: boolean;
-[F91:81]|     collapsePosition: { x: number; y: number };
-[F91:82]|   };
-[F91:83]| }
-[F91:84]| 
-[F91:85]| export interface TimerState {
-[F91:86]|   mode: TimerMode;
-[F91:87]|   timeRemaining: number;
-[F91:88]|   isRunning: boolean;
-[F91:89]|   currentTaskId: string | null;
-[F91:90]|   currentSessionStartTime?: number; // 当前专注会话开始时间
-[F91:91]| }
-[F91:92]| 
-[F91:93]| // Predefined templates
-[F91:94]| export const PREDEFINED_TEMPLATES: Template[] = [
-[F91:95]|   {
-[F91:96]|     id: 'general',
-[F91:97]|     name: '通用',
-[F91:98]|     description: '基础的工作、生活、学习分区',
-[F91:99]|     icon: 'LayoutGrid',
-[F91:100]|     zones: [
-[F91:101]|       { name: '工作', color: '#3b82f6', order: 0 },
-[F91:102]|       { name: '学习', color: '#8b5cf6', order: 1 },
-[F91:103]|       { name: '生活', color: '#22c55e', order: 2 },
-[F91:104]|     ],
-[F91:105]|   },
-[F91:106]|   {
-[F91:107]|     id: 'project',
-[F91:108]|     name: '项目管理',
-[F91:109]|     description: '适合多项目并行管理',
-[F91:110]|     icon: 'FolderKanban',
-[F91:111]|     zones: [
-[F91:112]|       { name: '项目 A', color: '#f59e0b', order: 0 },
-[F91:113]|       { name: '项目 B', color: '#ec4899', order: 1 },
-[F91:114]|       { name: '项目 C', color: '#06b6d4', order: 2 },
-[F91:115]|       { name: '其他', color: '#6b7280', order: 3 },
-[F91:116]|     ],
-[F91:117]|   },
-[F91:118]|   {
-[F91:119]|     id: 'dev',
-[F91:120]|     name: '开发工作',
-[F91:121]|     description: '适合软件开发工作流',
-[F91:122]|     icon: 'Code',
-[F91:123]|     zones: [
-[F91:124]|       { name: '开发', color: '#3b82f6', order: 0 },
-[F91:125]|       { name: '测试', color: '#22c55e', order: 1 },
-[F91:126]|       { name: '文档', color: '#f59e0b', order: 2 },
-[F91:127]|       { name: 'Bug 修复', color: '#ef4444', order: 3 },
-[F91:128]|     ],
-[F91:129]|   },
-[F91:130]|   {
-[F91:131]|     id: 'blank',
-[F91:132]|     name: '空白',
-[F91:133]|     description: '从零开始创建',
-[F91:134]|     icon: 'FileX',
-[F91:135]|     zones: [],
-[F91:136]|   },
-[F91:137]| ];
-[F91:138]| 
-[F91:139]| // Predefined colors for zones
-[F91:140]| export const ZONE_COLORS = [
-[F91:141]|   '#3b82f6', // blue
-[F91:142]|   '#22c55e', // green
-[F91:143]|   '#f59e0b', // yellow
-[F91:144]|   '#ef4444', // red
-[F91:145]|   '#8b5cf6', // purple
-[F91:146]|   '#ec4899', // pink
-[F91:147]|   '#06b6d4', // cyan
-[F91:148]|   '#f97316', // orange
-[F91:149]|   '#6366f1', // indigo
-[F91:150]|   '#14b8a6', // teal
-[F91:151]|   '#84cc16', // lime
-[F91:152]|   '#6b7280', // gray
-[F91:153]| ];
-[F91:154]| 
-[F91:155]| // 默认设置
-[F91:156]| export const DEFAULT_SETTINGS = {
-[F91:157]|   workDuration: 25 * 60, // 25分钟
-[F91:158]|   breakDuration: 5 * 60, // 5分钟
-[F91:159]|   longBreakDuration: 15 * 60, // 15分钟
-[F91:160]|   autoStartBreak: false,
-[F91:161]|   soundEnabled: true,
-[F91:162]|   collapsed: false,
-[F91:163]|   collapsePosition: { x: 100, y: 100 },
-[F91:164]| };
-[F91:165]| 
-[F91:166]| // 格式化时间为可读字符串
-[F91:167]| export function formatDuration(seconds: number): string {
-[F91:168]|   const hours = Math.floor(seconds / 3600);
-[F91:169]|   const mins = Math.floor((seconds % 3600) / 60);
-[F91:170]|   
-[F91:171]|   if (hours > 0) {
-[F91:172]|     return `${hours}h ${mins}m`;
-[F91:173]|   }
-[F91:174]|   return `${mins}m`;
-[F91:175]| }
-[F91:176]| 
-[F91:177]| // 格式化时间为详细字符串
-[F91:178]| export function formatDurationDetailed(seconds: number): string {
-[F91:179]|   const hours = Math.floor(seconds / 3600);
-[F91:180]|   const mins = Math.floor((seconds % 3600) / 60);
-[F91:181]|   const secs = seconds % 60;
-[F91:182]|   
-[F91:183]|   if (hours > 0) {
-[F91:184]|     return `${hours}小时 ${mins}分 ${secs}秒`;
-[F91:185]|   }
-[F91:186]|   if (mins > 0) {
-[F91:187]|     return `${mins}分 ${secs}秒`;
-[F91:188]|   }
-[F91:189]|   return `${secs}秒`;
-[F91:190]| }
+[F91:4]| export function cn(...inputs: ClassValue[]) {
+[F91:5]|   return twMerge(clsx(inputs))
+[F91:6]| }
+
+================================================================================
+文件路径: src\types\index.ts(F92) (约合大小: 4 KB)
+================================================================================
+[F92:1]| export type TaskPriority = 'low' | 'medium' | 'high';
+[F92:2]| export type TaskUrgency = 'low' | 'medium' | 'high' | 'urgent';
+[F92:3]| export type TimerMode = 'work' | 'break' | 'longBreak' | 'idle';
+[F92:4]| export type GlobalViewSortMode = 'zone' | 'priority' | 'urgency' | 'weighted';
+[F92:5]| 
+[F92:6]| export interface SortConfig {
+[F92:7]|   mode: GlobalViewSortMode;
+[F92:8]|   priorityWeight: number;
+[F92:9]|   urgencyWeight: number;
+[F92:10]| }
+[F92:11]| 
+[F92:12]| // 内部剪贴板数据类型
+[F92:13]| export interface ClipboardData {
+[F92:14]|   type: 'task' | 'zone';
+[F92:15]|   data: Task | { zone: Zone; tasks: Task[] };
+[F92:16]|   timestamp: number;
+[F92:17]| }
+[F92:18]| 
+[F92:19]| export interface Task {
+[F92:20]|   id: string;
+[F92:21]|   zoneId: string;
+[F92:22]|   title: string;
+[F92:23]|   description: string;
+[F92:24]|   completed: boolean;
+[F92:25]|   priority: TaskPriority;
+[F92:26]|   urgency: TaskUrgency;
+[F92:27]|   order: number;
+[F92:28]|   createdAt: number;
+[F92:29]|   completedAt?: number;
+[F92:30]|   expanded: boolean;
+[F92:31]|   totalWorkTime: number; // 累计工作时间（秒）
+[F92:32]| }
+[F92:33]| 
+[F92:34]| export interface Zone {
+[F92:35]|   id: string;
+[F92:36]|   name: string;
+[F92:37]|   color: string;
+[F92:38]|   order: number;
+[F92:39]|   createdAt: number;
+[F92:40]| }
+[F92:41]| 
+[F92:42]| // 历史工作区（替代原来的 Archive）
+[F92:43]| export interface HistoryWorkspace {
+[F92:44]|   id: string;
+[F92:45]|   name: string;
+[F92:46]|   summary: string;
+[F92:47]|   createdAt: number;
+[F92:48]|   lastModified: number;
+[F92:49]|   zones: Zone[];
+[F92:50]|   tasks: Task[];
+[F92:51]|   sessions: PomodoroSession[];
+[F92:52]| }
+[F92:53]| 
+[F92:54]| // 当前工作区
+[F92:55]| export interface CurrentWorkspace {
+[F92:56]|   id: string;
+[F92:57]|   name: string;
+[F92:58]|   zones: Zone[];
+[F92:59]|   tasks: Task[];
+[F92:60]|   sessions: PomodoroSession[];
+[F92:61]|   createdAt: number;
+[F92:62]|   lastModified: number;
+[F92:63]| }
+[F92:64]| 
+[F92:65]| export interface Template {
+[F92:66]|   id: string;
+[F92:67]|   name: string;
+[F92:68]|   description: string;
+[F92:69]|   icon: string;
+[F92:70]|   zones: Omit<Zone, 'id' | 'createdAt'>[];
+[F92:71]| }
+[F92:72]| 
+[F92:73]| export interface PomodoroSession {
+[F92:74]|   id: string;
+[F92:75]|   taskId: string;
+[F92:76]|   startTime: number;
+[F92:77]|   endTime?: number;
+[F92:78]|   completed: boolean;
+[F92:79]| }
+[F92:80]| 
+[F92:81]| export interface AppState {
+[F92:82]|   currentView: 'zones' | 'global' | 'history' | 'settings';
+[F92:83]|   activeZoneId: string | null;
+[F92:84]|   activeHistoryId: string | null; // 当前查看的历史工作区ID
+[F92:85]|   // 当前工作区
+[F92:86]|   currentWorkspace: CurrentWorkspace;
+[F92:87]|   // 历史工作区列表
+[F92:88]|   historyWorkspaces: HistoryWorkspace[];
+[F92:89]|   // 设置
+[F92:90]|   settings: {
+[F92:91]|     workDuration: number;
+[F92:92]|     breakDuration: number;
+[F92:93]|     longBreakDuration: number;
+[F92:94]|     autoStartBreak: boolean;
+[F92:95]|     soundEnabled: boolean;
+[F92:96]|     collapsed: boolean;
+[F92:97]|     collapsePosition: { x: number; y: number };
+[F92:98]|     globalViewSort: SortConfig;
+[F92:99]|   };
+[F92:100]| }
+[F92:101]| 
+[F92:102]| export interface TimerState {
+[F92:103]|   mode: TimerMode;
+[F92:104]|   timeRemaining: number;
+[F92:105]|   isRunning: boolean;
+[F92:106]|   currentTaskId: string | null;
+[F92:107]|   currentSessionStartTime?: number; // 当前专注会话开始时间
+[F92:108]| }
+[F92:109]| 
+[F92:110]| // Predefined templates
+[F92:111]| export const PREDEFINED_TEMPLATES: Template[] = [
+[F92:112]|   {
+[F92:113]|     id: 'general',
+[F92:114]|     name: '通用',
+[F92:115]|     description: '基础的工作、生活、学习分区',
+[F92:116]|     icon: 'LayoutGrid',
+[F92:117]|     zones: [
+[F92:118]|       { name: '工作', color: '#3b82f6', order: 0 },
+[F92:119]|       { name: '学习', color: '#8b5cf6', order: 1 },
+[F92:120]|       { name: '生活', color: '#22c55e', order: 2 },
+[F92:121]|     ],
+[F92:122]|   },
+[F92:123]|   {
+[F92:124]|     id: 'project',
+[F92:125]|     name: '项目管理',
+[F92:126]|     description: '适合多项目并行管理',
+[F92:127]|     icon: 'FolderKanban',
+[F92:128]|     zones: [
+[F92:129]|       { name: '项目 A', color: '#f59e0b', order: 0 },
+[F92:130]|       { name: '项目 B', color: '#ec4899', order: 1 },
+[F92:131]|       { name: '项目 C', color: '#06b6d4', order: 2 },
+[F92:132]|       { name: '其他', color: '#6b7280', order: 3 },
+[F92:133]|     ],
+[F92:134]|   },
+[F92:135]|   {
+[F92:136]|     id: 'dev',
+[F92:137]|     name: '开发工作',
+[F92:138]|     description: '适合软件开发工作流',
+[F92:139]|     icon: 'Code',
+[F92:140]|     zones: [
+[F92:141]|       { name: '开发', color: '#3b82f6', order: 0 },
+[F92:142]|       { name: '测试', color: '#22c55e', order: 1 },
+[F92:143]|       { name: '文档', color: '#f59e0b', order: 2 },
+[F92:144]|       { name: 'Bug 修复', color: '#ef4444', order: 3 },
+[F92:145]|     ],
+[F92:146]|   },
+[F92:147]|   {
+[F92:148]|     id: 'blank',
+[F92:149]|     name: '空白',
+[F92:150]|     description: '从零开始创建',
+[F92:151]|     icon: 'FileX',
+[F92:152]|     zones: [],
+[F92:153]|   },
+[F92:154]| ];
+[F92:155]| 
+[F92:156]| // Predefined colors for zones
+[F92:157]| export const ZONE_COLORS = [
+[F92:158]|   '#3b82f6', // blue
+[F92:159]|   '#22c55e', // green
+[F92:160]|   '#f59e0b', // yellow
+[F92:161]|   '#ef4444', // red
+[F92:162]|   '#8b5cf6', // purple
+[F92:163]|   '#ec4899', // pink
+[F92:164]|   '#06b6d4', // cyan
+[F92:165]|   '#f97316', // orange
+[F92:166]|   '#6366f1', // indigo
+[F92:167]|   '#14b8a6', // teal
+[F92:168]|   '#84cc16', // lime
+[F92:169]|   '#6b7280', // gray
+[F92:170]| ];
+[F92:171]| 
+[F92:172]| // 默认设置
+[F92:173]| export const DEFAULT_SETTINGS = {
+[F92:174]|   workDuration: 25 * 60, // 25分钟
+[F92:175]|   breakDuration: 5 * 60, // 5分钟
+[F92:176]|   longBreakDuration: 15 * 60, // 15分钟
+[F92:177]|   autoStartBreak: false,
+[F92:178]|   soundEnabled: true,
+[F92:179]|   collapsed: false,
+[F92:180]|   collapsePosition: { x: 100, y: 100 },
+[F92:181]|   globalViewSort: {
+[F92:182]|     mode: 'zone' as GlobalViewSortMode,
+[F92:183]|     priorityWeight: 0.4,
+[F92:184]|     urgencyWeight: 0.6,
+[F92:185]|   },
+[F92:186]| };
+[F92:187]| 
+[F92:188]| // 格式化时间为可读字符串
+[F92:189]| export function formatDuration(seconds: number): string {
+[F92:190]|   const hours = Math.floor(seconds / 3600);
+[F92:191]|   const mins = Math.floor((seconds % 3600) / 60);
+[F92:192]|   
+[F92:193]|   if (hours > 0) {
+[F92:194]|     return `${hours}h ${mins}m`;
+[F92:195]|   }
+[F92:196]|   return `${mins}m`;
+[F92:197]| }
+[F92:198]| 
+[F92:199]| // 格式化时间为详细字符串
+[F92:200]| export function formatDurationDetailed(seconds: number): string {
+[F92:201]|   const hours = Math.floor(seconds / 3600);
+[F92:202]|   const mins = Math.floor((seconds % 3600) / 60);
+[F92:203]|   const secs = seconds % 60;
+[F92:204]|   
+[F92:205]|   if (hours > 0) {
+[F92:206]|     return `${hours}小时 ${mins}分 ${secs}秒`;
+[F92:207]|   }
+[F92:208]|   if (mins > 0) {
+[F92:209]|     return `${mins}分 ${secs}秒`;
+[F92:210]|   }
+[F92:211]|   return `${secs}秒`;
+[F92:212]| }
 
 ## 统计信息
-- 包含文件数: 91
-- 总大小: 318 KB
+- 包含文件数: 92
+- 总大小: 349 KB

@@ -120,7 +120,7 @@ export function FloatWindow({ children, onCollapse }: FloatWindowProps) {
       >
         <div className="drag-handle" style={{ pointerEvents: 'none' }}>
           <GripHorizontal size={14} className="text-white/50" />
-          <span className="title-text">浮动待办</span>
+          <span className="title-text">Focus Flow</span>
         </div>
         <div className="window-controls no-drag" data-tauri-drag-region="false">
           <button

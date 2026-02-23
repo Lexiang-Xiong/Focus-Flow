@@ -1759,7 +1759,7 @@
   transform: translateX(-50%);
   width: 24px;
   height: 16px;
-  background: rgba(25, 25, 35, 0.5);
+  background: rgba(25, 25, 35, 0.01);
   border-radius: 0 0 8px 8px;
   display: flex;
   align-items: center;
@@ -1806,12 +1806,13 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.01);
   border-radius: 8px;
 }
 
 .float-timer-icon {
-  color: var(--accent-color, #6366f1);
+  /* color: var(--accent-color, #6366f1); */
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .float-timer-text {
@@ -1834,7 +1835,7 @@
   height: 32px;
   border-radius: 8px;
   border: none;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   display: flex;
@@ -1844,7 +1845,7 @@
 }
 
 .float-action-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.5);
   color: rgba(255, 255, 255, 1);
 }
 
@@ -1858,12 +1859,12 @@
 }
 
 .float-action-btn.expand {
-  background: rgba(99, 102, 241, 0.5);
-  color: #818cf8;
+  background: rgba(0, 0, 0, 0.2);
+  /* color: #818cf8; */
 }
 
 .float-action-btn.expand:hover {
-  background: rgba(99, 102, 241, 0.8);
+  background: rgba(0, 0, 0, 0.5);
 }
 
 /* 独立浮动球窗口样式 */

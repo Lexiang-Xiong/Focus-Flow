@@ -12,7 +12,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "浮动待办",
+        "title": "Focus Flow",
         "width": 750,
         "height": 650,
         "minWidth": 300,

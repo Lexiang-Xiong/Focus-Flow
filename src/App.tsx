@@ -238,7 +238,7 @@ function App() {
 
   // 窗口尺寸常量
   const NORMAL_SIZE = { width: 750, height: 650 };
-  const COLLAPSED_SIZE = { width: 280, height: 80 };
+  const COLLAPSED_SIZE = { width: 280, height: 40 };
 
   const handleToggleCollapse = useCallback(async () => {
     const willCollapse = !data.settings.collapsed;
