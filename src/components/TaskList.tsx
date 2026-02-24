@@ -207,7 +207,8 @@ export function TaskList({
   // 计算当前焦点的根任务
   const focusedRootTasks = useMemo(() => {
     if (!focusedTaskId) return incompleteTasks;
-    return flattenedTasks.filter(t => t.parentId === focusedTaskId);
+    // 直接使用完整扁平化数组，flattenedTasks 已经包含了所有应该显示的后代任务
+    return flattenedTasks;
   }, [flattenedTasks, focusedTaskId, incompleteTasks]);
 
   // 显示的任务列表

@@ -343,6 +343,39 @@ export function GlobalView({
     );
   };
 
+  // Recursively render task with children for focused mode (always expand)
+  const renderFocusedTaskWithChildren = (task: Task, depth: number): React.ReactNode => {
+    const taskChildren = getChildTasks(task.id);
+    const hasKids = taskChildren.length > 0;
+    const showChildren = !task.isCollapsed;
+
+    return (
+      <div
+        key={task.id}
+        className="task-tree-item"
+        style={{ paddingLeft: depth > 0 ? `${depth * 24}px` : undefined }}
+      >
+        <TaskItem
+          task={task}
+          zoneColor={getZoneColor(task.zoneId)}
+          isActive={task.id === activeTaskId}
+          isTimerRunning={isTimerRunning && task.id === activeTaskId}
+          onToggle={onToggleTask}
+          onDelete={onDeleteTask}
+          onUpdate={onUpdateTask}
+          onToggleExpanded={onToggleExpanded}
+          onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
+          onSelect={onSelectTask}
+          onZoomIn={(id) => setFocusedTaskId(id)}
+          hasChildren={hasKids}
+          depth={depth}
+          isDraggable={false}
+        />
+        {showChildren && taskChildren.map((child) => renderFocusedTaskWithChildren(child, depth + 1))}
+      </div>
+    );
+  };
+
   // Recursively render task with children for sorting modes (respecting viewDepth)
   const renderTaskWithDepth = (task: Task, currentDepth: number): React.ReactNode => {
     const taskChildren = getChildTasks(task.id);
@@ -509,25 +542,7 @@ export function GlobalView({
           {/* Focused task view - show only children of focused task */}
           {focusedTaskId && focusedRootTasks && focusedRootTasks.length > 0 ? (
             <div className="focused-task-view">
-              {focusedRootTasks.map((task) => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  zoneColor={getZoneColor(task.zoneId)}
-                  isActive={task.id === activeTaskId}
-                  isTimerRunning={isTimerRunning && task.id === activeTaskId}
-                  onToggle={onToggleTask}
-                  onDelete={onDeleteTask}
-                  onUpdate={onUpdateTask}
-                  onToggleExpanded={onToggleExpanded}
-                  onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
-                  onSelect={onSelectTask}
-                  onZoomIn={(id) => setFocusedTaskId(id)}
-                  hasChildren={tasks.some(t => t.parentId === task.id)}
-                  depth={0}
-                  isDraggable={false}
-                />
-              ))}
+              {focusedRootTasks.map((task) => renderFocusedTaskWithChildren(task, 0))}
             </div>
           ) : focusedTaskId && focusedRootTasks && focusedRootTasks.length === 0 ? (
             <div className="empty-state">

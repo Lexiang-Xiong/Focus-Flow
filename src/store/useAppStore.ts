@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Task, Zone, AppState, TaskPriority, TaskUrgency, HistoryWorkspace } from '@/types';
 import { DEFAULT_SETTINGS, PREDEFINED_TEMPLATES } from '@/types';
+import { sqliteStorage } from '@/lib/storage-adapter';
 
 // 定义 Store 的接口
 interface AppStore extends AppState {
@@ -439,8 +440,8 @@ export const useAppStore = create<AppStore>()(
       })),
     }),
     {
-      name: 'focus-flow-storage-v4', // 新的存储 key，与旧版隔离
-      storage: createJSONStorage(() => localStorage),
+      name: 'focus-flow-storage-v4', // 保持 Key 不变，以便适配器能找到旧数据进行迁移
+      storage: createJSONStorage(() => sqliteStorage),
     }
   )
 );
