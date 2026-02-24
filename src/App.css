@@ -2520,6 +2520,44 @@
   border-radius: 12px;
 }
 
+/* 对话框标题样式修复 */
+.history-dialog [data-slot="dialog-title"],
+.template-dialog [data-slot="dialog-title"] {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* 对话框关闭按钮样式修复 */
+.history-dialog [data-slot="dialog-close"],
+.template-dialog [data-slot="dialog-close"] {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.history-dialog [data-slot="dialog-close"]:hover,
+.template-dialog [data-slot="dialog-close"]:hover {
+  color: rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 对话框内的输入框样式修复 */
+.history-dialog input,
+.template-dialog input {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.history-dialog input::placeholder,
+.template-dialog input::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.history-dialog input:focus,
+.template-dialog input:focus {
+  border-color: rgba(139, 92, 246, 0.8) !important;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
+  outline: none !important;
+}
+
 .history-form {
   display: flex;
   flex-direction: column;
