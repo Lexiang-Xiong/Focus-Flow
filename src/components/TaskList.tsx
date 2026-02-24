@@ -54,7 +54,7 @@ export function TaskList({
   onSelectTask,
   onClearCompleted,
 }: TaskListProps) {
-  const { moveTaskNode } = useAppStore();
+  const { moveTaskNode, expandTask } = useAppStore();
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
@@ -65,6 +65,12 @@ export function TaskList({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+  const [addingSubtaskParentId, setAddingSubtaskParentId] = useState<string | null>(null);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+  const [newSubtaskDescription, setNewSubtaskDescription] = useState('');
+  const [subtaskPriority, setSubtaskPriority] = useState<TaskPriority>('medium');
+  const [subtaskUrgency, setSubtaskUrgency] = useState<TaskUrgency>('low');
+  const subtaskInputRef = useRef<HTMLInputElement>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -72,10 +78,10 @@ export function TaskList({
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
 
-  // 使用扁平化任务列表
+  // 使用扁平化任务列表（支持聚焦模式）
   const flattenedTasks = useMemo(() =>
-    getFlattenedTasks(tasks, zone?.id || null),
-    [tasks, zone?.id]
+    getFlattenedTasks(tasks, zone?.id || null, focusedTaskId),
+    [tasks, zone?.id, focusedTaskId]
   );
 
   // 分离未完成和已完成任务
@@ -105,19 +111,20 @@ export function TaskList({
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+    const { active, over, delta } = event;
     setActiveId(null);
     setOverId(null);
 
-    if (over && active.id !== over.id) {
+    if (over && active.id !== over.id && zone) {
+      // 计算新位置
       const result = calculateNewPosition(
         flattenedTasks,
         active.id as string,
         over.id as string,
-        event.delta.x
+        delta.x
       );
-      if (result && zone) {
-        moveTaskNode(active.id as string, result.newParentId, result.overIndex, zone.id);
+      if (result) {
+        moveTaskNode(active.id as string, result.newParentId, result.anchorId, zone.id);
       }
     }
   };
@@ -135,6 +142,45 @@ export function TaskList({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleAddTask();
+    }
+  };
+
+  // 处理点击添加子任务按钮 - 展开父任务并显示输入框
+  const handleAddSubtaskClick = (parentId: string) => {
+    expandTask(parentId); // 展开父任务
+    setAddingSubtaskParentId(parentId); // 显示添加子任务输入框
+    setNewSubtaskTitle('');
+    setNewSubtaskDescription('');
+    setSubtaskPriority('medium'); // 重置优先级
+    setSubtaskUrgency('low');     // 重置紧急度
+    setTimeout(() => subtaskInputRef.current?.focus(), 0);
+  };
+
+  // 处理添加子任务
+  const handleAddSubtask = () => {
+    if (newSubtaskTitle.trim() && addingSubtaskParentId && zone) {
+      onAddTask(zone.id, newSubtaskTitle.trim(), newSubtaskDescription.trim(), subtaskPriority, subtaskUrgency, addingSubtaskParentId);
+      setNewSubtaskTitle('');
+      setNewSubtaskDescription('');
+      // 保持输入框焦点，方便连续添加
+      setTimeout(() => subtaskInputRef.current?.focus(), 0);
+    }
+  };
+
+  // 处理取消添加子任务
+  const handleCancelAddSubtask = () => {
+    setAddingSubtaskParentId(null);
+    setNewSubtaskTitle('');
+    setNewSubtaskDescription('');
+  };
+
+  // 处理子任务输入框按键事件
+  const handleSubtaskKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAddSubtask();
+    } else if (e.key === 'Escape') {
+      handleCancelAddSubtask();
     }
   };
 
@@ -332,24 +378,100 @@ export function TaskList({
                   strategy={verticalListSortingStrategy}
                 >
                   {displayTasks.map((task) => (
-                    <TaskItem
-                      key={task.id}
-                      task={task}
-                      zoneColor={getZoneColor(task.zoneId)}
-                      isActive={task.id === activeTaskId}
-                      isTimerRunning={isTimerRunning && task.id === activeTaskId}
-                      isDragOver={task.id === overId}
-                      onToggle={onToggleTask}
-                      onDelete={onDeleteTask}
-                      onUpdate={onUpdateTask}
-                      onToggleExpanded={onToggleExpanded}
-                      onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
-                      onZoomIn={(id) => setFocusedTaskId(id)}
-                      onSelect={onSelectTask}
-                      hasChildren={checkHasChildren(task.id)}
-                      depth={(task as FlattenedTask).depth}
-                      isDraggable={true}
-                    />
+                    <React.Fragment key={task.id}>
+                      <TaskItem
+                        task={task}
+                        zoneColor={getZoneColor(task.zoneId)}
+                        isActive={task.id === activeTaskId}
+                        isTimerRunning={isTimerRunning && task.id === activeTaskId}
+                        isDragOver={task.id === overId}
+                        onToggle={onToggleTask}
+                        onDelete={onDeleteTask}
+                        onUpdate={onUpdateTask}
+                        onToggleExpanded={onToggleExpanded}
+                        onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
+                        onAddSubtask={() => handleAddSubtaskClick(task.id)}
+                        onZoomIn={(id) => setFocusedTaskId(id)}
+                        onSelect={onSelectTask}
+                        hasChildren={checkHasChildren(task.id)}
+                        depth={(task as FlattenedTask).depth}
+                        isDraggable={true}
+                      />
+                      {/* 添加子任务输入框 - 完整表单 */}
+                      {addingSubtaskParentId === task.id && (
+                        <div
+                          className="relative mt-1 mb-2 pr-2"
+                          style={{ paddingLeft: `${((task as FlattenedTask).depth + 1) * 24 + 8}px` }}
+                        >
+                          <div className="flex flex-col gap-2 p-3 rounded-lg border border-white/10 bg-white/5 shadow-inner">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1">
+                                <Input
+                                  ref={subtaskInputRef}
+                                  value={newSubtaskTitle}
+                                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                                  onKeyDown={handleSubtaskKeyDown}
+                                  placeholder="子任务标题..."
+                                  className="h-8 text-sm text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30"
+                                  autoFocus
+                                />
+                              </div>
+                              <Button
+                                size="icon"
+                                className="h-7 w-7 bg-blue-600 hover:bg-blue-500 text-white rounded-md shrink-0"
+                                onClick={handleAddSubtask}
+                                disabled={!newSubtaskTitle.trim()}
+                              >
+                                <Plus size={14} />
+                              </Button>
+                            </div>
+                            {/* 描述输入框 */}
+                            <Input
+                              value={newSubtaskDescription}
+                              onChange={(e) => setNewSubtaskDescription(e.target.value)}
+                              onKeyDown={handleSubtaskKeyDown}
+                              placeholder="描述（可选，Shift+Enter 换行）..."
+                              className="h-7 text-sm text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30"
+                            />
+                            {/* 子任务也支持优先级设置 */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="priority-selector">
+                                  {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
+                                    <button
+                                      key={p}
+                                      className={`priority-btn ${subtaskPriority === p ? 'active' : ''} priority-${p}`}
+                                      onClick={() => setSubtaskPriority(p)}
+                                    >
+                                      <div className={`priority-dot ${p}`} />
+                                    </button>
+                                  ))}
+                                </div>
+                                <div className="urgency-selector">
+                                  {(['urgent', 'high', 'medium', 'low'] as TaskUrgency[]).map((u) => (
+                                    <button
+                                      key={u}
+                                      className={`urgency-btn ${subtaskUrgency === u ? 'active' : ''} urgency-${u}`}
+                                      onClick={() => setSubtaskUrgency(u)}
+                                    >
+                                      <Zap size={10} />
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 text-xs text-white/40 hover:text-white/80 px-2"
+                                onClick={handleCancelAddSubtask}
+                              >
+                                取消
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </React.Fragment>
                   ))}
                 </SortableContext>
 

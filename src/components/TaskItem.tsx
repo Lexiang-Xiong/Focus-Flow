@@ -195,7 +195,7 @@ export function TaskItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`task-item ${task.completed ? 'completed' : ''} ${isActive ? 'active' : ''} ${isTimerRunning && isActive ? 'working' : ''} ${depth > 0 ? 'subtask' : ''} ${isDragOver ? 'drag-over' : ''}`}
+      className={`task-item group relative ${task.completed ? 'completed' : ''} ${isActive ? 'active' : ''} ${isTimerRunning && isActive ? 'working' : ''} ${depth > 0 ? 'subtask' : ''} ${isDragOver ? 'drag-over' : ''}`}
       onClick={() => {
         // 点击任务项的空白区域时触发选择
         if (!isEditing) {
@@ -203,6 +203,18 @@ export function TaskItem({
         }
       }}
     >
+      {/* 极简视觉引导 - 左侧分区颜色条：hover/激活时显示 */}
+      <div
+        className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-sm transition-opacity duration-200"
+        style={{
+          backgroundColor: zoneColor,
+          opacity: isActive || isTimerRunning ? 1 : 0,
+        }}
+      />
+      <div
+        className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-sm bg-white/20 transition-opacity duration-200 group-hover:opacity-100 opacity-0 pointer-events-none"
+      />
+
       {/* Drag Handle */}
       {isDraggable ? (
         <div className="task-drag-handle" {...attributes} {...listeners}>
@@ -230,17 +242,19 @@ export function TaskItem({
 
       {/* Subtask Buttons Container - vertically stacked */}
       <div className="subtask-buttons-container">
-        {/* Add Subtask Button */}
-        <button
-          className="add-subtask-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            onAddSubtask?.(task.id);
-          }}
-          title="添加子任务"
-        >
-          <Plus size={12} />
-        </button>
+        {/* Add Subtask Button - 只在传递了onAddSubtask回调时显示 */}
+        {onAddSubtask && (
+          <button
+            className="add-subtask-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddSubtask?.(task.id);
+            }}
+            title="添加子任务"
+          >
+            <Plus size={12} />
+          </button>
+        )}
 
         {/* Subtask Toggle Button */}
         {hasChildren && (

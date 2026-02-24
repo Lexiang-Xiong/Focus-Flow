@@ -14,7 +14,9 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { ArrowLeft, CheckCircle2, Globe, ArrowUpDown, Zap, Flag, ChevronDown, ChevronRight, ArrowUp, Layers } from 'lucide-react';
+import React from 'react';
+import { ArrowLeft, CheckCircle2, Globe, ArrowUpDown, Zap, Flag, ChevronDown, ChevronRight, ArrowUp, Layers, Home } from 'lucide-react';
+import { getFlattenedTasks } from '@/lib/tree-utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -63,7 +65,8 @@ export function GlobalView({
   onSortConfigChange,
 }: GlobalViewProps) {
   const [showCompleted, setShowCompleted] = useState(false);
-  const [viewDepth, setViewDepth] = useState(1); // For sorting modes: how many levels to expand
+  const [viewDepth, setViewDepth] = useState(2); // For sorting modes: how many levels to expand (默认展开2层)
+  const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -234,6 +237,29 @@ export function GlobalView({
 
   const completedTasks = tasks.filter((t) => t.completed);
 
+  // 使用 getFlattenedTasks 支持聚焦模式
+  const flattenedTasks = useMemo(() => {
+    return getFlattenedTasks(tasks, null, focusedTaskId);
+  }, [tasks, focusedTaskId]);
+
+  // 计算 breadcrumbs
+  const breadcrumbs = useMemo(() => {
+    if (!focusedTaskId) return [];
+    const path: Task[] = [];
+    let current = tasks.find((t) => t.id === focusedTaskId);
+    while (current) {
+      path.unshift(current);
+      current = current.parentId ? tasks.find((t) => t.id === current!.parentId) : undefined;
+    }
+    return path;
+  }, [tasks, focusedTaskId]);
+
+  // 计算当前焦点的根任务
+  const focusedRootTasks = useMemo(() => {
+    if (!focusedTaskId) return null;
+    return flattenedTasks.filter(t => t.parentId === focusedTaskId);
+  }, [flattenedTasks, focusedTaskId]);
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -308,6 +334,7 @@ export function GlobalView({
           onToggleExpanded={onToggleExpanded}
           onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
           onSelect={onSelectTask}
+          onZoomIn={(id) => setFocusedTaskId(id)}
           hasChildren={hasKids}
           depth={depth}
         />
@@ -339,6 +366,7 @@ export function GlobalView({
           onToggleExpanded={onToggleExpanded}
           onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
           onSelect={onSelectTask}
+          onZoomIn={(id) => setFocusedTaskId(id)}
           hasChildren={hasKids}
           depth={currentDepth}
           isDraggable={sortConfig.mode === 'zone' && currentDepth === 0}
@@ -370,7 +398,7 @@ export function GlobalView({
             value={sortConfig.mode}
             onValueChange={(value: GlobalViewSortMode) => {
               onSortConfigChange({ ...sortConfig, mode: value });
-              setViewDepth(1); // Reset depth when changing mode
+              // 保留用户之前的展开层级习惯
             }}
           >
             <SelectTrigger className="sort-select-trigger">
@@ -409,7 +437,7 @@ export function GlobalView({
       </div>
 
       {/* Depth Controls for sorting modes */}
-      {sortConfig.mode !== 'zone' && maxTreeDepth > 0 && (
+      {sortConfig.mode !== 'zone' && maxTreeDepth > 0 && !focusedTaskId && (
         <div className="depth-controls">
           <span className="depth-label">展开层级:</span>
           <Button
@@ -452,10 +480,61 @@ export function GlobalView({
         </div>
       )}
 
+      {/* Breadcrumb Navigation for focused task */}
+      {focusedTaskId && (
+        <div className="flex items-center gap-1.5 px-1 py-2 mb-2 text-xs text-white/50 overflow-x-auto whitespace-nowrap border-b border-white/5">
+          <button
+            onClick={() => setFocusedTaskId(null)}
+            className="hover:text-white flex items-center gap-1 transition-colors"
+          >
+            <Home size={12} /> 全局
+          </button>
+          {breadcrumbs.map((crumb) => (
+            <React.Fragment key={crumb.id}>
+              <ChevronRight size={12} className="opacity-50" />
+              <button
+                onClick={() => setFocusedTaskId(crumb.id)}
+                className={`hover:text-white transition-colors ${crumb.id === focusedTaskId ? 'text-blue-400 font-medium' : ''}`}
+              >
+                {crumb.title}
+              </button>
+            </React.Fragment>
+          ))}
+        </div>
+      )}
+
       {/* Task List */}
       <ScrollArea className="task-scroll-area">
         <div className="tasks-container">
-          {rootTasks.length === 0 && completedTasks.length === 0 ? (
+          {/* Focused task view - show only children of focused task */}
+          {focusedTaskId && focusedRootTasks && focusedRootTasks.length > 0 ? (
+            <div className="focused-task-view">
+              {focusedRootTasks.map((task) => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  zoneColor={getZoneColor(task.zoneId)}
+                  isActive={task.id === activeTaskId}
+                  isTimerRunning={isTimerRunning && task.id === activeTaskId}
+                  onToggle={onToggleTask}
+                  onDelete={onDeleteTask}
+                  onUpdate={onUpdateTask}
+                  onToggleExpanded={onToggleExpanded}
+                  onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
+                  onSelect={onSelectTask}
+                  onZoomIn={(id) => setFocusedTaskId(id)}
+                  hasChildren={tasks.some(t => t.parentId === task.id)}
+                  depth={0}
+                  isDraggable={false}
+                />
+              ))}
+            </div>
+          ) : focusedTaskId && focusedRootTasks && focusedRootTasks.length === 0 ? (
+            <div className="empty-state">
+              <p>该任务下暂无子任务</p>
+              <p className="empty-hint">点击标题可进入子任务视图</p>
+            </div>
+          ) : rootTasks.length === 0 && completedTasks.length === 0 ? (
             <div className="empty-state">
               <Globe size={48} className="empty-icon" />
               <p>暂无任务</p>

@@ -27,7 +27,8 @@ interface AppStore extends AppState {
   clearCompleted: (zoneId?: string) => void;
   toggleExpanded: (id: string) => void;
   toggleSubtasksCollapsed: (id: string) => void;
-  moveTaskNode: (activeId: string, newParentId: string | null, targetIndex: number, zoneId: string) => void;
+  expandTask: (id: string) => void;
+  moveTaskNode: (activeId: string, newParentId: string | null, anchorId: string | null, zoneId: string) => void;
 
   // History Actions
   archiveCurrentWorkspace: (name?: string, summary?: string) => string;
@@ -283,7 +284,19 @@ export const useAppStore = create<AppStore>()(
         }
       })),
 
-      moveTaskNode: (activeId, newParentId, targetIndex, zoneId) => set((state) => {
+      // 展开任务（用于添加子任务时强制展开父节点）
+      expandTask: (id) => set((state) => ({
+        currentWorkspace: {
+          ...state.currentWorkspace,
+          tasks: state.currentWorkspace.tasks.map(t =>
+            t.id === id ? { ...t, isCollapsed: false } : t
+          ),
+          lastModified: Date.now()
+        }
+      })),
+
+      // 使用锚点定位法移动任务节点
+      moveTaskNode: (activeId, newParentId, anchorId, zoneId) => set((state) => {
         const allTasks = [...state.currentWorkspace.tasks];
         const activeTask = allTasks.find(t => t.id === activeId);
         if (!activeTask) return state;
@@ -292,15 +305,24 @@ export const useAppStore = create<AppStore>()(
         activeTask.parentId = newParentId;
         activeTask.zoneId = zoneId;
 
-        // 2. 获取该父级下的所有兄弟节点，重新排序
+        // 2. 获取该父级下的所有兄弟节点
         const siblings = allTasks
           .filter(t => t.zoneId === zoneId && t.parentId === newParentId && t.id !== activeId)
           .sort((a, b) => a.order - b.order);
 
-        // 将当前任务插入到合适的位置
-        siblings.splice(targetIndex, 0, activeTask);
+        // 3. 根据锚点插入任务
+        if (anchorId) {
+          const anchorIdx = siblings.findIndex(t => t.id === anchorId);
+          if (anchorIdx !== -1) {
+            siblings.splice(anchorIdx + 1, 0, activeTask);
+          } else {
+            siblings.push(activeTask);
+          }
+        } else {
+          siblings.unshift(activeTask); // 没有锚点说明排第一
+        }
 
-        // 3. 批量更新 order
+        // 4. 批量更新 order
         siblings.forEach((t, idx) => {
           t.order = idx;
         });
