@@ -13,6 +13,7 @@ interface TaskItemProps {
   zoneColor: string;
   isActive: boolean;
   isTimerRunning: boolean;
+  isDragOver?: boolean;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: Partial<Omit<Task, 'id'>>) => void;
@@ -31,6 +32,7 @@ export function TaskItem({
   zoneColor,
   isActive,
   isTimerRunning,
+  isDragOver = false,
   onToggle,
   onDelete,
   onUpdate,
@@ -70,6 +72,8 @@ export function TaskItem({
     transform: isDraggable ? CSS.Transform.toString(transform) : undefined,
     transition: isDraggable ? transition : undefined,
     opacity: isDragging ? 0.5 : 1,
+    // 通过 paddingLeft 实现缩进
+    paddingLeft: `${depth * 24}px`,
   };
 
   const handleSave = () => {
@@ -191,7 +195,7 @@ export function TaskItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`task-item ${task.completed ? 'completed' : ''} ${isActive ? 'active' : ''} ${isTimerRunning && isActive ? 'working' : ''} ${depth > 0 ? 'subtask' : ''}`}
+      className={`task-item ${task.completed ? 'completed' : ''} ${isActive ? 'active' : ''} ${isTimerRunning && isActive ? 'working' : ''} ${depth > 0 ? 'subtask' : ''} ${isDragOver ? 'drag-over' : ''}`}
       onClick={() => {
         // 点击任务项的空白区域时触发选择
         if (!isEditing) {

@@ -1,17 +1,16 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   DndContext,
-  closestCenter,
-  KeyboardSensor,
+  DragOverlay,
   PointerSensor,
   useSensor,
   useSensors,
+  type DragStartEvent,
   type DragEndEvent,
+  defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 import {
-  arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { Plus, CheckCircle2, Circle, Trash2, ChevronDown, Zap, ChevronRight, Home } from 'lucide-react';
@@ -20,6 +19,8 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TaskItem } from './TaskItem';
 import type { Task, TaskPriority, TaskUrgency, Zone } from '@/types';
+import { useAppStore } from '@/store/useAppStore';
+import { getFlattenedTasks, calculateNewPosition, type FlattenedTask } from '@/lib/tree-utils';
 
 interface TaskListProps {
   zone: Zone | null;
@@ -50,54 +51,102 @@ export function TaskList({
   onUpdateTask,
   onToggleExpanded,
   onToggleSubtasksCollapsed,
-  onReorderTasks,
   onSelectTask,
   onClearCompleted,
 }: TaskListProps) {
+  const { moveTaskNode } = useAppStore();
+
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [selectedPriority, setSelectedPriority] = useState<TaskPriority>('medium');
   const [selectedUrgency, setSelectedUrgency] = useState<TaskUrgency>('low');
   const [showCompleted, setShowCompleted] = useState(false);
   const [isAddingTask, setIsAddingTask] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
 
-  // Reset focusedTaskId when zone changes
-  useEffect(() => {
-    setFocusedTaskId(null);
-  }, [zone?.id]);
-
-  // For adding subtask
-  const [addingSubtaskParentId, setAddingSubtaskParentId] = useState<string | null>(null);
-  const [subtaskTitle, setSubtaskTitle] = useState('');
-  const [subtaskPriority, setSubtaskPriority] = useState<TaskPriority>('medium');
-  const [subtaskUrgency, setSubtaskUrgency] = useState<TaskUrgency>('low');
   const inputRef = useRef<HTMLInputElement>(null);
-  const subtaskInputRef = useRef<HTMLInputElement>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
 
-  // Get root tasks (no parent or undefined parent - for backward compatibility)
-  // Supports focused mode: when focusedTaskId is set, show only that task's children
-  const rootTasks = useMemo(() => {
-    if (focusedTaskId) {
-      // Focused mode: show focused task's direct children as root
-      return tasks
-        .filter((t) => t.parentId === focusedTaskId)
-        .sort((a, b) => a.order - b.order);
-    }
-    // Normal mode: show zone's root tasks
-    return tasks
-      .filter((t) => t.zoneId === zone?.id && (t.parentId === null || t.parentId === undefined))
-      .sort((a, b) => a.order - b.order);
-  }, [tasks, zone, focusedTaskId]);
+  // 使用扁平化任务列表
+  const flattenedTasks = useMemo(() =>
+    getFlattenedTasks(tasks, zone?.id || null),
+    [tasks, zone?.id]
+  );
 
-  // Calculate breadcrumbs for focused mode
+  // 分离未完成和已完成任务
+  const incompleteTasks = useMemo(() =>
+    flattenedTasks.filter(t => !t.completed),
+    [flattenedTasks]
+  );
+
+  const completedTasks = useMemo(() =>
+    flattenedTasks.filter(t => t.completed),
+    [flattenedTasks]
+  );
+
+  const activeItem = activeId ? flattenedTasks.find(t => t.id === activeId) : null;
+
+  const getZoneColor = (zoneId: string) => {
+    const z = zones.find((z) => z.id === zoneId);
+    return z?.color || '#6b7280';
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragOver = (event: { over: { id: string | number } | null }) => {
+    setOverId(event.over?.id as string | null);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    setOverId(null);
+
+    if (over && active.id !== over.id) {
+      const result = calculateNewPosition(
+        flattenedTasks,
+        active.id as string,
+        over.id as string,
+        event.delta.x
+      );
+      if (result && zone) {
+        moveTaskNode(active.id as string, result.newParentId, result.overIndex, zone.id);
+      }
+    }
+  };
+
+  const handleAddTask = () => {
+    if (newTaskTitle.trim() && zone) {
+      onAddTask(zone.id, newTaskTitle.trim(), newTaskDescription.trim(), selectedPriority, selectedUrgency, null);
+      setNewTaskTitle('');
+      setNewTaskDescription('');
+      inputRef.current?.focus();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAddTask();
+    }
+  };
+
+  const stats = {
+    total: tasks.filter((t) => t.zoneId === zone?.id).length,
+    completed: completedTasks.length,
+    pending: incompleteTasks.length,
+    completionRate: 0,
+  };
+  stats.completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+
+  // 计算 breadcrumbs
   const breadcrumbs = useMemo(() => {
     if (!focusedTaskId) return [];
     const path: Task[] = [];
@@ -109,209 +158,18 @@ export function TaskList({
     return path;
   }, [tasks, focusedTaskId]);
 
-  const incompleteTasks = tasks.filter((t) => !t.completed && t.zoneId === zone?.id);
-  const completedTasks = tasks.filter((t) => t.completed && t.zoneId === zone?.id);
+  // 计算当前焦点的根任务
+  const focusedRootTasks = useMemo(() => {
+    if (!focusedTaskId) return incompleteTasks;
+    return flattenedTasks.filter(t => t.parentId === focusedTaskId);
+  }, [flattenedTasks, focusedTaskId, incompleteTasks]);
 
-  // Build task tree structure
-  const getChildTasks = (parentId: string): Task[] => {
-    return tasks
-      .filter((t) => t.parentId === parentId)
-      .sort((a, b) => a.order - b.order);
-  };
+  // 显示的任务列表
+  const displayTasks = focusedTaskId ? focusedRootTasks : incompleteTasks;
 
-  const handleAddTask = () => {
-    if (newTaskTitle.trim() && zone) {
-      // In focused mode, add as child of focused task; otherwise add as root task
-      const parentId = focusedTaskId;
-      onAddTask(zone.id, newTaskTitle.trim(), newTaskDescription.trim(), selectedPriority, selectedUrgency, parentId);
-      setNewTaskTitle('');
-      setNewTaskDescription('');
-      inputRef.current?.focus();
-    }
-  };
-
-  const handleAddSubtask = (parentId: string) => {
-    if (subtaskTitle.trim() && zone) {
-      onAddTask(zone.id, subtaskTitle.trim(), '', subtaskPriority, subtaskUrgency, parentId);
-      setSubtaskTitle('');
-      setSubtaskPriority('medium');
-      setSubtaskUrgency('low');
-      setAddingSubtaskParentId(null);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleAddTask();
-    }
-  };
-
-  const handleSubtaskKeyDown = (e: React.KeyboardEvent, parentId: string) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleAddSubtask(parentId);
-    } else if (e.key === 'Escape') {
-      setAddingSubtaskParentId(null);
-      setSubtaskTitle('');
-    }
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      const oldIndex = rootTasks.findIndex((t) => t.id === active.id);
-      const newIndex = rootTasks.findIndex((t) => t.id === over.id);
-
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const reordered = arrayMove(rootTasks, oldIndex, newIndex);
-        onReorderTasks(zone?.id || '', reordered);
-      }
-    }
-  };
-
-  const getZoneColor = (zoneId: string) => {
-    const z = zones.find((z) => z.id === zoneId);
-    return z?.color || '#6b7280';
-  };
-
-  // Recursively render task with its children
-  const renderTaskWithChildren = (task: Task, depth: number): React.ReactNode => {
-    const taskChildren = getChildTasks(task.id);
-    const hasKids = taskChildren.length > 0;
-    const showChildren = !task.isCollapsed;
-
-    return (
-      <div
-        key={task.id}
-        className="task-tree-item relative"
-      >
-        <TaskItem
-          task={task}
-          zoneColor={getZoneColor(task.zoneId)}
-          isActive={task.id === activeTaskId}
-          isTimerRunning={isTimerRunning && task.id === activeTaskId}
-          onToggle={onToggleTask}
-          onDelete={onDeleteTask}
-          onUpdate={onUpdateTask}
-          onToggleExpanded={onToggleExpanded}
-          onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
-          onAddSubtask={(parentId) => setAddingSubtaskParentId(parentId)}
-          onZoomIn={(id) => setFocusedTaskId(id)}
-          onSelect={onSelectTask}
-          hasChildren={hasKids}
-          depth={0}
-          isDraggable={depth === 0}
-        />
-
-        {/* Subtask add form - outside showChildren to allow adding even when collapsed */}
-        {addingSubtaskParentId === task.id && (
-          <div className="subtask-add-form" style={{ paddingLeft: `${(depth + 1) * 20}px` }}>
-            <div className="subtask-add-inputs">
-              <Input
-                ref={subtaskInputRef}
-                value={subtaskTitle}
-                onChange={(e) => setSubtaskTitle(e.target.value)}
-                onKeyDown={(e) => handleSubtaskKeyDown(e, task.id)}
-                placeholder="子任务标题..."
-                className="subtask-input"
-                autoFocus
-              />
-              <div className="subtask-priority-select">
-                {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
-                  <button
-                    key={p}
-                    className={`priority-btn ${subtaskPriority === p ? 'active' : ''} priority-${p}`}
-                    onClick={() => setSubtaskPriority(p)}
-                  >
-                    <div className={`priority-dot ${p}`} />
-                  </button>
-                ))}
-              </div>
-              <div className="subtask-urgency-select">
-                {(['urgent', 'high', 'medium', 'low'] as TaskUrgency[]).map((u) => (
-                  <button
-                    key={u}
-                    className={`urgency-btn ${subtaskUrgency === u ? 'active' : ''} urgency-${u}`}
-                    onClick={() => setSubtaskUrgency(u)}
-                  >
-                    <Zap size={8} />
-                  </button>
-                ))}
-              </div>
-              <Button
-                size="icon"
-                className="subtask-add-btn"
-                onClick={() => handleAddSubtask(task.id)}
-                disabled={!subtaskTitle.trim()}
-              >
-                <Plus size={14} />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="subtask-cancel-btn"
-                onClick={() => {
-                  setAddingSubtaskParentId(null);
-                  setSubtaskTitle('');
-                }}
-              >
-                <ChevronDown size={14} />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Children area with VS Code style guide lines */}
-        {showChildren && (
-          <div className="relative" style={{ paddingLeft: '24px' }}>
-            {/* Vertical guide line */}
-            <div className="absolute top-0 bottom-0 left-3 w-px bg-white/10" />
-
-            {/* Render children */}
-            {taskChildren.map((child) => renderTaskWithChildren(child, depth + 1))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Recursively render completed task with its children
-  const renderCompletedTaskWithChildren = (task: Task, depth: number): React.ReactNode => {
-    const taskChildren = getChildTasks(task.id);
-    const hasKids = taskChildren.length > 0;
-
-    return (
-      <div
-        key={task.id}
-        className="task-tree-item"
-        style={{ paddingLeft: depth > 0 ? `${depth * 24}px` : undefined }}
-      >
-        <TaskItem
-          task={task}
-          zoneColor={getZoneColor(task.zoneId)}
-          isActive={false}
-          isTimerRunning={false}
-          onToggle={onToggleTask}
-          onDelete={onDeleteTask}
-          onUpdate={onUpdateTask}
-          onToggleExpanded={onToggleExpanded}
-          onSelect={onSelectTask}
-          hasChildren={hasKids}
-          depth={0}
-          isDraggable={false}
-        />
-        {taskChildren.map((child) => renderCompletedTaskWithChildren(child, depth + 1))}
-      </div>
-    );
-  };
-
-  const stats = {
-    total: tasks.filter((t) => t.zoneId === zone?.id).length,
-    completed: completedTasks.length,
-    pending: incompleteTasks.length,
-    completionRate: tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0,
+  // 检查任务是否有子任务
+  const checkHasChildren = (taskId: string): boolean => {
+    return tasks.some(t => t.parentId === taskId);
   };
 
   if (!zone) {
@@ -321,6 +179,16 @@ export function TaskList({
       </div>
     );
   }
+
+  const dropAnimation = {
+    sideEffects: defaultDropAnimationSideEffects({
+      styles: {
+        active: {
+          opacity: '0.5',
+        },
+      },
+    }),
+  };
 
   return (
     <div className="task-list-container">
@@ -444,7 +312,7 @@ export function TaskList({
       {/* Task List */}
       <ScrollArea className="task-scroll-area">
         <div className="tasks-container">
-          {rootTasks.length === 0 && completedTasks.length === 0 ? (
+          {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
             <div className="empty-state">
               <Circle size={48} className="empty-icon" />
               <p>暂无任务，添加一个开始专注吧！</p>
@@ -452,18 +320,58 @@ export function TaskList({
             </div>
           ) : (
             <>
-              {/* Draggable Root Tasks with Children */}
+              {/* Incomplete Tasks with DnD */}
               <DndContext
                 sensors={sensors}
-                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext
-                  items={rootTasks.map((t) => t.id)}
+                  items={displayTasks.map((t) => t.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  {rootTasks.map((task) => renderTaskWithChildren(task, 0))}
+                  {displayTasks.map((task) => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      zoneColor={getZoneColor(task.zoneId)}
+                      isActive={task.id === activeTaskId}
+                      isTimerRunning={isTimerRunning && task.id === activeTaskId}
+                      isDragOver={task.id === overId}
+                      onToggle={onToggleTask}
+                      onDelete={onDeleteTask}
+                      onUpdate={onUpdateTask}
+                      onToggleExpanded={onToggleExpanded}
+                      onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
+                      onZoomIn={(id) => setFocusedTaskId(id)}
+                      onSelect={onSelectTask}
+                      hasChildren={checkHasChildren(task.id)}
+                      depth={(task as FlattenedTask).depth}
+                      isDraggable={true}
+                    />
+                  ))}
                 </SortableContext>
+
+                <DragOverlay dropAnimation={dropAnimation}>
+                  {activeItem ? (
+                    <TaskItem
+                      task={activeItem}
+                      zoneColor={getZoneColor(activeItem.zoneId)}
+                      isActive={false}
+                      isTimerRunning={false}
+                      isDragOver={false}
+                      onToggle={() => {}}
+                      onDelete={() => {}}
+                      onUpdate={() => {}}
+                      onToggleExpanded={() => {}}
+                      onSelect={() => {}}
+                      hasChildren={false}
+                      depth={(activeItem as FlattenedTask).depth}
+                      isDraggable={true}
+                    />
+                  ) : null}
+                </DragOverlay>
               </DndContext>
 
               {/* Completed Tasks */}
@@ -482,10 +390,23 @@ export function TaskList({
 
                   {showCompleted && (
                     <div className="completed-tasks">
-                      {/* Only render root completed tasks recursively */}
-                      {completedTasks
-                        .filter((t) => t.parentId === null || t.parentId === undefined)
-                        .map((task) => renderCompletedTaskWithChildren(task, 0))}
+                      {completedTasks.map((task) => (
+                        <TaskItem
+                          key={task.id}
+                          task={task}
+                          zoneColor={getZoneColor(task.zoneId)}
+                          isActive={false}
+                          isTimerRunning={false}
+                          onToggle={onToggleTask}
+                          onDelete={onDeleteTask}
+                          onUpdate={onUpdateTask}
+                          onToggleExpanded={onToggleExpanded}
+                          onSelect={onSelectTask}
+                          hasChildren={false}
+                          depth={(task as FlattenedTask).depth}
+                          isDraggable={false}
+                        />
+                      ))}
                       <Button
                         variant="ghost"
                         size="sm"

@@ -27,6 +27,7 @@ interface AppStore extends AppState {
   clearCompleted: (zoneId?: string) => void;
   toggleExpanded: (id: string) => void;
   toggleSubtasksCollapsed: (id: string) => void;
+  moveTaskNode: (activeId: string, newParentId: string | null, targetIndex: number, zoneId: string) => void;
 
   // History Actions
   archiveCurrentWorkspace: (name?: string, summary?: string) => string;
@@ -281,6 +282,31 @@ export const useAppStore = create<AppStore>()(
           lastModified: Date.now()
         }
       })),
+
+      moveTaskNode: (activeId, newParentId, targetIndex, zoneId) => set((state) => {
+        const allTasks = [...state.currentWorkspace.tasks];
+        const activeTask = allTasks.find(t => t.id === activeId);
+        if (!activeTask) return state;
+
+        // 1. 修改父级和区域
+        activeTask.parentId = newParentId;
+        activeTask.zoneId = zoneId;
+
+        // 2. 获取该父级下的所有兄弟节点，重新排序
+        const siblings = allTasks
+          .filter(t => t.zoneId === zoneId && t.parentId === newParentId && t.id !== activeId)
+          .sort((a, b) => a.order - b.order);
+
+        // 将当前任务插入到合适的位置
+        siblings.splice(targetIndex, 0, activeTask);
+
+        // 3. 批量更新 order
+        siblings.forEach((t, idx) => {
+          t.order = idx;
+        });
+
+        return { currentWorkspace: { ...state.currentWorkspace, tasks: allTasks, lastModified: Date.now() } };
+      }),
 
       // --- Computed Helpers ---
       getTasksByZone: (zoneId) => {

@@ -1123,6 +1123,12 @@
   border-color: rgba(59, 130, 246, 0.3);
 }
 
+.task-item.drag-over {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
 .task-drag-handle {
   padding: 4px 0;
   cursor: grab;
