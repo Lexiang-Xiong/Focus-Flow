@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import React from 'react';
-import { ArrowLeft, CheckCircle2, Globe, ArrowUpDown, Zap, Flag, ChevronDown, ChevronRight, ArrowUp, Layers, Home } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Globe, ArrowUpDown, Zap, Flag, ChevronDown, ChevronRight, ArrowUp, Layers, Home, Clock } from 'lucide-react';
 import { getFlattenedTasks } from '@/lib/tree-utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -45,6 +45,8 @@ interface GlobalViewProps {
   onReorderTasks: (zoneId: string, _tasks: Task[]) => void;
   onSelectTask: (id: string) => void;
   onSortConfigChange: (config: SortConfig) => void;
+  getTotalWorkTime?: (taskId: string) => number;
+  getEstimatedTime?: (taskId: string) => number;
 }
 
 export function GlobalView({
@@ -63,6 +65,8 @@ export function GlobalView({
   onReorderTasks,
   onSelectTask,
   onSortConfigChange,
+  getTotalWorkTime,
+  getEstimatedTime,
 }: GlobalViewProps) {
   const [showCompleted, setShowCompleted] = useState(false);
   const [viewDepth, setViewDepth] = useState(2); // For sorting modes: how many levels to expand (默认展开2层)
@@ -95,6 +99,32 @@ export function GlobalView({
   // Get child tasks for a parent
   const getChildTasks = (parentId: string): Task[] => {
     return tasks.filter((t) => t.parentId === parentId).sort((a, b) => a.order - b.order);
+  };
+
+  // 计算任务的动态预期时间（手动设置或子任务之和）
+  const calculateEstimatedTime = (taskId: string): number => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return 0;
+
+    // 如果手动设置了预期时间，返回手动值
+    if (task.estimatedTime !== undefined && task.estimatedTime > 0) {
+      return task.estimatedTime;
+    }
+
+    // 否则计算所有子任务的预期时间之和
+    const childTasks = getChildTasks(taskId);
+    return childTasks.reduce((sum, child) => sum + calculateEstimatedTime(child.id), 0);
+  };
+
+  // 计算任务的动态总工作时间（ownTime + 所有子任务的 totalWorkTime）
+  const calculateTotalWorkTime = (taskId: string): number => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return 0;
+
+    const childTasks = getChildTasks(taskId);
+    const childrenTotalTime = childTasks.reduce((sum, child) => sum + calculateTotalWorkTime(child.id), 0);
+
+    return (task.ownTime || 0) + childrenTotalTime;
   };
 
   // Get max depth of task tree
@@ -140,6 +170,30 @@ export function GlobalView({
           return urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
         case 'weighted':
           return calculateWeightedScore(b) - calculateWeightedScore(a);
+        case 'workTime':
+          // 按执行时间降序，未工作排最后，使用动态计算的值
+          return calculateTotalWorkTime(b.id) - calculateTotalWorkTime(a.id);
+        case 'estimatedTime':
+          // 按预期时间降序，未定义排最后，使用动态计算的值
+          const aEst = calculateEstimatedTime(a.id);
+          const bEst = calculateEstimatedTime(b.id);
+          if (aEst === 0 && bEst === 0) return 0;
+          if (aEst === 0) return 1; // 未定义排最后
+          if (bEst === 0) return -1;
+          return bEst - aEst;
+        case 'timeDiff':
+          // 按时间差降序（实际时间 - 预期时间），差值越大越靠前
+          const aDiffTotal = calculateTotalWorkTime(a.id) / 60 - calculateEstimatedTime(a.id);
+          const bDiffTotal = calculateTotalWorkTime(b.id) / 60 - calculateEstimatedTime(b.id);
+          // 如果都没有预期时间，按工作时间排序
+          const aHasEst = calculateEstimatedTime(a.id) > 0;
+          const bHasEst = calculateEstimatedTime(b.id) > 0;
+          if (!aHasEst && !bHasEst) {
+            return calculateTotalWorkTime(b.id) - calculateTotalWorkTime(a.id);
+          }
+          if (!aHasEst) return 1;
+          if (!bHasEst) return -1;
+          return bDiffTotal - aDiffTotal;
         default:
           return 0;
       }
@@ -230,6 +284,31 @@ export function GlobalView({
           });
         }
       });
+    } else if (sortConfig.mode === 'workTime' || sortConfig.mode === 'estimatedTime' || sortConfig.mode === 'timeDiff') {
+      // 这三种模式按时间排序，不需要分组，直接显示所有任务
+      if (sortedRootTasks.length > 0) {
+        let title = '';
+        let color = '#6b7280';
+        switch (sortConfig.mode) {
+          case 'workTime':
+            title = '按执行时间';
+            color = '#3b82f6';
+            break;
+          case 'estimatedTime':
+            title = '按预期时间';
+            color = '#8b5cf6';
+            break;
+          case 'timeDiff':
+            title = '按时间差';
+            color = '#f59e0b';
+            break;
+        }
+        groups.push({
+          title,
+          color,
+          tasks: sortedRootTasks,
+        });
+      }
     }
 
     return groups;
@@ -337,6 +416,8 @@ export function GlobalView({
           onZoomIn={(id) => setFocusedTaskId(id)}
           hasChildren={hasKids}
           depth={depth}
+          getTotalWorkTime={getTotalWorkTime}
+          getEstimatedTime={getEstimatedTime}
         />
         {showChildren && taskChildren.map((child) => renderTaskWithChildren(child, depth + 1, maxExpandDepth))}
       </div>
@@ -403,6 +484,8 @@ export function GlobalView({
           hasChildren={hasKids}
           depth={currentDepth}
           isDraggable={sortConfig.mode === 'zone' && currentDepth === 0}
+          getTotalWorkTime={getTotalWorkTime}
+          getEstimatedTime={getEstimatedTime}
         />
         {showChildren && taskChildren.map((child) => renderTaskWithDepth(child, currentDepth + 1))}
       </div>
@@ -462,6 +545,24 @@ export function GlobalView({
                   <Flag size={14} />
                   <Zap size={14} />
                   <span>加权排序</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="workTime">
+                <div className="sort-option">
+                  <Clock size={14} />
+                  <span>执行时间</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="estimatedTime">
+                <div className="sort-option">
+                  <Clock size={14} />
+                  <span>预期时间</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="timeDiff">
+                <div className="sort-option">
+                  <Clock size={14} />
+                  <span>时间差</span>
                 </div>
               </SelectItem>
             </SelectContent>
@@ -647,6 +748,8 @@ export function GlobalView({
                                 onSelect={onSelectTask}
                                 hasChildren={taskChildren.length > 0}
                                 depth={0}
+                                getTotalWorkTime={getTotalWorkTime}
+                                getEstimatedTime={getEstimatedTime}
                               />
                               {taskChildren.map((child) => {
                                 const renderChild = (c: Task, d: number): React.ReactNode => {
@@ -669,6 +772,8 @@ export function GlobalView({
                                         onSelect={onSelectTask}
                                         hasChildren={grandchildren.length > 0}
                                         depth={0}
+                                        getTotalWorkTime={getTotalWorkTime}
+                                        getEstimatedTime={getEstimatedTime}
                                       />
                                       {grandchildren.map((gc) => renderChild(gc, d + 1))}
                                     </div>

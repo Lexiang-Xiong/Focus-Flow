@@ -44,6 +44,11 @@ interface AppStore extends AppState {
   getRootTasks: (zoneId: string) => Task[];
   getChildTasks: (parentId: string) => Task[];
   getStats: () => { total: number; completed: number; pending: number; highPriority: number; urgent: number };
+
+  // Timer helpers - 计时时累加时间到当前任务和所有父任务
+  addWorkTime: (taskId: string, seconds: number) => void;
+  getTotalWorkTime: (taskId: string) => number;
+  getEstimatedTime: (taskId: string) => number;
 }
 
 // 辅助函数：创建新工作区结构
@@ -154,7 +159,7 @@ export const useAppStore = create<AppStore>()(
           id: `task-${Date.now()}`,
           zoneId, parentId, title, description, priority, urgency,
           completed: false, isCollapsed: false, expanded: false,
-          order: maxOrder + 1, createdAt: Date.now(), totalWorkTime: 0
+          order: maxOrder + 1, createdAt: Date.now(), totalWorkTime: 0, ownTime: 0
         };
 
         return {
@@ -357,6 +362,60 @@ export const useAppStore = create<AppStore>()(
         const highPriority = tasks.filter(t => t.priority === 'high' && !t.completed).length;
         const urgent = tasks.filter(t => t.urgency === 'urgent' && !t.completed).length;
         return { total, completed, pending, highPriority, urgent };
+      },
+
+      // 计时时只更新当前任务的 ownTime（独立计时时间）
+      // totalWorkTime 通过 getTotalWorkTime 动态计算
+      addWorkTime: (taskId, seconds) => set((state) => {
+        const tasks = [...state.currentWorkspace.tasks];
+
+        // 只更新当前任务的 ownTime
+        const taskIndex = tasks.findIndex(t => t.id === taskId);
+        if (taskIndex === -1) return state;
+
+        tasks[taskIndex] = {
+          ...tasks[taskIndex],
+          ownTime: (tasks[taskIndex].ownTime || 0) + seconds
+        };
+
+        return {
+          currentWorkspace: { ...state.currentWorkspace, tasks, lastModified: Date.now() }
+        };
+      }),
+
+      // 动态计算任务的总工作时间（ownTime + 所有子任务的 totalWorkTime）
+      getTotalWorkTime: (taskId) => {
+        const tasks = get().currentWorkspace.tasks;
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) return 0;
+
+        // 获取所有直接子任务
+        const childTasks = tasks.filter(t => t.parentId === taskId);
+        const childrenTotalTime = childTasks.reduce((sum, child) => {
+          return sum + get().getTotalWorkTime(child.id);
+        }, 0);
+
+        return (task.ownTime || 0) + childrenTotalTime;
+      },
+
+      // 动态计算任务的预期时间（手动设置的值，或所有子任务预期时间之和）
+      getEstimatedTime: (taskId) => {
+        const tasks = get().currentWorkspace.tasks;
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) return 0;
+
+        // 如果手动设置了预期时间，返回手动值
+        if (task.estimatedTime !== undefined && task.estimatedTime > 0) {
+          return task.estimatedTime;
+        }
+
+        // 否则计算所有子任务的预期时间之和
+        const childTasks = tasks.filter(t => t.parentId === taskId);
+        const childrenEstimatedTime = childTasks.reduce((sum, child) => {
+          return sum + get().getEstimatedTime(child.id);
+        }, 0);
+
+        return childrenEstimatedTime;
       },
 
       // --- History Logic ---

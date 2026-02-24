@@ -54,7 +54,7 @@ export function TaskList({
   onSelectTask,
   onClearCompleted,
 }: TaskListProps) {
-  const { moveTaskNode, expandTask } = useAppStore();
+  const { moveTaskNode, expandTask, getTotalWorkTime, getEstimatedTime } = useAppStore();
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
@@ -397,6 +397,8 @@ export function TaskList({
                         hasChildren={checkHasChildren(task.id)}
                         depth={(task as FlattenedTask).depth}
                         isDraggable={true}
+                        getTotalWorkTime={getTotalWorkTime}
+                        getEstimatedTime={getEstimatedTime}
                       />
                       {/* 添加子任务输入框 - 完整表单 */}
                       {addingSubtaskParentId === task.id && (
@@ -492,6 +494,8 @@ export function TaskList({
                       hasChildren={false}
                       depth={(activeItem as FlattenedTask).depth}
                       isDraggable={true}
+                      getTotalWorkTime={getTotalWorkTime}
+                      getEstimatedTime={getEstimatedTime}
                     />
                   ) : null}
                 </DragOverlay>
@@ -528,6 +532,8 @@ export function TaskList({
                           hasChildren={false}
                           depth={(task as FlattenedTask).depth}
                           isDraggable={false}
+                          getTotalWorkTime={getTotalWorkTime}
+                          getEstimatedTime={getEstimatedTime}
                         />
                       ))}
                       <Button

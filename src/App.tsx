@@ -43,6 +43,9 @@ function App() {
     renameHistoryWorkspace,
     updateHistorySummary,
     getStats,
+    addWorkTime,
+    getTotalWorkTime,
+    getEstimatedTime,
     addZone,
   } = useAppStore();
 
@@ -65,21 +68,20 @@ function App() {
     tasksRef.current = tasks;
   }, [tasks]);
 
+  // 使用 ref 保持 addWorkTime 稳定，避免计时器回调重复创建
+  const addWorkTimeRef = useRef(addWorkTime);
+  addWorkTimeRef.current = addWorkTime;
+
   // 处理计时器滴答，累计任务时间
   const handleTimerTick = useCallback(() => {
     const currentActiveTaskId = activeTaskIdRef.current;
-    const currentTasks = tasksRef.current;
     const currentTimer = timerRef.current;
 
     if (currentActiveTaskId && currentTimer.isRunning && currentTimer.mode === 'work') {
-      const task = currentTasks.find(t => t.id === currentActiveTaskId);
-      if (task) {
-        updateTask(currentActiveTaskId, {
-          totalWorkTime: (task.totalWorkTime || 0) + 1
-        });
-      }
+      // 使用 addWorkTime 累加时间：当前任务增加 ownTime
+      addWorkTimeRef.current(currentActiveTaskId, 1);
     }
-  }, [updateTask]);
+  }, []);
 
   const handleTimerComplete = useCallback((mode: TimerMode) => {
     if (mode === 'work' && activeTaskId) {
@@ -418,6 +420,8 @@ function App() {
                     onReorderTasks={reorderTasks}
                     onSelectTask={handleSelectTask}
                     onSortConfigChange={(config) => updateSettings({ globalViewSort: config })}
+                    getTotalWorkTime={getTotalWorkTime}
+                    getEstimatedTime={getEstimatedTime}
                   />
                 ) : (
                   <TaskList

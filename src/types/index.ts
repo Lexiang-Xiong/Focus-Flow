@@ -1,7 +1,7 @@
 export type TaskPriority = 'low' | 'medium' | 'high';
 export type TaskUrgency = 'low' | 'medium' | 'high' | 'urgent';
 export type TimerMode = 'work' | 'break' | 'longBreak' | 'idle';
-export type GlobalViewSortMode = 'zone' | 'priority' | 'urgency' | 'weighted';
+export type GlobalViewSortMode = 'zone' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime' | 'timeDiff';
 
 export interface SortConfig {
   mode: GlobalViewSortMode;
@@ -30,7 +30,9 @@ export interface Task {
   createdAt: number;
   completedAt?: number;
   expanded: boolean;
-  totalWorkTime: number; // 累计工作时间（秒）
+  totalWorkTime: number; // 累计工作时间（秒），包含所有子任务的时间
+  ownTime?: number;      // 独立计时时间（秒），仅在该任务上花费的时间，不含子任务
+  estimatedTime?: number; // 预期时间（分钟），创建时可填也可后续编辑
 }
 
 export interface Zone {

@@ -25,6 +25,8 @@ interface TaskItemProps {
   hasChildren?: boolean;
   depth?: number;
   isDraggable?: boolean;
+  getTotalWorkTime?: (taskId: string) => number;
+  getEstimatedTime?: (taskId: string) => number;
 }
 
 export function TaskItem({
@@ -44,10 +46,13 @@ export function TaskItem({
   hasChildren = false,
   depth = 0,
   isDraggable = true,
+  getTotalWorkTime,
+  getEstimatedTime,
 }: TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDescription, setEditDescription] = useState(task.description);
+  const [editEstimatedTime, setEditEstimatedTime] = useState(task.estimatedTime?.toString() || '');
   const [showPriorityMenu, setShowPriorityMenu] = useState(false);
   const [showUrgencyMenu, setShowUrgencyMenu] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -78,9 +83,13 @@ export function TaskItem({
 
   const handleSave = () => {
     if (editTitle.trim()) {
+      const estimatedTimeValue = editEstimatedTime ? parseInt(editEstimatedTime, 10) : undefined;
       onUpdate(task.id, {
         title: editTitle.trim(),
         description: editDescription.trim(),
+        estimatedTime: (estimatedTimeValue !== undefined && !isNaN(estimatedTimeValue) && estimatedTimeValue > 0)
+          ? estimatedTimeValue
+          : undefined,
       });
     }
     setIsEditing(false);
@@ -292,6 +301,16 @@ export function TaskItem({
               placeholder="任务描述（可选）"
               className="task-edit-input description"
             />
+            <Input
+              type="number"
+              value={editEstimatedTime}
+              onChange={(e) => setEditEstimatedTime(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={handleBlur}
+              placeholder="预期时间（分钟，可选）"
+              className="task-edit-input estimated-time"
+              min="0"
+            />
           </div>
         ) : (
           <div className="task-content">
@@ -322,7 +341,29 @@ export function TaskItem({
             {/* Work Time Display */}
             <div className="task-work-time">
               <Clock size={10} className={isTimerRunning && isActive ? 'pulse' : ''} />
-              <span>累计: {formatDuration(task.totalWorkTime || 0)}</span>
+              {/* 使用动态计算的 totalWorkTime */}
+              <span>累计: {formatDuration(getTotalWorkTime ? getTotalWorkTime(task.id) : (task.totalWorkTime || 0))}</span>
+              {/* 显示预期时间：区分手动设置和自动继承 */}
+              {(() => {
+                const estimated = getEstimatedTime ? getEstimatedTime(task.id) : (task.estimatedTime || 0);
+                if (estimated > 0) {
+                  // 检查是否手动设置了预期时间
+                  const isManual = task.estimatedTime !== undefined && task.estimatedTime > 0;
+                  const isInherited = !isManual && hasChildren;
+                  return (
+                    <span className="estimated-time" title={isManual ? "手动设置的预期时间" : "从子任务继承的预期时间"}>
+                      / 预期: {estimated}m{isInherited ? '+' : ''}
+                    </span>
+                  );
+                }
+                return null;
+              })()}
+              {/* 显示独立时间（自己的 ownTime） */}
+              {(task.ownTime || 0) > 0 && (
+                <span className="own-time" title="在该任务上独立花费的时间（不含子任务）">
+                  (独立: {formatDuration(task.ownTime || 0)})
+                </span>
+              )}
               <button
                 className="reset-work-time-btn"
                 onClick={handleResetWorkTime}
