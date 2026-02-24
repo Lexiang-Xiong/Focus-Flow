@@ -40,7 +40,7 @@ interface GlobalViewProps {
   onToggleExpanded: (id: string) => void;
   onToggleSubtasksCollapsed?: (id: string) => void;
   onAddSubtask?: (parentId: string, title: string, priority: TaskPriority, urgency: TaskUrgency) => void;
-  onReorderTasks: (zoneId: string, tasks: Task[]) => void;
+  onReorderTasks: (zoneId: string, _tasks: Task[]) => void;
   onSelectTask: (id: string) => void;
   onSortConfigChange: (config: SortConfig) => void;
 }
@@ -57,7 +57,7 @@ export function GlobalView({
   onUpdateTask,
   onToggleExpanded,
   onToggleSubtasksCollapsed,
-  onAddSubtask,
+  onAddSubtask: _onAddSubtask,
   onReorderTasks,
   onSelectTask,
   onSortConfigChange,
@@ -92,11 +92,6 @@ export function GlobalView({
   // Get child tasks for a parent
   const getChildTasks = (parentId: string): Task[] => {
     return tasks.filter((t) => t.parentId === parentId).sort((a, b) => a.order - b.order);
-  };
-
-  // Check if task has children
-  const hasChildren = (taskId: string): boolean => {
-    return tasks.some((t) => t.parentId === taskId);
   };
 
   // Get max depth of task tree
@@ -281,11 +276,6 @@ export function GlobalView({
   const getZoneColor = (zoneId: string) => {
     const zone = zones.find((z) => z.id === zoneId);
     return zone?.color || '#6b7280';
-  };
-
-  const getZoneName = (zoneId: string) => {
-    const zone = zones.find((z) => z.id === zoneId);
-    return zone?.name || '未知分区';
   };
 
   const stats = {

@@ -119,10 +119,6 @@ export function TaskList({
       .sort((a, b) => a.order - b.order);
   };
 
-  const hasChildren = (taskId: string): boolean => {
-    return tasks.some((t) => t.parentId === taskId);
-  };
-
   const handleAddTask = () => {
     if (newTaskTitle.trim() && zone) {
       // In focused mode, add as child of focused task; otherwise add as root task

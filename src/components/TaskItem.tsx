@@ -192,7 +192,7 @@ export function TaskItem({
       ref={setNodeRef}
       style={style}
       className={`task-item ${task.completed ? 'completed' : ''} ${isActive ? 'active' : ''} ${isTimerRunning && isActive ? 'working' : ''} ${depth > 0 ? 'subtask' : ''}`}
-      onClick={(e) => {
+      onClick={() => {
         // 点击任务项的空白区域时触发选择
         if (!isEditing) {
           onSelect?.(task.id);

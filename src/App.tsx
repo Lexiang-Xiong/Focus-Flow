@@ -8,72 +8,55 @@ import { HistoryManager } from '@/components/HistoryManager';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { CollapseButton } from '@/components/CollapseButton';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { useStorage } from '@/hooks/useStorage';
-import { useZones } from '@/hooks/useZones';
-import { useTasks } from '@/hooks/useTasks';
+import { useAppStore } from '@/store/useAppStore';
 import { useTimer } from '@/hooks/useTimer';
 import { useClipboard } from '@/hooks/useClipboard';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import type { TimerMode } from '@/types';
+import { PREDEFINED_TEMPLATES } from '@/types';
 import './App.css';
 
 function App() {
   const {
-    data,
-    isLoaded,
-    updateZones,
-    updateTasks,
-    updateSettings,
+    currentWorkspace,
+    settings,
+    currentView,
+    activeZoneId,
+    historyWorkspaces,
     setCurrentView,
     setActiveZoneId,
-
+    updateSettings,
+    getZoneById,
+    getTasksByZone,
+    toggleTask,
+    deleteTask,
+    updateTask,
+    reorderTasks,
+    toggleExpanded,
+    toggleSubtasksCollapsed,
+    clearCompleted,
     archiveCurrentWorkspace,
     restoreFromHistory,
     createNewWorkspace,
     deleteHistoryWorkspace,
     renameHistoryWorkspace,
     updateHistorySummary,
-  } = useStorage();
+    getStats,
+    addZone,
+  } = useAppStore();
+
+  const zones = currentWorkspace.zones;
+  const tasks = currentWorkspace.tasks;
 
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
   // 使用ref存储activeTaskId和tasks，确保计时器回调中能获取最新值
   const activeTaskIdRef = useRef<string | null>(null);
-  const tasksRef = useRef<typeof data.currentWorkspace.tasks>([]);
+  const tasksRef = useRef<typeof tasks>([]);
   const timerRef = useRef<{ isRunning: boolean; mode: string }>({ isRunning: false, mode: 'idle' });
 
-  // 使用当前工作区的数据
-  const {
-    zones,
-    addZone,
-    updateZone,
-    deleteZone,
-    applyTemplate,
-    getZoneById,
-    templates,
-  } = useZones(
-    data.currentWorkspace.zones,
-    data.currentWorkspace.tasks,
-    updateZones,
-    updateTasks
-  );
-
-  const {
-    tasks,
-    getTasksByZone,
-    addTask,
-    toggleTask,
-    deleteTask,
-    updateTask,
-    toggleExpanded,
-    toggleSubtasksCollapsed,
-    reorderTasks,
-    clearCompleted,
-    stats,
-  } = useTasks(data.currentWorkspace.tasks, updateTasks);
-
-  // 同步ref和state（在tasks声明之后）
+  // 同步ref和state
   useEffect(() => {
     activeTaskIdRef.current = activeTaskId;
   }, [activeTaskId]);
@@ -84,7 +67,6 @@ function App() {
 
   // 处理计时器滴答，累计任务时间
   const handleTimerTick = useCallback(() => {
-    // 使用ref获取最新的activeTaskId、tasks和timer状态，避免闭包问题
     const currentActiveTaskId = activeTaskIdRef.current;
     const currentTasks = tasksRef.current;
     const currentTimer = timerRef.current;
@@ -99,7 +81,7 @@ function App() {
     }
   }, [updateTask]);
 
-  const handleTimerComplete = useCallback((mode: TimerMode, _duration: number) => {
+  const handleTimerComplete = useCallback((mode: TimerMode) => {
     if (mode === 'work' && activeTaskId) {
       const task = tasks.find(t => t.id === activeTaskId);
       if (task) {
@@ -115,11 +97,11 @@ function App() {
   }, [activeTaskId, tasks]);
 
   const timer = useTimer({
-    workDuration: data.settings.workDuration,
-    breakDuration: data.settings.breakDuration,
-    longBreakDuration: data.settings.longBreakDuration,
-    autoStartBreak: data.settings.autoStartBreak,
-    soundEnabled: data.settings.soundEnabled,
+    workDuration: settings.workDuration,
+    breakDuration: settings.breakDuration,
+    longBreakDuration: settings.longBreakDuration,
+    autoStartBreak: settings.autoStartBreak,
+    soundEnabled: settings.soundEnabled,
     onComplete: handleTimerComplete,
     onTick: handleTimerTick,
   });
@@ -134,47 +116,42 @@ function App() {
     hasZone,
   } = useClipboard();
 
-  // 同步timerRef（在timer声明之后）
+  // 同步timerRef
   useEffect(() => {
     timerRef.current = { isRunning: timer.isRunning, mode: timer.mode };
   }, [timer.isRunning, timer.mode]);
 
-  // 使用 ref 追踪当前模式，避免无限循环
+  // 使用 ref 追踪当前模式
   const currentModeRef = useRef<TimerMode>('work');
   useEffect(() => {
     currentModeRef.current = timer.mode;
   }, [timer.mode]);
 
-  // 监听 settings 变化，当 timer 在 idle 状态时同步更新时间，保持当前模式
+  // 监听 settings 变化
   useEffect(() => {
     if (timer.mode === 'idle' && !timer.isRunning) {
-      // 根据当前模式选择对应的时长
       const targetDuration = currentModeRef.current === 'break'
-        ? data.settings.breakDuration
+        ? settings.breakDuration
         : currentModeRef.current === 'longBreak'
-        ? data.settings.longBreakDuration
-        : data.settings.workDuration;
+        ? settings.longBreakDuration
+        : settings.workDuration;
 
       if (timer.timeRemaining !== targetDuration) {
         timer.updateTime(targetDuration);
       }
     }
-  }, [data.settings.workDuration, data.settings.breakDuration, data.settings.longBreakDuration]);
+  }, [settings.workDuration, settings.breakDuration, settings.longBreakDuration, timer]);
 
-  // 键盘快捷键监听（Ctrl+C / Ctrl+V）
+  // 键盘快捷键监听
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 忽略在输入框中的快捷键
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
 
-      // 获取当前选中的工作区
-      const currentZone = getZoneById(data.activeZoneId || '') || null;
+      const currentZone = getZoneById(activeZoneId || '') || null;
 
-      // Ctrl+C - 复制
       if (e.ctrlKey && e.key === 'c') {
-        // 优先复制任务（如果选中了任务）
         if (activeTaskId) {
           const task = tasks.find(t => t.id === activeTaskId);
           if (task) {
@@ -183,7 +160,6 @@ function App() {
             return;
           }
         }
-        // 否则复制工作区
         if (currentZone) {
           const zoneTasks = tasks.filter(t => t.zoneId === currentZone.id);
           if (zoneTasks.length > 0) {
@@ -193,20 +169,23 @@ function App() {
         }
       }
 
-      // Ctrl+V - 粘贴
       if (e.ctrlKey && e.key === 'v') {
-        // 优先粘贴工作区
         if (hasZone && currentZone) {
           const result = pasteZone(zones);
           if (result) {
-            updateZones([...zones, result.zone]);
-            updateTasks([...tasks, ...result.tasks]);
+            // 直接更新 store
+            result.zone.id = `zone-${Date.now()}`;
+            addZone(result.zone.name, result.zone.color);
+            const newTasks = result.tasks.map(t => ({ ...t, id: `task-${Date.now()}-${Math.random()}`, zoneId: result.zone.id }));
+            newTasks.forEach(t => {
+              useAppStore.getState().addTask(t.zoneId, t.title, t.description, t.priority, t.urgency, t.parentId);
+            });
             toast.success(`已粘贴工作区 "${result.zone.name}"`);
           }
         } else if (hasTask && currentZone) {
           const newTask = pasteTask(currentZone.id);
           if (newTask) {
-            updateTasks([...tasks, newTask]);
+            useAppStore.getState().addTask(currentZone.id, newTask.title, newTask.description, newTask.priority, newTask.urgency);
             toast.success('任务已粘贴');
           }
         }
@@ -215,7 +194,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTaskId, tasks, zones, getZoneById, data.activeZoneId, copyTask, copyZone, pasteTask, pasteZone, hasTask, hasZone, updateZones, updateTasks]);
+  }, [activeTaskId, tasks, zones, getZoneById, activeZoneId, copyTask, copyZone, pasteTask, pasteZone, hasTask, hasZone, addZone]);
 
   const handleStartTimer = useCallback(() => {
     const incompleteTasksList = tasks.filter((t) => !t.completed);
@@ -242,17 +221,15 @@ function App() {
   const COLLAPSED_SIZE = { width: 280, height: 40 };
 
   const handleToggleCollapse = useCallback(async () => {
-    const willCollapse = !data.settings.collapsed;
+    const willCollapse = !settings.collapsed;
 
     try {
       const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
       const win = getCurrentWindow();
 
       if (willCollapse) {
-        // 收起时：调整窗口大小
         await win.setSize(new LogicalSize(COLLAPSED_SIZE.width, COLLAPSED_SIZE.height));
       } else {
-        // 展开时：恢复窗口大小
         await win.setSize(new LogicalSize(NORMAL_SIZE.width, NORMAL_SIZE.height));
         await win.setFocus();
       }
@@ -261,7 +238,7 @@ function App() {
     }
 
     updateSettings({ collapsed: willCollapse });
-  }, [data.settings.collapsed, updateSettings]);
+  }, [settings.collapsed, updateSettings]);
 
   const handleArchiveCurrent = useCallback((name: string, summary: string) => {
     const id = archiveCurrentWorkspace(name, summary);
@@ -290,6 +267,14 @@ function App() {
     }
   }, [timer.currentTaskId, activeTaskId]);
 
+  // Loading state
+  const [isLoaded, setIsLoaded] = useState(false);
+  useEffect(() => {
+    // 短暂延迟确保 store 已初始化
+    const timer = setTimeout(() => setIsLoaded(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   if (!isLoaded) {
     return (
       <div className="loading-screen">
@@ -299,9 +284,10 @@ function App() {
     );
   }
 
-  // Show collapse button when collapsed
-  if (data.settings.collapsed) {
+  // 悬浮条模式
+  if (settings.collapsed) {
     const activeTask = tasks.find(t => t.id === activeTaskId);
+    const stats = getStats();
 
     return (
       <>
@@ -323,14 +309,12 @@ function App() {
     );
   }
 
-  const activeZone = getZoneById(data.activeZoneId || '') || null;
+  const activeZone = getZoneById(activeZoneId || '') || null;
   const currentZoneTasks = activeZone ? getTasksByZone(activeZone.id) : [];
 
   return (
     <>
-      <FloatWindow
-        onCollapse={handleToggleCollapse}
-      >
+      <FloatWindow onCollapse={handleToggleCollapse}>
         <div className="app-container">
           {/* Timer Section */}
           <PomodoroTimer
@@ -340,16 +324,15 @@ function App() {
             isRunning={timer.isRunning}
             progress={timer.progress}
             completedSessions={timer.completedSessions}
-            workDuration={data.settings.workDuration}
-            breakDuration={data.settings.breakDuration}
-            longBreakDuration={data.settings.longBreakDuration}
+            workDuration={settings.workDuration}
+            breakDuration={settings.breakDuration}
+            longBreakDuration={settings.longBreakDuration}
             onStart={handleStartTimer}
             onPause={timer.pause}
             onResume={timer.resume}
             onStop={timer.stop}
             onSkip={timer.skip}
             onUpdateTime={(seconds, mode) => {
-              // 手动修改时间时，同步更新到 settings
               if (mode === 'work') {
                 updateSettings({ workDuration: seconds });
               } else if (mode === 'break') {
@@ -360,7 +343,6 @@ function App() {
               timer.updateTime(seconds);
             }}
             onSetMode={(newMode) => {
-              // 切换模式时，使用 setMode 同时设置模式和对应的时间
               timer.setMode(newMode);
             }}
           />
@@ -368,22 +350,21 @@ function App() {
           {/* Divider */}
           <div className="section-divider" />
 
-          {/* Main Content - 可调节面板 */}
+          {/* Main Content */}
           <ResizablePanelGroup direction="horizontal" className="main-content">
-            {/* Zone Manager Sidebar */}
             <ResizablePanel defaultSize="40%" minSize="5%" maxSize="95%">
               <ZoneManager
                 zones={zones}
-                activeZoneId={data.activeZoneId}
-                templates={templates}
+                activeZoneId={activeZoneId}
+                templates={PREDEFINED_TEMPLATES}
                 onSelectZone={(zoneId) => {
                   setActiveZoneId(zoneId);
                   setCurrentView(zoneId === null ? 'global' : 'zones');
                 }}
                 onAddZone={addZone}
-                onUpdateZone={updateZone}
-                onDeleteZone={deleteZone}
-                onApplyTemplate={applyTemplate}
+                onUpdateZone={useAppStore.getState().updateZone}
+                onDeleteZone={useAppStore.getState().deleteZone}
+                onApplyTemplate={useAppStore.getState().applyTemplate}
                 onViewChange={(view) => {
                   setCurrentView(view);
                   if (view === 'global') setActiveZoneId(null);
@@ -393,16 +374,14 @@ function App() {
               />
             </ResizablePanel>
 
-            {/* 分隔条 */}
             <ResizableHandle className="resize-handle" withHandle />
 
-            {/* Content Area */}
             <ResizablePanel defaultSize="60%" minSize="5%">
               <div className="content-area">
-                {data.currentView === 'history' ? (
+                {currentView === 'history' ? (
                   <HistoryManager
-                    historyWorkspaces={data.historyWorkspaces}
-                    templates={templates}
+                    historyWorkspaces={historyWorkspaces}
+                    templates={PREDEFINED_TEMPLATES}
                     onBack={() => setCurrentView('zones')}
                     onRestore={handleRestoreFromHistory}
                     onDelete={deleteHistoryWorkspace}
@@ -411,20 +390,20 @@ function App() {
                     onCreateNewWorkspace={handleCreateNewWorkspace}
                     onArchiveCurrent={handleArchiveCurrent}
                   />
-                ) : data.currentView === 'settings' ? (
+                ) : currentView === 'settings' ? (
                   <SettingsPanel
-                    settings={data.settings}
+                    settings={settings}
                     onBack={() => setCurrentView('zones')}
                     onUpdateSettings={updateSettings}
                     onPreviewMode={timer.setMode}
                   />
-                ) : data.currentView === 'global' ? (
+                ) : currentView === 'global' ? (
                   <GlobalView
                     zones={zones}
                     tasks={tasks}
                     activeTaskId={activeTaskId}
                     isTimerRunning={timer.isRunning}
-                    sortConfig={data.settings.globalViewSort}
+                    sortConfig={settings.globalViewSort}
                     onBack={() => {
                       setCurrentView('zones');
                       if (zones.length > 0) {
@@ -447,7 +426,7 @@ function App() {
                     tasks={currentZoneTasks}
                     activeTaskId={activeTaskId}
                     isTimerRunning={timer.isRunning}
-                    onAddTask={addTask}
+                    onAddTask={useAppStore.getState().addTask}
                     onToggleTask={toggleTask}
                     onDeleteTask={deleteTask}
                     onUpdateTask={updateTask}
