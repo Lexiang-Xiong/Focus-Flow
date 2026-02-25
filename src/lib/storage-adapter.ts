@@ -1,5 +1,5 @@
 import type { StateStorage } from 'zustand/middleware';
-import { dbGetItem, dbSetItem, dbRemoveItem } from '@/lib/db';
+import { dbGetItem, dbSetItem, dbRemoveItem } from '@/lib/db-legacy';
 
 export const sqliteStorage: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {

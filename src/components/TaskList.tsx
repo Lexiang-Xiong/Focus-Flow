@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TaskItem } from './TaskItem';
 import type { Task, TaskPriority, TaskUrgency, Zone } from '@/types';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store';
 import { getFlattenedTasks, calculateNewPosition, type FlattenedTask } from '@/lib/tree-utils';
 
 interface TaskListProps {

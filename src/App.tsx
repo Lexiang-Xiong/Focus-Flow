@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { FloatWindow } from '@/components/FloatWindow';
 import { PomodoroTimer } from '@/components/PomodoroTimer';
 import { ZoneManager } from '@/components/ZoneManager';
@@ -8,7 +8,7 @@ import { HistoryManager } from '@/components/HistoryManager';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { CollapseButton } from '@/components/CollapseButton';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store';
 import { useTimer } from '@/hooks/useTimer';
 import { useClipboard } from '@/hooks/useClipboard';
 import { Toaster } from '@/components/ui/sonner';
@@ -25,6 +25,8 @@ function App() {
     activeZoneId,
     focusedTaskId,
     historyWorkspaces,
+    zones,
+    tasks,
     setCurrentView,
     setActiveZoneId,
     setFocusedTaskId,
@@ -60,8 +62,56 @@ function App() {
     addZone,
   } = useAppStore();
 
-  const zones = currentWorkspace.zones;
-  const tasks = currentWorkspace.tasks;
+  // 预计算所有任务时间（避免渲染时递归计算）
+  const taskComputedTimes = useMemo(() => {
+    const computed: Record<string, { totalWorkTime: number; estimatedTime: number }> = {};
+    if (!tasks || tasks.length === 0) return computed;
+
+    // 计算 estimatedTime（自底向上）
+    const computeEstimated = (taskId: string): number => {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return 0;
+
+      if (task.estimatedTime !== undefined && task.estimatedTime > 0) {
+        computed[taskId] = computed[taskId] || { totalWorkTime: 0, estimatedTime: 0 };
+        computed[taskId].estimatedTime = task.estimatedTime;
+        return task.estimatedTime;
+      }
+
+      const children = tasks.filter(t => t.parentId === taskId);
+      const childrenEst = children.reduce((sum, child) => sum + computeEstimated(child.id), 0);
+
+      computed[taskId] = computed[taskId] || { totalWorkTime: 0, estimatedTime: 0 };
+      computed[taskId].estimatedTime = childrenEst;
+      return childrenEst;
+    };
+
+    // 计算 totalWorkTime（自底向上）
+    const computeTotalWorkTime = (taskId: string): number => {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return 0;
+
+      const children = tasks.filter(t => t.parentId === taskId);
+      const childrenTotal = children.reduce((sum, child) => sum + computeTotalWorkTime(child.id), 0);
+
+      const total = (task.ownTime || 0) + childrenTotal;
+
+      if (!computed[taskId]) {
+        computed[taskId] = { totalWorkTime: 0, estimatedTime: 0 };
+      }
+      computed[taskId].totalWorkTime = total;
+
+      return total;
+    };
+
+    const rootTasks = tasks.filter(t => !t.parentId);
+    rootTasks.forEach(t => {
+      computeEstimated(t.id);
+      computeTotalWorkTime(t.id);
+    });
+
+    return computed;
+  }, [tasks]);
 
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
@@ -378,6 +428,7 @@ function App() {
                 onAddZone={addZone}
                 onUpdateZone={useAppStore.getState().updateZone}
                 onDeleteZone={useAppStore.getState().deleteZone}
+                onReorderZones={useAppStore.getState().reorderZones}
                 onApplyTemplate={(templateId) => {
                   // 应用模板前先自动保存当前工作区
                   if (currentWorkspace.tasks.length > 0) {
@@ -457,6 +508,7 @@ function App() {
                     }}
                     getTotalWorkTime={getTotalWorkTime}
                     getEstimatedTime={getEstimatedTime}
+                    taskComputedTimes={taskComputedTimes}
                   />
                 ) : (
                   <TaskList

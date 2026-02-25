@@ -567,6 +567,34 @@
   border-color: rgba(59, 130, 246, 0.3);
 }
 
+.zone-item.dragging {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.zone-grip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  margin-right: 4px;
+  cursor: grab;
+  color: rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+}
+
+.zone-grip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.zone-grip:active {
+  cursor: grabbing;
+}
+
 .zone-item.global {
   background: linear-gradient(90deg, rgba(59, 130, 246, 0.1), rgba(34, 197, 94, 0.1));
 }

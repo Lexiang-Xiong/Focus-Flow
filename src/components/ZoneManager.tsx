@@ -1,9 +1,26 @@
 import { useState } from 'react';
-import { Plus, Settings, Trash2, Edit2, Palette, FolderKanban, History, Cog, Save, X } from 'lucide-react';
+import { Plus, Settings, Trash2, Edit2, Palette, FolderKanban, History, Cog, Save, X, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { Zone, Template } from '@/types';
 import { ZONE_COLORS } from '@/types';
 
@@ -16,12 +33,88 @@ interface ZoneManagerProps {
   onAddZone: (name: string, color: string) => void;
   onUpdateZone: (id: string, updates: Partial<Omit<Zone, 'id'>>) => void;
   onDeleteZone: (id: string) => void;
+  onReorderZones?: (zones: Zone[]) => void;
   onApplyTemplate: (templateId: string) => void;
   onViewChange: (view: 'zones' | 'global' | 'history') => void;
   onOpenHistory: () => void;
   onOpenSettings: () => void;
   onSaveAsTemplate?: (name: string) => void;
   onDeleteCustomTemplate?: (id: string) => void;
+}
+
+// 可排序的 Zone Item 组件
+function SortableZoneItem({
+  zone,
+  isActive,
+  onSelect,
+  onEdit,
+  onDelete,
+}: {
+  zone: Zone;
+  isActive: boolean;
+  onSelect: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: zone.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 'auto',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`zone-item ${isActive ? 'active' : ''} ${isDragging ? 'dragging' : ''}`}
+    >
+      <button
+        className="zone-grip"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical size={12} />
+      </button>
+      <button
+        className="zone-content"
+        onClick={onSelect}
+      >
+        <div
+          className="zone-color-indicator"
+          style={{ backgroundColor: zone.color }}
+        />
+        <span className="zone-name">{zone.name}</span>
+      </button>
+      <div className="zone-actions">
+        <Button
+          size="icon"
+          variant="ghost"
+          className="zone-edit-btn"
+          onClick={onEdit}
+        >
+          <Edit2 size={12} />
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="zone-delete-btn"
+          onClick={onDelete}
+        >
+          <Trash2 size={12} />
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export function ZoneManager({
@@ -33,6 +126,7 @@ export function ZoneManager({
   onAddZone,
   onUpdateZone,
   onDeleteZone,
+  onReorderZones,
   onApplyTemplate,
   onViewChange,
   onOpenHistory,
@@ -40,12 +134,37 @@ export function ZoneManager({
   onSaveAsTemplate,
   onDeleteCustomTemplate,
 }: ZoneManagerProps) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = zones.findIndex((z) => z.id === active.id);
+      const newIndex = zones.findIndex((z) => z.id === over.id);
+
+      const newZones = arrayMove(zones, oldIndex, newIndex).map((z, i) => ({
+        ...z,
+        order: i,
+      }));
+
+      onReorderZones?.(newZones);
+    }
+  };
   const [isAdding, setIsAdding] = useState(false);
   const [newZoneName, setNewZoneName] = useState('');
   const [newZoneColor, setNewZoneColor] = useState(ZONE_COLORS[0]);
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [showSaveTemplateDialog, setShowSaveTemplateDialog] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
 
@@ -63,16 +182,6 @@ export function ZoneManager({
         name: editingZone.name.trim(),
         color: editingZone.color,
       });
-      setEditingZone(null);
-      setEditDialogOpen(false);
-    }
-  };
-
-  const handleEditDialogOpen = (open: boolean, zone?: Zone) => {
-    setEditDialogOpen(open);
-    if (open && zone) {
-      setEditingZone(zone);
-    } else if (!open) {
       setEditingZone(null);
     }
   };
@@ -241,91 +350,80 @@ export function ZoneManager({
 
       {/* Zone List */}
       <ScrollArea className="zone-list-scroll">
-        <div className="zone-list">
-          {/* Global View Button */}
-          <button
-            className={`zone-item global ${activeZoneId === null ? 'active' : ''}`}
-            onClick={() => onSelectZone(null)}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={zones.map(z => z.id)}
+            strategy={verticalListSortingStrategy}
           >
-            <div className="zone-color-indicator" style={{ background: 'linear-gradient(90deg, #3b82f6, #22c55e, #f59e0b)' }} />
-            <span className="zone-name">全局视图</span>
-            <span className="zone-count">全部</span>
-          </button>
-
-          {/* Zone Items */}
-          {zones.map((zone) => (
-            <div
-              key={zone.id}
-              className={`zone-item ${activeZoneId === zone.id ? 'active' : ''}`}
-            >
+            <div className="zone-list">
+              {/* Global View Button */}
               <button
-                className="zone-content"
-                onClick={() => onSelectZone(zone.id)}
+                className={`zone-item global ${activeZoneId === null ? 'active' : ''}`}
+                onClick={() => onSelectZone(null)}
               >
-                <div
-                  className="zone-color-indicator"
-                  style={{ backgroundColor: zone.color }}
-                />
-                <span className="zone-name">{zone.name}</span>
+                <div className="zone-color-indicator" style={{ background: 'linear-gradient(90deg, #3b82f6, #22c55e, #f59e0b)' }} />
+                <span className="zone-name">全局视图</span>
+                <span className="zone-count">全部</span>
               </button>
-              <div className="zone-actions">
-                <Dialog open={editDialogOpen} onOpenChange={(open) => handleEditDialogOpen(open, zone)}>
-                  <DialogTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="zone-edit-btn"
-                    >
-                      <Edit2 size={12} />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="zone-edit-dialog">
-                    <DialogHeader>
-                      <DialogTitle>编辑分区</DialogTitle>
-                    </DialogHeader>
-                    <div className="zone-edit-form">
-                      <Input
-                        value={editingZone?.name || ''}
-                        onChange={(e) => setEditingZone(prev => prev ? { ...prev, name: e.target.value } : null)}
-                        placeholder="分区名称"
-                      />
-                      <div className="color-picker">
-                        <span className="color-label">选择颜色</span>
-                        <div className="color-grid">
-                          {ZONE_COLORS.map((color) => (
-                            <button
-                              key={color}
-                              className={`color-option ${editingZone?.color === color ? 'selected' : ''}`}
-                              style={{ backgroundColor: color }}
-                              onClick={() => setEditingZone(prev => prev ? { ...prev, color } : null)}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <div className="zone-edit-actions">
-                        <Button variant="outline" onClick={() => { setEditingZone(null); setEditDialogOpen(false); }}>
-                          取消
-                        </Button>
-                        <Button onClick={handleUpdateZone}>
-                          保存
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="zone-delete-btn"
-                  onClick={() => onDeleteZone(zone.id)}
-                >
-                  <Trash2 size={12} />
+
+              {/* Zone Items */}
+              {zones.map((zone) => (
+                <SortableZoneItem
+                  key={zone.id}
+                  zone={zone}
+                  isActive={activeZoneId === zone.id}
+                  onSelect={() => onSelectZone(zone.id)}
+                  onEdit={() => setEditingZone(zone)}
+                  onDelete={() => onDeleteZone(zone.id)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </ScrollArea>
+
+      {/* Edit Zone Dialog */}
+      {editingZone && (
+        <Dialog open={!!editingZone} onOpenChange={(open) => !open && setEditingZone(null)}>
+          <DialogContent className="zone-edit-dialog">
+            <DialogHeader>
+              <DialogTitle>编辑分区</DialogTitle>
+            </DialogHeader>
+            <div className="zone-edit-form">
+              <Input
+                value={editingZone?.name || ''}
+                onChange={(e) => setEditingZone(prev => prev ? { ...prev, name: e.target.value } : null)}
+                placeholder="分区名称"
+              />
+              <div className="color-picker">
+                <span className="color-label">选择颜色</span>
+                <div className="color-grid">
+                  {ZONE_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      className={`color-option ${editingZone?.color === color ? 'selected' : ''}`}
+                      style={{ backgroundColor: color }}
+                      onClick={() => setEditingZone(prev => prev ? { ...prev, color } : null)}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="zone-edit-actions">
+                <Button variant="outline" onClick={() => setEditingZone(null)}>
+                  取消
+                </Button>
+                <Button onClick={handleUpdateZone}>
+                  保存
                 </Button>
               </div>
             </div>
-          ))}
-        </div>
-      </ScrollArea>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Footer Actions */}
       <div className="zone-manager-footer">

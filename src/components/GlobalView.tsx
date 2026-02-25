@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/select';
 import { TaskItem } from './TaskItem';
 import type { Task, Zone, GlobalViewSortMode, SortConfig, TaskPriority, TaskUrgency } from '@/types';
+import type { TaskComputedTime } from '@/store/slices/taskSlice';
 
 interface GlobalViewProps {
   zones: Zone[];
@@ -48,6 +49,7 @@ interface GlobalViewProps {
   onNavigateToZone?: (zoneId: string, taskId: string) => void;
   getTotalWorkTime?: (taskId: string) => number;
   getEstimatedTime?: (taskId: string) => number;
+  taskComputedTimes?: Record<string, TaskComputedTime>;
 }
 
 export function GlobalView({
@@ -69,6 +71,7 @@ export function GlobalView({
   onNavigateToZone,
   getTotalWorkTime,
   getEstimatedTime,
+  taskComputedTimes,
 }: GlobalViewProps) {
   const [showCompleted, setShowCompleted] = useState(false);
   const [viewDepth, setViewDepth] = useState(2); // For sorting modes: how many levels to expand (默认展开2层)
@@ -103,23 +106,31 @@ export function GlobalView({
     return tasks.filter((t) => t.parentId === parentId).sort((a, b) => a.order - b.order);
   };
 
-  // 计算任务的动态预期时间（手动设置或子任务之和）
+  // 计算任务的动态预期时间（优先使用预计算值，否则递归计算）
   const calculateEstimatedTime = (taskId: string): number => {
+    // 优先使用预计算值
+    if (taskComputedTimes && taskComputedTimes[taskId]) {
+      return taskComputedTimes[taskId].estimatedTime;
+    }
+    // Fallback: 递归计算
     const task = tasks.find(t => t.id === taskId);
     if (!task) return 0;
 
-    // 如果手动设置了预期时间，返回手动值
     if (task.estimatedTime !== undefined && task.estimatedTime > 0) {
       return task.estimatedTime;
     }
 
-    // 否则计算所有子任务的预期时间之和
     const childTasks = getChildTasks(taskId);
     return childTasks.reduce((sum, child) => sum + calculateEstimatedTime(child.id), 0);
   };
 
-  // 计算任务的动态总工作时间（ownTime + 所有子任务的 totalWorkTime）
+  // 计算任务的动态总工作时间（优先使用预计算值，否则递归计算）
   const calculateTotalWorkTime = (taskId: string): number => {
+    // 优先使用预计算值
+    if (taskComputedTimes && taskComputedTimes[taskId]) {
+      return taskComputedTimes[taskId].totalWorkTime;
+    }
+    // Fallback: 递归计算
     const task = tasks.find(t => t.id === taskId);
     if (!task) return 0;
 
