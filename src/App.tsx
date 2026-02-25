@@ -50,6 +50,9 @@ function App() {
     exportAllHistoryToJson,
     importHistoryFromJson,
     importAllHistoryFromJson,
+    customTemplates,
+    saveCustomTemplate,
+    deleteCustomTemplate,
     getStats,
     addWorkTime,
     getTotalWorkTime,
@@ -406,6 +409,9 @@ function App() {
                     onExportAllHistory={exportAllHistoryToJson}
                     onImportHistory={importHistoryFromJson}
                     onImportAllHistory={importAllHistoryFromJson}
+                    customTemplates={customTemplates}
+                    onSaveCustomTemplate={saveCustomTemplate}
+                    onDeleteCustomTemplate={deleteCustomTemplate}
                   />
                 ) : currentView === 'settings' ? (
                   <SettingsPanel

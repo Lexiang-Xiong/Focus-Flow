@@ -92,6 +92,8 @@ export interface AppState {
   currentWorkspace: CurrentWorkspace;
   // 历史工作区列表
   historyWorkspaces: HistoryWorkspace[];
+  // 自定义模板列表
+  customTemplates: Template[];
   // 设置
   settings: {
     workDuration: number;

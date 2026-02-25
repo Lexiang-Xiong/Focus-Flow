@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { History, ArrowLeft, RotateCcw, Trash2, Copy, FolderPlus, Calendar, Clock, ChevronDown, ChevronRight, CheckCircle2, Circle, Download, Upload, Archive } from 'lucide-react';
+import { History, ArrowLeft, RotateCcw, Trash2, Copy, FolderPlus, Calendar, Clock, ChevronDown, ChevronRight, CheckCircle2, Circle, Download, Upload, Archive, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -12,6 +12,7 @@ import type { HistoryWorkspace, Template } from '@/types';
 interface HistoryManagerProps {
   historyWorkspaces: HistoryWorkspace[];
   templates: Template[];
+  customTemplates?: Template[]; // 自定义模板
   currentSourceHistoryId?: string; // 当前工作区来自哪个历史记录
   onBack: () => void;
   onRestore: (historyId: string) => void;
@@ -26,11 +27,14 @@ interface HistoryManagerProps {
   onExportAllHistory?: () => string;
   onImportHistory?: (jsonString: string) => boolean;
   onImportAllHistory?: (jsonString: string) => number;
+  onSaveCustomTemplate?: (name: string) => void;
+  onDeleteCustomTemplate?: (id: string) => void;
 }
 
 export function HistoryManager({
   historyWorkspaces,
   templates,
+  customTemplates = [],
   currentSourceHistoryId,
   onBack,
   onRestore,
@@ -45,11 +49,17 @@ export function HistoryManager({
   onExportAllHistory,
   onImportHistory,
   onImportAllHistory,
+  onSaveCustomTemplate,
+  onDeleteCustomTemplate,
 }: HistoryManagerProps) {
   const [showNewWorkspaceDialog, setShowNewWorkspaceDialog] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [showOverwriteConfirm, setShowOverwriteConfirm] = useState(false);
   const [pendingOverwriteId, setPendingOverwriteId] = useState<string | null>(null);
+  const [showSaveTemplateDialog, setShowSaveTemplateDialog] = useState(false);
+  const [showDeleteTemplateConfirm, setShowDeleteTemplateConfirm] = useState(false);
+  const [pendingDeleteTemplateId, setPendingDeleteTemplateId] = useState<string | null>(null);
+  const [newTemplateName, setNewTemplateName] = useState('');
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [archiveName, setArchiveName] = useState('');
   const [archiveSummary, setArchiveSummary] = useState('');
@@ -250,6 +260,36 @@ export function HistoryManager({
     setPendingOverwriteId(null);
   };
 
+  // 处理保存模板
+  const handleSaveTemplate = () => {
+    if (newTemplateName.trim() && onSaveCustomTemplate) {
+      onSaveCustomTemplate(newTemplateName.trim());
+      setNewTemplateName('');
+      setShowSaveTemplateDialog(false);
+    }
+  };
+
+  // 处理删除自定义模板
+  const handleDeleteCustomTemplate = (id: string) => {
+    setPendingDeleteTemplateId(id);
+    setShowDeleteTemplateConfirm(true);
+  };
+
+  // 确认删除模板
+  const confirmDeleteTemplate = () => {
+    if (onDeleteCustomTemplate && pendingDeleteTemplateId) {
+      onDeleteCustomTemplate(pendingDeleteTemplateId);
+    }
+    setShowDeleteTemplateConfirm(false);
+    setPendingDeleteTemplateId(null);
+  };
+
+  // 取消删除模板
+  const cancelDeleteTemplate = () => {
+    setShowDeleteTemplateConfirm(false);
+    setPendingDeleteTemplateId(null);
+  };
+
   const handleRename = (historyId: string) => {
     if (editName.trim()) {
       onRename(historyId, editName.trim());
@@ -361,6 +401,50 @@ export function HistoryManager({
           </DialogContent>
         </Dialog>
 
+        {/* 保存模板对话框 */}
+        <Dialog open={showSaveTemplateDialog} onOpenChange={setShowSaveTemplateDialog}>
+          <DialogContent className="history-dialog">
+            <DialogHeader>
+              <DialogTitle>保存为模板</DialogTitle>
+            </DialogHeader>
+            <p>将当前分区保存为模板</p>
+            <Input
+              value={newTemplateName}
+              onChange={(e) => setNewTemplateName(e.target.value)}
+              placeholder="输入模板名称"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveTemplate();
+              }}
+            />
+            <div className="history-form-actions">
+              <Button variant="outline" onClick={() => setShowSaveTemplateDialog(false)}>
+                取消
+              </Button>
+              <Button onClick={handleSaveTemplate} disabled={!newTemplateName.trim()}>
+                保存
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* 删除模板确认对话框 */}
+        <Dialog open={showDeleteTemplateConfirm} onOpenChange={setShowDeleteTemplateConfirm}>
+          <DialogContent className="history-dialog">
+            <DialogHeader>
+              <DialogTitle>删除模板</DialogTitle>
+            </DialogHeader>
+            <p>确定要删除这个模板吗？此操作无法撤销。</p>
+            <div className="history-form-actions">
+              <Button variant="outline" onClick={cancelDeleteTemplate}>
+                取消
+              </Button>
+              <Button onClick={confirmDeleteTemplate} className="bg-red-500 hover:bg-red-600">
+                删除
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={showNewWorkspaceDialog} onOpenChange={setShowNewWorkspaceDialog}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="history-action-btn primary">
@@ -411,6 +495,49 @@ export function HistoryManager({
                     </div>
                   </button>
                 ))}
+                {/* 自定义模板 */}
+                {customTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    className="template-item custom-template"
+                    onClick={() => handleCreateNewWorkspace(template.id)}
+                  >
+                    <div className="template-info">
+                      <span className="template-name">{template.name}</span>
+                      <span className="template-desc">{template.description}</span>
+                    </div>
+                    <div className="template-zones">
+                      {template.zones.map((z, i) => (
+                        <span
+                          key={i}
+                          className="template-zone-dot"
+                          style={{ backgroundColor: z.color }}
+                        />
+                      ))}
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="delete-template-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCustomTemplate(template.id);
+                      }}
+                    >
+                      <X size={12} />
+                    </Button>
+                  </button>
+                ))}
+                {/* 保存当前分区为模板按钮 */}
+                {onSaveCustomTemplate && (
+                  <button
+                    className="template-item save-template-btn"
+                    onClick={() => setShowSaveTemplateDialog(true)}
+                  >
+                    <Save size={16} />
+                    <span>保存当前分区为模板</span>
+                  </button>
+                )}
               </div>
             </div>
           </DialogContent>

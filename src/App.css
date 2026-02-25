@@ -2643,6 +2643,40 @@
   gap: 4px;
 }
 
+/* 保存模板按钮样式 */
+.save-template-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: rgba(139, 92, 246, 0.9) !important;
+  border-style: dashed !important;
+}
+
+.save-template-btn:hover {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+}
+
+.save-template-btn span {
+  color: rgba(139, 92, 246, 0.9);
+  font-size: 13px;
+}
+
+/* 删除模板按钮样式 */
+.delete-template-btn {
+  color: rgba(239, 68, 68, 0.7) !important;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.template-item:hover .delete-template-btn {
+  opacity: 1;
+}
+
+.delete-template-btn:hover {
+  color: rgba(239, 68, 68, 1) !important;
+}
+
 .template-zone-dot {
   width: 8px;
   height: 8px;

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Task, Zone, AppState, TaskPriority, TaskUrgency, HistoryWorkspace } from '@/types';
+import type { Task, Zone, AppState, TaskPriority, TaskUrgency, HistoryWorkspace, Template } from '@/types';
 import { DEFAULT_SETTINGS, PREDEFINED_TEMPLATES } from '@/types';
 import { sqliteStorage } from '@/lib/storage-adapter';
 
@@ -46,6 +46,11 @@ interface AppStore extends AppState {
   importHistoryFromJson: (jsonString: string) => boolean;
   importAllHistoryFromJson: (jsonString: string) => number; // 返回导入的数量
 
+  // Template Actions
+  saveCustomTemplate: (name: string) => void;
+  deleteCustomTemplate: (id: string) => void;
+  renameCustomTemplate: (id: string, newName: string) => void;
+
   // Computed helpers
   getTasksByZone: (zoneId: string) => Task[];
   getRootTasks: (zoneId: string) => Task[];
@@ -79,6 +84,7 @@ export const useAppStore = create<AppStore>()(
       activeHistoryId: null,
       currentWorkspace: createWorkspaceData(),
       historyWorkspaces: [],
+      customTemplates: [],
       settings: DEFAULT_SETTINGS,
 
       // --- Actions ---
@@ -649,6 +655,41 @@ export const useAppStore = create<AppStore>()(
           console.error('Failed to import histories:', error);
           return 0;
         }
+      },
+
+      // 保存当前分区为自定义模板
+      saveCustomTemplate: (name) => {
+        const state = get();
+        const template: Template = {
+          id: `custom-${Date.now()}`,
+          name,
+          description: `包含 ${state.currentWorkspace.zones.length} 个分区`,
+          icon: 'LayoutGrid',
+          zones: state.currentWorkspace.zones.map(z => ({
+            name: z.name,
+            color: z.color,
+            order: z.order
+          }))
+        };
+        set(state => ({
+          customTemplates: [...state.customTemplates, template]
+        }));
+      },
+
+      // 删除自定义模板
+      deleteCustomTemplate: (id) => {
+        set(state => ({
+          customTemplates: state.customTemplates.filter(t => t.id !== id)
+        }));
+      },
+
+      // 重命名自定义模板
+      renameCustomTemplate: (id, newName) => {
+        set(state => ({
+          customTemplates: state.customTemplates.map(t =>
+            t.id === id ? { ...t, name: newName } : t
+          )
+        }));
       },
     }),
     {
