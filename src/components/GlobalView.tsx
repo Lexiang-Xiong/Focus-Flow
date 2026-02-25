@@ -45,6 +45,7 @@ interface GlobalViewProps {
   onReorderTasks: (zoneId: string, _tasks: Task[]) => void;
   onSelectTask: (id: string) => void;
   onSortConfigChange: (config: SortConfig) => void;
+  onNavigateToZone?: (zoneId: string, taskId: string) => void;
   getTotalWorkTime?: (taskId: string) => number;
   getEstimatedTime?: (taskId: string) => number;
 }
@@ -65,6 +66,7 @@ export function GlobalView({
   onReorderTasks,
   onSelectTask,
   onSortConfigChange,
+  onNavigateToZone,
   getTotalWorkTime,
   getEstimatedTime,
 }: GlobalViewProps) {
@@ -413,7 +415,10 @@ export function GlobalView({
           onToggleExpanded={onToggleExpanded}
           onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
           onSelect={onSelectTask}
-          onZoomIn={(id) => setFocusedTaskId(id)}
+          onZoomIn={onNavigateToZone ? (id) => {
+            const t = tasks.find(task => task.id === id);
+            if (t) onNavigateToZone(t.zoneId, id);
+          } : undefined}
           hasChildren={hasKids}
           depth={depth}
           getTotalWorkTime={getTotalWorkTime}
@@ -447,7 +452,10 @@ export function GlobalView({
           onToggleExpanded={onToggleExpanded}
           onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
           onSelect={onSelectTask}
-          onZoomIn={(id) => setFocusedTaskId(id)}
+          onZoomIn={onNavigateToZone ? (id) => {
+            const t = tasks.find(task => task.id === id);
+            if (t) onNavigateToZone(t.zoneId, id);
+          } : undefined}
           hasChildren={hasKids}
           depth={depth}
           isDraggable={false}
@@ -480,7 +488,10 @@ export function GlobalView({
           onToggleExpanded={onToggleExpanded}
           onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
           onSelect={onSelectTask}
-          onZoomIn={(id) => setFocusedTaskId(id)}
+          onZoomIn={onNavigateToZone ? (id) => {
+            const t = tasks.find(task => task.id === id);
+            if (t) onNavigateToZone(t.zoneId, id);
+          } : undefined}
           hasChildren={hasKids}
           depth={currentDepth}
           isDraggable={sortConfig.mode === 'zone' && currentDepth === 0}

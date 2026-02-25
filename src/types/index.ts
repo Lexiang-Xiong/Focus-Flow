@@ -64,6 +64,7 @@ export interface CurrentWorkspace {
   sessions: PomodoroSession[];
   createdAt: number;
   lastModified: number;
+  sourceHistoryId?: string; // 来自哪个历史记录（恢复时设置）
 }
 
 export interface Template {
@@ -85,6 +86,7 @@ export interface PomodoroSession {
 export interface AppState {
   currentView: 'zones' | 'global' | 'history' | 'settings';
   activeZoneId: string | null;
+  focusedTaskId: string | null; // 从全局视图导航到分区时聚焦的任务ID
   activeHistoryId: string | null; // 当前查看的历史工作区ID
   // 当前工作区
   currentWorkspace: CurrentWorkspace;

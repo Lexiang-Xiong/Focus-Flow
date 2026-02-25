@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -28,6 +28,7 @@ interface TaskListProps {
   tasks: Task[];
   activeTaskId: string | null;
   isTimerRunning: boolean;
+  focusedTaskId?: string | null; // 从全局视图导航过来时聚焦的任务ID
   onAddTask: (zoneId: string, title: string, description: string, priority?: TaskPriority, urgency?: TaskUrgency, parentId?: string | null) => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
@@ -45,6 +46,7 @@ export function TaskList({
   tasks,
   activeTaskId,
   isTimerRunning,
+  focusedTaskId: propFocusedTaskId,
   onAddTask,
   onToggleTask,
   onDeleteTask,
@@ -63,8 +65,20 @@ export function TaskList({
   const [showCompleted, setShowCompleted] = useState(false);
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
+  const [localFocusedTaskId, setLocalFocusedTaskId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+
+  // 当从全局视图传入 focusedTaskId 时，同步到本地状态
+  // 这样后续就可以正常使用本地状态进行导航了
+  useEffect(() => {
+    if (propFocusedTaskId !== undefined && propFocusedTaskId !== localFocusedTaskId) {
+      setLocalFocusedTaskId(propFocusedTaskId);
+    }
+  }, [propFocusedTaskId]);
+
+  // 始终使用本地状态，支持在区内导航
+  const focusedTaskId = localFocusedTaskId;
+  const setFocusedTaskId = setLocalFocusedTaskId;
   const [addingSubtaskParentId, setAddingSubtaskParentId] = useState<string | null>(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [newSubtaskDescription, setNewSubtaskDescription] = useState('');

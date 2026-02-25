@@ -9,6 +9,7 @@ interface AppStore extends AppState {
   // 视图与状态 Actions
   setCurrentView: (view: AppState['currentView']) => void;
   setActiveZoneId: (id: string | null) => void;
+  setFocusedTaskId: (id: string | null) => void;
   updateSettings: (settings: Partial<AppState['settings']>) => void;
 
   // Zone Actions
@@ -33,11 +34,17 @@ interface AppStore extends AppState {
 
   // History Actions
   archiveCurrentWorkspace: (name?: string, summary?: string) => string;
+  quickArchiveCurrentWorkspace: () => string | null; // 快速存档，返回历史ID，如果需要覆盖则返回null
+  overwriteHistoryWorkspace: (historyId: string) => void; // 覆盖指定历史记录
   restoreFromHistory: (historyId: string) => void;
   createNewWorkspace: (name?: string, templateId?: string) => void;
   deleteHistoryWorkspace: (id: string) => void;
   renameHistoryWorkspace: (id: string, newName: string) => void;
   updateHistorySummary: (id: string, summary: string) => void;
+  exportHistoryToJson: (historyId: string) => string | null;
+  exportAllHistoryToJson: () => string;
+  importHistoryFromJson: (jsonString: string) => boolean;
+  importAllHistoryFromJson: (jsonString: string) => number; // 返回导入的数量
 
   // Computed helpers
   getTasksByZone: (zoneId: string) => Task[];
@@ -68,6 +75,7 @@ export const useAppStore = create<AppStore>()(
       // 初始状态
       currentView: 'zones',
       activeZoneId: null,
+      focusedTaskId: null,
       activeHistoryId: null,
       currentWorkspace: createWorkspaceData(),
       historyWorkspaces: [],
@@ -76,7 +84,8 @@ export const useAppStore = create<AppStore>()(
       // --- Actions ---
 
       setCurrentView: (view) => set({ currentView: view }),
-      setActiveZoneId: (id) => set({ activeZoneId: id }),
+      setActiveZoneId: (id) => set({ activeZoneId: id, focusedTaskId: null }), // 切换分区时重置聚焦任务
+      setFocusedTaskId: (id) => set({ focusedTaskId: id }),
       updateSettings: (newSettings) => set((state) => ({
         settings: { ...state.settings, ...newSettings }
       })),
@@ -425,15 +434,71 @@ export const useAppStore = create<AppStore>()(
           const history: HistoryWorkspace = {
             ...state.currentWorkspace,
             id: historyId,
+            // createdAt 继承 currentWorkspace 的创建时间（工作区最初创建的时间）
             name: name || state.currentWorkspace.name,
             summary: summary || `包含 ${state.currentWorkspace.zones.length} 个分区，${state.currentWorkspace.tasks.length} 个任务`,
-            lastModified: Date.now(),
+            lastModified: Date.now(), // 修改时间为当前存入时间
           };
           return {
-            historyWorkspaces: [history, ...state.historyWorkspaces]
+            historyWorkspaces: [history, ...state.historyWorkspaces],
+            // 存入历史后创建全新的空白工作区（无分区、无任务）
+            currentWorkspace: {
+              id: `workspace-${Date.now()}`,
+              name: state.currentWorkspace.name, // 保留原名称
+              zones: [],
+              tasks: [],
+              sessions: [],
+              createdAt: Date.now(), // 新的创建时间
+              lastModified: Date.now(),
+              sourceHistoryId: undefined, // 清空来源记录
+            },
+            activeZoneId: null, // 清空当前分区
           };
         });
         return historyId;
+      },
+
+      // 快速存档：直接执行存档，不做覆盖检查
+      quickArchiveCurrentWorkspace: () => {
+        const now = new Date();
+        const dateStr = `${now.getMonth() + 1}月${now.getDate()}日`;
+        const defaultName = `存档 ${dateStr}`;
+        return get().archiveCurrentWorkspace(defaultName, '');
+      },
+
+      // 覆盖指定历史记录
+      overwriteHistoryWorkspace: (historyId) => {
+        set((state) => {
+          const existingHistory = state.historyWorkspaces.find(h => h.id === historyId);
+          if (!existingHistory) return state;
+
+          const updatedHistory: HistoryWorkspace = {
+            ...state.currentWorkspace,
+            id: historyId,
+            name: existingHistory.name, // 保留原名称
+            // createdAt 保留原创建时间
+            summary: existingHistory.summary, // 保留原摘要
+            lastModified: Date.now(), // 更新修改时间
+          };
+
+          return {
+            historyWorkspaces: state.historyWorkspaces.map(h =>
+              h.id === historyId ? updatedHistory : h
+            ),
+            // 覆盖历史后创建全新的空白工作区
+            currentWorkspace: {
+              id: `workspace-${Date.now()}`,
+              name: state.currentWorkspace.name, // 保留原名称
+              zones: [],
+              tasks: [],
+              sessions: [],
+              createdAt: Date.now(), // 新的创建时间
+              lastModified: Date.now(),
+              sourceHistoryId: undefined, // 清空来源记录
+            },
+            activeZoneId: null, // 清空当前分区
+          };
+        });
       },
 
       restoreFromHistory: (historyId) => set((state) => {
@@ -444,7 +509,9 @@ export const useAppStore = create<AppStore>()(
           currentWorkspace: {
             ...history,
             id: `workspace-${Date.now()}`,
-            lastModified: Date.now()
+            createdAt: history.createdAt, // 继承历史的创建时间（工作区最初创建的时间）
+            lastModified: Date.now(),
+            sourceHistoryId: historyId // 记录来自哪个历史记录
           },
           activeZoneId: history.zones[0]?.id || null,
           currentView: 'zones'
@@ -497,6 +564,92 @@ export const useAppStore = create<AppStore>()(
           h.id === id ? { ...h, summary: summary.trim() } : h
         )
       })),
+
+      // 导出历史工作区为 JSON 字符串
+      exportHistoryToJson: (historyId) => {
+        const state = get();
+        const history = state.historyWorkspaces.find(h => h.id === historyId);
+        if (!history) return null;
+        return JSON.stringify(history, null, 2);
+      },
+
+      // 从 JSON 字符串导入历史工作区
+      importHistoryFromJson: (jsonString) => {
+        try {
+          const data = JSON.parse(jsonString);
+          // 验证数据结构
+          if (!data.name || !data.zones || !Array.isArray(data.zones) || !data.tasks || !Array.isArray(data.tasks)) {
+            console.error('Invalid history data structure');
+            return false;
+          }
+
+          // 生成新的 ID 以避免冲突
+          const importedHistory: HistoryWorkspace = {
+            ...data,
+            id: `history-${Date.now()}`,
+            createdAt: Date.now(),
+            lastModified: Date.now(),
+          };
+
+          set(state => ({
+            historyWorkspaces: [importedHistory, ...state.historyWorkspaces]
+          }));
+
+          return true;
+        } catch (error) {
+          console.error('Failed to import history:', error);
+          return false;
+        }
+      },
+
+      // 导出所有历史工作区为 JSON 数组
+      exportAllHistoryToJson: () => {
+        const state = get();
+        return JSON.stringify(state.historyWorkspaces, null, 2);
+      },
+
+      // 批量导入历史工作区（支持单个或数组）
+      importAllHistoryFromJson: (jsonString: string) => {
+        try {
+          const data = JSON.parse(jsonString);
+          let histories: HistoryWorkspace[] = [];
+
+          // 支持单个对象或数组
+          if (Array.isArray(data)) {
+            histories = data;
+          } else if (data.name && data.zones) {
+            histories = [data];
+          } else {
+            console.error('Invalid data format');
+            return 0;
+          }
+
+          // 验证并处理每个历史记录
+          const validHistories: HistoryWorkspace[] = histories.filter(h =>
+            h.name && h.zones && Array.isArray(h.zones) && h.tasks && Array.isArray(h.tasks)
+          ).map(h => ({
+            ...h,
+            id: `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            createdAt: Date.now(),
+            lastModified: Date.now(),
+          }));
+
+          if (validHistories.length === 0) {
+            console.error('No valid histories found');
+            return 0;
+          }
+
+          set(state => ({
+            // 保持原有顺序：现有历史在前，导入的在后
+            historyWorkspaces: [...state.historyWorkspaces, ...validHistories]
+          }));
+
+          return validHistories.length;
+        } catch (error) {
+          console.error('Failed to import histories:', error);
+          return 0;
+        }
+      },
     }),
     {
       name: 'focus-flow-storage-v4', // 保持 Key 不变，以便适配器能找到旧数据进行迁移

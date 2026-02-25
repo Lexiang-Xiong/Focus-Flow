@@ -23,9 +23,11 @@ function App() {
     settings,
     currentView,
     activeZoneId,
+    focusedTaskId,
     historyWorkspaces,
     setCurrentView,
     setActiveZoneId,
+    setFocusedTaskId,
     updateSettings,
     getZoneById,
     getTasksByZone,
@@ -37,11 +39,17 @@ function App() {
     toggleSubtasksCollapsed,
     clearCompleted,
     archiveCurrentWorkspace,
+    quickArchiveCurrentWorkspace,
+    overwriteHistoryWorkspace,
     restoreFromHistory,
     createNewWorkspace,
     deleteHistoryWorkspace,
     renameHistoryWorkspace,
     updateHistorySummary,
+    exportHistoryToJson,
+    exportAllHistoryToJson,
+    importHistoryFromJson,
+    importAllHistoryFromJson,
     getStats,
     addWorkTime,
     getTotalWorkTime,
@@ -384,6 +392,7 @@ function App() {
                   <HistoryManager
                     historyWorkspaces={historyWorkspaces}
                     templates={PREDEFINED_TEMPLATES}
+                    currentSourceHistoryId={currentWorkspace.sourceHistoryId}
                     onBack={() => setCurrentView('zones')}
                     onRestore={handleRestoreFromHistory}
                     onDelete={deleteHistoryWorkspace}
@@ -391,6 +400,12 @@ function App() {
                     onUpdateSummary={updateHistorySummary}
                     onCreateNewWorkspace={handleCreateNewWorkspace}
                     onArchiveCurrent={handleArchiveCurrent}
+                    onQuickArchive={quickArchiveCurrentWorkspace}
+                    onOverwriteHistory={overwriteHistoryWorkspace}
+                    onExportHistory={exportHistoryToJson}
+                    onExportAllHistory={exportAllHistoryToJson}
+                    onImportHistory={importHistoryFromJson}
+                    onImportAllHistory={importAllHistoryFromJson}
                   />
                 ) : currentView === 'settings' ? (
                   <SettingsPanel
@@ -420,6 +435,11 @@ function App() {
                     onReorderTasks={reorderTasks}
                     onSelectTask={handleSelectTask}
                     onSortConfigChange={(config) => updateSettings({ globalViewSort: config })}
+                    onNavigateToZone={(zoneId, taskId) => {
+                      setActiveZoneId(zoneId);
+                      setFocusedTaskId(taskId);
+                      setCurrentView('zones');
+                    }}
                     getTotalWorkTime={getTotalWorkTime}
                     getEstimatedTime={getEstimatedTime}
                   />
@@ -430,6 +450,7 @@ function App() {
                     tasks={currentZoneTasks}
                     activeTaskId={activeTaskId}
                     isTimerRunning={timer.isRunning}
+                    focusedTaskId={focusedTaskId}
                     onAddTask={useAppStore.getState().addTask}
                     onToggleTask={toggleTask}
                     onDeleteTask={deleteTask}
