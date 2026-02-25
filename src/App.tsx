@@ -370,6 +370,7 @@ function App() {
                 zones={zones}
                 activeZoneId={activeZoneId}
                 templates={PREDEFINED_TEMPLATES}
+                customTemplates={customTemplates}
                 onSelectZone={(zoneId) => {
                   setActiveZoneId(zoneId);
                   setCurrentView(zoneId === null ? 'global' : 'zones');
@@ -377,13 +378,21 @@ function App() {
                 onAddZone={addZone}
                 onUpdateZone={useAppStore.getState().updateZone}
                 onDeleteZone={useAppStore.getState().deleteZone}
-                onApplyTemplate={useAppStore.getState().applyTemplate}
+                onApplyTemplate={(templateId) => {
+                  // 应用模板前先自动保存当前工作区
+                  if (currentWorkspace.tasks.length > 0) {
+                    archiveCurrentWorkspace();
+                  }
+                  useAppStore.getState().applyTemplate(templateId);
+                }}
                 onViewChange={(view) => {
                   setCurrentView(view);
                   if (view === 'global') setActiveZoneId(null);
                 }}
                 onOpenHistory={() => setCurrentView('history')}
                 onOpenSettings={() => setCurrentView('settings')}
+                onSaveAsTemplate={saveCustomTemplate}
+                onDeleteCustomTemplate={deleteCustomTemplate}
               />
             </ResizablePanel>
 

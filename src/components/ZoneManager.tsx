@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Settings, Trash2, Edit2, Palette, FolderKanban, History, Cog } from 'lucide-react';
+import { Plus, Settings, Trash2, Edit2, Palette, FolderKanban, History, Cog, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -11,6 +11,7 @@ interface ZoneManagerProps {
   zones: Zone[];
   activeZoneId: string | null;
   templates: Template[];
+  customTemplates?: Template[];
   onSelectZone: (zoneId: string | null) => void;
   onAddZone: (name: string, color: string) => void;
   onUpdateZone: (id: string, updates: Partial<Omit<Zone, 'id'>>) => void;
@@ -19,12 +20,15 @@ interface ZoneManagerProps {
   onViewChange: (view: 'zones' | 'global' | 'history') => void;
   onOpenHistory: () => void;
   onOpenSettings: () => void;
+  onSaveAsTemplate?: (name: string) => void;
+  onDeleteCustomTemplate?: (id: string) => void;
 }
 
 export function ZoneManager({
   zones,
   activeZoneId,
   templates,
+  customTemplates = [],
   onSelectZone,
   onAddZone,
   onUpdateZone,
@@ -33,6 +37,8 @@ export function ZoneManager({
   onViewChange,
   onOpenHistory,
   onOpenSettings,
+  onSaveAsTemplate,
+  onDeleteCustomTemplate,
 }: ZoneManagerProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newZoneName, setNewZoneName] = useState('');
@@ -40,6 +46,8 @@ export function ZoneManager({
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [showSaveTemplateDialog, setShowSaveTemplateDialog] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
 
   const handleAddZone = () => {
     if (newZoneName.trim()) {
@@ -108,6 +116,7 @@ export function ZoneManager({
                 <DialogTitle>选择工作模板</DialogTitle>
               </DialogHeader>
               <div className="template-list">
+                {/* 预定义模板 */}
                 {templates.map((template) => (
                   <button
                     key={template.id}
@@ -129,8 +138,94 @@ export function ZoneManager({
                     </div>
                   </button>
                 ))}
+                {/* 自定义模板 */}
+                {customTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    className="template-item"
+                    onClick={() => handleApplyTemplate(template.id)}
+                  >
+                    <div className="template-info">
+                      <span className="template-name">{template.name}</span>
+                      <span className="template-desc">{template.description}</span>
+                    </div>
+                    <div className="template-zones">
+                      {template.zones.map((z: { color: string }, i: number) => (
+                        <span
+                          key={i}
+                          className="template-zone-dot"
+                          style={{ backgroundColor: z.color }}
+                        />
+                      ))}
+                    </div>
+                    {onDeleteCustomTemplate && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="delete-template-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm('确定要删除这个模板吗？')) {
+                            onDeleteCustomTemplate(template.id);
+                          }
+                        }}
+                      >
+                        <X size={12} />
+                      </Button>
+                    )}
+                  </button>
+                ))}
+                {/* 保存当前分区为模板 */}
+                {onSaveAsTemplate && zones.length > 0 && (
+                  <button
+                    className="template-item save-template-btn"
+                    onClick={() => setShowSaveTemplateDialog(true)}
+                  >
+                    <Save size={16} />
+                    <span>保存当前分区为模板</span>
+                  </button>
+                )}
               </div>
             </DialogContent>
+
+            {/* 保存模板对话框 */}
+            <Dialog open={showSaveTemplateDialog} onOpenChange={setShowSaveTemplateDialog}>
+              <DialogContent className="history-dialog">
+                <DialogHeader>
+                  <DialogTitle>保存为模板</DialogTitle>
+                </DialogHeader>
+                <p>将当前分区保存为模板</p>
+                <Input
+                  value={newTemplateName}
+                  onChange={(e) => setNewTemplateName(e.target.value)}
+                  placeholder="输入模板名称"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newTemplateName.trim() && onSaveAsTemplate) {
+                      onSaveAsTemplate(newTemplateName.trim());
+                      setNewTemplateName('');
+                      setShowSaveTemplateDialog(false);
+                    }
+                  }}
+                />
+                <div className="history-form-actions">
+                  <Button variant="outline" onClick={() => setShowSaveTemplateDialog(false)}>
+                    取消
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (newTemplateName.trim() && onSaveAsTemplate) {
+                        onSaveAsTemplate(newTemplateName.trim());
+                        setNewTemplateName('');
+                        setShowSaveTemplateDialog(false);
+                      }
+                    }}
+                    disabled={!newTemplateName.trim()}
+                  >
+                    保存
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </Dialog>
           <Button
             size="icon"
