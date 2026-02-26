@@ -17,7 +17,7 @@ import {
 import React from 'react';
 import { ArrowLeft, CheckCircle2, Globe, ArrowUpDown, Zap, Flag, ChevronDown, ChevronRight, ChevronUp, ArrowUp, Layers, Home, Clock, CircleX, Network } from 'lucide-react';
 import { getFlattenedTasks } from '@/lib/tree-utils';
-import { calculateRankScores, mapRankToUrgency } from '@/lib/urgency-utils';
+import { calculateRankScores, mapRankToUrgency, getInheritedDeadline } from '@/lib/urgency-utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -109,8 +109,9 @@ export function GlobalView({
     const pWeight = sortConfig.priorityWeight ?? 0.6;
     const dWeight = sortConfig.deadlineWeight ?? 0.4;
     const normalizedPriority = (2 - priorityOrder[task.priority]) / 2; // 0-1, high=1
-    // 使用叶子节点专用的排名分数，如果没有 deadline 则为 0
-    const deadlineScore = task.deadline ? (leafModeRankScores[task.id] || 0) : 0;
+    // 使用继承的截止日期计算分数
+    const effectiveDeadline = getInheritedDeadline(task, tasks);
+    const deadlineScore = effectiveDeadline ? (leafModeRankScores[task.id] || 0) : 0;
     return normalizedPriority * pWeight + deadlineScore * dWeight;
   };
 
@@ -133,17 +134,21 @@ export function GlobalView({
   // 叶子节点模式专用排名分数（只基于叶子节点计算）
   const leafModeRankScores = useMemo(() => {
     if (!isLeafMode) return rankScores;
-    // 只对叶子节点计算排名
-    const leafTasks = rootTasks.filter(t => t.deadline && t.deadline > 0);
+
+    const leafTasks = rootTasks.filter(t => {
+      const effectiveDeadline = getInheritedDeadline(t, tasks);
+      return effectiveDeadline && effectiveDeadline > 0;
+    });
+
     // 按 deadline 排序（越早越紧急）
-    leafTasks.sort((a, b) => a.deadline! - b.deadline!);
+    leafTasks.sort((a, b) => getInheritedDeadline(a, tasks)! - getInheritedDeadline(b, tasks)!);
     // 分配排名分数
     const scores: Record<string, number> = {};
     leafTasks.forEach((task, index) => {
       scores[task.id] = 1 - (index / Math.max(leafTasks.length - 1, 1));
     });
     return scores;
-  }, [rootTasks, isLeafMode, rankScores]);
+  }, [rootTasks, isLeafMode, rankScores, tasks]);
 
   // Get child tasks for a parent
   const getChildTasks = (parentId: string): Task[] => {
@@ -224,9 +229,10 @@ export function GlobalView({
         case 'priority':
           return priorityOrder[a.priority] - priorityOrder[b.priority];
         case 'urgency':
-          // 使用叶子节点专用的排名分数
-          const aUrgencyScore = a.deadline ? (leafModeRankScores[a.id] || 0) : 0;
-          const bUrgencyScore = b.deadline ? (leafModeRankScores[b.id] || 0) : 0;
+          const aEffective = getInheritedDeadline(a, tasks);
+          const bEffective = getInheritedDeadline(b, tasks);
+          const aUrgencyScore = aEffective ? (leafModeRankScores[a.id] || 0) : 0;
+          const bUrgencyScore = bEffective ? (leafModeRankScores[b.id] || 0) : 0;
           return bUrgencyScore - aUrgencyScore;
         case 'weighted':
           return calculateWeightedScore(b) - calculateWeightedScore(a);
@@ -305,7 +311,8 @@ export function GlobalView({
       const noDeadlineTasks: Task[] = [];
 
       sortedRootTasks.forEach((t) => {
-        if (!t.deadline || t.deadline <= 0) {
+        const effectiveDeadline = getInheritedDeadline(t, tasks);
+        if (!effectiveDeadline || effectiveDeadline <= 0) {
           noDeadlineTasks.push(t);
         } else {
           const score = leafModeRankScores[t.id] || 0;

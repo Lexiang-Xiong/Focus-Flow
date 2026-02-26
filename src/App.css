@@ -1375,6 +1375,7 @@
   border-left: 2px solid rgba(255, 255, 255, 0.1);
   padding-left: 8px;
   margin-left: 4px;
+  white-space: pre-wrap;
 }
 
 .task-work-time {

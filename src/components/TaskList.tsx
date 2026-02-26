@@ -16,6 +16,7 @@ import {
 import { Plus, CheckCircle2, Circle, Trash2, ChevronDown, ChevronRight, Home, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -156,7 +157,7 @@ export function TaskList({
 
   const handleAddTask = () => {
     if (newTaskTitle.trim() && zone) {
-      onAddTask(zone.id, newTaskTitle.trim(), newTaskDescription.trim(), selectedPriority, selectedUrgency, selectedDeadline, selectedDeadlineType, null);
+      onAddTask(zone.id, newTaskTitle.trim(), newTaskDescription.trim(), selectedPriority, selectedUrgency, selectedDeadline, selectedDeadlineType, focusedTaskId || null);
       setNewTaskTitle('');
       setNewTaskDescription('');
       setSelectedDeadline(null);
@@ -475,12 +476,13 @@ export function TaskList({
               placeholder="任务标题..."
               className="add-task-title-input"
             />
-            <Input
+            <Textarea
               value={newTaskDescription}
               onChange={(e) => setNewTaskDescription(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="描述（可选，Shift+Enter 换行）..."
-              className="add-task-desc-input"
+              className="add-task-desc-input min-h-[36px] py-2 resize-none"
+              rows={1}
             />
           </div>
           <div className="add-task-actions">
@@ -594,12 +596,13 @@ export function TaskList({
                               </Button>
                             </div>
                             {/* 描述输入框 */}
-                            <Input
+                            <Textarea
                               value={newSubtaskDescription}
                               onChange={(e) => setNewSubtaskDescription(e.target.value)}
                               onKeyDown={handleSubtaskKeyDown}
                               placeholder="描述（可选，Shift+Enter 换行）..."
-                              className="h-7 text-sm text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30"
+                              className="min-h-[28px] text-sm text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30 resize-none py-1"
+                              rows={1}
                             />
                             {/* 子任务支持优先级和截止日期设置 */}
                             <div className="flex items-center justify-between">

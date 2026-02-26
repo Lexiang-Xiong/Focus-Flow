@@ -4,6 +4,7 @@ import { Check, Trash2, Edit2, GripVertical, ChevronDown, ChevronUp, ChevronRigh
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -132,7 +133,8 @@ export function TaskItem({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // 阻止 textarea 默认的换行行为
       handleSave();
     } else if (e.key === 'Escape') {
       setEditTitle(task.title);
@@ -314,13 +316,14 @@ export function TaskItem({
               placeholder="任务标题"
               className="task-edit-input"
             />
-            <Input
+            <Textarea
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
               onKeyDown={handleKeyDown}
               onBlur={handleBlur}
-              placeholder="任务描述（可选）"
-              className="task-edit-input description"
+              placeholder="任务描述（可选，Shift+Enter 换行）"
+              className="task-edit-input description min-h-[32px] resize-none py-1"
+              rows={1}
             />
             <Input
               type="number"
