@@ -58,6 +58,7 @@ jobs:
             - Linux: 下载 `.AppImage`、`.deb` 或 `.rpm`
           releaseDraft: true
           prerelease: false
+          targets: nsis
 
   build-ubuntu:
     runs-on: ubuntu-22.04
@@ -112,6 +113,7 @@ jobs:
             - Linux: 下载 `.AppImage`、`.deb` 或 `.rpm`
           releaseDraft: true
           prerelease: false
+          targets: deb rpm appimage
 
   build-macos:
     runs-on: macos-latest
@@ -161,3 +163,4 @@ jobs:
             - Linux: 下载 `.AppImage`、`.deb` 或 `.rpm`
           releaseDraft: true
           prerelease: false
+          targets: dmg app
