@@ -21,9 +21,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            src-tauri/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: Install frontend dependencies
         run: npm ci
@@ -39,9 +53,9 @@ jobs:
             Focus Flow - 浮动待办事项应用
 
             ## 下载说明
-            - Windows: 下载 `.exe` 文件
-            - macOS: 下载 `.dmg` 文件
-            - Linux: 下载 `.AppImage` 文件
+            - Windows: 下载 `.exe` 安装包 (NSIS)
+            - macOS: 下载 `.dmg` (Intel) 或 `.app.tar.gz` (Apple Silicon)
+            - Linux: 下载 `.AppImage`、`.deb` 或 `.rpm`
           releaseDraft: true
           prerelease: false
 
@@ -56,6 +70,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -64,6 +79,19 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            src-tauri/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: Install frontend dependencies
         run: npm ci
@@ -79,9 +107,9 @@ jobs:
             Focus Flow - 浮动待办事项应用
 
             ## 下载说明
-            - Windows: 下载 `.exe` 文件
-            - macOS: 下载 `.dmg` 文件
-            - Linux: 下载 `.AppImage` 文件
+            - Windows: 下载 `.exe` 安装包 (NSIS)
+            - macOS: 下载 `.dmg` (Intel) 或 `.app.tar.gz` (Apple Silicon)
+            - Linux: 下载 `.AppImage`、`.deb` 或 `.rpm`
           releaseDraft: true
           prerelease: false
 
@@ -96,9 +124,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            src-tauri/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: Install frontend dependencies
         run: npm ci
@@ -114,8 +156,8 @@ jobs:
             Focus Flow - 浮动待办事项应用
 
             ## 下载说明
-            - Windows: 下载 `.exe` 文件
-            - macOS: 下载 `.dmg` 文件
-            - Linux: 下载 `.AppImage` 文件
+            - Windows: 下载 `.exe` 安装包 (NSIS)
+            - macOS: 下载 `.dmg` (Intel) 或 `.app.tar.gz` (Apple Silicon)
+            - Linux: 下载 `.AppImage`、`.deb` 或 `.rpm`
           releaseDraft: true
           prerelease: false
