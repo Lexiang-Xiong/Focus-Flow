@@ -67,7 +67,6 @@ export function TaskItem({
   const [editDeadlineType, setEditDeadlineType] = useState<DeadlineType>(task.deadlineType || 'none');
   const [editHour, setEditHour] = useState<number>(task.deadline ? new Date(task.deadline).getHours() : 23);
   const [editMinute, setEditMinute] = useState<number>(task.deadline ? new Date(task.deadline).getMinutes() : 59);
-  const [timeOnlyMode, setTimeOnlyMode] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -369,6 +368,7 @@ export function TaskItem({
                   <button
                     className={`text-[10px] flex items-center gap-1 hover:bg-white/10 px-1 py-0.5 rounded transition-colors border ${isOverdue ? 'text-red-500 font-bold border-red-500/50' : inheritedDeadline && inheritedDeadline > 0 ? 'text-green-400 border-green-500/50 hover:text-green-300 hover:border-green-400' : 'border-white/30 text-white/50 hover:text-white/80 hover:border-white/50'}`}
                     title="点击修改截止日期"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <Calendar size={10} />
                     {inheritedDeadline && inheritedDeadline > 0 ? (
@@ -383,99 +383,9 @@ export function TaskItem({
                     align="start"
                     side="bottom"
                     sideOffset={4}
-                    avoidCollisions={false}
+                    collisionPadding={20}
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="flex gap-1 mb-2 border-b border-white/10 pb-2">
-                      <Button
-                        variant={editDeadlineType === 'today' ? 'default' : 'ghost'}
-                        size="sm"
-                        className={editDeadlineType === 'today' ? 'bg-green-600 text-white' : 'text-white hover:bg-white/10'}
-                        onClick={() => {
-                          const result = convertDeadlineType('today');
-                          setEditDeadline(result.deadline);
-                          setEditDeadlineType(result.deadlineType);
-                        }}
-                      >
-                        今天
-                      </Button>
-                      <Button
-                        variant={editDeadlineType === 'tomorrow' ? 'default' : 'ghost'}
-                        size="sm"
-                        className={editDeadlineType === 'tomorrow' ? 'bg-green-600 text-white' : 'text-white hover:bg-white/10'}
-                        onClick={() => {
-                          const result = convertDeadlineType('tomorrow');
-                          setEditDeadline(result.deadline);
-                          setEditDeadlineType(result.deadlineType);
-                        }}
-                      >
-                        明天
-                      </Button>
-                      <Button
-                        variant={editDeadlineType === 'week' ? 'default' : 'ghost'}
-                        size="sm"
-                        className={editDeadlineType === 'week' ? 'bg-green-600 text-white' : 'text-white hover:bg-white/10'}
-                        onClick={() => {
-                          const result = convertDeadlineType('week');
-                          setEditDeadline(result.deadline);
-                          setEditDeadlineType(result.deadlineType);
-                        }}
-                      >
-                        本周
-                      </Button>
-                      <Button
-                        variant={editDeadlineType === 'none' ? 'default' : 'ghost'}
-                        size="sm"
-                        className={editDeadlineType === 'none' ? 'bg-green-600 text-white' : 'text-white hover:bg-white/10'}
-                        onClick={() => {
-                          setEditDeadline(null);
-                          setEditDeadlineType('none');
-                        }}
-                      >
-                        无
-                      </Button>
-                    </div>
-                    {/* 仅时间模式切换 */}
-                    <div className="flex items-center gap-2 mb-2">
-                      <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={timeOnlyMode}
-                          onChange={(e) => setTimeOnlyMode(e.target.checked)}
-                          className="w-3.5 h-3.5 accent-green-500"
-                        />
-                        <span className="text-xs text-white/70">仅设置时间</span>
-                      </label>
-                    </div>
-                    {/* 时间选择器 - 仅时间模式下显示在日历位置 */}
-                    {timeOnlyMode ? (
-                      <div className="flex items-center gap-2 mb-2 px-1">
-                        <span className="text-xs text-white/80">时间:</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max="23"
-                          value={editHour}
-                          onChange={(e) => {
-                            const val = Math.max(0, Math.min(23, parseInt(e.target.value) || 0));
-                            setEditHour(val);
-                          }}
-                          className="w-12 h-7 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
-                        />
-                        <span className="text-white/80">:</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max="59"
-                          value={editMinute}
-                          onChange={(e) => {
-                            const val = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
-                            setEditMinute(val);
-                          }}
-                          className="w-12 h-7 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
-                        />
-                        <span className="text-xs text-white/50 ml-1">(保持当前日期)</span>
-                      </div>
-                    ) : (
                     <CalendarComponent
                       mode="single"
                       selected={editDeadline ? new Date(editDeadline) : undefined}
@@ -490,18 +400,18 @@ export function TaskItem({
                       className="rounded-md my-2"
                       classNames={{
                         root: "calendar-dark",
-                        months: "flex flex-col gap-4",
-                        month: "flex flex-col gap-4",
-                        caption: "flex justify-center pt-1 relative items-center",
+                        months: "flex flex-col gap-1 relative",
+                        month: "flex flex-col",
+                        caption: "flex justify-center items-center py-1 relative",
                         caption_label: "text-sm font-medium text-white",
-                        nav: "flex items-center gap-1 absolute w-full justify-between top-0 left-0 right-0",
-                        nav_button: "h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100 text-white hover:bg-white/20 rounded flex items-center justify-center",
-                        nav_button_previous: "absolute left-1",
-                        nav_button_next: "absolute right-1",
+                        nav: "absolute inset-x-0 top-1 flex items-center justify-between w-full z-10 px-1",
+                        nav_button: "h-6 w-6 bg-black p-0 text-white hover:bg-white hover:text-black rounded flex items-center justify-center transition-colors text-xs border border-white/20",
+                        nav_button_previous: "",
+                        nav_button_next: "",
                         table: "w-full border-collapse space-y-1",
                         head_row: "flex",
                         head_cell: "text-white/50 rounded-md w-9 font-normal text-[0.8rem]",
-                        row: "flex w-full mt-2",
+                        row: "flex w-full mt-1",
                         cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
                         day: "h-9 w-9 p-0 font-normal text-white bg-black hover:bg-white hover:text-black rounded-md transition-colors",
                         day_selected: "bg-white text-black hover:bg-white hover:text-black",
@@ -511,39 +421,89 @@ export function TaskItem({
                         day_hidden: "invisible",
                       }}
                     />
-                    )}
-                    {/* 时间选择器 */}
-                    <div className="flex items-center gap-2 mb-2 px-1">
-                      <span className="text-xs text-white/80">时间:</span>
-                      <input
-                        type="number"
-                        min="0"
-                        max="23"
-                        value={editHour}
-                        onChange={(e) => {
-                          const val = Math.max(0, Math.min(23, parseInt(e.target.value) || 0));
-                          setEditHour(val);
-                        }}
-                        className="w-12 h-7 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
-                      />
-                      <span className="text-white/80">:</span>
-                      <input
-                        type="number"
-                        min="0"
-                        max="59"
-                        value={editMinute}
-                        onChange={(e) => {
-                          const val = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
-                          setEditMinute(val);
-                        }}
-                        className="w-12 h-7 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
-                      />
+                    {/* 时间选择器和快捷按钮 */}
+                    <div className="flex items-center gap-2 mb-2 px-1 flex-wrap">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-white/80">时间:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="23"
+                          value={editHour}
+                          onChange={(e) => {
+                            const val = Math.max(0, Math.min(23, parseInt(e.target.value) || 0));
+                            setEditHour(val);
+                          }}
+                          className="w-10 h-6 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
+                        />
+                        <span className="text-white/80">:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="59"
+                          value={editMinute}
+                          onChange={(e) => {
+                            const val = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
+                            setEditMinute(val);
+                          }}
+                          className="w-10 h-6 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`h-6 px-2 text-xs ${editDeadlineType === 'today' ? 'bg-white text-black' : 'text-white hover:bg-white hover:text-black'}`}
+                          onClick={() => {
+                            const result = convertDeadlineType('today');
+                            setEditDeadline(result.deadline);
+                            setEditDeadlineType(result.deadlineType);
+                          }}
+                        >
+                          今天
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`h-6 px-2 text-xs ${editDeadlineType === 'tomorrow' ? 'bg-white text-black' : 'text-white hover:bg-white hover:text-black'}`}
+                          onClick={() => {
+                            const result = convertDeadlineType('tomorrow');
+                            setEditDeadline(result.deadline);
+                            setEditDeadlineType(result.deadlineType);
+                          }}
+                        >
+                          明天
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`h-6 px-2 text-xs ${editDeadlineType === 'week' ? 'bg-white text-black' : 'text-white hover:bg-white hover:text-black'}`}
+                          onClick={() => {
+                            const result = convertDeadlineType('week');
+                            setEditDeadline(result.deadline);
+                            setEditDeadlineType(result.deadlineType);
+                          }}
+                        >
+                          本周
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`h-6 px-2 text-xs ${editDeadlineType === 'none' ? 'bg-white text-black' : 'text-white hover:bg-white hover:text-black'}`}
+                          onClick={() => {
+                            setEditDeadline(null);
+                            setEditDeadlineType('none');
+                          }}
+                        >
+                          无
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 group">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1"
+                        className="flex-1 bg-black text-white hover:bg-white hover:text-black"
                         onClick={() => {
                           // 使用编辑的时间和日期创建新的截止时间
                           if (editDeadline) {
@@ -561,7 +521,7 @@ export function TaskItem({
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="flex-1 text-white hover:bg-white/10"
+                        className="flex-1 bg-black text-white hover:bg-white hover:text-black"
                         onClick={() => {
                           setEditDeadline(task.deadline || null);
                           setEditDeadlineType(task.deadlineType || 'none');

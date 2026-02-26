@@ -188,12 +188,6 @@ export function GlobalView({
           const aUrgencyScore = a.deadline ? (rankScores[a.id] || 0) : 0;
           const bUrgencyScore = b.deadline ? (rankScores[b.id] || 0) : 0;
           return bUrgencyScore - aUrgencyScore;
-        case 'deadline':
-          // 按截止日期排序，有 DDL 的排在前面
-          if (!a.deadline && !b.deadline) return 0;
-          if (!a.deadline) return 1;
-          if (!b.deadline) return -1;
-          return a.deadline - b.deadline;
         case 'weighted':
           return calculateWeightedScore(b) - calculateWeightedScore(a);
         case 'workTime':
@@ -265,7 +259,7 @@ export function GlobalView({
           });
         }
       });
-    } else if (sortConfig.mode === 'urgency' || sortConfig.mode === 'deadline') {
+    } else if (sortConfig.mode === 'urgency') {
       // 使用 deadline 排名自动计算 urgency
       const urgencyGroups: Record<TaskUrgency, Task[]> = { urgent: [], high: [], medium: [], low: [] };
       const noDeadlineTasks: Task[] = [];
@@ -595,12 +589,6 @@ export function GlobalView({
                 <div className="sort-option">
                   <Zap size={14} />
                   <span>按紧急度</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="deadline">
-                <div className="sort-option">
-                  <Clock size={14} />
-                  <span>按截止日期</span>
                 </div>
               </SelectItem>
               <SelectItem value="weighted">

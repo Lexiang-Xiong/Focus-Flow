@@ -335,11 +335,12 @@ export function TaskList({
                       selectedDeadline ? new Date(selectedDeadline).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : '截止日期'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-2" align="start">
+                <PopoverContent className="w-auto p-2 bg-black border border-white/20 max-h-[90vh] overflow-y-auto z-[9999]" align="start" side="bottom" sideOffset={4} collisionPadding={20} onClick={(e) => e.stopPropagation()}>
                   <div className="flex gap-1 mb-2 border-b border-white/10 pb-2">
                     <Button
-                      variant={selectedDeadlineType === 'today' ? 'default' : 'ghost'}
+                      variant="ghost"
                       size="sm"
+                      className={selectedDeadlineType === 'today' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
                       onClick={() => {
                         const result = convertDeadlineType('today');
                         setSelectedDeadline(result.deadline);
@@ -349,8 +350,9 @@ export function TaskList({
                       今天
                     </Button>
                     <Button
-                      variant={selectedDeadlineType === 'tomorrow' ? 'default' : 'ghost'}
+                      variant="ghost"
                       size="sm"
+                      className={selectedDeadlineType === 'tomorrow' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
                       onClick={() => {
                         const result = convertDeadlineType('tomorrow');
                         setSelectedDeadline(result.deadline);
@@ -360,8 +362,9 @@ export function TaskList({
                       明天
                     </Button>
                     <Button
-                      variant={selectedDeadlineType === 'week' ? 'default' : 'ghost'}
+                      variant="ghost"
                       size="sm"
+                      className={selectedDeadlineType === 'week' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
                       onClick={() => {
                         const result = convertDeadlineType('week');
                         setSelectedDeadline(result.deadline);
@@ -371,8 +374,9 @@ export function TaskList({
                       本周
                     </Button>
                     <Button
-                      variant={selectedDeadlineType === 'none' ? 'default' : 'ghost'}
+                      variant="ghost"
                       size="sm"
+                      className={selectedDeadlineType === 'none' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
                       onClick={() => {
                         setSelectedDeadline(null);
                         setSelectedDeadlineType('none');
@@ -561,11 +565,12 @@ export function TaskList({
                                         subtaskDeadline ? new Date(subtaskDeadline).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : 'DDL'}
                                     </Button>
                                   </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-2" align="start">
+                                  <PopoverContent className="w-auto p-2 bg-black border border-white/20 max-h-[90vh] overflow-y-auto z-[9999]" align="start" side="bottom" sideOffset={4} collisionPadding={20} onClick={(e) => e.stopPropagation()}>
                                     <div className="flex gap-1 mb-2 border-b border-white/10 pb-2">
                                       <Button
-                                        variant={subtaskDeadlineType === 'today' ? 'default' : 'ghost'}
+                                        variant="ghost"
                                         size="sm"
+                                        className={subtaskDeadlineType === 'today' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
                                         onClick={() => {
                                           const result = convertDeadlineType('today');
                                           setSubtaskDeadline(result.deadline);
@@ -575,8 +580,9 @@ export function TaskList({
                                         今天
                                       </Button>
                                       <Button
-                                        variant={subtaskDeadlineType === 'tomorrow' ? 'default' : 'ghost'}
+                                        variant="ghost"
                                         size="sm"
+                                        className={subtaskDeadlineType === 'tomorrow' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
                                         onClick={() => {
                                           const result = convertDeadlineType('tomorrow');
                                           setSubtaskDeadline(result.deadline);
@@ -586,8 +592,9 @@ export function TaskList({
                                         明天
                                       </Button>
                                       <Button
-                                        variant={subtaskDeadlineType === 'week' ? 'default' : 'ghost'}
+                                        variant="ghost"
                                         size="sm"
+                                        className={subtaskDeadlineType === 'week' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
                                         onClick={() => {
                                           const result = convertDeadlineType('week');
                                           setSubtaskDeadline(result.deadline);
@@ -597,8 +604,9 @@ export function TaskList({
                                         本周
                                       </Button>
                                       <Button
-                                        variant={subtaskDeadlineType === 'none' ? 'default' : 'ghost'}
+                                        variant="ghost"
                                         size="sm"
+                                        className={subtaskDeadlineType === 'none' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
                                         onClick={() => {
                                           setSubtaskDeadline(null);
                                           setSubtaskDeadlineType('none');
