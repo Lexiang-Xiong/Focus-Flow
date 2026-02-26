@@ -1,12 +1,13 @@
 export type TaskPriority = 'low' | 'medium' | 'high';
 export type TaskUrgency = 'low' | 'medium' | 'high' | 'urgent';
+export type DeadlineType = 'exact' | 'today' | 'tomorrow' | 'week' | 'none';
 export type TimerMode = 'work' | 'break' | 'longBreak' | 'idle';
-export type GlobalViewSortMode = 'zone' | 'priority' | 'urgency' | 'weighted';
+export type GlobalViewSortMode = 'zone' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime' | 'timeDiff' | 'deadline';
 
 export interface SortConfig {
   mode: GlobalViewSortMode;
   priorityWeight: number;
-  urgencyWeight: number;
+  deadlineWeight: number; // 替换原来的 urgencyWeight
 }
 
 // 内部剪贴板数据类型
@@ -25,12 +26,16 @@ export interface Task {
   description: string;
   completed: boolean;
   priority: TaskPriority;
-  urgency: TaskUrgency;
+  urgency: TaskUrgency;     // 保留用于显示，但值由 deadline 自动计算
+  deadline: number | null;  // 截止时间戳（毫秒）
+  deadlineType: DeadlineType; // 截止时间类型
   order: number;
   createdAt: number;
   completedAt?: number;
   expanded: boolean;
-  totalWorkTime: number; // 累计工作时间（秒）
+  totalWorkTime: number; // 累计工作时间（秒），包含所有子任务的时间
+  ownTime?: number;      // 独立计时时间（秒），仅在该任务上花费的时间，不含子任务
+  estimatedTime?: number; // 预期时间（分钟），创建时可填也可后续编辑
 }
 
 export interface Zone {
@@ -62,6 +67,7 @@ export interface CurrentWorkspace {
   sessions: PomodoroSession[];
   createdAt: number;
   lastModified: number;
+  sourceHistoryId?: string; // 来自哪个历史记录（恢复时设置）
 }
 
 export interface Template {
@@ -83,11 +89,14 @@ export interface PomodoroSession {
 export interface AppState {
   currentView: 'zones' | 'global' | 'history' | 'settings';
   activeZoneId: string | null;
+  focusedTaskId: string | null; // 从全局视图导航到分区时聚焦的任务ID
   activeHistoryId: string | null; // 当前查看的历史工作区ID
   // 当前工作区
   currentWorkspace: CurrentWorkspace;
   // 历史工作区列表
   historyWorkspaces: HistoryWorkspace[];
+  // 自定义模板列表
+  customTemplates: Template[];
   // 设置
   settings: {
     workDuration: number;
@@ -98,6 +107,7 @@ export interface AppState {
     collapsed: boolean;
     collapsePosition: { x: number; y: number };
     globalViewSort: SortConfig;
+    globalViewLeafMode: boolean; // 叶子节点模式状态
   };
 }
 
@@ -172,7 +182,7 @@ export const ZONE_COLORS = [
   '#6b7280', // gray
 ];
 
-// 默认设置
+// 默认设置（正常值）
 export const DEFAULT_SETTINGS = {
   workDuration: 25 * 60, // 25分钟
   breakDuration: 5 * 60, // 5分钟
@@ -183,9 +193,10 @@ export const DEFAULT_SETTINGS = {
   collapsePosition: { x: 100, y: 100 },
   globalViewSort: {
     mode: 'zone' as GlobalViewSortMode,
-    priorityWeight: 0.4,
-    urgencyWeight: 0.6,
+    priorityWeight: 0.6, // 60%
+    deadlineWeight: 0.4, // 40%
   },
+  globalViewLeafMode: false,
 };
 
 // 格式化时间为可读字符串

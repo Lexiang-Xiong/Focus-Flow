@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { FloatWindow } from '@/components/FloatWindow';
 import { PomodoroTimer } from '@/components/PomodoroTimer';
 import { ZoneManager } from '@/components/ZoneManager';
@@ -8,7 +8,7 @@ import { HistoryManager } from '@/components/HistoryManager';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { CollapseButton } from '@/components/CollapseButton';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store';
 import { useTimer } from '@/hooks/useTimer';
 import { useClipboard } from '@/hooks/useClipboard';
 import { Toaster } from '@/components/ui/sonner';
@@ -23,9 +23,13 @@ function App() {
     settings,
     currentView,
     activeZoneId,
+    focusedTaskId,
     historyWorkspaces,
+    zones,
+    tasks,
     setCurrentView,
     setActiveZoneId,
+    setFocusedTaskId,
     updateSettings,
     getZoneById,
     getTasksByZone,
@@ -37,17 +41,77 @@ function App() {
     toggleSubtasksCollapsed,
     clearCompleted,
     archiveCurrentWorkspace,
+    quickArchiveCurrentWorkspace,
+    overwriteHistoryWorkspace,
     restoreFromHistory,
     createNewWorkspace,
     deleteHistoryWorkspace,
     renameHistoryWorkspace,
     updateHistorySummary,
+    exportHistoryToJson,
+    exportAllHistoryToJson,
+    importHistoryFromJson,
+    importAllHistoryFromJson,
+    customTemplates,
+    saveCustomTemplate,
+    deleteCustomTemplate,
     getStats,
+    addWorkTime,
+    getTotalWorkTime,
+    getEstimatedTime,
     addZone,
   } = useAppStore();
 
-  const zones = currentWorkspace.zones;
-  const tasks = currentWorkspace.tasks;
+  // 预计算所有任务时间（避免渲染时递归计算）
+  const taskComputedTimes = useMemo(() => {
+    const computed: Record<string, { totalWorkTime: number; estimatedTime: number }> = {};
+    if (!tasks || tasks.length === 0) return computed;
+
+    // 计算 estimatedTime（自底向上）
+    const computeEstimated = (taskId: string): number => {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return 0;
+
+      if (task.estimatedTime !== undefined && task.estimatedTime > 0) {
+        computed[taskId] = computed[taskId] || { totalWorkTime: 0, estimatedTime: 0 };
+        computed[taskId].estimatedTime = task.estimatedTime;
+        return task.estimatedTime;
+      }
+
+      const children = tasks.filter(t => t.parentId === taskId);
+      const childrenEst = children.reduce((sum, child) => sum + computeEstimated(child.id), 0);
+
+      computed[taskId] = computed[taskId] || { totalWorkTime: 0, estimatedTime: 0 };
+      computed[taskId].estimatedTime = childrenEst;
+      return childrenEst;
+    };
+
+    // 计算 totalWorkTime（自底向上）
+    const computeTotalWorkTime = (taskId: string): number => {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return 0;
+
+      const children = tasks.filter(t => t.parentId === taskId);
+      const childrenTotal = children.reduce((sum, child) => sum + computeTotalWorkTime(child.id), 0);
+
+      const total = (task.ownTime || 0) + childrenTotal;
+
+      if (!computed[taskId]) {
+        computed[taskId] = { totalWorkTime: 0, estimatedTime: 0 };
+      }
+      computed[taskId].totalWorkTime = total;
+
+      return total;
+    };
+
+    const rootTasks = tasks.filter(t => !t.parentId);
+    rootTasks.forEach(t => {
+      computeEstimated(t.id);
+      computeTotalWorkTime(t.id);
+    });
+
+    return computed;
+  }, [tasks]);
 
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
@@ -65,21 +129,20 @@ function App() {
     tasksRef.current = tasks;
   }, [tasks]);
 
+  // 使用 ref 保持 addWorkTime 稳定，避免计时器回调重复创建
+  const addWorkTimeRef = useRef(addWorkTime);
+  addWorkTimeRef.current = addWorkTime;
+
   // 处理计时器滴答，累计任务时间
   const handleTimerTick = useCallback(() => {
     const currentActiveTaskId = activeTaskIdRef.current;
-    const currentTasks = tasksRef.current;
     const currentTimer = timerRef.current;
 
     if (currentActiveTaskId && currentTimer.isRunning && currentTimer.mode === 'work') {
-      const task = currentTasks.find(t => t.id === currentActiveTaskId);
-      if (task) {
-        updateTask(currentActiveTaskId, {
-          totalWorkTime: (task.totalWorkTime || 0) + 1
-        });
-      }
+      // 使用 addWorkTime 累加时间：当前任务增加 ownTime
+      addWorkTimeRef.current(currentActiveTaskId, 1);
     }
-  }, [updateTask]);
+  }, []);
 
   const handleTimerComplete = useCallback((mode: TimerMode) => {
     if (mode === 'work' && activeTaskId) {
@@ -178,14 +241,14 @@ function App() {
             addZone(result.zone.name, result.zone.color);
             const newTasks = result.tasks.map(t => ({ ...t, id: `task-${Date.now()}-${Math.random()}`, zoneId: result.zone.id }));
             newTasks.forEach(t => {
-              useAppStore.getState().addTask(t.zoneId, t.title, t.description, t.priority, t.urgency, t.parentId);
+              useAppStore.getState().addTask(t.zoneId, t.title, t.description, t.priority, t.urgency, t.deadline || null, t.deadlineType || 'none', t.parentId);
             });
             toast.success(`已粘贴工作区 "${result.zone.name}"`);
           }
         } else if (hasTask && currentZone) {
           const newTask = pasteTask(currentZone.id);
           if (newTask) {
-            useAppStore.getState().addTask(currentZone.id, newTask.title, newTask.description, newTask.priority, newTask.urgency);
+            useAppStore.getState().addTask(currentZone.id, newTask.title, newTask.description, newTask.priority, newTask.urgency, newTask.deadline || null, newTask.deadlineType || 'none');
             toast.success('任务已粘贴');
           }
         }
@@ -357,6 +420,7 @@ function App() {
                 zones={zones}
                 activeZoneId={activeZoneId}
                 templates={PREDEFINED_TEMPLATES}
+                customTemplates={customTemplates}
                 onSelectZone={(zoneId) => {
                   setActiveZoneId(zoneId);
                   setCurrentView(zoneId === null ? 'global' : 'zones');
@@ -364,13 +428,22 @@ function App() {
                 onAddZone={addZone}
                 onUpdateZone={useAppStore.getState().updateZone}
                 onDeleteZone={useAppStore.getState().deleteZone}
-                onApplyTemplate={useAppStore.getState().applyTemplate}
+                onReorderZones={useAppStore.getState().reorderZones}
+                onApplyTemplate={(templateId) => {
+                  // 应用模板前先自动保存当前工作区
+                  if (currentWorkspace.tasks.length > 0) {
+                    archiveCurrentWorkspace();
+                  }
+                  useAppStore.getState().applyTemplate(templateId);
+                }}
                 onViewChange={(view) => {
                   setCurrentView(view);
                   if (view === 'global') setActiveZoneId(null);
                 }}
                 onOpenHistory={() => setCurrentView('history')}
                 onOpenSettings={() => setCurrentView('settings')}
+                onSaveAsTemplate={saveCustomTemplate}
+                onDeleteCustomTemplate={deleteCustomTemplate}
               />
             </ResizablePanel>
 
@@ -382,6 +455,7 @@ function App() {
                   <HistoryManager
                     historyWorkspaces={historyWorkspaces}
                     templates={PREDEFINED_TEMPLATES}
+                    currentSourceHistoryId={currentWorkspace.sourceHistoryId}
                     onBack={() => setCurrentView('zones')}
                     onRestore={handleRestoreFromHistory}
                     onDelete={deleteHistoryWorkspace}
@@ -389,6 +463,15 @@ function App() {
                     onUpdateSummary={updateHistorySummary}
                     onCreateNewWorkspace={handleCreateNewWorkspace}
                     onArchiveCurrent={handleArchiveCurrent}
+                    onQuickArchive={quickArchiveCurrentWorkspace}
+                    onOverwriteHistory={overwriteHistoryWorkspace}
+                    onExportHistory={exportHistoryToJson}
+                    onExportAllHistory={exportAllHistoryToJson}
+                    onImportHistory={importHistoryFromJson}
+                    onImportAllHistory={importAllHistoryFromJson}
+                    customTemplates={customTemplates}
+                    onSaveCustomTemplate={saveCustomTemplate}
+                    onDeleteCustomTemplate={deleteCustomTemplate}
                   />
                 ) : currentView === 'settings' ? (
                   <SettingsPanel
@@ -404,6 +487,8 @@ function App() {
                     activeTaskId={activeTaskId}
                     isTimerRunning={timer.isRunning}
                     sortConfig={settings.globalViewSort}
+                    isLeafMode={settings.globalViewLeafMode}
+                    onLeafModeChange={(isLeaf) => updateSettings({ globalViewLeafMode: isLeaf })}
                     onBack={() => {
                       setCurrentView('zones');
                       if (zones.length > 0) {
@@ -418,6 +503,14 @@ function App() {
                     onReorderTasks={reorderTasks}
                     onSelectTask={handleSelectTask}
                     onSortConfigChange={(config) => updateSettings({ globalViewSort: config })}
+                    onNavigateToZone={(zoneId, taskId) => {
+                      setActiveZoneId(zoneId);
+                      setFocusedTaskId(taskId);
+                      setCurrentView('zones');
+                    }}
+                    getTotalWorkTime={getTotalWorkTime}
+                    getEstimatedTime={getEstimatedTime}
+                    taskComputedTimes={taskComputedTimes}
                   />
                 ) : (
                   <TaskList
@@ -426,6 +519,7 @@ function App() {
                     tasks={currentZoneTasks}
                     activeTaskId={activeTaskId}
                     isTimerRunning={timer.isRunning}
+                    focusedTaskId={focusedTaskId}
                     onAddTask={useAppStore.getState().addTask}
                     onToggleTask={toggleTask}
                     onDeleteTask={deleteTask}

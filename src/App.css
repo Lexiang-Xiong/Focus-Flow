@@ -567,6 +567,34 @@
   border-color: rgba(59, 130, 246, 0.3);
 }
 
+.zone-item.dragging {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.zone-grip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  margin-right: 4px;
+  cursor: grab;
+  color: rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+}
+
+.zone-grip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.zone-grip:active {
+  cursor: grabbing;
+}
+
 .zone-item.global {
   background: linear-gradient(90deg, rgba(59, 130, 246, 0.1), rgba(34, 197, 94, 0.1));
 }
@@ -1358,6 +1386,15 @@
   margin-top: 4px;
 }
 
+.task-work-time .estimated-time {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.task-work-time .own-time {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 10px;
+}
+
 .task-work-time svg {
   color: rgba(255, 255, 255, 0.3);
 }
@@ -1416,6 +1453,10 @@
 }
 
 .task-edit-input.description {
+  font-size: 12px;
+}
+
+.task-edit-input.estimated-time {
   font-size: 12px;
 }
 
@@ -2628,6 +2669,40 @@
 .template-zones {
   display: flex;
   gap: 4px;
+}
+
+/* 保存模板按钮样式 */
+.save-template-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: rgba(139, 92, 246, 0.9) !important;
+  border-style: dashed !important;
+}
+
+.save-template-btn:hover {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+}
+
+.save-template-btn span {
+  color: rgba(139, 92, 246, 0.9);
+  font-size: 13px;
+}
+
+/* 删除模板按钮样式 */
+.delete-template-btn {
+  color: rgba(239, 68, 68, 0.7) !important;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.template-item:hover .delete-template-btn {
+  opacity: 1;
+}
+
+.delete-template-btn:hover {
+  color: rgba(239, 68, 68, 1) !important;
 }
 
 .template-zone-dot {

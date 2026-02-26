@@ -8,7 +8,7 @@ interface UseTimerProps {
   autoStartBreak: boolean;
   soundEnabled: boolean;
   onComplete?: (mode: TimerMode, duration: number) => void;
-  onTick?: (elapsedSeconds: number) => void; // 每秒回调，用于累计时间
+  onTick?: (elapsedSeconds: number) => void;
 }
 
 export function useTimer({
@@ -31,7 +31,12 @@ export function useTimer({
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const tickCountRef = useRef(0);
 
-  // 辅助函数：安全清除定时器
+  // 关键修复 1: 使用 Ref 追踪最新的 state，打破闭包限制
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
   const clearIntervalSafe = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -39,24 +44,18 @@ export function useTimer({
     }
   }, []);
 
-  // Play notification sound using Web Audio API
   const playSound = useCallback(() => {
     if (!soundEnabled) return;
-
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
-
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-
       oscillator.frequency.value = 800;
       oscillator.type = 'sine';
-
       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.5);
     } catch (error) {
@@ -64,179 +63,120 @@ export function useTimer({
     }
   }, [soundEnabled]);
 
-  // Clear interval on unmount
   useEffect(() => {
     return () => clearIntervalSafe();
   }, [clearIntervalSafe]);
 
-  const start = useCallback((mode: TimerMode = 'work', taskId: string | null = null) => {
-    // 防御性清除：先清除可能存在的旧定时器
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
+  // 关键修复 2: 抽离通用的 Tick 逻辑
+  // 这个函数负责：计算时间 -> 执行副作用(onTick) -> 更新UI(setState)
+  const runTick = useCallback((startTime: number, initialTimeRemaining: number, currentDuration: number) => {
+    const now = Date.now();
+    const elapsed = Math.floor((now - startTime) / 1000);
+    const newTimeRemaining = Math.max(0, initialTimeRemaining - elapsed);
 
+    // ✅ 副作用放在这里，而不是 setState 内部
+    tickCountRef.current++;
+    onTick?.(tickCountRef.current);
+
+    if (newTimeRemaining <= 0) {
+      // 计时结束逻辑
+      playSound();
+      clearIntervalSafe();
+
+      const currentState = stateRef.current; // 读取最新状态
+      const completedMode = currentState.mode;
+
+      if (completedMode === 'work') {
+        setCompletedSessions((s) => s + 1);
+      }
+
+      onComplete?.(completedMode, currentDuration);
+
+      if (completedMode === 'work' && autoStartBreak) {
+        setTimeout(() => {
+          const nextMode = (completedSessions + 1) % 4 === 0 ? 'longBreak' : 'break';
+          // 这里的 start 需要能够访问到
+          startTimerInternal(nextMode, null);
+        }, 0);
+      }
+
+      setState(prev => ({
+        ...prev,
+        mode: 'idle',
+        timeRemaining: workDuration, // 重置为工作时长
+        isRunning: false,
+        currentTaskId: null,
+        currentSessionStartTime: undefined,
+        pausedTimeRemaining: undefined,
+      }));
+    } else {
+      // 仅更新 UI 时间
+      setState(prev => ({ ...prev, timeRemaining: newTimeRemaining }));
+    }
+  }, [onTick, playSound, clearIntervalSafe, onComplete, autoStartBreak, completedSessions, workDuration]);
+
+  // 内部启动函数，解决闭包调用问题
+  const startTimerInternal = useCallback((mode: TimerMode, taskId: string | null) => {
+    clearIntervalSafe();
     const duration = mode === 'work' ? workDuration : mode === 'break' ? breakDuration : longBreakDuration;
     tickCountRef.current = 0;
     const startTime = Date.now();
 
-    // 先更新状态，确保在定时器创建前状态已更新
     setState({
       mode,
       timeRemaining: duration,
       isRunning: true,
       currentTaskId: taskId,
       currentSessionStartTime: startTime,
-      pausedTimeRemaining: duration, // 开始时，pausedTimeRemaining = 初始时长
+      pausedTimeRemaining: duration,
     });
 
-    // 然后创建定时器（确保状态已更新后再启动定时器）
-    const newInterval = setInterval(() => {
-      setState((prev) => {
-        if (!prev.currentSessionStartTime || !prev.isRunning) {
-          return prev;
-        }
-
-        // 计算从开始到现在的秒数
-        const now = Date.now();
-        const elapsed = Math.floor((now - prev.currentSessionStartTime) / 1000);
-        // 从 pausedTimeRemaining 减去经过的秒数
-        const newTimeRemaining = Math.max(0, (prev.pausedTimeRemaining || duration) - elapsed);
-
-        tickCountRef.current++;
-        onTick?.(tickCountRef.current);
-
-        if (newTimeRemaining <= 1) {
-          // 计时完成
-          playSound();
-
-          // 清除定时器，防止僵尸定时器
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-
-          const completedMode = prev.mode;
-
-          if (prev.mode === 'work') {
-            setCompletedSessions((s) => s + 1);
-          }
-
-          onComplete?.(prev.mode, duration);
-
-          // 处理 autoStartBreak：直接在定时器外部启动，不嵌套
-          if (completedMode === 'work' && autoStartBreak) {
-            setTimeout(() => {
-              const nextMode = (completedSessions + 1) % 4 === 0 ? 'longBreak' : 'break';
-              start(nextMode, null);
-            }, 0);
-          }
-
-          return {
-            ...prev,
-            mode: 'idle',
-            timeRemaining: workDuration,
-            isRunning: false,
-            currentTaskId: null,
-            currentSessionStartTime: undefined,
-            pausedTimeRemaining: undefined,
-          };
-        }
-        return { ...prev, timeRemaining: newTimeRemaining };
-      });
+    intervalRef.current = setInterval(() => {
+      // 在 interval 中调用抽离的逻辑
+      // 注意：这里我们传递当时的 startTime 和 duration，保证计算准确
+      runTick(startTime, duration, duration);
     }, 1000);
+  }, [workDuration, breakDuration, longBreakDuration, clearIntervalSafe, runTick]);
 
-    // 立即赋值给 intervalRef
-    intervalRef.current = newInterval;
-  }, [workDuration, breakDuration, longBreakDuration, autoStartBreak, completedSessions, playSound, onComplete, onTick]);
+  const start = useCallback((mode: TimerMode = 'work', taskId: string | null = null) => {
+    startTimerInternal(mode, taskId);
+  }, [startTimerInternal]);
 
   const pause = useCallback(() => {
-    // 防御性清除：确保清除 interval
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    // 记录暂停时的剩余时间，清除 sessionStartTime
+    clearIntervalSafe();
     setState((prev) => ({
       ...prev,
       isRunning: false,
-      pausedTimeRemaining: prev.timeRemaining, // 保存当前剩余时间
-      currentSessionStartTime: undefined, // 清除开始时间
+      pausedTimeRemaining: prev.timeRemaining,
+      currentSessionStartTime: undefined,
     }));
-  }, []);
+  }, [clearIntervalSafe]);
 
   const resume = useCallback(() => {
-    // 1. 防御性检查：如果已经在运行或处于空闲态，直接返回
-    if (state.isRunning || state.mode === 'idle') {
-      return;
-    }
+    const current = stateRef.current;
+    if (current.isRunning || current.mode === 'idle') return;
 
-    // 2. 确保清理旧定时器
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-
-    // pausedTimeRemaining 保持不变（是暂停时保存的值）
+    clearIntervalSafe();
     const resumeStartTime = Date.now();
+    const currentPausedTime = current.pausedTimeRemaining || 0;
 
-    // 3. 创建新的定时器
-    const newInterval = setInterval(() => {
-      setState((innerPrev) => {
-        if (!innerPrev.currentSessionStartTime || !innerPrev.isRunning) {
-          return innerPrev;
-        }
+    // 重新获取当前模式的总时长，用于 onComplete 回调
+    const duration = current.mode === 'work' ? workDuration
+      : current.mode === 'break' ? breakDuration
+      : longBreakDuration;
 
-        const now = Date.now();
-        const elapsed = Math.floor((now - innerPrev.currentSessionStartTime) / 1000);
-        const newTimeRemaining = Math.max(0, (innerPrev.pausedTimeRemaining || 0) - elapsed);
-
-        tickCountRef.current++;
-        onTick?.(tickCountRef.current);
-
-        if (newTimeRemaining <= 1) {
-          // 计时完成
-          playSound();
-          const duration = innerPrev.mode === 'work' ? workDuration
-            : innerPrev.mode === 'break' ? breakDuration
-            : longBreakDuration;
-          onComplete?.(innerPrev.mode, duration);
-
-          // 清除定时器
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-
-          if (innerPrev.mode === 'work') {
-            setCompletedSessions((s) => s + 1);
-          }
-
-          return {
-            ...innerPrev,
-            mode: 'idle',
-            timeRemaining: workDuration,
-            isRunning: false,
-            currentTaskId: null,
-            currentSessionStartTime: undefined,
-            pausedTimeRemaining: undefined,
-          };
-        }
-        return { ...innerPrev, timeRemaining: newTimeRemaining };
-      });
+    intervalRef.current = setInterval(() => {
+      // 这里的逻辑稍有不同，因为是从暂停处继续
+      // 基准时间是 pausedTimeRemaining
+      runTick(resumeStartTime, currentPausedTime, duration);
     }, 1000);
 
-    // 4. 保存引用
-    intervalRef.current = newInterval;
-
-    // 5. 更新状态 - 设置新的开始时间，pausedTimeRemaining 保持不变
     setState((prev) => ({
       ...prev,
       isRunning: true,
       currentSessionStartTime: resumeStartTime,
-      // pausedTimeRemaining 保持不变（暂停时保存的值）
     }));
-  }, [state.isRunning, state.mode, state.pausedTimeRemaining, workDuration, breakDuration, longBreakDuration, playSound, onComplete, onTick]);
+  }, [clearIntervalSafe, runTick, workDuration, breakDuration, longBreakDuration]);
 
   const stop = useCallback(() => {
     clearIntervalSafe();
@@ -258,11 +198,13 @@ export function useTimer({
 
   const skip = useCallback(() => {
     clearIntervalSafe();
+    const current = stateRef.current;
 
-    if (state.mode === 'work') {
+    if (current.mode === 'work') {
       const nextMode = (completedSessions + 1) % 4 === 0 ? 'longBreak' : 'break';
       const nextDuration = nextMode === 'longBreak' ? longBreakDuration : breakDuration;
       tickCountRef.current = 0;
+
       setState({
         mode: nextMode,
         timeRemaining: nextDuration,
@@ -271,20 +213,14 @@ export function useTimer({
         currentSessionStartTime: autoStartBreak ? Date.now() : undefined,
         pausedTimeRemaining: autoStartBreak ? nextDuration : undefined,
       });
+
       if (autoStartBreak) {
-        start(nextMode);
+        startTimerInternal(nextMode, null);
       }
     } else {
-      setState({
-        mode: 'idle',
-        timeRemaining: workDuration,
-        isRunning: false,
-        currentTaskId: null,
-        currentSessionStartTime: undefined,
-        pausedTimeRemaining: undefined,
-      });
+      stop();
     }
-  }, [state.mode, completedSessions, workDuration, breakDuration, longBreakDuration, autoStartBreak, start, clearIntervalSafe]);
+  }, [completedSessions, workDuration, breakDuration, longBreakDuration, autoStartBreak, startTimerInternal, clearIntervalSafe, stop]);
 
   const updateTime = useCallback((newTimeInSeconds: number) => {
     setState(prev => ({
@@ -300,26 +236,15 @@ export function useTimer({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }, []);
 
-  // 设置模式（用于设置面板预览）
+  // 设置模式预览
   const setMode = useCallback((newMode: TimerMode) => {
-    // 如果正在运行，不允许切换模式
-    if (state.isRunning) return;
-
-    // 清除可能存在的定时器
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-
-    // 根据模式获取对应的时长
-    const duration = newMode === 'work'
-      ? workDuration
-      : newMode === 'break'
-      ? breakDuration
+    if (stateRef.current.isRunning) return;
+    clearIntervalSafe();
+    const duration = newMode === 'work' ? workDuration
+      : newMode === 'break' ? breakDuration
       : longBreakDuration;
 
     tickCountRef.current = 0;
-
     setState({
       mode: newMode,
       timeRemaining: duration,
@@ -328,7 +253,7 @@ export function useTimer({
       currentSessionStartTime: undefined,
       pausedTimeRemaining: duration,
     });
-  }, [state.isRunning, workDuration, breakDuration, longBreakDuration]);
+  }, [workDuration, breakDuration, longBreakDuration, clearIntervalSafe]);
 
   return {
     ...state,

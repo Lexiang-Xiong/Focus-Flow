@@ -94,3 +94,74 @@ html {
 body {
   background: transparent !important;
 }
+
+/* Depth controls for GlobalView */
+.depth-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.depth-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  margin-right: 4px;
+}
+
+.depth-controls .depth-value {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.depth-controls button {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.depth-controls button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+.depth-controls button:disabled {
+  opacity: 0.3;
+}
+
+.depth-controls button.active {
+  background: rgba(59, 130, 246, 0.5) !important;
+  color: #fff !important;
+}
+
+/* Calendar date picker fixes */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  gap: 0.5rem;
+}
+
+.calendar-title {
+  font-weight: 600;
+}
+
+/* Fix calendar month/year display overlap with navigation buttons */
+[data-calendar-header] {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
+/* Ensure popover can overflow viewport */
+[data-radix-popover-content-wrapper] {
+  z-index: 9999 !important;
+  position: fixed !important;
+}
