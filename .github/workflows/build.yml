@@ -10,21 +10,8 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: 'macos-latest'
-            target: 'aarch64-apple-darwin'
-          - platform: 'macos-latest'
-            target: 'x86_64-apple-darwin'
-          - platform: 'ubuntu-22.04'
-            target: ''
-          - platform: 'windows-latest'
-            target: ''
-
-    runs-on: ${{ matrix.platform }}
+  build-windows:
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
@@ -38,8 +25,42 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install dependencies (Ubuntu)
-        if: matrix.platform == 'ubuntu-22.04'
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Focus Flow v__VERSION__'
+          releaseBody: |
+            Focus Flow - 浮动待办事项应用
+
+            ## 下载说明
+            - Windows: 下载 `.exe` 文件
+            - macOS: 下载 `.dmg` 文件
+            - Linux: 下载 `.AppImage` 文件
+          releaseDraft: true
+          prerelease: false
+
+  build-ubuntu:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
@@ -63,4 +84,38 @@ jobs:
             - Linux: 下载 `.AppImage` 文件
           releaseDraft: true
           prerelease: false
-          args: ${{ matrix.target }}
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Focus Flow v__VERSION__'
+          releaseBody: |
+            Focus Flow - 浮动待办事项应用
+
+            ## 下载说明
+            - Windows: 下载 `.exe` 文件
+            - macOS: 下载 `.dmg` 文件
+            - Linux: 下载 `.AppImage` 文件
+          releaseDraft: true
+          prerelease: false
