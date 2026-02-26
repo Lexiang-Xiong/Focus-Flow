@@ -463,6 +463,11 @@ export function GlobalView({
     return zone?.color || '#6b7280';
   };
 
+  const getZoneName = (zoneId: string) => {
+    const zone = zones.find((z) => z.id === zoneId);
+    return zone?.name || '未知工作区';
+  };
+
   const stats = {
     total: tasks.length,
     completed: completedTasks.length,
@@ -614,18 +619,29 @@ export function GlobalView({
   // 专属的叶子节点渲染函数
   const renderLeafTask = (task: Task): React.ReactNode => {
     const path = getTaskBreadcrumbs(task.id);
+    const zoneName = getZoneName(task.zoneId);
+    const zoneColor = getZoneColor(task.zoneId);
+
     return (
       <div key={task.id} className="task-tree-item mb-1 relative">
-        {/* 上下文面包屑 */}
-        {path.length > 0 && (
-          <div className="flex items-center gap-1 pl-7 pr-2 text-[10px] text-white/40 mb-0.5 leading-none">
-            {path.map((p, i) => (
-              <span key={p.id} className="truncate max-w-[80px]">
-                {p.title} {i < path.length - 1 ? '>' : ''}
-              </span>
-            ))}
-          </div>
-        )}
+        {/* 上下文面包屑：工作区 > 父任务1 > 父任务2 > ... */}
+        <div className="flex items-center gap-1 pl-7 pr-2 text-[10px] text-white/40 mb-0.5 leading-none">
+          {/* 工作区名称 */}
+          <span
+            className="truncate max-w-[80px] font-medium"
+            style={{ color: zoneColor }}
+            title={zoneName}
+          >
+            {zoneName}
+          </span>
+          {path.length > 0 && <span className="text-white/30">›</span>}
+          {/* 父任务路径 */}
+          {path.map((p, i) => (
+            <span key={p.id} className="truncate max-w-[80px]">
+              {p.title} {i < path.length - 1 ? <span className="text-white/30 mx-0.5">›</span> : ''}
+            </span>
+          ))}
+        </div>
         <TaskItem
           task={task}
           zoneColor={getZoneColor(task.zoneId)}
