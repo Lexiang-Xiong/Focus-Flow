@@ -15,8 +15,9 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import React from 'react';
-import { ArrowLeft, CheckCircle2, Globe, ArrowUpDown, Zap, Flag, ChevronDown, ChevronRight, ArrowUp, Layers, Home, Clock } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Globe, ArrowUpDown, Zap, Flag, ChevronDown, ChevronRight, ChevronUp, ArrowUp, Layers, Home, Clock, CircleX } from 'lucide-react';
 import { getFlattenedTasks } from '@/lib/tree-utils';
+import { calculateRankScores, mapRankToUrgency } from '@/lib/urgency-utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -27,7 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TaskItem } from './TaskItem';
-import type { Task, Zone, GlobalViewSortMode, SortConfig, TaskPriority, TaskUrgency } from '@/types';
+import type { Task, Zone, GlobalViewSortMode, SortConfig, TaskPriority, TaskUrgency, DeadlineType } from '@/types';
 import type { TaskComputedTime } from '@/store/slices/taskSlice';
 
 interface GlobalViewProps {
@@ -42,7 +43,7 @@ interface GlobalViewProps {
   onUpdateTask: (id: string, updates: Partial<Omit<Task, 'id'>>) => void;
   onToggleExpanded: (id: string) => void;
   onToggleSubtasksCollapsed?: (id: string) => void;
-  onAddSubtask?: (parentId: string, title: string, priority: TaskPriority, urgency: TaskUrgency) => void;
+  onAddSubtask?: (parentId: string, title: string, priority: TaskPriority, urgency: TaskUrgency, deadline?: number | null, deadlineType?: DeadlineType) => void;
   onReorderTasks: (zoneId: string, _tasks: Task[]) => void;
   onSelectTask: (id: string) => void;
   onSortConfigChange: (config: SortConfig) => void;
@@ -86,14 +87,17 @@ export function GlobalView({
 
   // Helper functions for sorting
   const priorityOrder: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
-  const urgencyOrder: Record<TaskUrgency, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
+
+  // 计算所有任务的排名分数
+  const rankScores = useMemo(() => calculateRankScores(tasks), [tasks]);
 
   const calculateWeightedScore = (task: Task): number => {
     const pWeight = sortConfig.priorityWeight ?? 0.4;
-    const uWeight = sortConfig.urgencyWeight ?? 0.6;
+    const dWeight = sortConfig.deadlineWeight ?? 0.6;
     const normalizedPriority = (2 - priorityOrder[task.priority]) / 2; // 0-1, high=1
-    const normalizedUrgency = (3 - urgencyOrder[task.urgency]) / 3; // 0-1, urgent=1
-    return normalizedPriority * pWeight + normalizedUrgency * uWeight;
+    // 使用 deadline 排名分数，如果没有 deadline 则为 0
+    const deadlineScore = task.deadline ? (rankScores[task.id] || 0) : 0;
+    return normalizedPriority * pWeight + deadlineScore * dWeight;
   };
 
   // Get root tasks (no parent or undefined parent - for backward compatibility)
@@ -180,7 +184,16 @@ export function GlobalView({
         case 'priority':
           return priorityOrder[a.priority] - priorityOrder[b.priority];
         case 'urgency':
-          return urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
+          // 使用自动计算的 urgency（基于 deadline 排名）
+          const aUrgencyScore = a.deadline ? (rankScores[a.id] || 0) : 0;
+          const bUrgencyScore = b.deadline ? (rankScores[b.id] || 0) : 0;
+          return bUrgencyScore - aUrgencyScore;
+        case 'deadline':
+          // 按截止日期排序，有 DDL 的排在前面
+          if (!a.deadline && !b.deadline) return 0;
+          if (!a.deadline) return 1;
+          if (!b.deadline) return -1;
+          return a.deadline - b.deadline;
         case 'weighted':
           return calculateWeightedScore(b) - calculateWeightedScore(a);
         case 'workTime':
@@ -252,9 +265,20 @@ export function GlobalView({
           });
         }
       });
-    } else if (sortConfig.mode === 'urgency') {
+    } else if (sortConfig.mode === 'urgency' || sortConfig.mode === 'deadline') {
+      // 使用 deadline 排名自动计算 urgency
       const urgencyGroups: Record<TaskUrgency, Task[]> = { urgent: [], high: [], medium: [], low: [] };
-      sortedRootTasks.forEach((t) => urgencyGroups[t.urgency].push(t));
+      const noDeadlineTasks: Task[] = [];
+
+      sortedRootTasks.forEach((t) => {
+        if (!t.deadline || t.deadline <= 0) {
+          noDeadlineTasks.push(t);
+        } else {
+          const score = rankScores[t.id] || 0;
+          const urgency = mapRankToUrgency(score, true);
+          urgencyGroups[urgency].push(t);
+        }
+      });
 
       const urgencyLabels: Record<TaskUrgency, { title: string; color: string }> = {
         urgent: { title: '紧急', color: '#dc2626' },
@@ -272,6 +296,15 @@ export function GlobalView({
           });
         }
       });
+
+      // 添加"未设截止日期"分组
+      if (noDeadlineTasks.length > 0) {
+        groups.push({
+          title: '未设截止日期',
+          color: '#6b7280',
+          tasks: noDeadlineTasks,
+        });
+      }
     } else if (sortConfig.mode === 'weighted') {
       const scoreGroups: { title: string; color: string; minScore: number; tasks: Task[] }[] = [
         { title: '重要且紧急', color: '#dc2626', minScore: 0.75, tasks: [] },
@@ -434,6 +467,8 @@ export function GlobalView({
           depth={depth}
           getTotalWorkTime={getTotalWorkTime}
           getEstimatedTime={getEstimatedTime}
+          rankScores={rankScores}
+          allTasks={tasks}
         />
         {showChildren && taskChildren.map((child) => renderTaskWithChildren(child, depth + 1, maxExpandDepth))}
       </div>
@@ -562,6 +597,12 @@ export function GlobalView({
                   <span>按紧急度</span>
                 </div>
               </SelectItem>
+              <SelectItem value="deadline">
+                <div className="sort-option">
+                  <Clock size={14} />
+                  <span>按截止日期</span>
+                </div>
+              </SelectItem>
               <SelectItem value="weighted">
                 <div className="sort-option">
                   <Flag size={14} />
@@ -599,20 +640,29 @@ export function GlobalView({
           <Button
             size="sm"
             variant="ghost"
+            onClick={() => setViewDepth(0)}
+            className={viewDepth === 0 ? 'active' : ''}
+            title="全部收起"
+          >
+            <CircleX size={14} />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
             onClick={() => setViewDepth(1)}
             className={viewDepth === 1 ? 'active' : ''}
-            title="返回顶层"
+            title="仅显示顶层"
           >
             <ArrowUp size={14} />
           </Button>
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => setViewDepth(Math.max(1, viewDepth - 1))}
-            disabled={viewDepth <= 1}
+            onClick={() => setViewDepth(Math.max(0, viewDepth - 1))}
+            disabled={viewDepth <= 0}
             title="收起一级"
           >
-            <ChevronRight size={14} />
+            <ChevronUp size={14} />
           </Button>
           <span className="depth-value">{viewDepth}</span>
           <Button

@@ -92,6 +92,8 @@ async function initializeTables(db: Database): Promise<void> {
       completed INTEGER NOT NULL DEFAULT 0,
       priority TEXT NOT NULL DEFAULT 'medium',
       urgency TEXT NOT NULL DEFAULT 'low',
+      deadline INTEGER,
+      deadline_type TEXT DEFAULT 'none',
       "order" INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL,
       completed_at INTEGER,
@@ -216,7 +218,8 @@ export async function loadWorkspace(workspaceId: string): Promise<CurrentWorkspa
 
   const tasksResult = await db.select<{
     id: string; zone_id: string; parent_id: string | null; title: string; description: string;
-    completed: number; priority: string; urgency: string; order: number; created_at: number;
+    completed: number; priority: string; urgency: string; deadline: number | null; deadline_type: string;
+    order: number; created_at: number;
     completed_at: number | null; expanded: number; is_collapsed: number; total_work_time: number;
     own_time: number; estimated_time: number | null;
   }[]>(
@@ -248,6 +251,8 @@ export async function loadWorkspace(workspaceId: string): Promise<CurrentWorkspa
       completed: t.completed === 1,
       priority: t.priority as Task['priority'],
       urgency: t.urgency as Task['urgency'],
+      deadline: t.deadline || null,
+      deadlineType: (t.deadline_type || 'none') as Task['deadlineType'],
       order: t.order,
       createdAt: t.created_at,
       completedAt: t.completed_at || undefined,
@@ -345,7 +350,8 @@ export async function loadAllHistoryWorkspaces(): Promise<HistoryWorkspace[]> {
 
     const tasksResult = await db.select<{
       id: string; zone_id: string; parent_id: string | null; title: string; description: string;
-      completed: number; priority: string; urgency: string; order: number; created_at: number;
+      completed: number; priority: string; urgency: string; deadline: number | null; deadline_type: string;
+      order: number; created_at: number;
       completed_at: number | null; expanded: number; is_collapsed: number; total_work_time: number;
       own_time: number; estimated_time: number | null;
     }[]>(
@@ -378,6 +384,8 @@ export async function loadAllHistoryWorkspaces(): Promise<HistoryWorkspace[]> {
         completed: t.completed === 1,
         priority: t.priority as Task['priority'],
         urgency: t.urgency as Task['urgency'],
+        deadline: t.deadline || null,
+        deadlineType: (t.deadline_type || 'none') as Task['deadlineType'],
         order: t.order,
         createdAt: t.created_at,
         completedAt: t.completed_at || undefined,

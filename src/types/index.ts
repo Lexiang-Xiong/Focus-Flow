@@ -1,12 +1,13 @@
 export type TaskPriority = 'low' | 'medium' | 'high';
 export type TaskUrgency = 'low' | 'medium' | 'high' | 'urgent';
+export type DeadlineType = 'exact' | 'today' | 'tomorrow' | 'week' | 'none';
 export type TimerMode = 'work' | 'break' | 'longBreak' | 'idle';
-export type GlobalViewSortMode = 'zone' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime' | 'timeDiff';
+export type GlobalViewSortMode = 'zone' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime' | 'timeDiff' | 'deadline';
 
 export interface SortConfig {
   mode: GlobalViewSortMode;
   priorityWeight: number;
-  urgencyWeight: number;
+  deadlineWeight: number; // 替换原来的 urgencyWeight
 }
 
 // 内部剪贴板数据类型
@@ -25,7 +26,9 @@ export interface Task {
   description: string;
   completed: boolean;
   priority: TaskPriority;
-  urgency: TaskUrgency;
+  urgency: TaskUrgency;     // 保留用于显示，但值由 deadline 自动计算
+  deadline: number | null;  // 截止时间戳（毫秒）
+  deadlineType: DeadlineType; // 截止时间类型
   order: number;
   createdAt: number;
   completedAt?: number;
@@ -190,7 +193,7 @@ export const DEFAULT_SETTINGS = {
   globalViewSort: {
     mode: 'zone' as GlobalViewSortMode,
     priorityWeight: 0.4,
-    urgencyWeight: 0.6,
+    deadlineWeight: 0.6,
   },
 };
 

@@ -1,12 +1,16 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Check, Trash2, Edit2, GripVertical, ChevronDown, ChevronUp, ChevronRight, Flag, RotateCcw, Clock, Zap, Plus } from 'lucide-react';
+import { Check, Trash2, Edit2, GripVertical, ChevronDown, ChevronUp, ChevronRight, Flag, RotateCcw, Clock, Plus, Calendar } from 'lucide-react';
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useState, useRef, useEffect } from 'react';
-import type { Task, TaskPriority, TaskUrgency } from '@/types';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import type { Task, TaskPriority, DeadlineType } from '@/types';
 import { formatDuration } from '@/types';
+import { getDeadlineStatus, calculateRankScores, getUrgencyColor as getHeatColor, convertDeadlineType, getInheritedDeadline } from '@/lib/urgency-utils';
+import { useAppStore } from '@/store';
 
 interface TaskItemProps {
   task: Task;
@@ -27,6 +31,8 @@ interface TaskItemProps {
   isDraggable?: boolean;
   getTotalWorkTime?: (taskId: string) => number;
   getEstimatedTime?: (taskId: string) => number;
+  rankScores?: Record<string, number>;  // 排名分数
+  allTasks?: Task[];  // 所有任务，用于计算排名
 }
 
 export function TaskItem({
@@ -48,13 +54,20 @@ export function TaskItem({
   isDraggable = true,
   getTotalWorkTime,
   getEstimatedTime,
+  rankScores = {},
+  allTasks = [],
 }: TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDescription, setEditDescription] = useState(task.description);
   const [editEstimatedTime, setEditEstimatedTime] = useState(task.estimatedTime?.toString() || '');
   const [showPriorityMenu, setShowPriorityMenu] = useState(false);
-  const [showUrgencyMenu, setShowUrgencyMenu] = useState(false);
+  const [showDeadlinePicker, setShowDeadlinePicker] = useState(false);
+  const [editDeadline, setEditDeadline] = useState<number | null>(task.deadline || null);
+  const [editDeadlineType, setEditDeadlineType] = useState<DeadlineType>(task.deadlineType || 'none');
+  const [editHour, setEditHour] = useState<number>(task.deadline ? new Date(task.deadline).getHours() : 23);
+  const [editMinute, setEditMinute] = useState<number>(task.deadline ? new Date(task.deadline).getMinutes() : 59);
+  const [timeOnlyMode, setTimeOnlyMode] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -71,6 +84,17 @@ export function TaskItem({
       titleInputRef.current.focus();
     }
   }, [isEditing]);
+
+  // 同步截止日期编辑状态
+  useEffect(() => {
+    setEditDeadline(task.deadline || null);
+    setEditDeadlineType(task.deadlineType || 'none');
+    if (task.deadline) {
+      const date = new Date(task.deadline);
+      setEditHour(date.getHours());
+      setEditMinute(date.getMinutes());
+    }
+  }, [task.deadline, task.deadlineType, showDeadlinePicker]);
 
   const style: React.CSSProperties = {
     // 只有可拖拽时才应用 transform，避免子任务缩进被覆盖
@@ -152,6 +176,23 @@ export function TaskItem({
     onUpdate(task.id, { totalWorkTime: 0 });
   };
 
+  // 从 store 获取所有任务，用于计算截止日期继承
+  const allTasksFromStore = useAppStore((state) => state.tasks);
+
+  // 计算任务的紧迫程度（用于热力条颜色）
+  const { urgencyScore, urgencyColor, deadlineText, isOverdue, inheritedDeadline } = useMemo(() => {
+    // 使用 store 中的所有任务来计算继承关系
+    const tasksForInheritance = allTasks.length > 0 ? allTasks : allTasksFromStore;
+    // 获取继承后的截止日期
+    const inherited = getInheritedDeadline(task, tasksForInheritance);
+    // 如果没有 rankScores，尝试计算
+    const scores = Object.keys(rankScores).length > 0 ? rankScores : (tasksForInheritance.length > 0 ? calculateRankScores(tasksForInheritance) : {});
+    const score = scores[task.id] || 0;
+    const { text: deadlineText, isOverdue } = getDeadlineStatus(inherited);
+    const color = getHeatColor(score, isOverdue);
+    return { urgencyScore: score, urgencyColor: color, deadlineText, isOverdue, inheritedDeadline: inherited };
+  }, [task.id, task.deadline, task.parentId, rankScores, allTasks, allTasksFromStore]);
+
   const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {
       case 'high':
@@ -165,32 +206,6 @@ export function TaskItem({
 
   const getPriorityLabel = (priority: TaskPriority) => {
     switch (priority) {
-      case 'high':
-        return '高';
-      case 'medium':
-        return '中';
-      case 'low':
-        return '低';
-    }
-  };
-
-  const getUrgencyColor = (urgency: TaskUrgency) => {
-    switch (urgency) {
-      case 'urgent':
-        return '#dc2626';
-      case 'high':
-        return '#f97316';
-      case 'medium':
-        return '#eab308';
-      case 'low':
-        return '#22c55e';
-    }
-  };
-
-  const getUrgencyLabel = (urgency: TaskUrgency) => {
-    switch (urgency) {
-      case 'urgent':
-        return '急';
       case 'high':
         return '高';
       case 'medium':
@@ -240,6 +255,15 @@ export function TaskItem({
         className="task-zone-indicator"
         style={{ backgroundColor: zoneColor }}
       />
+
+      {/* Urgency Heat Bar - 显示在任务左侧，根据紧迫程度变色 */}
+      {inheritedDeadline && inheritedDeadline > 0 && !task.completed && (
+        <div
+          className="absolute left-0 top-1 bottom-1 w-[4px] rounded-r-md transition-colors duration-300"
+          style={{ backgroundColor: urgencyColor }}
+          title={deadlineText || `紧迫度: ${Math.round(urgencyScore * 100)}%`}
+        />
+      )}
 
       {/* Checkbox */}
       <button
@@ -337,7 +361,220 @@ export function TaskItem({
             {task.expanded && task.description && (
               <div className="task-description">{task.description}</div>
             )}
-            
+
+            {/* Deadline Display with Edit - always visible */}
+            <div className="mt-1">
+              <Popover open={showDeadlinePicker} onOpenChange={setShowDeadlinePicker}>
+                <PopoverTrigger asChild>
+                  <button
+                    className={`text-[10px] flex items-center gap-1 hover:bg-white/10 px-1 py-0.5 rounded transition-colors border ${isOverdue ? 'text-red-500 font-bold border-red-500/50' : inheritedDeadline && inheritedDeadline > 0 ? 'text-green-400 border-green-500/50 hover:text-green-300 hover:border-green-400' : 'border-white/30 text-white/50 hover:text-white/80 hover:border-white/50'}`}
+                    title="点击修改截止日期"
+                  >
+                    <Calendar size={10} />
+                    {inheritedDeadline && inheritedDeadline > 0 ? (
+                      <span>{deadlineText}{task.parentId && !task.deadline && <span className="text-white/40 ml-0.5">(继承)</span>}</span>
+                    ) : (
+                      <span className="italic">设置截止日期</span>
+                    )}
+                  </button>
+                </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-2 bg-black border border-white/20 max-h-[90vh] overflow-y-auto z-[9999]"
+                    align="start"
+                    side="bottom"
+                    sideOffset={4}
+                    avoidCollisions={false}
+                  >
+                    <div className="flex gap-1 mb-2 border-b border-white/10 pb-2">
+                      <Button
+                        variant={editDeadlineType === 'today' ? 'default' : 'ghost'}
+                        size="sm"
+                        className={editDeadlineType === 'today' ? 'bg-green-600 text-white' : 'text-white hover:bg-white/10'}
+                        onClick={() => {
+                          const result = convertDeadlineType('today');
+                          setEditDeadline(result.deadline);
+                          setEditDeadlineType(result.deadlineType);
+                        }}
+                      >
+                        今天
+                      </Button>
+                      <Button
+                        variant={editDeadlineType === 'tomorrow' ? 'default' : 'ghost'}
+                        size="sm"
+                        className={editDeadlineType === 'tomorrow' ? 'bg-green-600 text-white' : 'text-white hover:bg-white/10'}
+                        onClick={() => {
+                          const result = convertDeadlineType('tomorrow');
+                          setEditDeadline(result.deadline);
+                          setEditDeadlineType(result.deadlineType);
+                        }}
+                      >
+                        明天
+                      </Button>
+                      <Button
+                        variant={editDeadlineType === 'week' ? 'default' : 'ghost'}
+                        size="sm"
+                        className={editDeadlineType === 'week' ? 'bg-green-600 text-white' : 'text-white hover:bg-white/10'}
+                        onClick={() => {
+                          const result = convertDeadlineType('week');
+                          setEditDeadline(result.deadline);
+                          setEditDeadlineType(result.deadlineType);
+                        }}
+                      >
+                        本周
+                      </Button>
+                      <Button
+                        variant={editDeadlineType === 'none' ? 'default' : 'ghost'}
+                        size="sm"
+                        className={editDeadlineType === 'none' ? 'bg-green-600 text-white' : 'text-white hover:bg-white/10'}
+                        onClick={() => {
+                          setEditDeadline(null);
+                          setEditDeadlineType('none');
+                        }}
+                      >
+                        无
+                      </Button>
+                    </div>
+                    {/* 仅时间模式切换 */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={timeOnlyMode}
+                          onChange={(e) => setTimeOnlyMode(e.target.checked)}
+                          className="w-3.5 h-3.5 accent-green-500"
+                        />
+                        <span className="text-xs text-white/70">仅设置时间</span>
+                      </label>
+                    </div>
+                    {/* 时间选择器 - 仅时间模式下显示在日历位置 */}
+                    {timeOnlyMode ? (
+                      <div className="flex items-center gap-2 mb-2 px-1">
+                        <span className="text-xs text-white/80">时间:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="23"
+                          value={editHour}
+                          onChange={(e) => {
+                            const val = Math.max(0, Math.min(23, parseInt(e.target.value) || 0));
+                            setEditHour(val);
+                          }}
+                          className="w-12 h-7 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
+                        />
+                        <span className="text-white/80">:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="59"
+                          value={editMinute}
+                          onChange={(e) => {
+                            const val = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
+                            setEditMinute(val);
+                          }}
+                          className="w-12 h-7 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
+                        />
+                        <span className="text-xs text-white/50 ml-1">(保持当前日期)</span>
+                      </div>
+                    ) : (
+                    <CalendarComponent
+                      mode="single"
+                      selected={editDeadline ? new Date(editDeadline) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          // 保持之前选择的时间，只更新日期
+                          date.setHours(editHour, editMinute, 0, 0);
+                          setEditDeadline(date.getTime());
+                          setEditDeadlineType('exact');
+                        }
+                      }}
+                      className="rounded-md my-2"
+                      classNames={{
+                        root: "calendar-dark",
+                        months: "flex flex-col gap-4",
+                        month: "flex flex-col gap-4",
+                        caption: "flex justify-center pt-1 relative items-center",
+                        caption_label: "text-sm font-medium text-white",
+                        nav: "flex items-center gap-1 absolute w-full justify-between top-0 left-0 right-0",
+                        nav_button: "h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100 text-white hover:bg-white/20 rounded flex items-center justify-center",
+                        nav_button_previous: "absolute left-1",
+                        nav_button_next: "absolute right-1",
+                        table: "w-full border-collapse space-y-1",
+                        head_row: "flex",
+                        head_cell: "text-white/50 rounded-md w-9 font-normal text-[0.8rem]",
+                        row: "flex w-full mt-2",
+                        cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                        day: "h-9 w-9 p-0 font-normal text-white bg-black hover:bg-white hover:text-black rounded-md transition-colors",
+                        day_selected: "bg-white text-black hover:bg-white hover:text-black",
+                        day_today: "border border-green-500 text-green-400",
+                        day_outside: "text-white/30 opacity-50",
+                        day_disabled: "text-white/30 opacity-50",
+                        day_hidden: "invisible",
+                      }}
+                    />
+                    )}
+                    {/* 时间选择器 */}
+                    <div className="flex items-center gap-2 mb-2 px-1">
+                      <span className="text-xs text-white/80">时间:</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="23"
+                        value={editHour}
+                        onChange={(e) => {
+                          const val = Math.max(0, Math.min(23, parseInt(e.target.value) || 0));
+                          setEditHour(val);
+                        }}
+                        className="w-12 h-7 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
+                      />
+                      <span className="text-white/80">:</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={editMinute}
+                        onChange={(e) => {
+                          const val = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
+                          setEditMinute(val);
+                        }}
+                        className="w-12 h-7 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          // 使用编辑的时间和日期创建新的截止时间
+                          if (editDeadline) {
+                            const date = new Date(editDeadline);
+                            date.setHours(editHour, editMinute, 0, 0);
+                            onUpdate(task.id, { deadline: date.getTime(), deadlineType: 'exact' });
+                          } else {
+                            onUpdate(task.id, { deadline: editDeadline, deadlineType: editDeadlineType });
+                          }
+                          setShowDeadlinePicker(false);
+                        }}
+                      >
+                        保存
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="flex-1 text-white hover:bg-white/10"
+                        onClick={() => {
+                          setEditDeadline(task.deadline || null);
+                          setEditDeadlineType(task.deadlineType || 'none');
+                          setShowDeadlinePicker(false);
+                        }}
+                      >
+                        取消
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+            </div>
+
             {/* Work Time Display */}
             <div className="task-work-time">
               <Clock size={10} className={isTimerRunning && isActive ? 'pulse' : ''} />
@@ -376,40 +613,8 @@ export function TaskItem({
         )}
       </div>
 
-      {/* Priority and Urgency */}
+      {/* Priority */}
       <div className="task-priority-wrapper">
-        {/* Urgency */}
-        <button
-          className="task-urgency"
-          style={{ color: getUrgencyColor(task.urgency) }}
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowUrgencyMenu(!showUrgencyMenu);
-          }}
-        >
-          <Zap size={12} />
-          <span>{getUrgencyLabel(task.urgency)}</span>
-        </button>
-        {showUrgencyMenu && (
-          <div className="urgency-menu">
-            {(['urgent', 'high', 'medium', 'low'] as TaskUrgency[]).map((u) => (
-              <button
-                key={u}
-                className={`urgency-option ${task.urgency === u ? 'selected' : ''}`}
-                style={{ color: getUrgencyColor(u) }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUpdate(task.id, { urgency: u });
-                  setShowUrgencyMenu(false);
-                }}
-              >
-                <Zap size={10} />
-                <span>{getUrgencyLabel(u)}</span>
-              </button>
-            ))}
-          </div>
-        )}
-
         {/* Priority */}
         <button
           className="task-priority"

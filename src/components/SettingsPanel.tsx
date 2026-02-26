@@ -24,7 +24,7 @@ export function SettingsPanel({
   const [breakMinutes, setBreakMinutes] = useState(Math.floor(settings.breakDuration / 60));
   const [longBreakMinutes, setLongBreakMinutes] = useState(Math.floor(settings.longBreakDuration / 60));
   const [priorityWeight, setPriorityWeight] = useState(settings.globalViewSort.priorityWeight * 100);
-  const [urgencyWeight, setUrgencyWeight] = useState(settings.globalViewSort.urgencyWeight * 100);
+  const [deadlineWeight, setDeadlineWeight] = useState(settings.globalViewSort.deadlineWeight * 100);
 
   // 同步外部 settings 变化到本地状态
   useEffect(() => {
@@ -73,27 +73,27 @@ export function SettingsPanel({
   const handlePriorityWeightChange = (value: number[]) => {
     const weight = value[0];
     setPriorityWeight(weight);
-    const newUrgencyWeight = 100 - weight;
-    setUrgencyWeight(newUrgencyWeight);
+    const newDeadlineWeight = 100 - weight;
+    setDeadlineWeight(newDeadlineWeight);
     onUpdateSettings({
       globalViewSort: {
         mode: settings.globalViewSort.mode as GlobalViewSortMode,
         priorityWeight: weight / 100,
-        urgencyWeight: newUrgencyWeight / 100,
+        deadlineWeight: newDeadlineWeight / 100,
       },
     });
   };
 
-  const handleUrgencyWeightChange = (value: number[]) => {
+  const handleDeadlineWeightChange = (value: number[]) => {
     const weight = value[0];
-    setUrgencyWeight(weight);
+    setDeadlineWeight(weight);
     const newPriorityWeight = 100 - weight;
     setPriorityWeight(newPriorityWeight);
     onUpdateSettings({
       globalViewSort: {
         mode: settings.globalViewSort.mode as GlobalViewSortMode,
         priorityWeight: newPriorityWeight / 100,
-        urgencyWeight: weight / 100,
+        deadlineWeight: weight / 100,
       },
     });
   };
@@ -103,7 +103,7 @@ export function SettingsPanel({
     setBreakMinutes(5);
     setLongBreakMinutes(15);
     setPriorityWeight(DEFAULT_SETTINGS.globalViewSort.priorityWeight * 100);
-    setUrgencyWeight(DEFAULT_SETTINGS.globalViewSort.urgencyWeight * 100);
+    setDeadlineWeight(DEFAULT_SETTINGS.globalViewSort.deadlineWeight * 100);
     onUpdateSettings({
       workDuration: DEFAULT_SETTINGS.workDuration,
       breakDuration: DEFAULT_SETTINGS.breakDuration,
@@ -255,11 +255,11 @@ export function SettingsPanel({
             <div className="setting-label">
               <Zap size={14} className="mr-2 text-orange-400" />
               <span>紧急度权重</span>
-              <span className="setting-value">{urgencyWeight}%</span>
+              <span className="setting-value">{deadlineWeight}%</span>
             </div>
             <Slider
-              value={[urgencyWeight]}
-              onValueChange={handleUrgencyWeightChange}
+              value={[deadlineWeight]}
+              onValueChange={handleDeadlineWeightChange}
               min={0}
               max={100}
               step={10}

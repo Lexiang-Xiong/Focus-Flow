@@ -1,5 +1,5 @@
 import type { StateCreator } from 'zustand';
-import type { Task, TaskPriority, TaskUrgency } from '@/types';
+import type { Task, TaskPriority, TaskUrgency, DeadlineType } from '@/types';
 
 export interface TaskComputedTime {
   totalWorkTime: number;
@@ -13,7 +13,7 @@ export interface TaskState {
 }
 
 export interface TaskActions {
-  addTask: (zoneId: string, title: string, description: string, priority?: TaskPriority, urgency?: TaskUrgency, parentId?: string | null) => void;
+  addTask: (zoneId: string, title: string, description: string, priority?: TaskPriority, urgency?: TaskUrgency, deadline?: number | null, deadlineType?: DeadlineType, parentId?: string | null) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
   toggleTask: (id: string) => void;
   deleteTask: (id: string) => void;
@@ -168,7 +168,7 @@ export const createTaskSlice: StateCreator<TaskSlice, [], [], TaskSlice> = (set,
   tasks: [],
   taskComputedTimes: {},
 
-  addTask: (zoneId, title, description, priority = 'medium', urgency = 'low', parentId = null) => set((state) => {
+  addTask: (zoneId, title, description, priority = 'medium', urgency = 'low', deadline = null, deadlineType = 'none', parentId = null) => set((state) => {
     const tasks = [...state.tasks];
     const siblings = tasks.filter(t =>
       parentId ? t.parentId === parentId : (t.zoneId === zoneId && !t.parentId)
@@ -178,6 +178,8 @@ export const createTaskSlice: StateCreator<TaskSlice, [], [], TaskSlice> = (set,
     const newTask: Task = {
       id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       zoneId, parentId, title, description, priority, urgency,
+      deadline,
+      deadlineType,
       completed: false, isCollapsed: false, expanded: false,
       order: maxOrder + 1, createdAt: Date.now(), totalWorkTime: 0, ownTime: 0
     };

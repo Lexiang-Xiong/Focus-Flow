@@ -13,12 +13,15 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, CheckCircle2, Circle, Trash2, ChevronDown, Zap, ChevronRight, Home } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Trash2, ChevronDown, ChevronRight, Home, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { TaskItem } from './TaskItem';
-import type { Task, TaskPriority, TaskUrgency, Zone } from '@/types';
+import type { Task, TaskPriority, TaskUrgency, DeadlineType, Zone } from '@/types';
+import { convertDeadlineType } from '@/lib/urgency-utils';
 import { useAppStore } from '@/store';
 import { getFlattenedTasks, calculateNewPosition, type FlattenedTask } from '@/lib/tree-utils';
 
@@ -29,7 +32,7 @@ interface TaskListProps {
   activeTaskId: string | null;
   isTimerRunning: boolean;
   focusedTaskId?: string | null; // 从全局视图导航过来时聚焦的任务ID
-  onAddTask: (zoneId: string, title: string, description: string, priority?: TaskPriority, urgency?: TaskUrgency, parentId?: string | null) => void;
+  onAddTask: (zoneId: string, title: string, description: string, priority?: TaskPriority, urgency?: TaskUrgency, deadline?: number | null, deadlineType?: DeadlineType, parentId?: string | null) => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
   onUpdateTask: (id: string, updates: Partial<Omit<Task, 'id'>>) => void;
@@ -61,7 +64,9 @@ export function TaskList({
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [selectedPriority, setSelectedPriority] = useState<TaskPriority>('medium');
-  const [selectedUrgency, setSelectedUrgency] = useState<TaskUrgency>('low');
+  const [selectedUrgency] = useState<TaskUrgency>('low');  // Urgency is now auto-calculated from deadline
+  const [selectedDeadline, setSelectedDeadline] = useState<number | null>(null);
+  const [selectedDeadlineType, setSelectedDeadlineType] = useState<DeadlineType>('none');
   const [showCompleted, setShowCompleted] = useState(false);
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -84,6 +89,8 @@ export function TaskList({
   const [newSubtaskDescription, setNewSubtaskDescription] = useState('');
   const [subtaskPriority, setSubtaskPriority] = useState<TaskPriority>('medium');
   const [subtaskUrgency, setSubtaskUrgency] = useState<TaskUrgency>('low');
+  const [subtaskDeadline, setSubtaskDeadline] = useState<number | null>(null);
+  const [subtaskDeadlineType, setSubtaskDeadlineType] = useState<DeadlineType>('none');
   const subtaskInputRef = useRef<HTMLInputElement>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -145,9 +152,11 @@ export function TaskList({
 
   const handleAddTask = () => {
     if (newTaskTitle.trim() && zone) {
-      onAddTask(zone.id, newTaskTitle.trim(), newTaskDescription.trim(), selectedPriority, selectedUrgency, null);
+      onAddTask(zone.id, newTaskTitle.trim(), newTaskDescription.trim(), selectedPriority, selectedUrgency, selectedDeadline, selectedDeadlineType, null);
       setNewTaskTitle('');
       setNewTaskDescription('');
+      setSelectedDeadline(null);
+      setSelectedDeadlineType('none');
       inputRef.current?.focus();
     }
   };
@@ -173,9 +182,11 @@ export function TaskList({
   // 处理添加子任务
   const handleAddSubtask = () => {
     if (newSubtaskTitle.trim() && addingSubtaskParentId && zone) {
-      onAddTask(zone.id, newSubtaskTitle.trim(), newSubtaskDescription.trim(), subtaskPriority, subtaskUrgency, addingSubtaskParentId);
+      onAddTask(zone.id, newSubtaskTitle.trim(), newSubtaskDescription.trim(), subtaskPriority, subtaskUrgency, subtaskDeadline, subtaskDeadlineType, addingSubtaskParentId);
       setNewSubtaskTitle('');
       setNewSubtaskDescription('');
+      setSubtaskDeadline(null);
+      setSubtaskDeadlineType('none');
       // 保持输入框焦点，方便连续添加
       setTimeout(() => subtaskInputRef.current?.focus(), 0);
     }
@@ -186,6 +197,8 @@ export function TaskList({
     setAddingSubtaskParentId(null);
     setNewSubtaskTitle('');
     setNewSubtaskDescription('');
+    setSubtaskDeadline(null);
+    setSubtaskDeadlineType('none');
   };
 
   // 处理子任务输入框按键事件
@@ -305,16 +318,82 @@ export function TaskList({
                 </button>
               ))}
             </div>
-            <div className="urgency-selector">
-              {(['urgent', 'high', 'medium', 'low'] as TaskUrgency[]).map((u) => (
-                <button
-                  key={u}
-                  className={`urgency-btn ${selectedUrgency === u ? 'active' : ''} urgency-${u}`}
-                  onClick={() => setSelectedUrgency(u)}
-                >
-                  <Zap size={10} />
-                </button>
-              ))}
+            {/* Deadline Selector */}
+            <div className="flex items-center gap-1">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`h-7 text-xs border-dashed ${selectedDeadlineType !== 'none' ? 'border-blue-500 text-blue-400' : ''}`}
+                  >
+                    <Calendar size={12} className="mr-1" />
+                    {selectedDeadlineType === 'none' ? '截止日期' :
+                      selectedDeadlineType === 'today' ? '今天' :
+                      selectedDeadlineType === 'tomorrow' ? '明天' :
+                      selectedDeadlineType === 'week' ? '本周' :
+                      selectedDeadline ? new Date(selectedDeadline).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : '截止日期'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2" align="start">
+                  <div className="flex gap-1 mb-2 border-b border-white/10 pb-2">
+                    <Button
+                      variant={selectedDeadlineType === 'today' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => {
+                        const result = convertDeadlineType('today');
+                        setSelectedDeadline(result.deadline);
+                        setSelectedDeadlineType(result.deadlineType);
+                      }}
+                    >
+                      今天
+                    </Button>
+                    <Button
+                      variant={selectedDeadlineType === 'tomorrow' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => {
+                        const result = convertDeadlineType('tomorrow');
+                        setSelectedDeadline(result.deadline);
+                        setSelectedDeadlineType(result.deadlineType);
+                      }}
+                    >
+                      明天
+                    </Button>
+                    <Button
+                      variant={selectedDeadlineType === 'week' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => {
+                        const result = convertDeadlineType('week');
+                        setSelectedDeadline(result.deadline);
+                        setSelectedDeadlineType(result.deadlineType);
+                      }}
+                    >
+                      本周
+                    </Button>
+                    <Button
+                      variant={selectedDeadlineType === 'none' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => {
+                        setSelectedDeadline(null);
+                        setSelectedDeadlineType('none');
+                      }}
+                    >
+                      无
+                    </Button>
+                  </div>
+                  <CalendarComponent
+                    mode="single"
+                    selected={selectedDeadline ? new Date(selectedDeadline) : undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        setSelectedDeadline(date.getTime());
+                        setSelectedDeadlineType('exact');
+                      }
+                    }}
+                    className="rounded-md"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
           <div className="add-task-inputs">
@@ -354,6 +433,8 @@ export function TaskList({
                 setIsAddingTask(false);
                 setNewTaskTitle('');
                 setNewTaskDescription('');
+                setSelectedDeadline(null);
+                setSelectedDeadlineType('none');
               }}
             >
               <ChevronDown size={18} />
@@ -450,7 +531,7 @@ export function TaskList({
                               placeholder="描述（可选，Shift+Enter 换行）..."
                               className="h-7 text-sm text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30"
                             />
-                            {/* 子任务也支持优先级设置 */}
+                            {/* 子任务支持优先级和截止日期设置 */}
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <div className="priority-selector">
@@ -464,17 +545,81 @@ export function TaskList({
                                     </button>
                                   ))}
                                 </div>
-                                <div className="urgency-selector">
-                                  {(['urgent', 'high', 'medium', 'low'] as TaskUrgency[]).map((u) => (
-                                    <button
-                                      key={u}
-                                      className={`urgency-btn ${subtaskUrgency === u ? 'active' : ''} urgency-${u}`}
-                                      onClick={() => setSubtaskUrgency(u)}
+                                {/* 子任务截止日期选择器 */}
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className={`h-6 text-xs border-dashed ${subtaskDeadlineType !== 'none' ? 'border-blue-500 text-blue-400' : ''}`}
                                     >
-                                      <Zap size={10} />
-                                    </button>
-                                  ))}
-                                </div>
+                                      <Calendar size={10} className="mr-1" />
+                                      {subtaskDeadlineType === 'none' ? 'DDL' :
+                                        subtaskDeadlineType === 'today' ? '今天' :
+                                        subtaskDeadlineType === 'tomorrow' ? '明天' :
+                                        subtaskDeadlineType === 'week' ? '本周' :
+                                        subtaskDeadline ? new Date(subtaskDeadline).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : 'DDL'}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-2" align="start">
+                                    <div className="flex gap-1 mb-2 border-b border-white/10 pb-2">
+                                      <Button
+                                        variant={subtaskDeadlineType === 'today' ? 'default' : 'ghost'}
+                                        size="sm"
+                                        onClick={() => {
+                                          const result = convertDeadlineType('today');
+                                          setSubtaskDeadline(result.deadline);
+                                          setSubtaskDeadlineType(result.deadlineType);
+                                        }}
+                                      >
+                                        今天
+                                      </Button>
+                                      <Button
+                                        variant={subtaskDeadlineType === 'tomorrow' ? 'default' : 'ghost'}
+                                        size="sm"
+                                        onClick={() => {
+                                          const result = convertDeadlineType('tomorrow');
+                                          setSubtaskDeadline(result.deadline);
+                                          setSubtaskDeadlineType(result.deadlineType);
+                                        }}
+                                      >
+                                        明天
+                                      </Button>
+                                      <Button
+                                        variant={subtaskDeadlineType === 'week' ? 'default' : 'ghost'}
+                                        size="sm"
+                                        onClick={() => {
+                                          const result = convertDeadlineType('week');
+                                          setSubtaskDeadline(result.deadline);
+                                          setSubtaskDeadlineType(result.deadlineType);
+                                        }}
+                                      >
+                                        本周
+                                      </Button>
+                                      <Button
+                                        variant={subtaskDeadlineType === 'none' ? 'default' : 'ghost'}
+                                        size="sm"
+                                        onClick={() => {
+                                          setSubtaskDeadline(null);
+                                          setSubtaskDeadlineType('none');
+                                        }}
+                                      >
+                                        无
+                                      </Button>
+                                    </div>
+                                    <CalendarComponent
+                                      mode="single"
+                                      selected={subtaskDeadline ? new Date(subtaskDeadline) : undefined}
+                                      onSelect={(date) => {
+                                        if (date) {
+                                          setSubtaskDeadline(date.getTime());
+                                          setSubtaskDeadlineType('exact');
+                                        }
+                                      }}
+                                      className="rounded-md"
+                                    />
+                                  </PopoverContent>
+                                </Popover>
                               </div>
                               <Button
                                 size="sm"

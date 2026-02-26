@@ -241,14 +241,14 @@ function App() {
             addZone(result.zone.name, result.zone.color);
             const newTasks = result.tasks.map(t => ({ ...t, id: `task-${Date.now()}-${Math.random()}`, zoneId: result.zone.id }));
             newTasks.forEach(t => {
-              useAppStore.getState().addTask(t.zoneId, t.title, t.description, t.priority, t.urgency, t.parentId);
+              useAppStore.getState().addTask(t.zoneId, t.title, t.description, t.priority, t.urgency, t.deadline || null, t.deadlineType || 'none', t.parentId);
             });
             toast.success(`已粘贴工作区 "${result.zone.name}"`);
           }
         } else if (hasTask && currentZone) {
           const newTask = pasteTask(currentZone.id);
           if (newTask) {
-            useAppStore.getState().addTask(currentZone.id, newTask.title, newTask.description, newTask.priority, newTask.urgency);
+            useAppStore.getState().addTask(currentZone.id, newTask.title, newTask.description, newTask.priority, newTask.urgency, newTask.deadline || null, newTask.deadlineType || 'none');
             toast.success('任务已粘贴');
           }
         }

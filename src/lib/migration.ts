@@ -55,7 +55,7 @@ async function migrateV0ToV1(): Promise<void> {
       collapse_position_y: settings.collapsePosition?.y ?? 100,
       sort_mode: settings.globalViewSort?.mode ?? 'zone',
       priority_weight: settings.globalViewSort?.priorityWeight ?? 0.4,
-      urgency_weight: settings.globalViewSort?.urgencyWeight ?? 0.6
+      urgency_weight: settings.globalViewSort?.deadlineWeight ?? 0.6
     });
     console.log('[Migration] Migrated settings');
 
@@ -116,7 +116,7 @@ export function convertDbSettingsToApp(settings: {
   soundEnabled: boolean;
   collapsed: boolean;
   collapsePosition: { x: number; y: number };
-  globalViewSort: { mode: string; priorityWeight: number; urgencyWeight: number };
+  globalViewSort: { mode: string; priorityWeight: number; deadlineWeight: number };
 } {
   if (!settings) {
     return DEFAULT_SETTINGS;
@@ -134,9 +134,9 @@ export function convertDbSettingsToApp(settings: {
       y: settings.collapse_position_y
     },
     globalViewSort: {
-      mode: settings.sort_mode as 'zone' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime' | 'timeDiff',
+      mode: settings.sort_mode as 'zone' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime' | 'timeDiff' | 'deadline',
       priorityWeight: settings.priority_weight,
-      urgencyWeight: settings.urgency_weight
+      deadlineWeight: settings.urgency_weight || 0.6
     }
   };
 }
