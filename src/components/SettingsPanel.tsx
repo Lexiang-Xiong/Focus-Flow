@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Settings, Clock, Volume2, RotateCcw, Flag, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -24,7 +24,8 @@ export function SettingsPanel({
   const [breakMinutes, setBreakMinutes] = useState(Math.floor(settings.breakDuration / 60));
   const [longBreakMinutes, setLongBreakMinutes] = useState(Math.floor(settings.longBreakDuration / 60));
   const [priorityWeight, setPriorityWeight] = useState(settings.globalViewSort.priorityWeight * 100);
-  const [deadlineWeight, setDeadlineWeight] = useState(settings.globalViewSort.deadlineWeight * 100);
+  // deadlineWeight 由 priorityWeight 计算得出，保证两者之和为 100
+  const deadlineWeight = useMemo(() => 100 - priorityWeight, [priorityWeight]);
 
   // 同步外部 settings 变化到本地状态
   useEffect(() => {
@@ -73,27 +74,26 @@ export function SettingsPanel({
   const handlePriorityWeightChange = (value: number[]) => {
     const weight = value[0];
     setPriorityWeight(weight);
-    const newDeadlineWeight = 100 - weight;
-    setDeadlineWeight(newDeadlineWeight);
+    // deadlineWeight 会通过 useMemo 自动计算
     onUpdateSettings({
       globalViewSort: {
         mode: settings.globalViewSort.mode as GlobalViewSortMode,
         priorityWeight: weight / 100,
-        deadlineWeight: newDeadlineWeight / 100,
+        deadlineWeight: (100 - weight) / 100,
       },
     });
   };
 
   const handleDeadlineWeightChange = (value: number[]) => {
-    const weight = value[0];
-    setDeadlineWeight(weight);
-    const newPriorityWeight = 100 - weight;
-    setPriorityWeight(newPriorityWeight);
+    // 紧急度 Slider 正向联动：拖动紧急度时，优先级跟随反向变动
+    const dWeight = value[0];
+    const pWeight = 100 - dWeight;
+    setPriorityWeight(pWeight);
     onUpdateSettings({
       globalViewSort: {
         mode: settings.globalViewSort.mode as GlobalViewSortMode,
-        priorityWeight: newPriorityWeight / 100,
-        deadlineWeight: weight / 100,
+        priorityWeight: pWeight / 100,
+        deadlineWeight: dWeight / 100,
       },
     });
   };
@@ -103,7 +103,7 @@ export function SettingsPanel({
     setBreakMinutes(5);
     setLongBreakMinutes(15);
     setPriorityWeight(DEFAULT_SETTINGS.globalViewSort.priorityWeight * 100);
-    setDeadlineWeight(DEFAULT_SETTINGS.globalViewSort.deadlineWeight * 100);
+    // deadlineWeight 会通过 useMemo 自动计算
     onUpdateSettings({
       workDuration: DEFAULT_SETTINGS.workDuration,
       breakDuration: DEFAULT_SETTINGS.breakDuration,

@@ -67,6 +67,8 @@ export function TaskList({
   const [selectedUrgency] = useState<TaskUrgency>('low');  // Urgency is now auto-calculated from deadline
   const [selectedDeadline, setSelectedDeadline] = useState<number | null>(null);
   const [selectedDeadlineType, setSelectedDeadlineType] = useState<DeadlineType>('none');
+  const [selectedDeadlineHour, setSelectedDeadlineHour] = useState<number>(23);
+  const [selectedDeadlineMinute, setSelectedDeadlineMinute] = useState<number>(59);
   const [showCompleted, setShowCompleted] = useState(false);
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -91,6 +93,8 @@ export function TaskList({
   const [subtaskUrgency, setSubtaskUrgency] = useState<TaskUrgency>('low');
   const [subtaskDeadline, setSubtaskDeadline] = useState<number | null>(null);
   const [subtaskDeadlineType, setSubtaskDeadlineType] = useState<DeadlineType>('none');
+  const [subtaskDeadlineHour, setSubtaskDeadlineHour] = useState<number>(23);
+  const [subtaskDeadlineMinute, setSubtaskDeadlineMinute] = useState<number>(59);
   const subtaskInputRef = useRef<HTMLInputElement>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -390,12 +394,74 @@ export function TaskList({
                     selected={selectedDeadline ? new Date(selectedDeadline) : undefined}
                     onSelect={(date) => {
                       if (date) {
+                        date.setHours(selectedDeadlineHour, selectedDeadlineMinute, 0, 0);
                         setSelectedDeadline(date.getTime());
                         setSelectedDeadlineType('exact');
                       }
                     }}
-                    className="rounded-md"
+                    className="rounded-md my-2"
+                    classNames={{
+                      root: "calendar-dark",
+                      months: "flex flex-col gap-1 relative",
+                      month: "flex flex-col",
+                      caption: "flex justify-center items-center py-1 relative",
+                      caption_label: "text-sm font-medium text-white",
+                      nav: "absolute inset-x-0 top-1 flex items-center justify-between w-full z-10 px-1",
+                      nav_button: "h-6 w-6 bg-black p-0 text-white hover:bg-white hover:text-black rounded flex items-center justify-center transition-colors text-xs border border-white/20",
+                      nav_button_previous: "",
+                      nav_button_next: "",
+                      table: "w-full border-collapse space-y-1",
+                      head_row: "flex",
+                      head_cell: "text-white/50 rounded-md w-9 font-normal text-[0.8rem]",
+                      row: "flex w-full mt-1",
+                      cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                      day: "h-9 w-9 p-0 font-normal text-white bg-black hover:bg-white hover:text-black rounded-md transition-colors",
+                      day_selected: "bg-white text-black hover:bg-white hover:text-black",
+                      day_today: "border border-green-500 text-green-400",
+                      day_outside: "text-white/30 opacity-50",
+                      day_disabled: "text-white/30 opacity-50",
+                      day_hidden: "invisible",
+                    }}
                   />
+                  {/* 时间选择器 */}
+                  <div className="flex items-center gap-2 mb-2 px-1 flex-wrap">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-white/80">时间:</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="23"
+                        value={selectedDeadlineHour}
+                        onChange={(e) => {
+                          const val = Math.max(0, Math.min(23, parseInt(e.target.value) || 0));
+                          setSelectedDeadlineHour(val);
+                          if (selectedDeadline) {
+                            const date = new Date(selectedDeadline);
+                            date.setHours(val, selectedDeadlineMinute, 0, 0);
+                            setSelectedDeadline(date.getTime());
+                          }
+                        }}
+                        className="w-10 h-6 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
+                      />
+                      <span className="text-white/80">:</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={selectedDeadlineMinute}
+                        onChange={(e) => {
+                          const val = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
+                          setSelectedDeadlineMinute(val);
+                          if (selectedDeadline) {
+                            const date = new Date(selectedDeadline);
+                            date.setHours(selectedDeadlineHour, val, 0, 0);
+                            setSelectedDeadline(date.getTime());
+                          }
+                        }}
+                        className="w-10 h-6 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
+                      />
+                    </div>
+                  </div>
                 </PopoverContent>
               </Popover>
             </div>
@@ -620,12 +686,74 @@ export function TaskList({
                                       selected={subtaskDeadline ? new Date(subtaskDeadline) : undefined}
                                       onSelect={(date) => {
                                         if (date) {
+                                          date.setHours(subtaskDeadlineHour, subtaskDeadlineMinute, 0, 0);
                                           setSubtaskDeadline(date.getTime());
                                           setSubtaskDeadlineType('exact');
                                         }
                                       }}
-                                      className="rounded-md"
+                                      className="rounded-md my-2"
+                                      classNames={{
+                                        root: "calendar-dark",
+                                        months: "flex flex-col gap-1 relative",
+                                        month: "flex flex-col",
+                                        caption: "flex justify-center items-center py-1 relative",
+                                        caption_label: "text-sm font-medium text-white",
+                                        nav: "absolute inset-x-0 top-1 flex items-center justify-between w-full z-10 px-1",
+                                        nav_button: "h-6 w-6 bg-black p-0 text-white hover:bg-white hover:text-black rounded flex items-center justify-center transition-colors text-xs border border-white/20",
+                                        nav_button_previous: "",
+                                        nav_button_next: "",
+                                        table: "w-full border-collapse space-y-1",
+                                        head_row: "flex",
+                                        head_cell: "text-white/50 rounded-md w-9 font-normal text-[0.8rem]",
+                                        row: "flex w-full mt-1",
+                                        cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                                        day: "h-9 w-9 p-0 font-normal text-white bg-black hover:bg-white hover:text-black rounded-md transition-colors",
+                                        day_selected: "bg-white text-black hover:bg-white hover:text-black",
+                                        day_today: "border border-green-500 text-green-400",
+                                        day_outside: "text-white/30 opacity-50",
+                                        day_disabled: "text-white/30 opacity-50",
+                                        day_hidden: "invisible",
+                                      }}
                                     />
+                                    {/* 时间选择器 */}
+                                    <div className="flex items-center gap-2 mb-2 px-1 flex-wrap">
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-xs text-white/80">时间:</span>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          max="23"
+                                          value={subtaskDeadlineHour}
+                                          onChange={(e) => {
+                                            const val = Math.max(0, Math.min(23, parseInt(e.target.value) || 0));
+                                            setSubtaskDeadlineHour(val);
+                                            if (subtaskDeadline) {
+                                              const date = new Date(subtaskDeadline);
+                                              date.setHours(val, subtaskDeadlineMinute, 0, 0);
+                                              setSubtaskDeadline(date.getTime());
+                                            }
+                                          }}
+                                          className="w-10 h-6 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
+                                        />
+                                        <span className="text-white/80">:</span>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          max="59"
+                                          value={subtaskDeadlineMinute}
+                                          onChange={(e) => {
+                                            const val = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
+                                            setSubtaskDeadlineMinute(val);
+                                            if (subtaskDeadline) {
+                                              const date = new Date(subtaskDeadline);
+                                              date.setHours(subtaskDeadlineHour, val, 0, 0);
+                                              setSubtaskDeadline(date.getTime());
+                                            }
+                                          }}
+                                          className="w-10 h-6 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
+                                        />
+                                      </div>
+                                    </div>
                                   </PopoverContent>
                                 </Popover>
                               </div>

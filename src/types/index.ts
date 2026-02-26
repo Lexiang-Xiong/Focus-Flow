@@ -182,7 +182,7 @@ export const ZONE_COLORS = [
   '#6b7280', // gray
 ];
 
-// 默认设置
+// 默认设置（正常值）
 export const DEFAULT_SETTINGS = {
   workDuration: 25 * 60, // 25分钟
   breakDuration: 5 * 60, // 5分钟
@@ -193,8 +193,8 @@ export const DEFAULT_SETTINGS = {
   collapsePosition: { x: 100, y: 100 },
   globalViewSort: {
     mode: 'zone' as GlobalViewSortMode,
-    priorityWeight: 0.4,
-    deadlineWeight: 0.6,
+    priorityWeight: 0.6, // 60%
+    deadlineWeight: 0.4, // 40%
   },
   globalViewLeafMode: false,
 };

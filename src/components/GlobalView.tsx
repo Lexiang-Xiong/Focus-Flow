@@ -106,8 +106,8 @@ export function GlobalView({
   const rankScores = useMemo(() => calculateRankScores(tasks), [tasks]);
 
   const calculateWeightedScore = (task: Task): number => {
-    const pWeight = sortConfig.priorityWeight ?? 0.4;
-    const dWeight = sortConfig.deadlineWeight ?? 0.6;
+    const pWeight = sortConfig.priorityWeight ?? 0.6;
+    const dWeight = sortConfig.deadlineWeight ?? 0.4;
     const normalizedPriority = (2 - priorityOrder[task.priority]) / 2; // 0-1, high=1
     // 使用叶子节点专用的排名分数，如果没有 deadline 则为 0
     const deadlineScore = task.deadline ? (leafModeRankScores[task.id] || 0) : 0;
