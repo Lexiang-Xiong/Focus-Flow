@@ -107,6 +107,7 @@ export interface AppState {
     collapsed: boolean;
     collapsePosition: { x: number; y: number };
     globalViewSort: SortConfig;
+    globalViewLeafMode: boolean; // 叶子节点模式状态
   };
 }
 
@@ -195,6 +196,7 @@ export const DEFAULT_SETTINGS = {
     priorityWeight: 0.4,
     deadlineWeight: 0.6,
   },
+  globalViewLeafMode: false,
 };
 
 // 格式化时间为可读字符串

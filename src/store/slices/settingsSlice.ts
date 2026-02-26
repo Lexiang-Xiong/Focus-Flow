@@ -13,6 +13,7 @@ export interface SettingsState {
     collapsed: boolean;
     collapsePosition: { x: number; y: number };
     globalViewSort: SortConfig;
+    globalViewLeafMode: boolean;
   };
   customTemplates: Template[];
 }

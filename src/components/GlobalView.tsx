@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import React from 'react';
-import { ArrowLeft, CheckCircle2, Globe, ArrowUpDown, Zap, Flag, ChevronDown, ChevronRight, ChevronUp, ArrowUp, Layers, Home, Clock, CircleX } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Globe, ArrowUpDown, Zap, Flag, ChevronDown, ChevronRight, ChevronUp, ArrowUp, Layers, Home, Clock, CircleX, Network } from 'lucide-react';
 import { getFlattenedTasks } from '@/lib/tree-utils';
 import { calculateRankScores, mapRankToUrgency } from '@/lib/urgency-utils';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,8 @@ interface GlobalViewProps {
   activeTaskId: string | null;
   isTimerRunning: boolean;
   sortConfig: SortConfig;
+  isLeafMode?: boolean; // 叶子节点模式状态（可选，用于外部控制）
+  onLeafModeChange?: (isLeaf: boolean) => void; // 叶子节点模式变化回调
   onBack: () => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
@@ -59,6 +61,8 @@ export function GlobalView({
   activeTaskId,
   isTimerRunning,
   sortConfig,
+  isLeafMode: externalLeafMode,
+  onLeafModeChange,
   onBack,
   onToggleTask,
   onDeleteTask,
@@ -77,6 +81,16 @@ export function GlobalView({
   const [showCompleted, setShowCompleted] = useState(false);
   const [viewDepth, setViewDepth] = useState(2); // For sorting modes: how many levels to expand (默认展开2层)
   const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
+  // 叶子节点模式：如果外部提供了状态则使用外部状态，否则使用本地状态
+  const [internalLeafMode, setInternalLeafMode] = useState(false);
+  const isLeafMode = externalLeafMode !== undefined ? externalLeafMode : internalLeafMode;
+  const setIsLeafMode = (value: boolean) => {
+    if (onLeafModeChange) {
+      onLeafModeChange(value);
+    } else {
+      setInternalLeafMode(value);
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -95,15 +109,41 @@ export function GlobalView({
     const pWeight = sortConfig.priorityWeight ?? 0.4;
     const dWeight = sortConfig.deadlineWeight ?? 0.6;
     const normalizedPriority = (2 - priorityOrder[task.priority]) / 2; // 0-1, high=1
-    // 使用 deadline 排名分数，如果没有 deadline 则为 0
-    const deadlineScore = task.deadline ? (rankScores[task.id] || 0) : 0;
+    // 使用叶子节点专用的排名分数，如果没有 deadline 则为 0
+    const deadlineScore = task.deadline ? (leafModeRankScores[task.id] || 0) : 0;
     return normalizedPriority * pWeight + deadlineScore * dWeight;
   };
 
-  // Get root tasks (no parent or undefined parent - for backward compatibility)
-  const rootTasks = useMemo(() => {
-    return tasks.filter((t) => (t.parentId === null || t.parentId === undefined) && !t.completed);
-  }, [tasks]);
+  // Get base tasks for sorting (either pure leaf nodes or root nodes)
+  const baseTasksForSorting = useMemo(() => {
+    const incompleteTasks = tasks.filter(t => !t.completed);
+
+    if (isLeafMode) {
+      // 叶子节点模式：寻找没有任何子任务的节点
+      return incompleteTasks.filter(t => !tasks.some(child => child.parentId === t.id));
+    }
+
+    // 树状模式：寻找根节点（没有父节点的任务）
+    return incompleteTasks.filter(t => t.parentId === null || t.parentId === undefined);
+  }, [tasks, isLeafMode]);
+
+  // 将结果赋值给 rootTasks，使后续逻辑自动生效
+  const rootTasks = baseTasksForSorting;
+
+  // 叶子节点模式专用排名分数（只基于叶子节点计算）
+  const leafModeRankScores = useMemo(() => {
+    if (!isLeafMode) return rankScores;
+    // 只对叶子节点计算排名
+    const leafTasks = rootTasks.filter(t => t.deadline && t.deadline > 0);
+    // 按 deadline 排序（越早越紧急）
+    leafTasks.sort((a, b) => a.deadline! - b.deadline!);
+    // 分配排名分数
+    const scores: Record<string, number> = {};
+    leafTasks.forEach((task, index) => {
+      scores[task.id] = 1 - (index / Math.max(leafTasks.length - 1, 1));
+    });
+    return scores;
+  }, [rootTasks, isLeafMode, rankScores]);
 
   // Get child tasks for a parent
   const getChildTasks = (parentId: string): Task[] => {
@@ -184,9 +224,9 @@ export function GlobalView({
         case 'priority':
           return priorityOrder[a.priority] - priorityOrder[b.priority];
         case 'urgency':
-          // 使用自动计算的 urgency（基于 deadline 排名）
-          const aUrgencyScore = a.deadline ? (rankScores[a.id] || 0) : 0;
-          const bUrgencyScore = b.deadline ? (rankScores[b.id] || 0) : 0;
+          // 使用叶子节点专用的排名分数
+          const aUrgencyScore = a.deadline ? (leafModeRankScores[a.id] || 0) : 0;
+          const bUrgencyScore = b.deadline ? (leafModeRankScores[b.id] || 0) : 0;
           return bUrgencyScore - aUrgencyScore;
         case 'weighted':
           return calculateWeightedScore(b) - calculateWeightedScore(a);
@@ -218,7 +258,7 @@ export function GlobalView({
           return 0;
       }
     });
-  }, [rootTasks, sortConfig, zoneModeTasks]);
+  }, [rootTasks, sortConfig, zoneModeTasks, leafModeRankScores]);
 
   // Group tasks for all sorting modes
   const taskGroups = useMemo(() => {
@@ -268,7 +308,7 @@ export function GlobalView({
         if (!t.deadline || t.deadline <= 0) {
           noDeadlineTasks.push(t);
         } else {
-          const score = rankScores[t.id] || 0;
+          const score = leafModeRankScores[t.id] || 0;
           const urgency = mapRankToUrgency(score, true);
           urgencyGroups[urgency].push(t);
         }
@@ -543,6 +583,75 @@ export function GlobalView({
     );
   };
 
+  // 缓存面包屑路径，避免重复计算
+  const breadcrumbsCache = useMemo(() => new Map<string, Task[]>(), [tasks]);
+
+  // 获取任务的父级路径用于叶子节点模式的上下文展示
+  const getTaskBreadcrumbs = (taskId: string): Task[] => {
+    // 检查缓存
+    if (breadcrumbsCache.has(taskId)) {
+      return breadcrumbsCache.get(taskId)!;
+    }
+
+    const path: Task[] = [];
+    let current = tasks.find(t => t.id === taskId);
+    const visited = new Set<string>(); // 防止循环引用
+
+    while (current?.parentId && !visited.has(current.id)) {
+      visited.add(current.id);
+      const parent = tasks.find(t => t.id === current!.parentId);
+      if (parent) {
+        path.unshift(parent);
+        current = parent;
+      } else break;
+    }
+
+    // 存入缓存
+    breadcrumbsCache.set(taskId, path);
+    return path;
+  };
+
+  // 专属的叶子节点渲染函数
+  const renderLeafTask = (task: Task): React.ReactNode => {
+    const path = getTaskBreadcrumbs(task.id);
+    return (
+      <div key={task.id} className="task-tree-item mb-1 relative">
+        {/* 上下文面包屑 */}
+        {path.length > 0 && (
+          <div className="flex items-center gap-1 pl-7 pr-2 text-[10px] text-white/40 mb-0.5 leading-none">
+            {path.map((p, i) => (
+              <span key={p.id} className="truncate max-w-[80px]">
+                {p.title} {i < path.length - 1 ? '>' : ''}
+              </span>
+            ))}
+          </div>
+        )}
+        <TaskItem
+          task={task}
+          zoneColor={getZoneColor(task.zoneId)}
+          isActive={task.id === activeTaskId}
+          isTimerRunning={isTimerRunning && task.id === activeTaskId}
+          onToggle={onToggleTask}
+          onDelete={onDeleteTask}
+          onUpdate={onUpdateTask}
+          onToggleExpanded={onToggleExpanded}
+          onSelect={onSelectTask}
+          onZoomIn={onNavigateToZone ? (id) => {
+            const t = tasks.find(task => task.id === id);
+            if (t) onNavigateToZone(t.zoneId, id);
+          } : undefined}
+          hasChildren={false}
+          depth={0}
+          isDraggable={false} // 安全限制：叶子模式下强制禁用拖拽
+          getTotalWorkTime={getTotalWorkTime}
+          getEstimatedTime={getEstimatedTime}
+          rankScores={rankScores}
+          allTasks={tasks}
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="global-view-container">
       {/* Header */}
@@ -560,7 +669,20 @@ export function GlobalView({
           <span>全局视图</span>
           <span className="task-count">({stats.completed}/{stats.total})</span>
         </div>
-        <div className="sort-mode-selector">
+        <div className="flex items-center gap-2 ml-auto">
+          {/* 叶子节点模式切换开关 */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={`h-8 px-2 border ${isLeafMode ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-gray-800 text-gray-200 border-gray-600'}`}
+            onClick={() => setIsLeafMode(!isLeafMode)}
+            title={isLeafMode ? "当前为：只看可执行子任务" : "当前为：树状结构"}
+          >
+            <Network size={14} className="mr-1" />
+            {isLeafMode ? '叶子节点' : '树状视图'}
+          </Button>
+
+          <div className="sort-mode-selector m-0">
           <Select
             value={sortConfig.mode}
             onValueChange={(value: GlobalViewSortMode) => {
@@ -619,10 +741,11 @@ export function GlobalView({
             </SelectContent>
           </Select>
         </div>
+        </div>
       </div>
 
       {/* Depth Controls for sorting modes */}
-      {sortConfig.mode !== 'zone' && maxTreeDepth > 0 && !focusedTaskId && (
+      {!isLeafMode && sortConfig.mode !== 'zone' && maxTreeDepth > 0 && !focusedTaskId && (
         <div className="depth-controls">
           <span className="depth-label">展开层级:</span>
           <Button
@@ -741,7 +864,9 @@ export function GlobalView({
                         items={group.tasks.map((t) => t.id)}
                         strategy={verticalListSortingStrategy}
                       >
-                        {group.tasks.map((task) => renderTaskWithDepth(task, 0))}
+                        {group.tasks.map((task) =>
+                          isLeafMode ? renderLeafTask(task) : renderTaskWithDepth(task, 0)
+                        )}
                       </SortableContext>
                     </div>
                   ))}
@@ -764,7 +889,9 @@ export function GlobalView({
                       items={group.tasks.map((t) => t.id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      {group.tasks.map((task) => renderTaskWithDepth(task, 0))}
+                      {group.tasks.map((task) =>
+                        isLeafMode ? renderLeafTask(task) : renderTaskWithDepth(task, 0)
+                      )}
                     </SortableContext>
                   </div>
                 ))

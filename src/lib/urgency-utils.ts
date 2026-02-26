@@ -64,6 +64,55 @@ export function getUrgencyColor(score: number, isOverdue: boolean = false): stri
 }
 
 /**
+ * 根据绝对 deadline 时间获取紧迫性颜色
+ * 7 档位：赤橙黄绿青蓝紫 + 灰（未定义）+ 深红（逾期）
+ * - 赤：5小时以内
+ * - 橙：12小时以内
+ * - 黄：24小时以内
+ * - 绿：2天以内
+ * - 青：一周以内
+ * - 蓝：一个月以内
+ * - 紫：一个月以后
+ * - 灰：未定义
+ * - 深红：已逾期
+ *
+ * @param deadline 任务的截止时间戳（毫秒）
+ * @param isOverdue 是否已逾期
+ * @returns 颜色值
+ */
+export function getAbsoluteUrgencyColor(deadline: number | null, isOverdue: boolean = false): string {
+  // 逾期优先显示深红
+  if (isOverdue) {
+    return 'hsl(0, 80%, 35%)'; // 深红 - 逾期
+  }
+
+  // 未定义 deadline 显示灰色
+  if (!deadline || deadline <= 0) {
+    return 'hsl(0, 0%, 50%)'; // 灰色 - 未定义
+  }
+
+  const now = Date.now();
+  const diff = deadline - now; // 剩余毫秒数
+  const hours = diff / (1000 * 60 * 60); // 转换为小时
+
+  if (hours <= 5) {
+    return 'hsl(0, 85%, 50%)'; // 赤 - 5小时以内（红色）
+  } else if (hours <= 12) {
+    return 'hsl(25, 90%, 50%)'; // 橙 - 12小时以内（橙色）
+  } else if (hours <= 24) {
+    return 'hsl(50, 90%, 50%)'; // 黄 - 24小时以内（黄色）
+  } else if (hours <= 48) {
+    return 'hsl(120, 70%, 45%)'; // 绿 - 2天以内（绿色）
+  } else if (hours <= 168) { // 7天 = 168小时
+    return 'hsl(170, 80%, 45%)'; // 青 - 一周以内（青色）
+  } else if (hours <= 720) { // 30天 = 720小时
+    return 'hsl(210, 80%, 50%)'; // 蓝 - 一个月以内（蓝色）
+  } else {
+    return 'hsl(270, 60%, 50%)'; // 紫 - 一个月以后（紫色）
+  }
+}
+
+/**
  * 获取继承后的截止日期
  * 如果任务本身没有设置截止日期，但父任务有，则返回父任务的截止日期
  * @param task 当前任务

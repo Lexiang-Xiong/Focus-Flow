@@ -487,6 +487,8 @@ function App() {
                     activeTaskId={activeTaskId}
                     isTimerRunning={timer.isRunning}
                     sortConfig={settings.globalViewSort}
+                    isLeafMode={settings.globalViewLeafMode}
+                    onLeafModeChange={(isLeaf) => updateSettings({ globalViewLeafMode: isLeaf })}
                     onBack={() => {
                       setCurrentView('zones');
                       if (zones.length > 0) {

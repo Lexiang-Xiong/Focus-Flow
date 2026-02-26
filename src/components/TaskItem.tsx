@@ -9,7 +9,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import type { Task, TaskPriority, DeadlineType } from '@/types';
 import { formatDuration } from '@/types';
-import { getDeadlineStatus, calculateRankScores, getUrgencyColor as getHeatColor, convertDeadlineType, getInheritedDeadline } from '@/lib/urgency-utils';
+import { getDeadlineStatus, getAbsoluteUrgencyColor, convertDeadlineType, getInheritedDeadline } from '@/lib/urgency-utils';
 import { useAppStore } from '@/store';
 
 interface TaskItemProps {
@@ -54,7 +54,7 @@ export function TaskItem({
   isDraggable = true,
   getTotalWorkTime,
   getEstimatedTime,
-  rankScores = {},
+  // rankScores 不再需要用于紧迫性显示（使用绝对时间）
   allTasks = [],
 }: TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -178,19 +178,17 @@ export function TaskItem({
   // 从 store 获取所有任务，用于计算截止日期继承
   const allTasksFromStore = useAppStore((state) => state.tasks);
 
-  // 计算任务的紧迫程度（用于热力条颜色）
-  const { urgencyScore, urgencyColor, deadlineText, isOverdue, inheritedDeadline } = useMemo(() => {
+  // 计算任务的紧迫程度（用于热力条颜色）- 使用绝对时间计算7档位
+  const { urgencyColor, deadlineText, isOverdue, inheritedDeadline } = useMemo(() => {
     // 使用 store 中的所有任务来计算继承关系
     const tasksForInheritance = allTasks.length > 0 ? allTasks : allTasksFromStore;
     // 获取继承后的截止日期
     const inherited = getInheritedDeadline(task, tasksForInheritance);
-    // 如果没有 rankScores，尝试计算
-    const scores = Object.keys(rankScores).length > 0 ? rankScores : (tasksForInheritance.length > 0 ? calculateRankScores(tasksForInheritance) : {});
-    const score = scores[task.id] || 0;
     const { text: deadlineText, isOverdue } = getDeadlineStatus(inherited);
-    const color = getHeatColor(score, isOverdue);
-    return { urgencyScore: score, urgencyColor: color, deadlineText, isOverdue, inheritedDeadline: inherited };
-  }, [task.id, task.deadline, task.parentId, rankScores, allTasks, allTasksFromStore]);
+    // 使用绝对时间计算紧迫性颜色（7档位：赤橙黄绿青蓝紫 + 灰 + 深红）
+    const color = getAbsoluteUrgencyColor(inherited, isOverdue);
+    return { urgencyColor: color, deadlineText, isOverdue, inheritedDeadline: inherited };
+  }, [task.id, task.deadline, task.parentId, allTasks, allTasksFromStore]);
 
   const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {
@@ -255,12 +253,12 @@ export function TaskItem({
         style={{ backgroundColor: zoneColor }}
       />
 
-      {/* Urgency Heat Bar - 显示在任务左侧，根据紧迫程度变色 */}
-      {inheritedDeadline && inheritedDeadline > 0 && !task.completed && (
+      {/* Urgency Heat Bar - 显示在任务左侧，根据紧迫程度变色（未完成任务都显示） */}
+      {!task.completed && (
         <div
           className="absolute left-0 top-1 bottom-1 w-[4px] rounded-r-md transition-colors duration-300"
           style={{ backgroundColor: urgencyColor }}
-          title={deadlineText || `紧迫度: ${Math.round(urgencyScore * 100)}%`}
+          title={deadlineText || (inheritedDeadline ? `剩余 ${deadlineText}` : '未定义截止日期')}
         />
       )}
 
