@@ -60,6 +60,7 @@ function App() {
     getTotalWorkTime,
     getEstimatedTime,
     addZone,
+    hasUnsavedChanges,
   } = useAppStore();
 
   // 预计算所有任务时间（避免渲染时递归计算）
@@ -456,6 +457,7 @@ function App() {
                     historyWorkspaces={historyWorkspaces}
                     templates={PREDEFINED_TEMPLATES}
                     currentSourceHistoryId={currentWorkspace.sourceHistoryId}
+                    hasUnsavedChanges={hasUnsavedChanges}
                     onBack={() => setCurrentView('zones')}
                     onRestore={handleRestoreFromHistory}
                     onDelete={deleteHistoryWorkspace}

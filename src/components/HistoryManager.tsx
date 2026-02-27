@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { writeTextFile, readTextFile } from '@tauri-apps/plugin-fs';
 import JSZip from 'jszip';
@@ -14,6 +15,7 @@ interface HistoryManagerProps {
   templates: Template[];
   customTemplates?: Template[]; // 自定义模板
   currentSourceHistoryId?: string; // 当前工作区来自哪个历史记录
+  hasUnsavedChanges?: () => boolean; // 检测当前工作区是否有未保存的内容
   onBack: () => void;
   onRestore: (historyId: string) => void;
   onDelete: (historyId: string) => void;
@@ -36,6 +38,7 @@ export function HistoryManager({
   templates,
   customTemplates = [],
   currentSourceHistoryId,
+  hasUnsavedChanges,
   onBack,
   onRestore,
   onDelete,
@@ -68,6 +71,44 @@ export function HistoryManager({
   const [editingSummaryId, setEditingSummaryId] = useState<string | null>(null);
   const [editSummary, setEditSummary] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // 未保存确认对话框状态
+  const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
+  // 保留 pendingAction 用于日志或调试
+  const [_pendingAction, setPendingAction] = useState<{
+    type: 'restore' | 'import' | 'newWorkspace';
+    data?: string | undefined;
+  } | null>(null);
+  const [pendingCallback, setPendingCallback] = useState<(() => void) | null>(null);
+
+  // 检查是否有未保存的更改，如果有则弹出确认对话框
+  const checkAndProceed = (action: { type: 'restore' | 'import' | 'newWorkspace'; data?: string | undefined }, callback: () => void) => {
+    if (hasUnsavedChanges && hasUnsavedChanges()) {
+      setPendingAction(action);
+      setPendingCallback(() => callback);
+      setShowUnsavedConfirm(true);
+    } else {
+      callback();
+    }
+  };
+
+  // 执行待处理的操作
+  const executePendingAction = () => {
+    if (pendingCallback) {
+      pendingCallback();
+    }
+
+    setShowUnsavedConfirm(false);
+    setPendingAction(null);
+    setPendingCallback(null);
+  };
+
+  // 取消待处理操作
+  const cancelPendingAction = () => {
+    setShowUnsavedConfirm(false);
+    setPendingAction(null);
+    setPendingCallback(null);
+  };
 
 
   // 处理导出 - 使用 Tauri 对话框
@@ -155,6 +196,13 @@ export function HistoryManager({
     }
   };
 
+  // 触发导入（带未保存检查）
+  const triggerImport = () => {
+    checkAndProceed({ type: 'import' }, () => {
+      handleImport();
+    });
+  };
+
   // 处理全量导出
   const handleExportAll = async () => {
     if (!onExportAllHistory) return;
@@ -208,13 +256,17 @@ export function HistoryManager({
 
   // 处理恢复确认
   const handleRestoreWithConfirm = (id: string) => {
-    onRestore(id);
+    checkAndProceed({ type: 'restore', data: id }, () => {
+      onRestore(id);
+    });
   };
 
   const handleCreateNewWorkspace = (templateId?: string) => {
-    onCreateNewWorkspace(newWorkspaceName || undefined, templateId);
-    setNewWorkspaceName('');
-    setShowNewWorkspaceDialog(false);
+    checkAndProceed({ type: 'newWorkspace', data: templateId }, () => {
+      onCreateNewWorkspace(newWorkspaceName || undefined, templateId);
+      setNewWorkspaceName('');
+      setShowNewWorkspaceDialog(false);
+    });
   };
 
   const handleArchive = () => {
@@ -317,6 +369,22 @@ export function HistoryManager({
 
   return (
     <div className="history-manager-container">
+      {/* 未保存更改确认对话框 */}
+      <AlertDialog open={showUnsavedConfirm} onOpenChange={setShowUnsavedConfirm}>
+        <AlertDialogContent className="history-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>当前工作区未保存</AlertDialogTitle>
+            <AlertDialogDescription>
+              当前工作区还有未保存的内容。继续操作将丢失当前工作区的所有内容。确定要继续吗？
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelPendingAction}>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={executePendingAction}>继续</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Header */}
       <div className="history-manager-header">
         <Button
@@ -545,7 +613,7 @@ export function HistoryManager({
 
         {/* 导入按钮 */}
         {onImportHistory && (
-          <Button variant="outline" size="sm" className="history-action-btn" onClick={handleImport}>
+          <Button variant="outline" size="sm" className="history-action-btn" onClick={triggerImport}>
             <Upload size={14} className="mr-1" />
             导入
           </Button>

@@ -21,6 +21,7 @@ export interface HistoryActions {
   exportAllHistoryToJson: () => string;
   importHistoryFromJson: (jsonString: string) => boolean;
   importAllHistoryFromJson: (jsonString: string) => number;
+  hasUnsavedChanges: () => boolean;
 }
 
 export type HistorySlice = HistoryState & HistoryActions;
@@ -43,12 +44,15 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
   archiveCurrentWorkspace: (name, summary) => {
     const historyId = `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const state = get();
+    // 从 store 顶层获取 zones 和 tasks
+    const zones = (state as unknown as { zones: unknown[] }).zones;
+    const tasks = (state as unknown as { tasks: unknown[] }).tasks;
 
     const history: HistoryWorkspace = {
       ...state.currentWorkspace,
       id: historyId,
       name: name || state.currentWorkspace.name,
-      summary: summary || `包含 ${state.currentWorkspace.zones.length} 个分区，${state.currentWorkspace.tasks.length} 个任务`,
+      summary: summary || `包含 ${zones.length} 个分区，${tasks.length} 个任务`,
       lastModified: Date.now(),
     };
 
@@ -64,7 +68,11 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
 
   quickArchiveCurrentWorkspace: () => {
     const state = get();
-    if (state.currentWorkspace.tasks.length === 0 && state.currentWorkspace.zones.length === 0) {
+    // 从 store 顶层获取 zones 和 tasks
+    const zones = (state as unknown as { zones: unknown[] }).zones;
+    const tasks = (state as unknown as { tasks: unknown[] }).tasks;
+
+    if (zones.length === 0 && tasks.length === 0) {
       return null;
     }
 
@@ -72,7 +80,7 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
     const history: HistoryWorkspace = {
       ...state.currentWorkspace,
       id: historyId,
-      summary: `包含 ${state.currentWorkspace.zones.length} 个分区，${state.currentWorkspace.tasks.length} 个任务`,
+      summary: `包含 ${zones.length} 个分区，${tasks.length} 个任务`,
       lastModified: Date.now(),
     };
 
@@ -220,5 +228,12 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
     } catch {
       return 0;
     }
+  },
+
+  hasUnsavedChanges: () => {
+    const state = get();
+    // 检查当前工作区是否有内容（zones 或 tasks 存储在 store 顶层）
+    return (state as unknown as { zones: unknown[]; tasks: unknown[] }).zones.length > 0 ||
+           (state as unknown as { zones: unknown[]; tasks: unknown[] }).tasks.length > 0;
   },
 });
