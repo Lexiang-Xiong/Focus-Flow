@@ -34,6 +34,7 @@ export const useAppStore = create<AppStore>()(
         currentWorkspace: state.currentWorkspace,
         historyWorkspaces: state.historyWorkspaces,
         customTemplates: state.customTemplates,
+        configProfiles: state.configProfiles || [],
         settings: state.settings,
         recurringTemplates: state.recurringTemplates || [],
       }),

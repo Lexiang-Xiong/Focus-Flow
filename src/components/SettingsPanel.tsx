@@ -1,13 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, Settings, Clock, Volume2, RotateCcw, Flag, Zap, Repeat, Plus, Trash2, Edit2 } from 'lucide-react';
+import { ArrowLeft, Settings, Clock, Volume2, RotateCcw, Flag, Zap, Repeat, Plus, Trash2, Edit2, Bookmark, Download, Upload, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { AppState, TimerMode, GlobalViewSortMode, Zone, RecurringTemplate, TaskPriority } from '@/types';
+import type { AppState, TimerMode, GlobalViewSortMode, Zone, RecurringTemplate, TaskPriority, ConfigProfile } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
+import { useAppStore } from '@/store';
+import { save, open } from '@tauri-apps/plugin-dialog';
+import { writeTextFile, readTextFile } from '@tauri-apps/plugin-fs';
+import { toast } from 'sonner';
 
 interface SettingsPanelProps {
   settings: AppState['settings'];
@@ -52,26 +56,19 @@ export function SettingsPanel({
   const [recDeadlineValue, setRecDeadlineValue] = useState(2);
   const [recDeadlineUnit, setRecDeadlineUnit] = useState<'hours' | 'days'>('days');
 
+  // 配置快照相关状态
+  const { configProfiles, saveConfigProfile, applyConfigProfile, deleteConfigProfile, updateConfigProfile, importConfigProfile } = useAppStore();
+  const [showSaveProfileDialog, setShowSaveProfileDialog] = useState(false);
+  const [profileName, setProfileName] = useState('');
+  const [editingProfile, setEditingProfile] = useState<ConfigProfile | null>(null);
+  const [editingProfileName, setEditingProfileName] = useState('');
+
   // 初始化默认分区
   useEffect(() => {
     if (zones.length > 0 && !recZoneId) {
       setRecZoneId(zones[0].id);
     }
   }, [zones, recZoneId]);
-
-  // 打开新建弹窗
-  const handleOpenNewDialog = () => {
-    setEditingTemplate(null);
-    setRecTitle('');
-    setRecDesc('');
-    setRecZoneId(zones.length > 0 ? zones[0].id : '');
-    setRecPriority('medium');
-    setRecIntervalValue(1);
-    setRecIntervalUnit('days');
-    setRecDeadlineValue(2);
-    setRecDeadlineUnit('days');
-    setShowRecurringDialog(true);
-  };
 
   // 打开编辑弹窗
   const handleEditTemplate = (tpl: RecurringTemplate) => {
@@ -142,6 +139,7 @@ export function SettingsPanel({
         intervalMinutes,
         deadlineOffsetHours,
         isActive: true,
+        scope: 'global',
       });
     }
 
@@ -151,6 +149,56 @@ export function SettingsPanel({
     setRecDesc('');
     setRecIntervalValue(1);
     setRecDeadlineValue(2);
+  };
+
+  // 导出配置
+  const handleExportConfig = async () => {
+    try {
+      const state = useAppStore.getState();
+      const exportData = {
+        version: 1,
+        name: `环境备份 ${new Date().toLocaleDateString()}`,
+        settings: state.settings,
+        customTemplates: state.customTemplates,
+        recurringTemplates: state.recurringTemplates.filter((r: RecurringTemplate) => r.scope === 'global' || !r.scope)
+      };
+
+      const filePath = await save({
+        defaultPath: `focus-flow-env-${Date.now()}.json`,
+        filters:[{ name: 'JSON', extensions: ['json'] }]
+      });
+
+      if (filePath) {
+        await writeTextFile(filePath, JSON.stringify(exportData, null, 2));
+        toast.success('环境配置已成功导出！');
+      }
+    } catch (e) {
+      console.error('导出配置失败', e);
+      toast.error('导出配置失败');
+    }
+  };
+
+  // 导入配置
+  const handleImportConfig = async () => {
+    try {
+      const selected = await open({
+        multiple: false,
+        filters: [{ name: 'JSON', extensions: ['json'] }]
+      });
+
+      if (selected && typeof selected === 'string') {
+        const content = await readTextFile(selected);
+        const success = importConfigProfile(JSON.parse(content));
+        if (success) {
+          toast.success('配置已导入到快照列表，请点击应用');
+        } else {
+          toast.error('文件格式错误');
+        }
+      }
+    } catch (e) {
+      console.error('导入配置失败', e);
+      toast.error('导入配置失败');
+    }
   };
 
   // 同步外部 settings 变化到本地状态
@@ -623,6 +671,130 @@ export function SettingsPanel({
               <Button variant="ghost" onClick={() => setShowRecurringDialog(false)}>取消</Button>
               <Button className="bg-blue-600 hover:bg-blue-500 text-white" onClick={handleSaveRecurring} disabled={!recTitle.trim()}>
                 保存规则
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Environment Profiles Section */}
+        <div className="settings-section mt-6">
+          <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
+            <h3 className="flex items-center text-xs font-semibold text-white/70">
+              <Bookmark size={14} className="mr-2 text-indigo-400" />
+              环境配置快照
+            </h3>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleImportConfig}>
+                <Upload size={12} className="mr-1" /> 导入
+              </Button>
+              <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleExportConfig}>
+                <Download size={12} className="mr-1" /> 导出
+              </Button>
+            </div>
+          </div>
+          <p className="settings-section-desc mb-3">
+            将当前的设置、模板和全局自动化规则打包保存。方便在不同工作模式间一键切换。
+          </p>
+
+          <Button
+            variant="outline"
+            className="w-full mb-3 border-dashed border-indigo-500/50 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
+            onClick={() => setShowSaveProfileDialog(true)}
+          >
+            <Save size={14} className="mr-2" /> 保存当前环境为快照
+          </Button>
+
+          <div className="flex flex-col gap-2">
+            {(!configProfiles || configProfiles.length === 0) && (
+              <div className="text-center py-4 text-xs text-white/30 bg-black/10 rounded-md border border-white/5">
+                暂无配置快照
+              </div>
+            )}
+            {(configProfiles || []).map(profile => (
+              <div key={profile.id} className="flex flex-col gap-2 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-indigo-500/30 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-white/90">{profile.name}</span>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" className="h-6 text-xs px-2 bg-indigo-600 hover:bg-indigo-500 text-white" onClick={() => {
+                      applyConfigProfile(profile.id);
+                      toast.success(`已应用环境：${profile.name}`);
+                    }}>
+                      应用
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-blue-400 hover:bg-blue-400/10" onClick={() => {
+                      setEditingProfile(profile);
+                      setEditingProfileName(profile.name);
+                    }}>
+                      <Edit2 size={12} />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10" onClick={() => deleteConfigProfile(profile.id)}>
+                      <Trash2 size={12} />
+                    </Button>
+                  </div>
+                </div>
+                <div className="text-[10px] text-white/40">
+                  创建于: {new Date(profile.createdAt).toLocaleString()} · 包含 {profile.recurringTemplates.length} 个全局规则
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Save Profile Dialog */}
+        <Dialog open={showSaveProfileDialog} onOpenChange={setShowSaveProfileDialog}>
+          <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>保存配置快照</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-4 py-2">
+              <Input
+                value={profileName}
+                onChange={e => setProfileName(e.target.value)}
+                placeholder="例如：极简办公模式"
+                className="bg-black/30 border-white/20"
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-2 mt-2">
+              <Button variant="ghost" onClick={() => setShowSaveProfileDialog(false)}>取消</Button>
+              <Button className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!profileName.trim()} onClick={() => {
+                saveConfigProfile(profileName.trim(), recurringTemplates.filter((r: RecurringTemplate) => r.scope === 'global' || !r.scope));
+                setProfileName('');
+                setShowSaveProfileDialog(false);
+                toast.success('快照保存成功');
+              }}>
+                保存
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Profile Dialog */}
+        <Dialog open={!!editingProfile} onOpenChange={(open) => !open && setEditingProfile(null)}>
+          <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>编辑配置快照</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-4 py-2">
+              <Input
+                value={editingProfileName}
+                onChange={e => setEditingProfileName(e.target.value)}
+                placeholder="快照名称"
+                className="bg-black/30 border-white/20"
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-2 mt-2">
+              <Button variant="ghost" onClick={() => setEditingProfile(null)}>取消</Button>
+              <Button className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!editingProfileName.trim()} onClick={() => {
+                if (editingProfile) {
+                  updateConfigProfile(editingProfile.id, { name: editingProfileName.trim() });
+                  toast.success('快照名称已更新');
+                }
+                setEditingProfile(null);
+                setEditingProfileName('');
+              }}>
+                保存
               </Button>
             </div>
           </DialogContent>

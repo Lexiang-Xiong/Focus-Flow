@@ -51,6 +51,17 @@ export interface RecurringTemplate {
   deadlineOffsetHours: number; // 自动设定截止时间的偏移量(小时)
   lastTriggeredAt: number; // 上次生成的时间
   isActive: boolean;
+  scope?: 'global' | 'workspace'; // 规则作用域标识
+}
+
+// 配置环境包（快照）
+export interface ConfigProfile {
+  id: string;
+  name: string;
+  createdAt: number;
+  settings: AppState['settings'];
+  customTemplates: Template[];
+  recurringTemplates: RecurringTemplate[];
 }
 
 export interface Zone {
@@ -128,6 +139,8 @@ export interface AppState {
   };
   // 定时任务模板列表
   recurringTemplates: RecurringTemplate[];
+  // 配置环境包列表
+  configProfiles: ConfigProfile[];
 }
 
 export interface TimerState {
