@@ -36,6 +36,21 @@ export interface Task {
   totalWorkTime: number; // 累计工作时间（秒），包含所有子任务的时间
   ownTime?: number;      // 独立计时时间（秒），仅在该任务上花费的时间，不含子任务
   estimatedTime?: number; // 预期时间（分钟），创建时可填也可后续编辑
+  preventAutoComplete?: boolean; // 开启后即使所有子任务完成也不会自动结束
+  isRecurring?: boolean; // 标识是否由定时器生成
+}
+
+// 定时任务模板
+export interface RecurringTemplate {
+  id: string;
+  title: string;
+  description: string;
+  zoneId: string;
+  priority: TaskPriority;
+  intervalMinutes: number; // 循环间隔(分钟)
+  deadlineOffsetHours: number; // 自动设定截止时间的偏移量(小时)
+  lastTriggeredAt: number; // 上次生成的时间
+  isActive: boolean;
 }
 
 export interface Zone {
@@ -108,7 +123,11 @@ export interface AppState {
     collapsePosition: { x: number; y: number };
     globalViewSort: SortConfig;
     globalViewLeafMode: boolean; // 叶子节点模式状态
+    autoSaveEnabled: boolean;
+    autoSaveInterval: number;
   };
+  // 定时任务模板列表
+  recurringTemplates: RecurringTemplate[];
 }
 
 export interface TimerState {
@@ -197,6 +216,9 @@ export const DEFAULT_SETTINGS = {
     deadlineWeight: 0.4, // 40%
   },
   globalViewLeafMode: false,
+  autoSaveEnabled: false, // 是否开启自动保存
+  autoSaveInterval: 60, // 自动保存间隔（秒），默认60秒
+  recurringTemplates: [], // 定时任务模板列表
 };
 
 // 格式化时间为可读字符串

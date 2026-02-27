@@ -25,27 +25,35 @@ const createZone = (name: string, color: string, order: number): Zone => ({
   createdAt: Date.now(),
 });
 
-export const createZoneSlice: StateCreator<ZoneSlice & TaskSlice, [], [], ZoneSlice> = (set, get) => ({
+export const createZoneSlice: StateCreator<ZoneSlice & TaskSlice & { saveSnapshot?: () => void }, [], [], ZoneSlice> = (set, get) => ({
   zones: [],
 
-  addZone: (name, color) => set((state) => {
+  addZone: (name, color) => {
+    get().saveSnapshot?.();
+
+    set((state) => {
     const maxOrder = state.zones.length > 0 ? Math.max(...state.zones.map(z => z.order)) : -1;
     const newZone = createZone(name, color, maxOrder + 1);
     return { zones: [...state.zones, newZone] };
-  }),
+    });
+  },
 
   updateZone: (id, updates) => set((state) => ({
     zones: state.zones.map(z => z.id === id ? { ...z, ...updates } : z)
   })),
 
-  deleteZone: (id) => set((state) => {
+  deleteZone: (id) => {
+    get().saveSnapshot?.();
+
+    set((state) => {
     // 删除分区时，同时删除该分区下的所有任务
     const tasks = get().tasks.filter(t => t.zoneId !== id);
     return {
       zones: state.zones.filter(z => z.id !== id),
       tasks,
     };
-  }),
+    });
+  },
 
   reorderZones: (newOrder) => set({ zones: newOrder }),
 

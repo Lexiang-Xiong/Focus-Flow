@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Check, Trash2, Edit2, GripVertical, ChevronDown, ChevronUp, ChevronRight, Flag, RotateCcw, Clock, Plus, Calendar } from 'lucide-react';
+import { Check, Trash2, Edit2, GripVertical, ChevronDown, ChevronUp, ChevronRight, Flag, RotateCcw, Clock, Plus, Calendar, Pin } from 'lucide-react';
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -611,6 +611,19 @@ export function TaskItem({
 
       {/* Actions */}
       <div className="task-actions">
+        {/* Prevent Auto Complete Switch - 只有有子任务时才显示 */}
+        {hasChildren && (
+          <button
+            className={`task-action-btn ${task.preventAutoComplete ? 'prevent-active' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpdate(task.id, { preventAutoComplete: !task.preventAutoComplete });
+            }}
+            title={task.preventAutoComplete ? '已开启：子任务全部完成也不会自动结束' : '开启：子任务全部完成也不会自动结束'}
+          >
+            <Pin size={12} />
+          </button>
+        )}
         <Button
           size="icon"
           variant="ghost"

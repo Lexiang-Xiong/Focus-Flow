@@ -42,6 +42,7 @@ function App() {
     clearCompleted,
     archiveCurrentWorkspace,
     quickArchiveCurrentWorkspace,
+    autoSaveSnapshot,
     overwriteHistoryWorkspace,
     restoreFromHistory,
     createNewWorkspace,
@@ -61,6 +62,13 @@ function App() {
     getEstimatedTime,
     addZone,
     hasUnsavedChanges,
+    undo,
+    redo,
+    checkRecurringTasks,
+    recurringTemplates,
+    addRecurringTemplate,
+    updateRecurringTemplate,
+    deleteRecurringTemplate,
   } = useAppStore();
 
   // 预计算所有任务时间（避免渲染时递归计算）
@@ -211,6 +219,22 @@ function App() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // Ctrl+Z 撤销
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+        toast.info('已撤销');
+        return;
+      }
+
+      // Ctrl+Shift+Z 或 Ctrl+Y 重做
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        redo();
+        toast.info('已重做');
         return;
       }
 
@@ -387,6 +411,33 @@ function App() {
     }
   }, [timer.currentTaskId, activeTaskId]);
 
+  // 自动保存历史
+  useEffect(() => {
+    if (!settings.autoSaveEnabled) return;
+
+    const interval = settings.autoSaveInterval * 1000; // 转换为毫秒
+    const intervalId = setInterval(() => {
+      if (hasUnsavedChanges()) {
+        autoSaveSnapshot();
+        toast.success('已自动保存');
+      }
+    }, interval);
+
+    return () => clearInterval(intervalId);
+  }, [settings.autoSaveEnabled, settings.autoSaveInterval, hasUnsavedChanges, autoSaveSnapshot]);
+
+  // 定时任务心跳 - 每分钟检查一次
+  useEffect(() => {
+    // 首次加载检查一次
+    checkRecurringTasks();
+
+    const interval = setInterval(() => {
+      checkRecurringTasks();
+    }, 60000); // 60秒
+
+    return () => clearInterval(interval);
+  }, [checkRecurringTasks]);
+
   // Loading state
   const [isLoaded, setIsLoaded] = useState(false);
   useEffect(() => {
@@ -534,6 +585,11 @@ function App() {
                 ) : currentView === 'settings' ? (
                   <SettingsPanel
                     settings={settings}
+                    zones={zones}
+                    recurringTemplates={recurringTemplates}
+                    onAddRecurringTemplate={addRecurringTemplate}
+                    onUpdateRecurringTemplate={updateRecurringTemplate}
+                    onDeleteRecurringTemplate={deleteRecurringTemplate}
                     onBack={() => setCurrentView('zones')}
                     onUpdateSettings={updateSettings}
                     onPreviewMode={timer.setMode}

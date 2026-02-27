@@ -14,6 +14,8 @@ export interface SettingsState {
     collapsePosition: { x: number; y: number };
     globalViewSort: SortConfig;
     globalViewLeafMode: boolean;
+    autoSaveEnabled: boolean;
+    autoSaveInterval: number;
   };
   customTemplates: Template[];
 }

@@ -1553,6 +1553,15 @@
   background: rgba(239, 68, 68, 0.1);
 }
 
+/* Prevent Auto Complete button active state */
+.task-action-btn.prevent-active {
+  color: #60a5fa !important;
+}
+
+.task-action-btn.prevent-active:hover {
+  color: #93c5fd !important;
+}
+
 /* Completed Section */
 .completed-section {
   margin-top: 8px;

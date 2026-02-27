@@ -1,5 +1,6 @@
 import type { StateCreator } from 'zustand';
-import type { Task, TaskPriority, TaskUrgency, DeadlineType } from '@/types';
+import type { Task, TaskPriority, TaskUrgency, DeadlineType, RecurringTemplate } from '@/types';
+import type { UndoSlice } from './undoSlice';
 
 export interface TaskComputedTime {
   totalWorkTime: number;
@@ -10,6 +11,8 @@ export interface TaskState {
   tasks: Task[];
   // 预计算的任务时间，避免渲染时递归计算
   taskComputedTimes: Record<string, TaskComputedTime>;
+  // 定时任务模板
+  recurringTemplates: RecurringTemplate[];
 }
 
 export interface TaskActions {
@@ -23,6 +26,11 @@ export interface TaskActions {
   toggleSubtasksCollapsed: (id: string) => void;
   expandTask: (id: string) => void;
   moveTaskNode: (activeId: string, newParentId: string | null, anchorId: string | null, zoneId: string) => void;
+  // 定时任务相关
+  addRecurringTemplate: (template: Omit<RecurringTemplate, 'id' | 'lastTriggeredAt'>) => void;
+  updateRecurringTemplate: (id: string, updates: Partial<RecurringTemplate>) => void;
+  deleteRecurringTemplate: (id: string) => void;
+  checkRecurringTasks: () => void;
 }
 
 export interface TaskComputed {
@@ -164,12 +172,15 @@ const computeAllTaskTimes = (tasks: Task[]): Record<string, TaskComputedTime> =>
   return computed;
 };
 
-export const createTaskSlice: StateCreator<TaskSlice, [], [], TaskSlice> = (set, get) => ({
+export const createTaskSlice: StateCreator<TaskSlice & UndoSlice, [], [], TaskSlice> = (set, get) => ({
   tasks: [],
   taskComputedTimes: {},
+  recurringTemplates: [],
 
-  addTask: (zoneId, title, description, priority = 'medium', urgency = 'low', deadline = null, deadlineType = 'none', parentId = null) => set((state) => {
-    const tasks = [...state.tasks];
+  addTask: (zoneId, title, description, priority = 'medium', urgency = 'low', deadline = null, deadlineType = 'none', parentId = null) => {
+    get().saveSnapshot?.();
+    set((state) => {
+      const tasks = [...state.tasks];
     const siblings = tasks.filter(t =>
       parentId ? t.parentId === parentId : (t.zoneId === zoneId && !t.parentId)
     );
@@ -194,9 +205,12 @@ export const createTaskSlice: StateCreator<TaskSlice, [], [], TaskSlice> = (set,
     const computedTimes = computeAllTaskTimes(newTasks);
 
     return { tasks: newTasks, taskComputedTimes: computedTimes };
-  }),
+    });
+  },
 
-  updateTask: (id, updates) => set((state) => {
+  updateTask: (id, updates) => {
+    get().saveSnapshot?.();
+    set((state) => {
     const tasks = [...state.tasks];
     const taskIndex = tasks.findIndex(t => t.id === id);
     if (taskIndex === -1) return state;
@@ -214,9 +228,12 @@ export const createTaskSlice: StateCreator<TaskSlice, [], [], TaskSlice> = (set,
     const computedTimes = computeAllTaskTimes(newTasks);
 
     return { tasks: newTasks, taskComputedTimes: computedTimes };
-  }),
+    });
+  },
 
-  toggleTask: (id) => set((state) => {
+  toggleTask: (id) => {
+    get().saveSnapshot?.();
+    set((state) => {
     const tasks = [...state.tasks];
     const targetIndex = tasks.findIndex(t => t.id === id);
     if (targetIndex === -1) return state;
@@ -254,7 +271,8 @@ export const createTaskSlice: StateCreator<TaskSlice, [], [], TaskSlice> = (set,
       const siblings = tasks.filter(t => t.parentId === parent.id);
       const allSiblingsCompleted = siblings.every(t => t.completed);
 
-      if (allSiblingsCompleted !== parent.completed) {
+      // 只有当父任务没有开启"preventAutoComplete"时，才自动更新完成状态
+      if (allSiblingsCompleted !== parent.completed && !parent.preventAutoComplete) {
         const parentIndex = tasks.findIndex(t => t.id === parent.id);
         tasks[parentIndex] = {
           ...parent,
@@ -268,9 +286,12 @@ export const createTaskSlice: StateCreator<TaskSlice, [], [], TaskSlice> = (set,
     updateAncestors(id, newCompleted);
 
     return { tasks };
-  }),
+    });
+  },
 
-  deleteTask: (id) => set((state) => {
+  deleteTask: (id) => {
+    get().saveSnapshot?.();
+    set((state) => {
     const getAllDescendantIds = (parentId: string, allTasks: Task[]): string[] => {
       const children = allTasks.filter(t => t.parentId === parentId);
       return children.flatMap(child => [child.id, ...getAllDescendantIds(child.id, allTasks)]);
@@ -288,19 +309,23 @@ export const createTaskSlice: StateCreator<TaskSlice, [], [], TaskSlice> = (set,
     }
 
     return { tasks: newTasks };
-  }),
+    });
+  },
 
   reorderTasks: (zoneId, newTasks) => set((state) => {
     const otherTasks = state.tasks.filter(t => t.zoneId !== zoneId);
     return { tasks: [...otherTasks, ...newTasks] };
   }),
 
-  clearCompleted: (zoneId) => set((state) => {
+  clearCompleted: (zoneId) => {
+    get().saveSnapshot?.();
+    set((state) => {
     const tasks = zoneId
       ? state.tasks.filter(t => !(t.zoneId === zoneId && t.completed))
       : state.tasks.filter(t => !t.completed);
     return { tasks };
-  }),
+    });
+  },
 
   toggleExpanded: (id) => set((state) => ({
     tasks: state.tasks.map(t => t.id === id ? { ...t, expanded: !t.expanded } : t)
@@ -425,4 +450,83 @@ export const createTaskSlice: StateCreator<TaskSlice, [], [], TaskSlice> = (set,
     const childTasks = get().tasks.filter(t => t.parentId === taskId);
     return childTasks.reduce((sum, child) => sum + get().getEstimatedTime(child.id), 0);
   },
+
+  // 定时任务模板相关
+  addRecurringTemplate: (template) => set((state) => ({
+    recurringTemplates: [
+      ...(state.recurringTemplates || []),
+      {
+        ...template,
+        id: `rec-${Date.now()}`,
+        lastTriggeredAt: Date.now(),
+        isActive: true,
+      },
+    ],
+  })),
+
+  updateRecurringTemplate: (id, updates) => set((state) => ({
+    recurringTemplates: (state.recurringTemplates || []).map(t =>
+      t.id === id ? { ...t, ...updates } : t
+    ),
+  })),
+
+  deleteRecurringTemplate: (id) => set((state) => ({
+    recurringTemplates: (state.recurringTemplates || []).filter(t => t.id !== id),
+  })),
+
+  checkRecurringTasks: () => set((state) => {
+    const now = Date.now();
+    const templates = state.recurringTemplates || [];
+    let hasChanges = false;
+    let newTasks = [...state.tasks];
+    const newTemplates = [...templates];
+
+    templates.forEach((tpl, index) => {
+      if (!tpl.isActive) return;
+
+      // 计算时间差 (分钟)
+      const diffMinutes = (now - tpl.lastTriggeredAt) / 1000 / 60;
+
+      if (diffMinutes >= tpl.intervalMinutes) {
+        hasChanges = true;
+
+        // 生成新任务
+        const deadline = tpl.deadlineOffsetHours > 0
+          ? now + (tpl.deadlineOffsetHours * 60 * 60 * 1000)
+          : null;
+
+        const newTask: Task = {
+          id: `task-auto-${Date.now()}-${index}`,
+          zoneId: tpl.zoneId,
+          parentId: null,
+          title: tpl.title,
+          description: tpl.description + '\n(自动生成)',
+          priority: tpl.priority,
+          urgency: 'low',
+          deadline: deadline,
+          deadlineType: deadline ? 'exact' : 'none',
+          completed: false,
+          isCollapsed: false,
+          expanded: false,
+          order: 0,
+          createdAt: now,
+          totalWorkTime: 0,
+          ownTime: 0,
+          isRecurring: true,
+        };
+
+        newTasks.unshift(newTask);
+
+        // 更新模板最后触发时间
+        newTemplates[index] = { ...tpl, lastTriggeredAt: now };
+      }
+    });
+
+    if (hasChanges) {
+      // 预计算时间
+      const computedTimes = computeAllTaskTimes(newTasks);
+      return { tasks: newTasks, recurringTemplates: newTemplates, taskComputedTimes: computedTimes };
+    }
+    return {};
+  }),
 });

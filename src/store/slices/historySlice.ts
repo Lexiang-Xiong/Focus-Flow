@@ -11,6 +11,7 @@ export interface HistoryState {
 export interface HistoryActions {
   archiveCurrentWorkspace: (name?: string, summary?: string) => string;
   quickArchiveCurrentWorkspace: () => string | null;
+  autoSaveSnapshot: () => string | null;
   overwriteHistoryWorkspace: (historyId: string) => void;
   restoreFromHistory: (historyId: string) => void;
   createNewWorkspace: (name?: string, templateId?: string) => void;
@@ -96,6 +97,49 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
     });
 
     return historyId;
+  },
+
+  // 自动保存快照 - 覆盖式更新策略
+  autoSaveSnapshot: () => {
+    const state = get() as unknown as { zones: Zone[]; tasks: Task[]; currentWorkspace: CurrentWorkspace; historyWorkspaces: HistoryWorkspace[] };
+    const zones = state.zones;
+    const tasks = state.tasks;
+
+    if (zones.length === 0 && tasks.length === 0) {
+      return null;
+    }
+
+    // 固定的自动保存ID
+    const AUTO_SAVE_ID = 'auto-save-fixed-slot';
+
+    const snapshot: HistoryWorkspace = {
+      ...state.currentWorkspace,
+      id: AUTO_SAVE_ID,
+      name: '自动保存 (最新)',
+      zones: JSON.parse(JSON.stringify(zones)),
+      tasks: JSON.parse(JSON.stringify(tasks)),
+      sessions: [],
+      summary: `包含 ${zones.length} 个分区，${tasks.length} 个任务`,
+      lastModified: Date.now(),
+    };
+
+    const newHistories = [...state.historyWorkspaces];
+    const existingIndex = newHistories.findIndex(h => h.id === AUTO_SAVE_ID);
+
+    if (existingIndex !== -1) {
+      // 已存在则覆盖并移到最前面
+      newHistories.splice(existingIndex, 1);
+      newHistories.unshift(snapshot);
+    } else {
+      // 不存在则插入头部
+      newHistories.unshift(snapshot);
+    }
+
+    set({
+      historyWorkspaces: newHistories.slice(0, 100),
+    });
+
+    return AUTO_SAVE_ID;
   },
 
   overwriteHistoryWorkspace: (historyId) => {

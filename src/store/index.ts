@@ -6,8 +6,9 @@ import { createZoneSlice, type ZoneSlice } from './slices/zoneSlice';
 import { createTaskSlice, type TaskSlice } from './slices/taskSlice';
 import { createHistorySlice, type HistorySlice } from './slices/historySlice';
 import { createSettingsSlice, type SettingsSlice } from './slices/settingsSlice';
+import { createUndoSlice, type UndoSlice } from './slices/undoSlice';
 
-export type AppStore = UISlice & ZoneSlice & TaskSlice & HistorySlice & SettingsSlice;
+export type AppStore = UISlice & ZoneSlice & TaskSlice & HistorySlice & SettingsSlice & UndoSlice;
 
 // 组合所有 slices
 export const useAppStore = create<AppStore>()(
@@ -18,6 +19,7 @@ export const useAppStore = create<AppStore>()(
       ...createTaskSlice(...a),
       ...createHistorySlice(...a),
       ...createSettingsSlice(...a),
+      ...createUndoSlice(...a),
     }),
     {
       name: 'focus-flow-storage-v4',
@@ -33,6 +35,7 @@ export const useAppStore = create<AppStore>()(
         historyWorkspaces: state.historyWorkspaces,
         customTemplates: state.customTemplates,
         settings: state.settings,
+        recurringTemplates: state.recurringTemplates || [],
       }),
     }
   )
