@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -33,6 +33,7 @@ interface TaskListProps {
   activeTaskId: string | null;
   isTimerRunning: boolean;
   focusedTaskId?: string | null; // 从全局视图导航过来时聚焦的任务ID
+  onSetFocusedTaskId?: (id: string | null) => void;
   onAddTask: (zoneId: string, title: string, description: string, priority?: TaskPriority, urgency?: TaskUrgency, deadline?: number | null, deadlineType?: DeadlineType, parentId?: string | null) => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
@@ -51,6 +52,7 @@ export function TaskList({
   activeTaskId,
   isTimerRunning,
   focusedTaskId: propFocusedTaskId,
+  onSetFocusedTaskId,
   onAddTask,
   onToggleTask,
   onDeleteTask,
@@ -73,20 +75,15 @@ export function TaskList({
   const [showCompleted, setShowCompleted] = useState(false);
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [localFocusedTaskId, setLocalFocusedTaskId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
 
-  // 当从全局视图传入 focusedTaskId 时，同步到本地状态
-  // 这样后续就可以正常使用本地状态进行导航了
-  useEffect(() => {
-    if (propFocusedTaskId !== undefined && propFocusedTaskId !== localFocusedTaskId) {
-      setLocalFocusedTaskId(propFocusedTaskId);
+  // 直接使用全局传递进来的聚焦状态，并通过回调更新 Store
+  const focusedTaskId = propFocusedTaskId;
+  const setFocusedTaskId = (id: string | null) => {
+    if (onSetFocusedTaskId) {
+      onSetFocusedTaskId(id);
     }
-  }, [propFocusedTaskId]);
-
-  // 始终使用本地状态，支持在区内导航
-  const focusedTaskId = localFocusedTaskId;
-  const setFocusedTaskId = setLocalFocusedTaskId;
+  };
   const [addingSubtaskParentId, setAddingSubtaskParentId] = useState<string | null>(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [newSubtaskDescription, setNewSubtaskDescription] = useState('');
@@ -147,7 +144,8 @@ export function TaskList({
         flattenedTasks,
         active.id as string,
         over.id as string,
-        delta.x
+        delta.x,
+        focusedTaskId || null
       );
       if (result) {
         moveTaskNode(active.id as string, result.newParentId, result.anchorId, zone.id);

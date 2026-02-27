@@ -30,6 +30,7 @@ export function useClipboard() {
       ...task,
       id: `task-${Date.now()}`,
       zoneId,
+      parentId: null, // 粘贴为顶级任务
       order: 0, // 会在 addTask 中计算
       createdAt: Date.now(),
       completed: false,
@@ -65,12 +66,20 @@ export function useClipboard() {
     };
   }, [clipboard]);
 
+  // 获取剪贴板中原始任务的 parentId（用于全局模式下的同级粘贴）
+  const getOriginalParentId = useCallback((): string | null => {
+    if (!clipboard || clipboard.type !== 'task') return null;
+    const task = clipboard.data as Task;
+    return task.parentId;
+  }, [clipboard]);
+
   return {
     clipboard,
     copyTask,
     copyZone,
     pasteTask,
     pasteZone,
+    getOriginalParentId,
     hasTask: clipboard?.type === 'task',
     hasZone: clipboard?.type === 'zone',
   };

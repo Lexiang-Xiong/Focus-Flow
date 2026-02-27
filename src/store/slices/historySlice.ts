@@ -1,5 +1,5 @@
 import type { StateCreator } from 'zustand';
-import type { HistoryWorkspace, CurrentWorkspace } from '@/types';
+import type { HistoryWorkspace, CurrentWorkspace, Zone, Task } from '@/types';
 import type { TaskSlice } from './taskSlice';
 import type { ZoneSlice } from './zoneSlice';
 
@@ -43,15 +43,17 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
 
   archiveCurrentWorkspace: (name, summary) => {
     const historyId = `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const state = get();
-    // 从 store 顶层获取 zones 和 tasks
-    const zones = (state as unknown as { zones: unknown[] }).zones;
-    const tasks = (state as unknown as { tasks: unknown[] }).tasks;
+    const state = get() as unknown as { zones: Zone[]; tasks: Task[]; currentWorkspace: CurrentWorkspace; historyWorkspaces: HistoryWorkspace[] };
+    const zones = state.zones;
+    const tasks = state.tasks;
 
     const history: HistoryWorkspace = {
       ...state.currentWorkspace,
       id: historyId,
       name: name || state.currentWorkspace.name,
+      zones,
+      tasks,
+      sessions: [],
       summary: summary || `包含 ${zones.length} 个分区，${tasks.length} 个任务`,
       lastModified: Date.now(),
     };
@@ -67,10 +69,9 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
   },
 
   quickArchiveCurrentWorkspace: () => {
-    const state = get();
-    // 从 store 顶层获取 zones 和 tasks
-    const zones = (state as unknown as { zones: unknown[] }).zones;
-    const tasks = (state as unknown as { tasks: unknown[] }).tasks;
+    const state = get() as unknown as { zones: Zone[]; tasks: Task[]; currentWorkspace: CurrentWorkspace; historyWorkspaces: HistoryWorkspace[] };
+    const zones = state.zones;
+    const tasks = state.tasks;
 
     if (zones.length === 0 && tasks.length === 0) {
       return null;
@@ -80,6 +81,9 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
     const history: HistoryWorkspace = {
       ...state.currentWorkspace,
       id: historyId,
+      zones,
+      tasks,
+      sessions: [],
       summary: `包含 ${zones.length} 个分区，${tasks.length} 个任务`,
       lastModified: Date.now(),
     };
@@ -99,9 +103,17 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
       const historyIndex = state.historyWorkspaces.findIndex(h => h.id === historyId);
       if (historyIndex === -1) return state;
 
+      const stateWithData = state as unknown as { zones: Zone[]; tasks: Task[]; currentWorkspace: CurrentWorkspace };
+      const currentZones = stateWithData.zones;
+      const currentTasks = stateWithData.tasks;
+
       const history = state.historyWorkspaces[historyIndex];
       const overwritten: HistoryWorkspace = {
         ...history,
+        zones: currentZones,
+        tasks: currentTasks,
+        sessions: [],
+        summary: `包含 ${currentZones.length} 个分区，${currentTasks.length} 个任务`,
         lastModified: Date.now(),
       };
 
@@ -110,9 +122,9 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
 
       return {
         historyWorkspaces: newHistory,
-        currentWorkspace: { ...history, sourceHistoryId: historyId },
-        zones: history.zones,
-        tasks: history.tasks,
+        currentWorkspace: { ...history, sourceHistoryId: historyId, zones: currentZones, tasks: currentTasks },
+        zones: currentZones,
+        tasks: currentTasks,
       };
     });
   },

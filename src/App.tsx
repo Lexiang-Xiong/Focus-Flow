@@ -176,6 +176,7 @@ function App() {
     copyZone,
     pasteTask,
     pasteZone,
+    getOriginalParentId,
     hasTask,
     hasZone,
   } = useClipboard();
@@ -213,7 +214,19 @@ function App() {
         return;
       }
 
-      const currentZone = getZoneById(activeZoneId || '') || null;
+      // 尝试获取当前操作的区域上下文
+      let currentZone = getZoneById(activeZoneId || '') || null;
+
+      // 如果没有选中分区，尝试通过"选中任务"或"当前聚焦的任务"来推断分区
+      if (!currentZone) {
+        const contextTaskId = activeTaskId || focusedTaskId;
+        if (contextTaskId) {
+          const contextTask = tasks.find(t => t.id === contextTaskId);
+          if (contextTask) {
+            currentZone = getZoneById(contextTask.zoneId) || null;
+          }
+        }
+      }
 
       if (e.ctrlKey && e.key === 'c') {
         if (activeTaskId) {
@@ -249,16 +262,59 @@ function App() {
         } else if (hasTask && currentZone) {
           const newTask = pasteTask(currentZone.id);
           if (newTask) {
-            useAppStore.getState().addTask(currentZone.id, newTask.title, newTask.description, newTask.priority, newTask.urgency, newTask.deadline || null, newTask.deadlineType || 'none');
-            toast.success('任务已粘贴');
+            let targetZoneId = currentZone.id;
+            let parentId: string | null = null;
+
+            if (currentView === 'global') {
+              // 1. 全局模式下：无视当前的聚焦路径，直接粘贴在被复制者的同一层级
+              parentId = getOriginalParentId();
+              if (parentId) {
+                const parentTask = tasks.find(t => t.id === parentId);
+                if (parentTask) {
+                  targetZoneId = parentTask.zoneId;
+                }
+              }
+            } else if (focusedTaskId) {
+              // 2. 分区模式且有聚焦（面包屑路径）：粘贴为当前所处路径（文件夹）的子任务，与选中的 activeTaskId 无关
+              const focusedTask = tasks.find(t => t.id === focusedTaskId);
+              if (focusedTask) {
+                parentId = focusedTaskId;
+                targetZoneId = focusedTask.zoneId;
+              }
+            } else {
+              // 3. 普通分区视图，无聚焦：粘贴为根级任务
+              parentId = null;
+            }
+
+            useAppStore.getState().addTask(
+              targetZoneId,
+              newTask.title,
+              newTask.description,
+              newTask.priority,
+              newTask.urgency,
+              newTask.deadline || null,
+              newTask.deadlineType || 'none',
+              parentId
+            );
+            toast.success(parentId ? '子任务已粘贴' : '任务已粘贴');
           }
+        }
+      }
+
+      // Delete 键删除选中的任务
+      if (e.key === 'Delete' && activeTaskId) {
+        const task = tasks.find(t => t.id === activeTaskId);
+        if (task) {
+          deleteTask(activeTaskId);
+          toast.success('任务已删除');
+          setActiveTaskId(null);
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTaskId, tasks, zones, getZoneById, activeZoneId, copyTask, copyZone, pasteTask, pasteZone, hasTask, hasZone, addZone]);
+  }, [activeTaskId, tasks, zones, getZoneById, activeZoneId, focusedTaskId, currentView, copyTask, copyZone, pasteTask, pasteZone, getOriginalParentId, hasTask, hasZone, addZone, deleteTask]);
 
   const handleStartTimer = useCallback(() => {
     const incompleteTasksList = tasks.filter((t) => !t.completed);
@@ -522,6 +578,7 @@ function App() {
                     activeTaskId={activeTaskId}
                     isTimerRunning={timer.isRunning}
                     focusedTaskId={focusedTaskId}
+                    onSetFocusedTaskId={setFocusedTaskId}
                     onAddTask={useAppStore.getState().addTask}
                     onToggleTask={toggleTask}
                     onDeleteTask={deleteTask}

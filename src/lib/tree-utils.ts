@@ -52,11 +52,13 @@ export function getFlattenedTasks(
 
 // 根据拖拽位置和偏移量，计算预期的深度和父节点 ID
 // 使用锚点定位法 (Anchor ID) 替代索引定位，更加稳定
+// focusedTaskId: 聚焦模式下的面包屑路径终点，用于限制拖拽的"根目录"
 export function calculateNewPosition(
   flattenedTasks: FlattenedTask[],
   activeId: string,
   overId: string,
-  offsetPx: number
+  offsetPx: number,
+  focusedTaskId: string | null = null
 ): { newDepth: number; newParentId: string | null; anchorId: string | null } | null {
   const activeIndex = flattenedTasks.findIndex(t => t.id === activeId);
   const overIndex = flattenedTasks.findIndex(t => t.id === overId);
@@ -73,24 +75,27 @@ export function calculateNewPosition(
   const nextItem = flattenedTasks[overIndex + (activeIndex < overIndex ? 1 : 0)];
 
   // 1. 计算受限的深度
+  // 在聚焦模式下，最小深度为 0（相对根目录，即 focusedTaskId）
+  const minBaseDepth = 0;
   let newDepth = activeItem.depth;
   if (prevItem) {
     const maxDepth = prevItem.depth + 1;
-    const minDepth = nextItem ? nextItem.depth : 0;
+    const minDepth = nextItem ? nextItem.depth : minBaseDepth;
     const calculatedDepth = activeItem.depth + depthOffset;
     newDepth = Math.max(minDepth, Math.min(maxDepth, calculatedDepth));
   } else {
-    newDepth = 0; // 拖到最顶部，只能是根节点
+    newDepth = minBaseDepth; // 拖到最顶部，聚焦模式下为相对根目录
   }
 
   // 2. 寻找新父节点
-  let newParentId: string | null = null;
+  // 聚焦模式下，默认父节点为 focusedTaskId，而不是绝对根目录 null
+  let newParentId: string | null = focusedTaskId;
   if (newDepth > 0 && prevItem) {
     if (newDepth === prevItem.depth + 1) {
       newParentId = prevItem.id;
     } else {
       const p = flattenedTasks.slice(0, overIndex).reverse().find(t => t.depth === newDepth - 1);
-      newParentId = p ? p.id : null;
+      newParentId = p ? p.id : focusedTaskId;
     }
   }
 

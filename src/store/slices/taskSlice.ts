@@ -334,32 +334,30 @@ export const createTaskSlice: StateCreator<TaskSlice, [], [], TaskSlice> = (set,
 
     const activeTask = { ...tasks[activeIndex], zoneId, parentId: newParentId };
 
-    // 如果有锚点，调整顺序
+    // 获取目标路径（Zone + Parent）下除了当前任务以外的所有兄弟任务，并按顺序排列
+    const siblings = tasks
+      .filter(t => t.zoneId === zoneId && t.parentId === newParentId && t.id !== activeId)
+      .sort((a, b) => a.order - b.order);
+
+    // 计算插入位置：如果有锚点，插在锚点之后；否则插在最前面（索引 0）
+    let insertIndex = 0;
     if (anchorId) {
-      const anchorIndex = tasks.findIndex(t => t.id === anchorId);
-      if (anchorIndex !== -1) {
-        const siblings = tasks.filter(t =>
-          t.zoneId === zoneId && t.parentId === newParentId && t.id !== activeId
-        );
-        const anchorSiblingIndex = siblings.findIndex(t => t.id === anchorId);
-        siblings.splice(anchorSiblingIndex + 1, 0, activeTask);
-
-        tasks[activeIndex] = {
-          ...activeTask,
-          order: anchorSiblingIndex + 1
-        };
-
-        // 重新编号
-        siblings.forEach((s, idx) => {
-          const taskIdx = tasks.findIndex(t => t.id === s.id);
-          if (taskIdx !== -1) {
-            tasks[taskIdx] = { ...tasks[taskIdx], order: idx };
-          }
-        });
+      const anchorSiblingIndex = siblings.findIndex(t => t.id === anchorId);
+      if (anchorSiblingIndex !== -1) {
+        insertIndex = anchorSiblingIndex + 1;
       }
-    } else {
-      tasks[activeIndex] = activeTask;
     }
+
+    // 将当前任务插入到兄弟数组的正确位置
+    siblings.splice(insertIndex, 0, activeTask);
+
+    // 统一更新该路径下所有兄弟任务的 order 值
+    siblings.forEach((s, idx) => {
+      const taskIdx = tasks.findIndex(t => t.id === s.id);
+      if (taskIdx !== -1) {
+        tasks[taskIdx] = { ...tasks[taskIdx], order: idx, zoneId, parentId: newParentId };
+      }
+    });
 
     return { tasks };
   }),
