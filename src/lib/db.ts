@@ -103,6 +103,7 @@ async function initializeTables(db: Database): Promise<void> {
       own_time INTEGER NOT NULL DEFAULT 0,
       workspace_id TEXT NOT NULL,
       estimated_time,
+      prevent_auto_complete INTEGER NOT NULL DEFAULT 0,
       FOREIGN KEY (zone_id) REFERENCES zones(id) ON DELETE CASCADE,
       FOREIGN KEY (parent_id) REFERENCES tasks(id) ON DELETE CASCADE,
       FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
@@ -183,9 +184,9 @@ export async function saveWorkspace(workspace: CurrentWorkspace): Promise<void> 
   // 插入 tasks
   for (const task of workspace.tasks) {
     await db.execute(
-      `INSERT INTO tasks (id, zone_id, parent_id, title, description, completed, priority, urgency, "order", created_at, completed_at, expanded, is_collapsed, total_work_time, own_time, estimated_time, workspace_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
-      [task.id, task.zoneId, task.parentId, task.title, task.description, task.completed ? 1 : 0, task.priority, task.urgency, task.order, task.createdAt, task.completedAt || null, task.expanded ? 1 : 0, task.isCollapsed ? 1 : 0, task.totalWorkTime, task.ownTime || 0, task.estimatedTime || null, workspace.id]
+      `INSERT INTO tasks (id, zone_id, parent_id, title, description, completed, priority, urgency, "order", created_at, completed_at, expanded, is_collapsed, total_work_time, own_time, estimated_time, prevent_auto_complete, workspace_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+      [task.id, task.zoneId, task.parentId, task.title, task.description, task.completed ? 1 : 0, task.priority, task.urgency, task.order, task.createdAt, task.completedAt || null, task.expanded ? 1 : 0, task.isCollapsed ? 1 : 0, task.totalWorkTime, task.ownTime || 0, task.estimatedTime || null, task.preventAutoComplete ? 1 : 0, workspace.id]
     );
   }
 
@@ -221,7 +222,7 @@ export async function loadWorkspace(workspaceId: string): Promise<CurrentWorkspa
     completed: number; priority: string; urgency: string; deadline: number | null; deadline_type: string;
     order: number; created_at: number;
     completed_at: number | null; expanded: number; is_collapsed: number; total_work_time: number;
-    own_time: number; estimated_time: number | null;
+    own_time: number; estimated_time: number | null; prevent_auto_complete: number;
   }[]>(
     `SELECT * FROM tasks WHERE workspace_id = $1 ORDER BY "order"`,
     [workspaceId]
@@ -260,7 +261,8 @@ export async function loadWorkspace(workspaceId: string): Promise<CurrentWorkspa
       isCollapsed: t.is_collapsed === 1,
       totalWorkTime: t.total_work_time,
       ownTime: t.own_time,
-      estimatedTime: t.estimated_time || undefined
+      estimatedTime: t.estimated_time || undefined,
+      preventAutoComplete: t.prevent_auto_complete === 1
     })),
     sessions: sessionsResult.map(s => ({
       id: s.id,
@@ -317,9 +319,9 @@ export async function saveHistoryWorkspace(history: HistoryWorkspace): Promise<v
   // 插入 tasks
   for (const task of history.tasks) {
     await db.execute(
-      `INSERT INTO tasks (id, zone_id, parent_id, title, description, completed, priority, urgency, "order", created_at, completed_at, expanded, is_collapsed, total_work_time, own_time, estimated_time, workspace_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
-      [task.id, task.zoneId, task.parentId, task.title, task.description, task.completed ? 1 : 0, task.priority, task.urgency, task.order, task.createdAt, task.completedAt || null, task.expanded ? 1 : 0, task.isCollapsed ? 1 : 0, task.totalWorkTime, task.ownTime || 0, task.estimatedTime || null, history.id]
+      `INSERT INTO tasks (id, zone_id, parent_id, title, description, completed, priority, urgency, "order", created_at, completed_at, expanded, is_collapsed, total_work_time, own_time, estimated_time, prevent_auto_complete, workspace_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+      [task.id, task.zoneId, task.parentId, task.title, task.description, task.completed ? 1 : 0, task.priority, task.urgency, task.order, task.createdAt, task.completedAt || null, task.expanded ? 1 : 0, task.isCollapsed ? 1 : 0, task.totalWorkTime, task.ownTime || 0, task.estimatedTime || null, task.preventAutoComplete ? 1 : 0, history.id]
     );
   }
 
@@ -353,7 +355,7 @@ export async function loadAllHistoryWorkspaces(): Promise<HistoryWorkspace[]> {
       completed: number; priority: string; urgency: string; deadline: number | null; deadline_type: string;
       order: number; created_at: number;
       completed_at: number | null; expanded: number; is_collapsed: number; total_work_time: number;
-      own_time: number; estimated_time: number | null;
+      own_time: number; estimated_time: number | null; prevent_auto_complete: number;
     }[]>(
       `SELECT * FROM tasks WHERE workspace_id = $1 ORDER BY "order"`,
       [h.id]
@@ -393,7 +395,8 @@ export async function loadAllHistoryWorkspaces(): Promise<HistoryWorkspace[]> {
         isCollapsed: t.is_collapsed === 1,
         totalWorkTime: t.total_work_time,
         ownTime: t.own_time,
-        estimatedTime: t.estimated_time || undefined
+        estimatedTime: t.estimated_time || undefined,
+        preventAutoComplete: t.prevent_auto_complete === 1
       })),
       sessions: sessionsResult.map(s => ({
         id: s.id,
