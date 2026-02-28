@@ -1655,9 +1655,11 @@
 .global-view-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding-bottom: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  flex-wrap: nowrap; /* 强制单行，绝不换行 */
+  min-width: 0;      /* 允许内部元素缩小低于其内容宽度 */
 }
 
 .back-btn {
@@ -1665,6 +1667,7 @@
   height: 28px;
   padding: 0;
   color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;    /* 返回按钮绝不压缩 */
 }
 
 .back-btn:hover {
@@ -1675,10 +1678,19 @@
 .global-view-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 14px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
+  flex: 1;           /* 核心：占据剩余空间并允许吸收被挤压的空间 */
+  min-width: 0;      /* 核心：必须有，否则 flex 子项无法执行文本截断(truncate) */
+}
+
+/* 右侧操作按钮组 */
+.global-view-header .flex.items-center.gap-2.ml-auto {
+  flex-shrink: 0;   /* 按钮绝不压缩 */
+  display: flex;
+  gap: 6px;
 }
 
 /* Zone Label in Global View */

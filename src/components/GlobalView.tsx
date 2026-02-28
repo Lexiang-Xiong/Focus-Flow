@@ -690,21 +690,24 @@ export function GlobalView({
           <ArrowLeft size={18} />
         </Button>
         <div className="global-view-title">
-          <Globe size={18} className="text-blue-400" />
-          <span>{t('view.globalView')}</span>
-          <span className="task-count">({stats.completed}/{stats.total})</span>
+          <Globe size={18} className="text-blue-400 shrink-0" />
+          <span className="truncate" title={t('view.globalView')}>{t('view.globalView')}</span>
+          <span className="task-count shrink-0">({stats.completed}/{stats.total})</span>
         </div>
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-2 ml-auto shrink-0">
           {/* 叶子节点模式切换开关 */}
           <Button
             variant="outline"
             size="sm"
-            className={`h-8 px-2 border ${isLeafMode ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-gray-800 text-gray-200 border-gray-600'}`}
+            className={`h-8 px-2 border flex-shrink-0 ${isLeafMode ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-gray-800 text-gray-200 border-gray-600'}`}
             onClick={() => setIsLeafMode(!isLeafMode)}
-            title={isLeafMode ? "当前为：只看可执行子任务" : "当前为：树状结构"}
+            title={isLeafMode ? t('view.leafMode') : t('view.treeView')}
           >
-            <Network size={14} className="mr-1" />
-            {isLeafMode ? t('view.leafMode') : t('view.treeView')}
+            <Network size={14} className={isLeafMode ? "" : "opacity-70"} />
+            {/* 核心修复：为文字添加 span 并根据需要处理 */}
+            <span className="ml-1 whitespace-nowrap">
+              {isLeafMode ? t('view.leafMode') : t('view.treeView')}
+            </span>
           </Button>
 
           <div className="sort-mode-selector m-0">
@@ -715,9 +718,9 @@ export function GlobalView({
               // 保留用户之前的展开层级习惯
             }}
           >
-            <SelectTrigger className="sort-select-trigger">
+            <SelectTrigger className="sort-select-trigger min-w-[100px] flex-shrink-0">
               <ArrowUpDown size={14} />
-              <SelectValue placeholder="排序" />
+              <SelectValue placeholder={t('view.sortMode')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="zone">
