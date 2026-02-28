@@ -37,10 +37,10 @@
 - **Task Tracking**: Timer is linked to the selected task, automatically logging time spent on each item.
 - **Sound Alerts**: Audio notifications when the timer ends (customizable).
 
-<div align="center">
+<!-- <div align="center">
   <img src="assets/4.png" alt="Leaf Node Mode" width="800" />
   <p><i>Pomodoro System</i></p>
-</div>
+</div> -->
 
 #### 📊 Powerful Views
 - **Global View**: See all tasks from all workspaces in one unified list and allows you to view them in different sorting rules under that view.
