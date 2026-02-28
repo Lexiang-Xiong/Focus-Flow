@@ -295,7 +295,8 @@ export function HistoryManager({
   };
 
   const handleArchive = () => {
-    const name = archiveName.trim() || `${i18n.language === 'zh' ? '存档' : 'Archive'} ${new Date().toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US')}`;
+    const dateStr = new Date().toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US');
+    const name = archiveName.trim() || t('workspace.archiveDefaultName', { date: dateStr });
     const summary = archiveSummary.trim() || '';
     onArchiveCurrent(name, summary);
     setArchiveName('');
@@ -438,7 +439,7 @@ export function HistoryManager({
           </DialogTrigger>
           <DialogContent className="history-dialog">
             <DialogHeader>
-              <DialogTitle>将当前工作{t('workspace.archive')}</DialogTitle>
+              <DialogTitle>{t('workspace.archiveCurrent')}</DialogTitle>
             </DialogHeader>
             <div className="history-form">
               <Input
