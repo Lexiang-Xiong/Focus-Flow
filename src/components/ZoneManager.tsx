@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Settings, Trash2, Edit2, Palette, FolderKanban, History, Cog, Save, X, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -134,6 +135,7 @@ export function ZoneManager({
   onSaveAsTemplate,
   onDeleteCustomTemplate,
 }: ZoneManagerProps) {
+  const { t } = useTranslation();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -177,7 +179,7 @@ export function ZoneManager({
   };
 
   const handleUpdateZone = () => {
-    if (editingZone && editingZone.name.trim()) {
+    if (editingZone && editingZone.name && editingZone.name.trim()) {
       onUpdateZone(editingZone.id, {
         name: editingZone.name.trim(),
         color: editingZone.color,
@@ -197,7 +199,7 @@ export function ZoneManager({
       <div className="zone-manager-header">
         <span className="zone-manager-title">
           <FolderKanban size={16} />
-          工作分区
+          {t('zone.zones')}
         </span>
         <div className="zone-manager-actions">
           <Button
@@ -205,7 +207,7 @@ export function ZoneManager({
             variant="ghost"
             className="zone-action-btn"
             onClick={() => onViewChange('global')}
-            title="全局视图"
+            title={t('view.globalView')}
           >
             <Palette size={14} />
           </Button>
@@ -215,17 +217,17 @@ export function ZoneManager({
                 size="icon"
                 variant="ghost"
                 className="zone-action-btn"
-                title="应用模板"
+                title={t('template.applyTemplate')}
               >
                 <Settings size={14} />
               </Button>
             </DialogTrigger>
             <DialogContent className="template-dialog">
               <DialogHeader>
-                <DialogTitle>选择工作模板</DialogTitle>
+                <DialogTitle>{t('template.applyTemplate')}</DialogTitle>
               </DialogHeader>
               <div className="template-list">
-                {/* 预定义模板 */}
+                {/* {t('template.predefinedTemplates')} */}
                 {templates.map((template) => (
                   <button
                     key={template.id}
@@ -233,21 +235,22 @@ export function ZoneManager({
                     onClick={() => handleApplyTemplate(template.id)}
                   >
                     <div className="template-info">
-                      <span className="template-name">{template.name}</span>
-                      <span className="template-desc">{template.description}</span>
+                      <span className="template-name">{template.nameKey ? t(template.nameKey) : template.name}</span>
+                      <span className="template-desc">{template.descKey ? t(template.descKey) : template.description}</span>
                     </div>
                     <div className="template-zones">
-                      {template.zones.map((z: { color: string }, i: number) => (
+                      {template.zones.map((z: { color: string; nameKey?: string; name?: string }, i: number) => (
                         <span
                           key={i}
                           className="template-zone-dot"
                           style={{ backgroundColor: z.color }}
+                          title={z.nameKey ? t(z.nameKey) : z.name}
                         />
                       ))}
                     </div>
                   </button>
                 ))}
-                {/* 自定义模板 */}
+                {/* {t('template.customTemplates')} */}
                 {customTemplates.map((template) => (
                   <button
                     key={template.id}
@@ -255,15 +258,16 @@ export function ZoneManager({
                     onClick={() => handleApplyTemplate(template.id)}
                   >
                     <div className="template-info">
-                      <span className="template-name">{template.name}</span>
-                      <span className="template-desc">{template.description}</span>
+                      <span className="template-name">{template.nameKey ? t(template.nameKey) : template.name}</span>
+                      <span className="template-desc">{template.descKey ? t(template.descKey) : template.description}</span>
                     </div>
                     <div className="template-zones">
-                      {template.zones.map((z: { color: string }, i: number) => (
+                      {template.zones.map((z: { color: string; nameKey?: string; name?: string }, i: number) => (
                         <span
                           key={i}
                           className="template-zone-dot"
                           style={{ backgroundColor: z.color }}
+                          title={z.nameKey ? t(z.nameKey) : z.name}
                         />
                       ))}
                     </div>
@@ -274,7 +278,7 @@ export function ZoneManager({
                         className="delete-template-btn"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (window.confirm('确定要删除这个模板吗？')) {
+                          if (window.confirm(t('messages.confirmDelete'))) {
                             onDeleteCustomTemplate(template.id);
                           }
                         }}
@@ -284,14 +288,14 @@ export function ZoneManager({
                     )}
                   </button>
                 ))}
-                {/* 保存当前分区为模板 */}
+                {/* {t('template.saveAsTemplate')} */}
                 {onSaveAsTemplate && zones.length > 0 && (
                   <button
                     className="template-item save-template-btn"
                     onClick={() => setShowSaveTemplateDialog(true)}
                   >
                     <Save size={16} />
-                    <span>保存当前分区为模板</span>
+                    <span>{t('template.saveAsTemplate')}</span>
                   </button>
                 )}
               </div>
@@ -301,13 +305,13 @@ export function ZoneManager({
             <Dialog open={showSaveTemplateDialog} onOpenChange={setShowSaveTemplateDialog}>
               <DialogContent className="history-dialog">
                 <DialogHeader>
-                  <DialogTitle>保存为模板</DialogTitle>
+                  <DialogTitle>{t('template.saveAsTemplate')}</DialogTitle>
                 </DialogHeader>
-                <p>将当前分区保存为模板</p>
+                <p>{t('template.saveAsTemplateDesc') || 'Save current zones as template'}</p>
                 <Input
                   value={newTemplateName}
                   onChange={(e) => setNewTemplateName(e.target.value)}
-                  placeholder="输入模板名称"
+                  placeholder={t('template.templateName')}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && newTemplateName.trim() && onSaveAsTemplate) {
                       onSaveAsTemplate(newTemplateName.trim());
@@ -318,7 +322,7 @@ export function ZoneManager({
                 />
                 <div className="history-form-actions">
                   <Button variant="outline" onClick={() => setShowSaveTemplateDialog(false)}>
-                    取消
+                    {t('common.cancel')}
                   </Button>
                   <Button
                     onClick={() => {
@@ -330,7 +334,7 @@ export function ZoneManager({
                     }}
                     disabled={!newTemplateName.trim()}
                   >
-                    保存
+                    {t('common.save')}
                   </Button>
                 </div>
               </DialogContent>
@@ -341,7 +345,7 @@ export function ZoneManager({
             variant="ghost"
             className="zone-action-btn"
             onClick={() => setIsAdding(true)}
-            title="添加分区"
+            title={t('zone.addZone')}
           >
             <Plus size={14} />
           </Button>
@@ -366,8 +370,8 @@ export function ZoneManager({
                 onClick={() => onSelectZone(null)}
               >
                 <div className="zone-color-indicator" style={{ background: 'linear-gradient(90deg, #3b82f6, #22c55e, #f59e0b)' }} />
-                <span className="zone-name">全局视图</span>
-                <span className="zone-count">全部</span>
+                <span className="zone-name">{t('view.globalView')}</span>
+                <span className="zone-count">{t('common.all')}</span>
               </button>
 
               {/* Zone Items */}
@@ -391,13 +395,13 @@ export function ZoneManager({
         <Dialog open={!!editingZone} onOpenChange={(open) => !open && setEditingZone(null)}>
           <DialogContent className="zone-edit-dialog">
             <DialogHeader>
-              <DialogTitle>编辑分区</DialogTitle>
+              <DialogTitle>{t('settings.editZone')}</DialogTitle>
             </DialogHeader>
             <div className="zone-edit-form">
               <Input
                 value={editingZone?.name || ''}
                 onChange={(e) => setEditingZone(prev => prev ? { ...prev, name: e.target.value } : null)}
-                placeholder="分区名称"
+                placeholder={t('zone.zoneName')}
               />
               <div className="color-picker">
                 <span className="color-label">选择颜色</span>
@@ -414,10 +418,10 @@ export function ZoneManager({
               </div>
               <div className="zone-edit-actions">
                 <Button variant="outline" onClick={() => setEditingZone(null)}>
-                  取消
+                  {t('common.cancel')}
                 </Button>
                 <Button onClick={handleUpdateZone}>
-                  保存
+                  {t('common.save')}
                 </Button>
               </div>
             </div>
@@ -434,7 +438,7 @@ export function ZoneManager({
           onClick={onOpenHistory}
         >
           <History size={14} className="mr-1" />
-          历史
+          {t('workspace.history')}
         </Button>
         <Button
           variant="ghost"
@@ -443,7 +447,7 @@ export function ZoneManager({
           onClick={onOpenSettings}
         >
           <Cog size={14} className="mr-1" />
-          设置
+          {t('settings.title')}
         </Button>
       </div>
 
@@ -453,7 +457,7 @@ export function ZoneManager({
           <Input
             value={newZoneName}
             onChange={(e) => setNewZoneName(e.target.value)}
-            placeholder="分区名称"
+            placeholder={t('zone.zoneName')}
             onKeyDown={(e) => e.key === 'Enter' && handleAddZone()}
             autoFocus
           />
@@ -471,10 +475,10 @@ export function ZoneManager({
           </div>
           <div className="zone-add-actions">
             <Button variant="outline" size="sm" onClick={() => setIsAdding(false)}>
-              取消
+              {t('common.cancel')}
             </Button>
             <Button size="sm" onClick={handleAddZone} disabled={!newZoneName.trim()}>
-              添加
+              {t('common.add')}
             </Button>
           </div>
         </div>

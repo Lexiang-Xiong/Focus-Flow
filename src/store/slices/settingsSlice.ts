@@ -6,6 +6,7 @@ import type { TaskSlice } from './taskSlice';
 
 export interface SettingsState {
   settings: {
+    language: string;
     workDuration: number;
     breakDuration: number;
     longBreakDuration: number;

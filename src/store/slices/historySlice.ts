@@ -2,6 +2,7 @@ import type { StateCreator } from 'zustand';
 import type { HistoryWorkspace, CurrentWorkspace, Zone, Task } from '@/types';
 import type { TaskSlice } from './taskSlice';
 import type { ZoneSlice } from './zoneSlice';
+import i18n from '@/lib/i18n';
 
 export interface HistoryState {
   historyWorkspaces: HistoryWorkspace[];
@@ -28,7 +29,7 @@ export interface HistoryActions {
 export type HistorySlice = HistoryState & HistoryActions;
 
 // 创建新工作区结构
-const createWorkspaceData = (name = '当前工作'): CurrentWorkspace => ({
+const createWorkspaceData = (name = i18n.t('workspace.defaultName')): CurrentWorkspace => ({
   id: `workspace-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
   name,
   zones: [],
@@ -55,7 +56,7 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
       zones,
       tasks,
       sessions: [],
-      summary: summary || `包含 ${zones.length} 个分区，${tasks.length} 个任务`,
+      summary: summary || i18n.t('workspace.defaultSummary', { zones: zones.length, tasks: tasks.length }),
       lastModified: Date.now(),
     };
 
@@ -85,7 +86,7 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
       zones,
       tasks,
       sessions: [],
-      summary: `包含 ${zones.length} 个分区，${tasks.length} 个任务`,
+      summary: i18n.t('workspace.defaultSummary', { zones: zones.length, tasks: tasks.length }),
       lastModified: Date.now(),
     };
 
@@ -115,11 +116,11 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
     const snapshot: HistoryWorkspace = {
       ...state.currentWorkspace,
       id: AUTO_SAVE_ID,
-      name: '自动保存 (最新)',
+      name: i18n.t('workspace.autoSaveName'),
       zones: JSON.parse(JSON.stringify(zones)),
       tasks: JSON.parse(JSON.stringify(tasks)),
       sessions: [],
-      summary: `包含 ${zones.length} 个分区，${tasks.length} 个任务`,
+      summary: i18n.t('workspace.defaultSummary', { zones: zones.length, tasks: tasks.length }),
       lastModified: Date.now(),
     };
 
@@ -157,7 +158,7 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
         zones: currentZones,
         tasks: currentTasks,
         sessions: [],
-        summary: `包含 ${currentZones.length} 个分区，${currentTasks.length} 个任务`,
+        summary: i18n.t('workspace.defaultSummary', { zones: currentZones.length, tasks: currentTasks.length }),
         lastModified: Date.now(),
       };
 
@@ -234,7 +235,7 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
       // 生成新的 ID 避免冲突
       const newHistory: HistoryWorkspace = {
         id: `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        name: parsed.name || '未命名',
+        name: parsed.name || i18n.t('common.unnamed'),
         summary: parsed.summary || '',
         createdAt: parsed.createdAt || Date.now(),
         lastModified: Date.now(),
@@ -266,7 +267,7 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
         imported++;
         return {
           id: `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          name: h.name || '未命名',
+          name: h.name || i18n.t('common.unnamed'),
           summary: h.summary || '',
           createdAt: h.createdAt || Date.now(),
           lastModified: Date.now(),

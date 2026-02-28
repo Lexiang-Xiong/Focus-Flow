@@ -12,6 +12,7 @@ import type { Task, TaskPriority, DeadlineType } from '@/types';
 import { formatDuration } from '@/types';
 import { getDeadlineStatus, getAbsoluteUrgencyColor, convertDeadlineType, getInheritedDeadline } from '@/lib/urgency-utils';
 import { useAppStore } from '@/store';
+import { useTranslation } from 'react-i18next';
 
 interface TaskItemProps {
   task: Task;
@@ -58,6 +59,7 @@ export function TaskItem({
   // rankScores 不再需要用于紧迫性显示（使用绝对时间）
   allTasks = [],
 }: TaskItemProps) {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDescription, setEditDescription] = useState(task.description);
@@ -206,11 +208,11 @@ export function TaskItem({
   const getPriorityLabel = (priority: TaskPriority) => {
     switch (priority) {
       case 'high':
-        return '高';
+        return t('task.priorityHigh');
       case 'medium':
-        return '中';
+        return t('task.priorityMedium');
       case 'low':
-        return '低';
+        return t('task.priorityLow');
     }
   };
 
@@ -260,7 +262,7 @@ export function TaskItem({
         <div
           className="absolute left-0 top-1 bottom-1 w-[4px] rounded-r-md transition-colors duration-300"
           style={{ backgroundColor: urgencyColor }}
-          title={deadlineText || (inheritedDeadline ? `剩余 ${deadlineText}` : '未定义截止日期')}
+          title={deadlineText || (inheritedDeadline ? `${t('task.remaining')} ${deadlineText}` : t('task.noDeadline'))}
         />
       )}
 
@@ -282,7 +284,7 @@ export function TaskItem({
               e.stopPropagation();
               onAddSubtask?.(task.id);
             }}
-            title="添加子任务"
+            title={t('task.addSubtask')}
           >
             <Plus size={12} />
           </button>
@@ -373,9 +375,9 @@ export function TaskItem({
                   >
                     <Calendar size={10} />
                     {inheritedDeadline && inheritedDeadline > 0 ? (
-                      <span>{deadlineText}{task.parentId && !task.deadline && <span className="text-white/40 ml-0.5">(继承)</span>}</span>
+                      <span>{deadlineText}{task.parentId && !task.deadline && <span className="text-white/40 ml-0.5">{t('task.inherited')}</span>}</span>
                     ) : (
-                      <span className="italic">设置截止日期</span>
+                      <span className="italic">{t('task.setDeadline')}</span>
                     )}
                   </button>
                 </PopoverTrigger>
@@ -461,7 +463,7 @@ export function TaskItem({
                             setEditDeadlineType(result.deadlineType);
                           }}
                         >
-                          今天
+                          {t('task.deadlineToday')}
                         </Button>
                         <Button
                           variant="ghost"
@@ -473,7 +475,7 @@ export function TaskItem({
                             setEditDeadlineType(result.deadlineType);
                           }}
                         >
-                          明天
+                          {t('task.deadlineTomorrow')}
                         </Button>
                         <Button
                           variant="ghost"
@@ -485,7 +487,7 @@ export function TaskItem({
                             setEditDeadlineType(result.deadlineType);
                           }}
                         >
-                          本周
+                          {t('task.deadlineWeek')}
                         </Button>
                         <Button
                           variant="ghost"
@@ -496,7 +498,7 @@ export function TaskItem({
                             setEditDeadlineType('none');
                           }}
                         >
-                          无
+                          {t('task.deadlineNone')}
                         </Button>
                       </div>
                     </div>
@@ -517,7 +519,7 @@ export function TaskItem({
                           setShowDeadlinePicker(false);
                         }}
                       >
-                        保存
+                        {t('common.save')}
                       </Button>
                       <Button
                         size="sm"
@@ -529,7 +531,7 @@ export function TaskItem({
                           setShowDeadlinePicker(false);
                         }}
                       >
-                        取消
+                        {t('common.cancel')}
                       </Button>
                     </div>
                   </PopoverContent>
@@ -540,7 +542,7 @@ export function TaskItem({
             <div className="task-work-time">
               <Clock size={10} className={isTimerRunning && isActive ? 'pulse' : ''} />
               {/* 使用动态计算的 totalWorkTime */}
-              <span>累计: {formatDuration(getTotalWorkTime ? getTotalWorkTime(task.id) : (task.totalWorkTime || 0))}</span>
+              <span>{t('task.totalWorkTime')}: {formatDuration(getTotalWorkTime ? getTotalWorkTime(task.id) : (task.totalWorkTime || 0))}</span>
               {/* 显示预期时间：区分手动设置和自动继承 */}
               {(() => {
                 const estimated = getEstimatedTime ? getEstimatedTime(task.id) : (task.estimatedTime || 0);
@@ -619,7 +621,7 @@ export function TaskItem({
               e.stopPropagation();
               onUpdate(task.id, { preventAutoComplete: !task.preventAutoComplete });
             }}
-            title={task.preventAutoComplete ? '已开启：子任务全部完成也不会自动结束' : '开启：子任务全部完成也不会自动结束'}
+            title={task.preventAutoComplete ? t('task.preventAutoCompleteEnabled') : t('task.preventAutoCompleteDisabled')}
           >
             <Pin size={12} />
           </button>

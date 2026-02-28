@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Pin, Minus, X, GripHorizontal, ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface FloatWindowProps {
   children: React.ReactNode;
@@ -67,6 +68,7 @@ const tauriWindow = {
 };
 
 export function FloatWindow({ children, onCollapse }: FloatWindowProps) {
+  const { t } = useTranslation();
   const [isPinned, setIsPinned] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -120,13 +122,13 @@ export function FloatWindow({ children, onCollapse }: FloatWindowProps) {
       >
         <div className="drag-handle" style={{ pointerEvents: 'none' }}>
           <GripHorizontal size={14} className="text-white/50" />
-          <span className="title-text">Focus Flow</span>
+          <span className="title-text">{t('app.name')}</span>
         </div>
         <div className="window-controls no-drag" data-tauri-drag-region="false">
           <button
             className={`control-btn ${isPinned ? 'active' : ''}`}
             onClick={togglePin}
-            title={isPinned ? '取消置顶' : '置顶窗口'}
+            title={isPinned ? t('window.unpin') : t('window.pin')}
           >
             <Pin size={14} />
           </button>
@@ -134,7 +136,7 @@ export function FloatWindow({ children, onCollapse }: FloatWindowProps) {
             <button
               className="control-btn"
               onClick={onCollapse}
-              title="收起为悬浮球"
+              title={t('window.collapseToBall')}
             >
               <ChevronDown size={14} />
             </button>
@@ -142,14 +144,14 @@ export function FloatWindow({ children, onCollapse }: FloatWindowProps) {
           <button
             className="control-btn"
             onClick={handleMinimize}
-            title="最小化"
+            title={t('window.minimize')}
           >
             <Minus size={14} />
           </button>
           <button
             className="control-btn close"
             onClick={handleClose}
-            title="关闭"
+            title={t('window.close')}
           >
             <X size={14} />
           </button>

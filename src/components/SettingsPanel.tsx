@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Settings, Clock, Volume2, RotateCcw, Flag, Zap, Repeat, Plus, Trash2, Edit2, Bookmark, Download, Upload, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -36,6 +37,7 @@ export function SettingsPanel({
   onUpdateSettings,
   onPreviewMode,
 }: SettingsPanelProps) {
+  const { t, i18n } = useTranslation();
   const [workMinutes, setWorkMinutes] = useState(Math.floor(settings.workDuration / 60));
   const [breakMinutes, setBreakMinutes] = useState(Math.floor(settings.breakDuration / 60));
   const [longBreakMinutes, setLongBreakMinutes] = useState(Math.floor(settings.longBreakDuration / 60));
@@ -69,6 +71,13 @@ export function SettingsPanel({
       setRecZoneId(zones[0].id);
     }
   }, [zones, recZoneId]);
+
+  // 同步语言设置
+  useEffect(() => {
+    if (settings.language && settings.language !== i18n.language) {
+      i18n.changeLanguage(settings.language);
+    }
+  }, [settings.language, i18n]);
 
   // 打开编辑弹窗
   const handleEditTemplate = (tpl: RecurringTemplate) => {
@@ -157,7 +166,7 @@ export function SettingsPanel({
       const state = useAppStore.getState();
       const exportData = {
         version: 1,
-        name: `环境备份 ${new Date().toLocaleDateString()}`,
+        name: `${t('profile.exportName') || 'Environment Backup'} ${new Date().toLocaleDateString()}`,
         settings: state.settings,
         customTemplates: state.customTemplates,
         recurringTemplates: state.recurringTemplates.filter((r: RecurringTemplate) => r.scope === 'global' || !r.scope)
@@ -170,11 +179,11 @@ export function SettingsPanel({
 
       if (filePath) {
         await writeTextFile(filePath, JSON.stringify(exportData, null, 2));
-        toast.success('环境配置已成功导出！');
+        toast.success(t('profile.exportSuccess'));
       }
     } catch (e) {
       console.error('导出配置失败', e);
-      toast.error('导出配置失败');
+      toast.error(t('profile.exportFailed') || 'Export failed');
     }
   };
 
@@ -190,14 +199,14 @@ export function SettingsPanel({
         const content = await readTextFile(selected);
         const success = importConfigProfile(JSON.parse(content));
         if (success) {
-          toast.success('配置已导入到快照列表，请点击应用');
+          toast.success(t('profile.profileImported'));
         } else {
-          toast.error('文件格式错误');
+          toast.error(t('profile.importFailed'));
         }
       }
     } catch (e) {
       console.error('导入配置失败', e);
-      toast.error('导入配置失败');
+      toast.error(t('profile.importFailed'));
     }
   };
 
@@ -309,23 +318,51 @@ export function SettingsPanel({
         </Button>
         <div className="settings-panel-title">
           <Settings size={18} className="text-blue-400" />
-          <span>设置</span>
+          <span>{t('settings.title')}</span>
         </div>
       </div>
 
       {/* Settings Content */}
       <div className="settings-content">
+        {/* Language Settings */}
+        <div className="settings-section">
+          <h3 className="settings-section-title">
+            <Settings size={14} className="mr-2" />
+            {t('settings.language')}
+          </h3>
+          <div className="setting-item">
+            <div className="setting-label">
+              <span>{t('settings.language')}</span>
+              <Select
+                value={settings.language || 'zh'}
+                onValueChange={(val) => {
+                  onUpdateSettings({ language: val });
+                  i18n.changeLanguage(val);
+                }}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="zh">简体中文</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
         {/* Timer Settings */}
         <div className="settings-section">
           <h3 className="settings-section-title">
             <Clock size={14} className="mr-2" />
-            计时器设置
+            {t('settings.timerSettings')}
           </h3>
 
           {/* Work Duration */}
           <div className="setting-item">
             <div className="setting-label">
-              <span>专注时长 (分钟)</span>
+              <span>{t('settings.workDuration')} {t('settings.workDurationMinutes')}</span>
               <Input
                 type="number"
                 value={workMinutes}
@@ -352,7 +389,7 @@ export function SettingsPanel({
           {/* Break Duration */}
           <div className="setting-item">
             <div className="setting-label">
-              <span>短休息时长 (分钟)</span>
+              <span>{t('settings.breakDuration')} {t('settings.workDurationMinutes')}</span>
               <Input
                 type="number"
                 value={breakMinutes}
@@ -379,7 +416,7 @@ export function SettingsPanel({
           {/* Long Break Duration */}
           <div className="setting-item">
             <div className="setting-label">
-              <span>长休息时长 (分钟)</span>
+              <span>{t('settings.longBreakDuration')} {t('settings.workDurationMinutes')}</span>
               <Input
                 type="number"
                 value={longBreakMinutes}
@@ -408,17 +445,17 @@ export function SettingsPanel({
         <div className="settings-section">
           <h3 className="settings-section-title">
             <Flag size={14} className="mr-2" />
-            加权排序设置
+            {t('settings.weightedSort')}
           </h3>
           <p className="settings-section-desc">
-            在全局视图使用加权排序时，优先级和紧急度的权重比例
+            {t('settings.weightedSortDesc')}
           </p>
 
           {/* Priority Weight */}
           <div className="setting-item">
             <div className="setting-label">
               <Flag size={14} className="mr-2 text-red-400" />
-              <span>优先级权重</span>
+              <span>{t('settings.priorityWeight')}</span>
               <span className="setting-value">{priorityWeight}%</span>
             </div>
             <Slider
@@ -435,7 +472,7 @@ export function SettingsPanel({
           <div className="setting-item">
             <div className="setting-label">
               <Zap size={14} className="mr-2 text-orange-400" />
-              <span>紧急度权重</span>
+              <span>{t('settings.deadlineWeight')}</span>
               <span className="setting-value">{deadlineWeight}%</span>
             </div>
             <Slider
@@ -453,14 +490,14 @@ export function SettingsPanel({
         <div className="settings-section">
           <h3 className="settings-section-title">
             <Volume2 size={14} className="mr-2" />
-            其他设置
+            {t('settings.otherSettings')}
           </h3>
 
           {/* Auto Start Break */}
           <div className="setting-item switch">
             <div className="setting-label">
-              <span>自动开始休息</span>
-              <span className="setting-desc">专注结束后自动开始休息计时</span>
+              <span>{t('settings.autoStartBreak')}</span>
+              <span className="setting-desc">{t('settings.autoStartBreakDesc')}</span>
             </div>
             <Switch
               checked={settings.autoStartBreak}
@@ -471,8 +508,8 @@ export function SettingsPanel({
           {/* Sound Enabled */}
           <div className="setting-item switch">
             <div className="setting-label">
-              <span>声音提醒</span>
-              <span className="setting-desc">计时结束时播放提示音</span>
+              <span>{t('settings.soundEnabled')}</span>
+              <span className="setting-desc">{t('settings.soundEnabledDesc')}</span>
             </div>
             <Switch
               checked={settings.soundEnabled}
@@ -483,8 +520,8 @@ export function SettingsPanel({
           {/* Auto Save Enabled */}
           <div className="setting-item switch">
             <div className="setting-label">
-              <span>自动保存历史</span>
-              <span className="setting-desc">自动将当前工作区保存到历史记录</span>
+              <span>{t('settings.autoSaveEnabled')}</span>
+              <span className="setting-desc">{t('settings.autoSaveEnabledDesc')}</span>
             </div>
             <Switch
               checked={settings.autoSaveEnabled || false}
@@ -496,7 +533,7 @@ export function SettingsPanel({
           {settings.autoSaveEnabled && (
             <div className="setting-item">
               <div className="setting-label">
-                <span>保存间隔 (秒)</span>
+                <span>{t('settings.autoSaveInterval')} {t('settings.autoSaveIntervalSeconds')}</span>
                 <Input
                   type="number"
                   value={autoSaveInterval}
@@ -531,21 +568,21 @@ export function SettingsPanel({
           <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
             <h3 className="flex items-center text-xs font-semibold text-white/70">
               <Repeat size={14} className="mr-2 text-green-400" />
-              定时任务 (自动化)
+              {t('settings.recurringTasks')}
             </h3>
             <Button size="sm" className="h-6 text-xs px-2 bg-blue-600 hover:bg-blue-500 text-white" onClick={() => setShowRecurringDialog(true)}>
               <Plus size={12} className="mr-1" />
-              新建规则
+              {t('settings.newRule')}
             </Button>
           </div>
           <p className="settings-section-desc mb-3">
-            设置周期性任务，系统会在后台自动为您生成待办事项。
+            {t('settings.recurringTasksDesc')}
           </p>
 
           <div className="flex flex-col gap-2">
             {!recurringTemplates || recurringTemplates.length === 0 ? (
               <div className="text-center py-4 text-xs text-white/30 bg-black/10 rounded-md border border-dashed border-white/10">
-                暂无自动化规则
+                {t('recurring.noRules')}
               </div>
             ) : (
               recurringTemplates.map(tpl => (
@@ -557,7 +594,7 @@ export function SettingsPanel({
                         checked={tpl.isActive}
                         onCheckedChange={(c) => onUpdateRecurringTemplate(tpl.id, { isActive: c })}
                       />
-                      <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-blue-400 hover:bg-blue-400/10" onClick={() => handleEditTemplate(tpl)} title="编辑规则">
+                      <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-blue-400 hover:bg-blue-400/10" onClick={() => handleEditTemplate(tpl)} title={t('settings.editRule')}>
                         <Edit2 size={12} />
                       </Button>
                       <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10" onClick={() => onDeleteRecurringTemplate(tpl.id)}>
@@ -568,15 +605,15 @@ export function SettingsPanel({
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/50">
                     <span className="flex items-center">
                       <Repeat size={10} className="mr-1" />
-                      每 {tpl.intervalMinutes >= 1440 ? `${tpl.intervalMinutes / 1440} 天` : tpl.intervalMinutes >= 60 ? `${tpl.intervalMinutes / 60} 小时` : `${tpl.intervalMinutes} 分钟`}
+                      {t('recurring.every')} {tpl.intervalMinutes >= 1440 ? `${tpl.intervalMinutes / 1440} ${t('recurring.days')}` : tpl.intervalMinutes >= 60 ? `${tpl.intervalMinutes / 60} ${t('recurring.hours')}` : `${tpl.intervalMinutes} ${t('recurring.minutes')}`}
                     </span>
                     <span className="flex items-center">
                       <Clock size={10} className="mr-1" />
-                      DDL: 生成后 {tpl.deadlineOffsetHours >= 24 ? `${tpl.deadlineOffsetHours / 24} 天` : `${tpl.deadlineOffsetHours} 小时`}
+                      {t('recurring.ddl')}: {t('recurring.afterGeneration')} {tpl.deadlineOffsetHours >= 24 ? `${tpl.deadlineOffsetHours / 24} ${t('recurring.days')}` : `${tpl.deadlineOffsetHours} ${t('recurring.hours')}`}
                     </span>
                     <span className="flex items-center">
                       <Flag size={10} className="mr-1" />
-                      存放至: {zones.find(z => z.id === tpl.zoneId)?.name || '未知分区'}
+                      {t('recurring.targetZone')}: {zones.find(z => z.id === tpl.zoneId)?.name || t('recurring.unknownZone')}
                     </span>
                   </div>
                 </div>
@@ -589,22 +626,22 @@ export function SettingsPanel({
         <Dialog open={showRecurringDialog} onOpenChange={setShowRecurringDialog}>
           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
             <DialogHeader>
-              <DialogTitle>新建定时任务</DialogTitle>
+              <DialogTitle>{editingTemplate ? t('recurring.editRule') : t('recurring.addRule')}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-2">
               <div className="flex flex-col gap-2">
-                <label className="text-xs text-white/60">任务名称</label>
-                <Input value={recTitle} onChange={e => setRecTitle(e.target.value)} className="bg-black/30 border-white/20" placeholder="例如：每周周报总结" />
+                <label className="text-xs text-white/60">{t('recurring.ruleTitle')}</label>
+                <Input value={recTitle} onChange={e => setRecTitle(e.target.value)} className="bg-black/30 border-white/20" placeholder={t('recurring.ruleTitlePlaceholder')} />
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-xs text-white/60">描述 (可选)</label>
-                <Input value={recDesc} onChange={e => setRecDesc(e.target.value)} className="bg-black/30 border-white/20" placeholder="任务描述..." />
+                <label className="text-xs text-white/60">{t('recurring.ruleDescription')}</label>
+                <Input value={recDesc} onChange={e => setRecDesc(e.target.value)} className="bg-black/30 border-white/20" placeholder={t('recurring.ruleDescriptionPlaceholder')} />
               </div>
 
               <div className="flex gap-4">
                 <div className="flex flex-col gap-2 flex-1">
-                  <label className="text-xs text-white/60">触发间隔 <span className="text-white/30 text-[10px]">(最小5分钟)</span></label>
+                  <label className="text-xs text-white/60">{t('recurring.triggerInterval')} <span className="text-white/30 text-[10px]">{t('recurring.minInterval')}</span></label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
@@ -628,14 +665,14 @@ export function SettingsPanel({
                       }
                     }}>
                       <SelectTrigger className="w-[80px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="minutes">分钟</SelectItem><SelectItem value="hours">小时</SelectItem><SelectItem value="days">天</SelectItem></SelectContent>
+                      <SelectContent><SelectItem value="minutes">{t('recurring.minutes')}</SelectItem><SelectItem value="hours">{t('recurring.hours')}</SelectItem><SelectItem value="days">{t('recurring.days')}</SelectItem></SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 flex-1">
-                  <label className="text-xs text-white/60">目标分区</label>
+                  <label className="text-xs text-white/60">{t('recurring.targetZone')}</label>
                   <Select value={recZoneId} onValueChange={setRecZoneId}>
-                    <SelectTrigger className="bg-black/30 border-white/20"><SelectValue placeholder="选择分区" /></SelectTrigger>
+                    <SelectTrigger className="bg-black/30 border-white/20"><SelectValue placeholder={t('recurring.selectZone')} /></SelectTrigger>
                     <SelectContent>
                       {zones.map(z => <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>)}
                     </SelectContent>
@@ -645,32 +682,32 @@ export function SettingsPanel({
 
               <div className="flex gap-4">
                 <div className="flex flex-col gap-2 flex-1">
-                  <label className="text-xs text-white/60">自动设定 DDL (生成后)</label>
+                  <label className="text-xs text-white/60">{t('recurring.autoDeadline')} {t('recurring.afterGeneration')}</label>
                   <div className="flex items-center gap-2">
                     <Input type="number" min={0} value={recDeadlineValue} onChange={e => setRecDeadlineValue(Number(e.target.value))} className="bg-black/30 border-white/20" />
                     <Select value={recDeadlineUnit} onValueChange={(v: 'hours' | 'days') => setRecDeadlineUnit(v)}>
                       <SelectTrigger className="w-[80px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="hours">小时</SelectItem><SelectItem value="days">天</SelectItem></SelectContent>
+                      <SelectContent><SelectItem value="hours">{t('recurring.hours')}</SelectItem><SelectItem value="days">{t('recurring.days')}</SelectItem></SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 flex-1">
-                  <label className="text-xs text-white/60">优先级</label>
+                  <label className="text-xs text-white/60">{t('recurring.priority')}</label>
                   <Select value={recPriority} onValueChange={(v: TaskPriority) => setRecPriority(v)}>
                     <SelectTrigger className="bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="high">高 (High)</SelectItem>
-                      <SelectItem value="medium">中 (Medium)</SelectItem>
-                      <SelectItem value="low">低 (Low)</SelectItem>
+                      <SelectItem value="high">{t('task.priorityHigh')}</SelectItem>
+                      <SelectItem value="medium">{t('task.priorityMedium')}</SelectItem>
+                      <SelectItem value="low">{t('task.priorityLow')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-4">
-              <Button variant="ghost" onClick={() => setShowRecurringDialog(false)}>取消</Button>
+              <Button variant="ghost" onClick={() => setShowRecurringDialog(false)}>{t('common.cancel')}</Button>
               <Button className="bg-blue-600 hover:bg-blue-500 text-white" onClick={handleSaveRecurring} disabled={!recTitle.trim()}>
-                保存规则
+                {t('recurring.saveRule')}
               </Button>
             </div>
           </DialogContent>
@@ -681,19 +718,19 @@ export function SettingsPanel({
           <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
             <h3 className="flex items-center text-xs font-semibold text-white/70">
               <Bookmark size={14} className="mr-2 text-indigo-400" />
-              环境配置快照
+              {t('settings.environmentProfiles')}
             </h3>
             <div className="flex gap-2">
               <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleImportConfig}>
-                <Upload size={12} className="mr-1" /> 导入
+                <Upload size={12} className="mr-1" /> {t('common.import')}
               </Button>
               <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleExportConfig}>
-                <Download size={12} className="mr-1" /> 导出
+                <Download size={12} className="mr-1" /> {t('common.export')}
               </Button>
             </div>
           </div>
           <p className="settings-section-desc mb-3">
-            将当前的设置、模板和全局自动化规则打包保存。方便在不同工作模式间一键切换。
+            {t('settings.environmentProfilesDesc')}
           </p>
 
           <Button
@@ -701,13 +738,13 @@ export function SettingsPanel({
             className="w-full mb-3 border-dashed border-indigo-500/50 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
             onClick={() => setShowSaveProfileDialog(true)}
           >
-            <Save size={14} className="mr-2" /> 保存当前环境为快照
+            <Save size={14} className="mr-2" /> {t('settings.saveAsSnapshot')}
           </Button>
 
           <div className="flex flex-col gap-2">
             {(!configProfiles || configProfiles.length === 0) && (
               <div className="text-center py-4 text-xs text-white/30 bg-black/10 rounded-md border border-white/5">
-                暂无配置快照
+                {t('profile.noProfiles')}
               </div>
             )}
             {(configProfiles || []).map(profile => (
@@ -717,9 +754,9 @@ export function SettingsPanel({
                   <div className="flex items-center gap-2">
                     <Button size="sm" className="h-6 text-xs px-2 bg-indigo-600 hover:bg-indigo-500 text-white" onClick={() => {
                       applyConfigProfile(profile.id);
-                      toast.success(`已应用环境：${profile.name}`);
+                      toast.success(`${t('profile.profileApplied')}: ${profile.name}`);
                     }}>
-                      应用
+                      {t('common.apply')}
                     </Button>
                     <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-blue-400 hover:bg-blue-400/10" onClick={() => {
                       setEditingProfile(profile);
@@ -733,7 +770,7 @@ export function SettingsPanel({
                   </div>
                 </div>
                 <div className="text-[10px] text-white/40">
-                  创建于: {new Date(profile.createdAt).toLocaleString()} · 包含 {profile.recurringTemplates.length} 个全局规则
+                  {t('profile.createdAt')}: {new Date(profile.createdAt).toLocaleString()} · {t('profile.containsRules', { count: profile.recurringTemplates.length })}
                 </div>
               </div>
             ))}
@@ -744,26 +781,26 @@ export function SettingsPanel({
         <Dialog open={showSaveProfileDialog} onOpenChange={setShowSaveProfileDialog}>
           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
             <DialogHeader>
-              <DialogTitle>保存配置快照</DialogTitle>
+              <DialogTitle>{t('profile.saveProfile')}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-2">
               <Input
                 value={profileName}
                 onChange={e => setProfileName(e.target.value)}
-                placeholder="例如：极简办公模式"
+                placeholder={t('profile.exampleMode')}
                 className="bg-black/30 border-white/20"
                 autoFocus
               />
             </div>
             <div className="flex justify-end gap-2 mt-2">
-              <Button variant="ghost" onClick={() => setShowSaveProfileDialog(false)}>取消</Button>
+              <Button variant="ghost" onClick={() => setShowSaveProfileDialog(false)}>{t('common.cancel')}</Button>
               <Button className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!profileName.trim()} onClick={() => {
                 saveConfigProfile(profileName.trim(), recurringTemplates.filter((r: RecurringTemplate) => r.scope === 'global' || !r.scope));
                 setProfileName('');
                 setShowSaveProfileDialog(false);
-                toast.success('快照保存成功');
+                toast.success(t('profile.profileSaved'));
               }}>
-                保存
+                {t('common.save')}
               </Button>
             </div>
           </DialogContent>
@@ -773,28 +810,28 @@ export function SettingsPanel({
         <Dialog open={!!editingProfile} onOpenChange={(open) => !open && setEditingProfile(null)}>
           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
             <DialogHeader>
-              <DialogTitle>编辑配置快照</DialogTitle>
+              <DialogTitle>{t('profile.editProfile') || 'Edit Profile'}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-2">
               <Input
                 value={editingProfileName}
                 onChange={e => setEditingProfileName(e.target.value)}
-                placeholder="快照名称"
+                placeholder={t('profile.snapshotName')}
                 className="bg-black/30 border-white/20"
                 autoFocus
               />
             </div>
             <div className="flex justify-end gap-2 mt-2">
-              <Button variant="ghost" onClick={() => setEditingProfile(null)}>取消</Button>
+              <Button variant="ghost" onClick={() => setEditingProfile(null)}>{t('common.cancel')}</Button>
               <Button className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!editingProfileName.trim()} onClick={() => {
                 if (editingProfile) {
                   updateConfigProfile(editingProfile.id, { name: editingProfileName.trim() });
-                  toast.success('快照名称已更新');
+                  toast.success(t('profile.profileSaved'));
                 }
                 setEditingProfile(null);
                 setEditingProfileName('');
               }}>
-                保存
+                {t('common.save')}
               </Button>
             </div>
           </DialogContent>
@@ -809,7 +846,7 @@ export function SettingsPanel({
             onClick={handleReset}
           >
             <RotateCcw size={14} className="mr-1" />
-            恢复默认设置
+            {t('settings.resetSettings')}
           </Button>
         </div>
       </div>

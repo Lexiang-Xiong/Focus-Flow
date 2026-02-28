@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Task, Zone, ClipboardData } from '@/types';
 
 export function useClipboard() {
+  const { t } = useTranslation();
   const [clipboard, setClipboard] = useState<ClipboardData | null>(null);
 
   // 复制任务
@@ -50,7 +52,7 @@ export function useClipboard() {
       zone: {
         ...data.zone,
         id: newZoneId,
-        name: `${data.zone.name} (副本)`,
+        name: `${data.zone.name || t('common.unnamed')} ${t('common.copySuffix')}`,
         order: maxOrder + 1,
       },
       tasks: data.tasks.map((task, index) => ({

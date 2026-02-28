@@ -30,6 +30,7 @@ import {
 import { TaskItem } from './TaskItem';
 import type { Task, Zone, GlobalViewSortMode, SortConfig, TaskPriority, TaskUrgency, DeadlineType } from '@/types';
 import type { TaskComputedTime } from '@/store/slices/taskSlice';
+import { useTranslation } from 'react-i18next';
 
 interface GlobalViewProps {
   zones: Zone[];
@@ -78,6 +79,7 @@ export function GlobalView({
   getEstimatedTime,
   taskComputedTimes,
 }: GlobalViewProps) {
+  const { t } = useTranslation();
   const [showCompleted, setShowCompleted] = useState(false);
   const [viewDepth, setViewDepth] = useState(2); // For sorting modes: how many levels to expand (默认展开2层)
   const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
@@ -276,7 +278,7 @@ export function GlobalView({
         const zoneTasks = sortedRootTasks.filter((t) => t.zoneId === zone.id);
         if (zoneTasks.length > 0) {
           groups.push({
-            title: zone.name,
+            title: zone.name || t('zone.unknownZone'),
             color: zone.color,
             tasks: zoneTasks,
             zoneId: zone.id,
@@ -291,9 +293,9 @@ export function GlobalView({
       sortedRootTasks.forEach((t) => priorityGroups[t.priority].push(t));
 
       const priorityLabels: Record<TaskPriority, { title: string; color: string }> = {
-        high: { title: '高优先级', color: '#ef4444' },
-        medium: { title: '中优先级', color: '#eab308' },
-        low: { title: '低优先级', color: '#22c55e' },
+        high: { title: t('task.priorityHigh'), color: '#ef4444' },
+        medium: { title: t('task.priorityMedium'), color: '#eab308' },
+        low: { title: t('task.priorityLow'), color: '#22c55e' },
       };
 
       (['high', 'medium', 'low'] as TaskPriority[]).forEach((p) => {
@@ -341,17 +343,17 @@ export function GlobalView({
       // 添加"未设截止日期"分组
       if (noDeadlineTasks.length > 0) {
         groups.push({
-          title: '未设截止日期',
+          title: t('urgency.noDeadline'),
           color: '#6b7280',
           tasks: noDeadlineTasks,
         });
       }
     } else if (sortConfig.mode === 'weighted') {
       const scoreGroups: { title: string; color: string; minScore: number; tasks: Task[] }[] = [
-        { title: '重要且紧急', color: '#dc2626', minScore: 0.75, tasks: [] },
-        { title: '重要或紧急', color: '#f97316', minScore: 0.5, tasks: [] },
-        { title: '一般', color: '#eab308', minScore: 0.25, tasks: [] },
-        { title: '低优先级', color: '#22c55e', minScore: 0, tasks: [] },
+        { title: t('urgency.veryUrgent'), color: '#dc2626', minScore: 0.75, tasks: [] },
+        { title: t('urgency.urgent'), color: '#f97316', minScore: 0.5, tasks: [] },
+        { title: t('view.normal'), color: '#eab308', minScore: 0.25, tasks: [] },
+        { title: t('urgency.later'), color: '#22c55e', minScore: 0, tasks: [] },
       ];
 
       sortedRootTasks.forEach((t) => {
@@ -378,15 +380,15 @@ export function GlobalView({
         let color = '#6b7280';
         switch (sortConfig.mode) {
           case 'workTime':
-            title = '按执行时间';
+            title = t('view.sortByWorkTime') || 'By Time Worked';
             color = '#3b82f6';
             break;
           case 'estimatedTime':
-            title = '按预期时间';
+            title = t('view.sortByEstimatedTime') || 'By Estimated Time';
             color = '#8b5cf6';
             break;
           case 'timeDiff':
-            title = '按时间差';
+            title = t('view.sortByTimeDiff') || 'By Time Difference';
             color = '#f59e0b';
             break;
         }
@@ -472,7 +474,7 @@ export function GlobalView({
 
   const getZoneName = (zoneId: string) => {
     const zone = zones.find((z) => z.id === zoneId);
-    return zone?.name || '未知工作区';
+    return zone?.name || t('zone.unknownZone');
   };
 
   const stats = {
@@ -689,7 +691,7 @@ export function GlobalView({
         </Button>
         <div className="global-view-title">
           <Globe size={18} className="text-blue-400" />
-          <span>全局视图</span>
+          <span>{t('view.globalView')}</span>
           <span className="task-count">({stats.completed}/{stats.total})</span>
         </div>
         <div className="flex items-center gap-2 ml-auto">
@@ -702,7 +704,7 @@ export function GlobalView({
             title={isLeafMode ? "当前为：只看可执行子任务" : "当前为：树状结构"}
           >
             <Network size={14} className="mr-1" />
-            {isLeafMode ? '叶子节点' : '树状视图'}
+            {isLeafMode ? t('view.leafMode') : t('view.treeView')}
           </Button>
 
           <div className="sort-mode-selector m-0">
@@ -721,44 +723,44 @@ export function GlobalView({
               <SelectItem value="zone">
                 <div className="sort-option">
                   <Globe size={14} />
-                  <span>按工作区</span>
+                  <span>{t('view.sortByZone')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="priority">
                 <div className="sort-option">
                   <Flag size={14} />
-                  <span>按优先级</span>
+                  <span>{t('view.sortByPriority')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="urgency">
                 <div className="sort-option">
                   <Zap size={14} />
-                  <span>按紧急度</span>
+                  <span>{t('view.sortByUrgency')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="weighted">
                 <div className="sort-option">
                   <Flag size={14} />
                   <Zap size={14} />
-                  <span>加权排序</span>
+                  <span>{t('settings.weightedSort')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="workTime">
                 <div className="sort-option">
                   <Clock size={14} />
-                  <span>执行时间</span>
+                  <span>{t('view.sortByWorkTime')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="estimatedTime">
                 <div className="sort-option">
                   <Clock size={14} />
-                  <span>预期时间</span>
+                  <span>{t('view.sortByEstimatedTime')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="timeDiff">
                 <div className="sort-option">
                   <Clock size={14} />
-                  <span>时间差</span>
+                  <span>{t('view.sortByTimeDiff')}</span>
                 </div>
               </SelectItem>
             </SelectContent>
@@ -770,13 +772,13 @@ export function GlobalView({
       {/* Depth Controls for sorting modes */}
       {!isLeafMode && sortConfig.mode !== 'zone' && maxTreeDepth > 0 && !focusedTaskId && (
         <div className="depth-controls">
-          <span className="depth-label">展开层级:</span>
+          <span className="depth-label">{t('view.expandDepth')}:</span>
           <Button
             size="sm"
             variant="ghost"
             onClick={() => setViewDepth(0)}
             className={viewDepth === 0 ? 'active' : ''}
-            title="全部收起"
+            title={t('view.collapseAll')}
           >
             <CircleX size={14} />
           </Button>
@@ -785,7 +787,7 @@ export function GlobalView({
             variant="ghost"
             onClick={() => setViewDepth(1)}
             className={viewDepth === 1 ? 'active' : ''}
-            title="仅显示顶层"
+            title={t('view.topLevelOnly')}
           >
             <ArrowUp size={14} />
           </Button>
@@ -794,7 +796,7 @@ export function GlobalView({
             variant="ghost"
             onClick={() => setViewDepth(Math.max(0, viewDepth - 1))}
             disabled={viewDepth <= 0}
-            title="收起一级"
+            title={t('view.collapseOneLevel')}
           >
             <ChevronUp size={14} />
           </Button>
@@ -804,7 +806,7 @@ export function GlobalView({
             variant="ghost"
             onClick={() => setViewDepth(Math.min(maxTreeDepth, viewDepth + 1))}
             disabled={viewDepth >= maxTreeDepth}
-            title="展开一级"
+            title={t('view.expandOneLevel')}
           >
             <ChevronDown size={14} />
           </Button>
@@ -813,7 +815,7 @@ export function GlobalView({
             variant="ghost"
             onClick={() => setViewDepth(maxTreeDepth)}
             className={viewDepth >= maxTreeDepth ? 'active' : ''}
-            title="展开所有"
+            title={t('view.expandAll')}
           >
             <Layers size={14} />
           </Button>
@@ -827,7 +829,7 @@ export function GlobalView({
             onClick={() => setFocusedTaskId(null)}
             className="hover:text-white flex items-center gap-1 transition-colors"
           >
-            <Home size={12} /> 全局
+            <Home size={12} /> {t('view.breadcrumb')}
           </button>
           {breadcrumbs.map((crumb) => (
             <React.Fragment key={crumb.id}>
@@ -853,14 +855,14 @@ export function GlobalView({
             </div>
           ) : focusedTaskId && focusedRootTasks && focusedRootTasks.length === 0 ? (
             <div className="empty-state">
-              <p>该任务下暂无子任务</p>
-              <p className="empty-hint">点击标题可进入子任务视图</p>
+              <p>{t('view.noSubtasksHere')}</p>
+              <p className="empty-hint">{t('view.clickTitleHint')}</p>
             </div>
           ) : rootTasks.length === 0 && completedTasks.length === 0 ? (
             <div className="empty-state">
               <Globe size={48} className="empty-icon" />
-              <p>暂无任务</p>
-              <p className="empty-hint">在分区中添加任务，这里会显示所有任务</p>
+              <p>{t('view.noTasksGlobal')}</p>
+              <p className="empty-hint">{t('view.emptyGlobalView')}</p>
             </div>
           ) : (
             <>
@@ -928,7 +930,7 @@ export function GlobalView({
                     onClick={() => setShowCompleted(!showCompleted)}
                   >
                     <CheckCircle2 size={14} className="text-green-400" />
-                    <span>已完成 ({completedTasks.length})</span>
+                    <span>{t('task.completed')} ({completedTasks.length})</span>
                     <span className={`toggle-arrow ${showCompleted ? 'open' : ''}`}>
                       ▼
                     </span>
@@ -1006,11 +1008,11 @@ export function GlobalView({
       {/* Footer Stats */}
       <div className="task-list-footer">
         <div className="footer-stat">
-          <span className="stat-label">完成率</span>
+          <span className="stat-label">{t('task.completionRate')}</span>
           <span className="stat-value">{stats.completionRate}%</span>
         </div>
         <div className="footer-stat">
-          <span className="stat-label">待办</span>
+          <span className="stat-label">{t('task.pending')}</span>
           <span className="stat-value">{stats.pending}</span>
         </div>
       </div>

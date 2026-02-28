@@ -66,7 +66,8 @@ export interface ConfigProfile {
 
 export interface Zone {
   id: string;
-  name: string;
+  name?: string;
+  nameKey?: string;
   color: string;
   order: number;
   createdAt: number;
@@ -98,8 +99,10 @@ export interface CurrentWorkspace {
 
 export interface Template {
   id: string;
-  name: string;
-  description: string;
+  name?: string;
+  nameKey?: string;
+  description?: string;
+  descKey?: string;
   icon: string;
   zones: Omit<Zone, 'id' | 'createdAt'>[];
 }
@@ -125,6 +128,7 @@ export interface AppState {
   customTemplates: Template[];
   // 设置
   settings: {
+    language: string;
     workDuration: number;
     breakDuration: number;
     longBreakDuration: number;
@@ -156,43 +160,43 @@ export interface TimerState {
 export const PREDEFINED_TEMPLATES: Template[] = [
   {
     id: 'general',
-    name: '通用',
-    description: '基础的工作、生活、学习分区',
+    nameKey: 'template.templateGeneral',
+    descKey: 'template.templateGeneralDesc',
     icon: 'LayoutGrid',
     zones: [
-      { name: '工作', color: '#3b82f6', order: 0 },
-      { name: '学习', color: '#8b5cf6', order: 1 },
-      { name: '生活', color: '#22c55e', order: 2 },
+      { nameKey: 'zone.workZone', color: '#3b82f6', order: 0 },
+      { nameKey: 'zone.studyZone', color: '#8b5cf6', order: 1 },
+      { nameKey: 'zone.lifeZone', color: '#22c55e', order: 2 },
     ],
   },
   {
     id: 'project',
-    name: '项目管理',
-    description: '适合多项目并行管理',
+    nameKey: 'template.templateProject',
+    descKey: 'template.templateProjectDesc',
     icon: 'FolderKanban',
     zones: [
-      { name: '项目 A', color: '#f59e0b', order: 0 },
-      { name: '项目 B', color: '#ec4899', order: 1 },
-      { name: '项目 C', color: '#06b6d4', order: 2 },
-      { name: '其他', color: '#6b7280', order: 3 },
+      { nameKey: 'zone.projectA', color: '#f59e0b', order: 0 },
+      { nameKey: 'zone.projectB', color: '#ec4899', order: 1 },
+      { nameKey: 'zone.projectC', color: '#06b6d4', order: 2 },
+      { nameKey: 'zone.other', color: '#6b7280', order: 3 },
     ],
   },
   {
     id: 'dev',
-    name: '开发工作',
-    description: '适合软件开发工作流',
+    nameKey: 'template.templateDev',
+    descKey: 'template.templateDevDesc',
     icon: 'Code',
     zones: [
-      { name: '开发', color: '#3b82f6', order: 0 },
-      { name: '测试', color: '#22c55e', order: 1 },
-      { name: '文档', color: '#f59e0b', order: 2 },
-      { name: 'Bug 修复', color: '#ef4444', order: 3 },
+      { nameKey: 'zone.devZone', color: '#3b82f6', order: 0 },
+      { nameKey: 'zone.testZone', color: '#22c55e', order: 1 },
+      { nameKey: 'zone.docZone', color: '#f59e0b', order: 2 },
+      { nameKey: 'zone.bugFix', color: '#ef4444', order: 3 },
     ],
   },
   {
     id: 'blank',
-    name: '空白',
-    description: '从零开始创建',
+    nameKey: 'template.templateBlank',
+    descKey: 'template.templateBlankDesc',
     icon: 'FileX',
     zones: [],
   },
@@ -216,6 +220,7 @@ export const ZONE_COLORS = [
 
 // 默认设置（正常值）
 export const DEFAULT_SETTINGS = {
+  language: 'zh', // 默认语言
   workDuration: 25 * 60, // 25分钟
   breakDuration: 5 * 60, // 5分钟
   longBreakDuration: 15 * 60, // 15分钟
@@ -229,8 +234,8 @@ export const DEFAULT_SETTINGS = {
     deadlineWeight: 0.4, // 40%
   },
   globalViewLeafMode: false,
-  autoSaveEnabled: false, // 是否开启自动保存
-  autoSaveInterval: 60, // 自动保存间隔（秒），默认60秒
+  autoSaveEnabled: true, // 默认开启自动保存
+  autoSaveInterval: 120, // 自动保存间隔（秒），默认120秒
   recurringTemplates: [], // 定时任务模板列表
 };
 

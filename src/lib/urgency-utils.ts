@@ -1,4 +1,5 @@
 import type { Task, TaskPriority, TaskUrgency } from '../types';
+import i18n from 'i18next';
 
 /**
  * Deadline type for task
@@ -163,10 +164,10 @@ export function getDeadlineStatus(deadline: number | null | undefined): { text: 
   const hours = Math.floor((absDiff % (24 * 3600 * 1000)) / (3600 * 1000));
   const mins = Math.floor((absDiff % (3600 * 1000)) / (60 * 1000));
 
-  let text = isOverdue ? '已逾期 ' : '剩余 ';
-  if (days > 0) text += `${days}天${hours}时`;
-  else if (hours > 0) text += `${hours}时${mins}分`;
-  else text += `${mins}分`;
+  let text = isOverdue ? i18n.t('urgency.overduePrefix') : i18n.t('urgency.remainingPrefix');
+  if (days > 0) text += i18n.t('urgency.daysHours', { days, hours });
+  else if (hours > 0) text += i18n.t('urgency.hoursMins', { hours, mins });
+  else text += i18n.t('urgency.mins', { mins });
 
   return { text, isOverdue };
 }
@@ -183,13 +184,13 @@ export function getDeadlineDisplay(deadline: number | null | undefined, deadline
   const isOverdue = deadline < now;
 
   if (deadlineType === 'today') {
-    return isOverdue ? '今天 (已逾期)' : '今天';
+    return isOverdue ? i18n.t('urgency.todayOverdue') : i18n.t('task.deadlineToday');
   }
   if (deadlineType === 'tomorrow') {
-    return isOverdue ? '明天 (已逾期)' : '明天';
+    return isOverdue ? i18n.t('urgency.tomorrowOverdue') : i18n.t('task.deadlineTomorrow');
   }
   if (deadlineType === 'week') {
-    return isOverdue ? '本周 (已逾期)' : '本周';
+    return isOverdue ? i18n.t('urgency.weekOverdue') : i18n.t('task.deadlineWeek');
   }
 
   // exact 类型
@@ -198,10 +199,11 @@ export function getDeadlineDisplay(deadline: number | null | undefined, deadline
   const day = date.getDate();
   const hour = date.getHours();
   const min = date.getMinutes();
+  const dateStr = `${month}/${day} ${hour}:${min.toString().padStart(2, '0')}`;
 
   return isOverdue
-    ? `${month}/${day} ${hour}:${min.toString().padStart(2, '0')} (已逾期)`
-    : `${month}/${day} ${hour}:${min.toString().padStart(2, '0')}`;
+    ? i18n.t('urgency.exactOverdue', { date: dateStr })
+    : dateStr;
 }
 
 // 优先级分数映射

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Play, Pause, Square, SkipForward, Coffee, Brain, Timer, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -42,6 +43,7 @@ export function PomodoroTimer({
   onUpdateTime,
   onSetMode,
 }: PomodoroTimerProps) {
+  const { t } = useTranslation();
   // 编辑状态
   const [isEditing, setIsEditing] = useState(false);
   const [editMinutes, setEditMinutes] = useState('');
@@ -102,13 +104,13 @@ export function PomodoroTimer({
   const getModeText = () => {
     switch (mode) {
       case 'work':
-        return '专注中';
+        return t('timer.work');
       case 'break':
-        return '短休息';
+        return t('timer.break');
       case 'longBreak':
-        return '长休息';
+        return t('timer.longBreak');
       default:
-        return '准备开始';
+        return t('timer.idle');
     }
   };
 
@@ -150,7 +152,7 @@ export function PomodoroTimer({
           <button
             className="timer-collapse-btn"
             onClick={() => setIsCollapsed(false)}
-            title="展开"
+            title={t('view.expand') || 'Expand'}
           >
             <ChevronUp size={14} />
           </button>
@@ -178,7 +180,7 @@ export function PomodoroTimer({
                 <span
                   className={`timer-collapsed-time ${!isRunning ? 'cursor-pointer' : ''}`}
                   style={isRunning ? { color: getProgressColor() } : undefined}
-                  title={isRunning ? "计时中无法修改" : "点击修改时间"}
+                  title={isRunning ? t('timer.runningNoEdit') || 'Cannot edit while running' : t('timer.clickToEdit') || 'Click to edit'}
                 >
                   {formattedTime}
                 </span>
@@ -189,19 +191,19 @@ export function PomodoroTimer({
         {/* 控制按钮区域 */}
         <div className={`timer-collapsed-controls bg-gradient-to-r ${getModeColor()}`}>
           {isRunning ? (
-            <button className="timer-collapsed-btn primary" onClick={onPause} title="暂停">
+            <button className="timer-collapsed-btn primary" onClick={onPause} title={t('timer.pause')}>
               <Pause size={20} />
             </button>
           ) : mode !== 'idle' ? (
-            <button className="timer-collapsed-btn primary" onClick={onResume} title="继续">
+            <button className="timer-collapsed-btn primary" onClick={onResume} title={t('timer.resume')}>
               <Play size={20} />
             </button>
           ) : (
-            <button className="timer-collapsed-btn primary" onClick={onStart} title="开始">
+            <button className="timer-collapsed-btn primary" onClick={onStart} title={t('timer.startFocus')}>
               <Play size={20} />
             </button>
           )}
-          <button className="timer-collapsed-btn" onClick={onStop} title="重置">
+          <button className="timer-collapsed-btn" onClick={onStop} title={t('common.reset')}>
             <Square size={20} />
           </button>
         </div>
@@ -229,7 +231,7 @@ export function PomodoroTimer({
           <button
             className="timer-collapse-toggle"
             onClick={() => setIsCollapsed(true)}
-            title="收缩"
+            title={t('view.collapse') || 'Collapse'}
           >
             <ChevronDown size={14} />
           </button>
@@ -266,7 +268,7 @@ export function PomodoroTimer({
             className={`time-text ${isRunning ? 'running' : ''} ${!isRunning ? 'cursor-pointer hover:scale-105' : ''}`}
             style={isRunning ? { color: getProgressColor() } : undefined}
             onClick={handleTimeClick}
-            title={isRunning ? "计时中无法修改" : "点击修改时间"}
+            title={isRunning ? t('timer.runningNoEdit') || 'Cannot edit while running' : t('timer.clickToEdit') || 'Click to edit'}
           >
             {formattedTime}
           </span>
@@ -279,26 +281,26 @@ export function PomodoroTimer({
           <button
             className="mode-btn"
             onClick={() => onSetMode('work')}
-            title={`专注 ${Math.floor(workDuration / 60)} 分钟`}
+            title={`${t('timer.work')} ${Math.floor(workDuration / 60)} ${t('settings.workDurationMinutes')}`}
           >
             <Brain size={14} />
-            <span>专注</span>
+            <span>{t('timer.work')}</span>
           </button>
           <button
             className="mode-btn"
             onClick={() => onSetMode('break')}
-            title={`短休息 ${Math.floor(breakDuration / 60)} 分钟`}
+            title={`${t('timer.break')} ${Math.floor(breakDuration / 60)} ${t('settings.workDurationMinutes')}`}
           >
             <Coffee size={14} />
-            <span>休息</span>
+            <span>{t('timer.break')}</span>
           </button>
           <button
             className="mode-btn"
             onClick={() => onSetMode('longBreak')}
-            title={`长休息 ${Math.floor(longBreakDuration / 60)} 分钟`}
+            title={`${t('timer.longBreak')} ${Math.floor(longBreakDuration / 60)} ${t('settings.workDurationMinutes')}`}
           >
             <Coffee size={14} />
-            <span>长休息</span>
+            <span>{t('timer.longBreak')}</span>
           </button>
         </div>
       )}
@@ -321,7 +323,7 @@ export function PomodoroTimer({
             onClick={onStart}
           >
             <Play size={16} className="mr-1" />
-            开始专注
+            {t('timer.startFocus')}
           </Button>
         ) : (
           <>

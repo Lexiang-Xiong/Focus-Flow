@@ -25,6 +25,7 @@ import type { Task, TaskPriority, TaskUrgency, DeadlineType, Zone } from '@/type
 import { convertDeadlineType } from '@/lib/urgency-utils';
 import { useAppStore } from '@/store';
 import { getFlattenedTasks, calculateNewPosition, type FlattenedTask } from '@/lib/tree-utils';
+import { useTranslation } from 'react-i18next';
 
 interface TaskListProps {
   zone: Zone | null;
@@ -63,6 +64,7 @@ export function TaskList({
   onClearCompleted,
 }: TaskListProps) {
   const { moveTaskNode, expandTask, getTotalWorkTime, getEstimatedTime } = useAppStore();
+  const { t, i18n } = useTranslation();
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
@@ -252,7 +254,7 @@ export function TaskList({
   if (!zone) {
     return (
       <div className="task-list-empty">
-        <p>请选择一个工作分区</p>
+        <p>{t('zone.noZones')}</p>
       </div>
     );
   }
@@ -331,11 +333,11 @@ export function TaskList({
                     className={`h-7 text-xs border-dashed ${selectedDeadlineType !== 'none' ? 'border-blue-500 text-blue-400' : ''}`}
                   >
                     <Calendar size={12} className="mr-1" />
-                    {selectedDeadlineType === 'none' ? '截止日期' :
-                      selectedDeadlineType === 'today' ? '今天' :
-                      selectedDeadlineType === 'tomorrow' ? '明天' :
-                      selectedDeadlineType === 'week' ? '本周' :
-                      selectedDeadline ? new Date(selectedDeadline).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : '截止日期'}
+                    {selectedDeadlineType === 'none' ? t('task.deadline') :
+                      selectedDeadlineType === 'today' ? t('task.deadlineToday') :
+                      selectedDeadlineType === 'tomorrow' ? t('task.deadlineTomorrow') :
+                      selectedDeadlineType === 'week' ? t('task.deadlineWeek') :
+                      selectedDeadline ? new Date(selectedDeadline).toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US', { month: 'numeric', day: 'numeric' }) : t('task.deadline')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-2 bg-black border border-white/20 max-h-[90vh] overflow-y-auto z-[9999]" align="start" side="bottom" sideOffset={4} collisionPadding={20} onClick={(e) => e.stopPropagation()}>
@@ -350,7 +352,7 @@ export function TaskList({
                         setSelectedDeadlineType(result.deadlineType);
                       }}
                     >
-                      今天
+                      {t('task.deadlineToday')}
                     </Button>
                     <Button
                       variant="ghost"
@@ -362,7 +364,7 @@ export function TaskList({
                         setSelectedDeadlineType(result.deadlineType);
                       }}
                     >
-                      明天
+                      {t('task.deadlineTomorrow')}
                     </Button>
                     <Button
                       variant="ghost"
@@ -374,7 +376,7 @@ export function TaskList({
                         setSelectedDeadlineType(result.deadlineType);
                       }}
                     >
-                      本周
+                      {t('task.deadlineWeek')}
                     </Button>
                     <Button
                       variant="ghost"
@@ -385,7 +387,7 @@ export function TaskList({
                         setSelectedDeadlineType('none');
                       }}
                     >
-                      无
+                      {t('task.deadlineNone')}
                     </Button>
                   </div>
                   <CalendarComponent
@@ -425,7 +427,7 @@ export function TaskList({
                   {/* 时间选择器 */}
                   <div className="flex items-center gap-2 mb-2 px-1 flex-wrap">
                     <div className="flex items-center gap-1">
-                      <span className="text-xs text-white/80">时间:</span>
+                      <span className="text-xs text-white/80">{t('task.time')}:</span>
                       <input
                         type="number"
                         min="0"
@@ -471,14 +473,14 @@ export function TaskList({
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="任务标题..."
+              placeholder={t('task.taskTitle') + '...'}
               className="add-task-title-input"
             />
             <Textarea
               value={newTaskDescription}
               onChange={(e) => setNewTaskDescription(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="描述（可选，Shift+Enter 换行）..."
+              placeholder={t('task.descriptionOptional')}
               className="add-task-desc-input min-h-[36px] py-2 resize-none"
               rows={1}
             />
@@ -517,7 +519,7 @@ export function TaskList({
           onClick={() => setIsAddingTask(true)}
         >
           <Plus size={16} />
-          <span>添加任务</span>
+          <span>{t('task.addTask')}</span>
         </button>
       )}
 
@@ -527,8 +529,8 @@ export function TaskList({
           {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
             <div className="empty-state">
               <Circle size={48} className="empty-icon" />
-              <p>暂无任务，添加一个开始专注吧！</p>
-              <p className="empty-hint">双击任务可展开/收缩描述</p>
+              <p>{t('task.noTasks')}</p>
+              <p className="empty-hint">{t('task.doubleClickHint')}</p>
             </div>
           ) : (
             <>
@@ -579,7 +581,7 @@ export function TaskList({
                                   value={newSubtaskTitle}
                                   onChange={(e) => setNewSubtaskTitle(e.target.value)}
                                   onKeyDown={handleSubtaskKeyDown}
-                                  placeholder="子任务标题..."
+                                  placeholder={t('task.subtaskTitle')}
                                   className="h-8 text-sm text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30"
                                   autoFocus
                                 />
@@ -598,7 +600,7 @@ export function TaskList({
                               value={newSubtaskDescription}
                               onChange={(e) => setNewSubtaskDescription(e.target.value)}
                               onKeyDown={handleSubtaskKeyDown}
-                              placeholder="描述（可选，Shift+Enter 换行）..."
+                              placeholder={t('task.descriptionOptional')}
                               className="min-h-[28px] text-sm text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30 resize-none py-1"
                               rows={1}
                             />
@@ -625,11 +627,11 @@ export function TaskList({
                                       className={`h-6 text-xs border-dashed ${subtaskDeadlineType !== 'none' ? 'border-blue-500 text-blue-400' : ''}`}
                                     >
                                       <Calendar size={10} className="mr-1" />
-                                      {subtaskDeadlineType === 'none' ? 'DDL' :
-                                        subtaskDeadlineType === 'today' ? '今天' :
-                                        subtaskDeadlineType === 'tomorrow' ? '明天' :
-                                        subtaskDeadlineType === 'week' ? '本周' :
-                                        subtaskDeadline ? new Date(subtaskDeadline).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : 'DDL'}
+                                      {subtaskDeadlineType === 'none' ? t('recurring.ddl') :
+                                        subtaskDeadlineType === 'today' ? t('task.deadlineToday') :
+                                        subtaskDeadlineType === 'tomorrow' ? t('task.deadlineTomorrow') :
+                                        subtaskDeadlineType === 'week' ? t('task.deadlineWeek') :
+                                        subtaskDeadline ? new Date(subtaskDeadline).toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US', { month: 'numeric', day: 'numeric' }) : t('recurring.ddl')}
                                     </Button>
                                   </PopoverTrigger>
                                   <PopoverContent className="w-auto p-2 bg-black border border-white/20 max-h-[90vh] overflow-y-auto z-[9999]" align="start" side="bottom" sideOffset={4} collisionPadding={20} onClick={(e) => e.stopPropagation()}>
@@ -644,7 +646,7 @@ export function TaskList({
                                           setSubtaskDeadlineType(result.deadlineType);
                                         }}
                                       >
-                                        今天
+                                        {t('task.deadlineToday')}
                                       </Button>
                                       <Button
                                         variant="ghost"
@@ -656,7 +658,7 @@ export function TaskList({
                                           setSubtaskDeadlineType(result.deadlineType);
                                         }}
                                       >
-                                        明天
+                                        {t('task.deadlineTomorrow')}
                                       </Button>
                                       <Button
                                         variant="ghost"
@@ -668,7 +670,7 @@ export function TaskList({
                                           setSubtaskDeadlineType(result.deadlineType);
                                         }}
                                       >
-                                        本周
+                                        {t('task.deadlineWeek')}
                                       </Button>
                                       <Button
                                         variant="ghost"
@@ -679,7 +681,7 @@ export function TaskList({
                                           setSubtaskDeadlineType('none');
                                         }}
                                       >
-                                        无
+                                        {t('task.deadlineNone')}
                                       </Button>
                                     </div>
                                     <CalendarComponent
@@ -719,7 +721,7 @@ export function TaskList({
                                     {/* 时间选择器 */}
                                     <div className="flex items-center gap-2 mb-2 px-1 flex-wrap">
                                       <div className="flex items-center gap-1">
-                                        <span className="text-xs text-white/80">时间:</span>
+                                        <span className="text-xs text-white/80">{t('task.time')}:</span>
                                         <input
                                           type="number"
                                           min="0"
@@ -764,7 +766,7 @@ export function TaskList({
                                 className="h-6 text-xs text-white/40 hover:text-white/80 px-2"
                                 onClick={handleCancelAddSubtask}
                               >
-                                取消
+                                {t('common.cancel')}
                               </Button>
                             </div>
                           </div>
@@ -805,7 +807,7 @@ export function TaskList({
                     onClick={() => setShowCompleted(!showCompleted)}
                   >
                     <CheckCircle2 size={14} className="text-green-400" />
-                    <span>已完成 ({completedTasks.length})</span>
+                    <span>{t('task.completed')} ({completedTasks.length})</span>
                     <span className={`toggle-arrow ${showCompleted ? 'open' : ''}`}>
                       ▼
                     </span>
@@ -839,7 +841,7 @@ export function TaskList({
                         onClick={onClearCompleted}
                       >
                         <Trash2 size={14} className="mr-1" />
-                        清除已完成
+                        {t('task.clearCompleted')}
                       </Button>
                     </div>
                   )}
@@ -853,11 +855,11 @@ export function TaskList({
       {/* Footer Stats */}
       <div className="task-list-footer">
         <div className="footer-stat">
-          <span className="stat-label">完成率</span>
+          <span className="stat-label">{t('task.completionRate')}</span>
           <span className="stat-value">{stats.completionRate}%</span>
         </div>
         <div className="footer-stat">
-          <span className="stat-label">待办</span>
+          <span className="stat-label">{t('task.pending')}</span>
           <span className="stat-value">{stats.pending}</span>
         </div>
       </div>

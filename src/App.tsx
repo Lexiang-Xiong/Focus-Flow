@@ -15,6 +15,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import type { TimerMode } from '@/types';
 import { PREDEFINED_TEMPLATES } from '@/types';
+import { useTranslation } from 'react-i18next';
 import './App.css';
 
 function App() {
@@ -70,6 +71,14 @@ function App() {
     updateRecurringTemplate,
     deleteRecurringTemplate,
   } = useAppStore();
+  const { t, i18n } = useTranslation();
+
+  // 同步 i18n 和 settings.language
+  useEffect(() => {
+    if (settings.language && i18n.language !== settings.language) {
+      i18n.changeLanguage(settings.language);
+    }
+  }, [settings.language, i18n]);
 
   // 预计算所有任务时间（避免渲染时递归计算）
   const taskComputedTimes = useMemo(() => {
@@ -157,16 +166,17 @@ function App() {
     if (mode === 'work' && activeTaskId) {
       const task = tasks.find(t => t.id === activeTaskId);
       if (task) {
-        toast.success('专注完成！', {
-          description: `任务 "${task.title}" 累计工作 ${Math.floor((task.totalWorkTime || 0) / 60)} 分钟`,
+        const minutes = Math.floor((task.totalWorkTime || 0) / 60);
+        toast.success(t('toast.focusComplete'), {
+          description: t('toast.taskAccumulated', { title: task.title, minutes }),
         });
       }
     } else if (mode === 'break' || mode === 'longBreak') {
-      toast.info('休息结束', {
-        description: '准备好开始新的专注了吗？',
+      toast.info(t('toast.breakEnd'), {
+        description: t('toast.readyForNext'),
       });
     }
-  }, [activeTaskId, tasks]);
+  }, [activeTaskId, tasks, t]);
 
   const timer = useTimer({
     workDuration: settings.workDuration,
@@ -226,7 +236,7 @@ function App() {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
         undo();
-        toast.info('已撤销');
+        toast.info(t('toast.undo'));
         return;
       }
 
@@ -234,7 +244,7 @@ function App() {
       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
         e.preventDefault();
         redo();
-        toast.info('已重做');
+        toast.info(t('toast.redo'));
         return;
       }
 
@@ -257,7 +267,7 @@ function App() {
           const task = tasks.find(t => t.id === activeTaskId);
           if (task) {
             copyTask(task);
-            toast.success('任务已复制');
+            toast.success(t('toast.taskCopied'));
             return;
           }
         }
@@ -265,7 +275,7 @@ function App() {
           const zoneTasks = tasks.filter(t => t.zoneId === currentZone.id);
           if (zoneTasks.length > 0) {
             copyZone(currentZone, zoneTasks);
-            toast.success(`工作区 "${currentZone.name}" 已复制`);
+            toast.success(t('toast.zoneCopied', { name: currentZone.name }));
           }
         }
       }
@@ -276,12 +286,12 @@ function App() {
           if (result) {
             // 直接更新 store
             result.zone.id = `zone-${Date.now()}`;
-            addZone(result.zone.name, result.zone.color);
+            addZone(result.zone.name || t('common.unnamed'), result.zone.color);
             const newTasks = result.tasks.map(t => ({ ...t, id: `task-${Date.now()}-${Math.random()}`, zoneId: result.zone.id }));
             newTasks.forEach(t => {
               useAppStore.getState().addTask(t.zoneId, t.title, t.description, t.priority, t.urgency, t.deadline || null, t.deadlineType || 'none', t.parentId);
             });
-            toast.success(`已粘贴工作区 "${result.zone.name}"`);
+            toast.success(t('toast.zonePasted', { name: result.zone.name || t('common.unnamed') }));
           }
         } else if (hasTask && currentZone) {
           const newTask = pasteTask(currentZone.id);
@@ -320,7 +330,7 @@ function App() {
               newTask.deadlineType || 'none',
               parentId
             );
-            toast.success(parentId ? '子任务已粘贴' : '任务已粘贴');
+            toast.success(parentId ? t('toast.subtaskPasted') : t('toast.taskPasted'));
           }
         }
       }
@@ -330,7 +340,7 @@ function App() {
         const task = tasks.find(t => t.id === activeTaskId);
         if (task) {
           deleteTask(activeTaskId);
-          toast.success('任务已删除');
+          toast.success(t('toast.taskDeleted'));
           setActiveTaskId(null);
         }
       }
@@ -354,11 +364,11 @@ function App() {
     setActiveTaskId(taskId);
     if (timer.mode === 'idle') {
       const task = tasks.find(t => t.id === taskId);
-      toast.info('已选择任务', {
-        description: task ? `点击"开始专注"为 "${task.title}" 计时` : '点击"开始专注"开始计时',
+      toast.info(t('toast.taskSelected'), {
+        description: task ? t('toast.clickToStartTimer', { title: task.title }) : t('toast.clickToStart'),
       });
     }
-  }, [timer.mode, tasks]);
+  }, [timer.mode, tasks, t]);
 
   // 窗口尺寸常量
   const NORMAL_SIZE = { width: 750, height: 650 };
@@ -386,22 +396,24 @@ function App() {
 
   const handleArchiveCurrent = useCallback((name: string, summary: string) => {
     const id = archiveCurrentWorkspace(name, summary);
-    toast.success('已存入历史', {
-      description: `工作区 "${name}" 已保存到历史记录`,
+    toast.success(t('toast.archived'), {
+      description: t('toast.archiveSuccessDesc', { name }),
     });
     return id;
-  }, [archiveCurrentWorkspace]);
+  }, [archiveCurrentWorkspace, t]);
 
   const handleCreateNewWorkspace = useCallback((name?: string, templateId?: string) => {
     createNewWorkspace(name, templateId);
-    toast.success('新工作区已创建', {
-      description: templateId ? '使用模板创建了新工作区' : '创建了空白工作区',
-    });
-  }, [createNewWorkspace]);
+    if (templateId) {
+      toast.success(t('toast.workspaceCreatedTemplate'));
+    } else {
+      toast.success(t('toast.workspaceCreatedBlank'));
+    }
+  }, [createNewWorkspace, t]);
 
   const handleRestoreFromHistory = useCallback((historyId: string) => {
     restoreFromHistory(historyId);
-    toast.success('已恢复历史工作区');
+    toast.success(t('messages.workspaceRestored'));
   }, [restoreFromHistory]);
 
   // Update timer when active task changes
@@ -419,12 +431,12 @@ function App() {
     const intervalId = setInterval(() => {
       if (hasUnsavedChanges()) {
         autoSaveSnapshot();
-        toast.success('已自动保存');
+        toast.success(t('toast.autoSaved'));
       }
     }, interval);
 
     return () => clearInterval(intervalId);
-  }, [settings.autoSaveEnabled, settings.autoSaveInterval, hasUnsavedChanges, autoSaveSnapshot]);
+  }, [settings.autoSaveEnabled, settings.autoSaveInterval, hasUnsavedChanges, autoSaveSnapshot, t]);
 
   // 定时任务心跳 - 每分钟检查一次
   useEffect(() => {
@@ -450,7 +462,7 @@ function App() {
     return (
       <div className="loading-screen">
         <div className="loading-spinner" />
-        <span>加载中...</span>
+        <span>{t('common.loading')}</span>
       </div>
     );
   }
@@ -468,7 +480,7 @@ function App() {
           timerMode={timer.mode}
           formattedTime={timer.formattedTime}
           activeTaskId={activeTaskId}
-          taskTitle={activeTask?.title || '未选择任务'}
+          taskTitle={activeTask?.title || t('timer.noTaskSelected')}
           progress={timer.progress}
           onStart={() => timer.start('work', activeTaskId)}
           onPause={timer.pause}

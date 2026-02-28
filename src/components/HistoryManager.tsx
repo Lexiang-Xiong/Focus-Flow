@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { History, ArrowLeft, RotateCcw, Trash2, Copy, FolderPlus, Calendar, Clock, ChevronDown, ChevronRight, CheckCircle2, Circle, Download, Upload, Archive, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +17,7 @@ interface HistoryManagerProps {
   templates: Template[];
   customTemplates?: Template[]; // 自定义模板
   currentSourceHistoryId?: string; // 当前工作区来自哪个历史记录
-  hasUnsavedChanges?: () => boolean; // 检测当前工作区是否有未保存的内容
+  hasUnsavedChanges?: () => boolean; // 检测当前工作区是否有未{t('common.save')}的内容
   onBack: () => void;
   onRestore: (historyId: string) => void;
   onDelete: (historyId: string) => void;
@@ -71,8 +73,31 @@ export function HistoryManager({
   const [editingSummaryId, setEditingSummaryId] = useState<string | null>(null);
   const [editSummary, setEditSummary] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { t, i18n } = useTranslation();
 
-  // 未保存确认对话框状态
+  // Helper to get translated template name
+  const getTemplateName = (templateId: string, defaultName?: string) => {
+    const keyMap: Record<string, string> = {
+      'general': 'template.templateGeneral',
+      'project': 'template.templateProject',
+      'dev': 'template.templateDev',
+      'blank': 'template.templateBlank'
+    };
+    return keyMap[templateId] ? t(keyMap[templateId]) : (defaultName || t('common.unnamed'));
+  };
+
+  // Helper to get translated template description
+  const getTemplateDesc = (templateId: string, defaultDesc?: string) => {
+    const keyMap: Record<string, string> = {
+      'general': 'template.templateGeneralDesc',
+      'project': 'template.templateProjectDesc',
+      'dev': 'template.templateDevDesc',
+      'blank': 'template.templateBlankDesc'
+    };
+    return keyMap[templateId] ? t(keyMap[templateId]) : (defaultDesc || '');
+  };
+
+  // 未{t('common.save')}确认对话框状态
   const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
   // 保留 pendingAction 用于日志或调试
   const [_pendingAction, setPendingAction] = useState<{
@@ -81,7 +106,7 @@ export function HistoryManager({
   } | null>(null);
   const [pendingCallback, setPendingCallback] = useState<(() => void) | null>(null);
 
-  // 检查是否有未保存的更改，如果有则弹出确认对话框
+  // 检查是否有未{t('common.save')}的更改，如果有则弹出确认对话框
   const checkAndProceed = (action: { type: 'restore' | 'import' | 'newWorkspace'; data?: string | undefined }, callback: () => void) => {
     if (hasUnsavedChanges && hasUnsavedChanges()) {
       setPendingAction(action);
@@ -103,7 +128,7 @@ export function HistoryManager({
     setPendingCallback(null);
   };
 
-  // 取消待处理操作
+  // {t('common.cancel')}待处理操作
   const cancelPendingAction = () => {
     setShowUnsavedConfirm(false);
     setPendingAction(null);
@@ -118,7 +143,7 @@ export function HistoryManager({
     if (!json) return;
 
     try {
-      // 弹出保存对话框
+      // 弹出{t('common.save')}对话框
       const filePath = await save({
         defaultPath: `focus-flow-history-${Date.now()}.json`,
         filters: [{ name: 'JSON', extensions: ['json'] }]
@@ -159,7 +184,7 @@ export function HistoryManager({
             const jsonFiles = Object.keys(zip.files).filter(f => f.endsWith('.json'));
 
             if (jsonFiles.length === 0) {
-              alert('压缩文件中没有找到 JSON 文件。');
+              toast.error(t('workspace.noJsonFound'));
               return;
             }
 
@@ -172,31 +197,31 @@ export function HistoryManager({
             }
 
             if (totalImported > 0) {
-              alert(`导入成功！共导入 ${totalImported} 条历史记录。`);
+              toast.success(t('workspace.importSuccess', { count: totalImported }));
             } else {
-              alert('导入失败，文件格式无法解析。');
+              toast.error(t('workspace.importFailed'));
             }
           } catch (zipError) {
             console.error('Zip parse error:', zipError);
-            alert('无法解析压缩文件，请检查文件格式是否正确。');
+            toast.error(t('workspace.zipParseError'));
           }
         } else {
           // 处理单个 json 文件
           const count = onImportAllHistory(content);
           if (count > 0) {
-            alert(`导入成功！共导入 ${count} 条历史记录。`);
+            toast.success(t('workspace.importSuccess', { count }));
           } else {
-            alert('导入失败，文件格式无法解析。');
+            toast.error(t('workspace.importFailed'));
           }
         }
       }
     } catch (error) {
       console.error('Import failed:', error);
-      alert('导入失败: ' + (error as Error).message);
+      toast.error(t('workspace.importFailed'));
     }
   };
 
-  // 触发导入（带未保存检查）
+  // 触发导入（带未{t('common.save')}检查）
   const triggerImport = () => {
     checkAndProceed({ type: 'import' }, () => {
       handleImport();
@@ -208,7 +233,7 @@ export function HistoryManager({
     if (!onExportAllHistory) return;
 
     try {
-      // 弹出保存对话框
+      // 弹出{t('common.save')}对话框
       const filePath = await save({
         defaultPath: `focus-flow-all-history-${Date.now()}.zip`,
         filters: [{ name: 'ZIP', extensions: ['zip'] }]
@@ -241,11 +266,11 @@ export function HistoryManager({
 
         // 写入文件
         await writeTextFile(filePath, Array.from(bytes).map(b => String.fromCharCode(b)).join(''));
-        alert(`导出成功！共导出 ${historyWorkspaces.length} 条历史记录。`);
+        toast.success(t('workspace.exportSuccess', { count: historyWorkspaces.length }));
       }
     } catch (error) {
       console.error('Export all failed:', error);
-      alert('导出失败: ' + (error as Error).message);
+      toast.error(t('workspace.importFailed'));
     }
   };
 
@@ -270,7 +295,7 @@ export function HistoryManager({
   };
 
   const handleArchive = () => {
-    const name = archiveName.trim() || `存档 ${new Date().toLocaleDateString('zh-CN')}`;
+    const name = archiveName.trim() || `${i18n.language === 'zh' ? '存档' : 'Archive'} ${new Date().toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US')}`;
     const summary = archiveSummary.trim() || '';
     onArchiveCurrent(name, summary);
     setArchiveName('');
@@ -306,13 +331,13 @@ export function HistoryManager({
     setPendingOverwriteId(null);
   };
 
-  // 处理覆盖取消
+  // 处理覆盖{t('common.cancel')}
   const handleOverwriteCancel = () => {
     setShowOverwriteConfirm(false);
     setPendingOverwriteId(null);
   };
 
-  // 处理保存模板
+  // 处理{t('common.save')}模板
   const handleSaveTemplate = () => {
     if (newTemplateName.trim() && onSaveCustomTemplate) {
       onSaveCustomTemplate(newTemplateName.trim());
@@ -336,7 +361,7 @@ export function HistoryManager({
     setPendingDeleteTemplateId(null);
   };
 
-  // 取消删除模板
+  // {t('common.cancel')}删除模板
   const cancelDeleteTemplate = () => {
     setShowDeleteTemplateConfirm(false);
     setPendingDeleteTemplateId(null);
@@ -358,7 +383,7 @@ export function HistoryManager({
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleDateString('zh-CN', {
+    return date.toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -369,18 +394,18 @@ export function HistoryManager({
 
   return (
     <div className="history-manager-container">
-      {/* 未保存更改确认对话框 */}
+      {/* 未{t('common.save')}更改确认对话框 */}
       <AlertDialog open={showUnsavedConfirm} onOpenChange={setShowUnsavedConfirm}>
         <AlertDialogContent className="history-dialog">
           <AlertDialogHeader>
-            <AlertDialogTitle>当前工作区未保存</AlertDialogTitle>
+            <AlertDialogTitle>Current workspace unsaved</AlertDialogTitle>
             <AlertDialogDescription>
-              当前工作区还有未保存的内容。继续操作将丢失当前工作区的所有内容。确定要继续吗？
+              {t('workspace.confirmRestore')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelPendingAction}>取消</AlertDialogCancel>
-            <AlertDialogAction onClick={executePendingAction}>继续</AlertDialogAction>
+            <AlertDialogCancel onClick={cancelPendingAction}>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={executePendingAction}>{t('common.continue')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -397,7 +422,7 @@ export function HistoryManager({
         </Button>
         <div className="history-manager-title">
           <History size={18} className="text-purple-400" />
-          <span>历史工作区</span>
+          <span>{t('workspace.history')}</span>
           <span className="history-count">({historyWorkspaces.length})</span>
         </div>
       </div>
@@ -408,30 +433,30 @@ export function HistoryManager({
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="history-action-btn">
               <Calendar size={14} className="mr-1" />
-              存入历史
+              {t('workspace.archive')}
             </Button>
           </DialogTrigger>
           <DialogContent className="history-dialog">
             <DialogHeader>
-              <DialogTitle>将当前工作存入历史</DialogTitle>
+              <DialogTitle>将当前工作{t('workspace.archive')}</DialogTitle>
             </DialogHeader>
             <div className="history-form">
               <Input
                 value={archiveName}
                 onChange={(e) => setArchiveName(e.target.value)}
-                placeholder="工作区名称（如：项目第一阶段）"
+                placeholder={t('workspace.workspaceName') + ' (e.g., Project Phase 1)'}
               />
               <Input
                 value={archiveSummary}
                 onChange={(e) => setArchiveSummary(e.target.value)}
-                placeholder="摘要描述（可选）"
+                placeholder={t('workspace.workspaceSummary') + ' (optional)'}
               />
               <div className="history-form-actions">
                 <Button variant="outline" onClick={() => setShowArchiveDialog(false)}>
-                  取消
+                  {t('common.cancel')}
                 </Button>
                 <Button onClick={handleArchive}>
-                  存入历史
+                  {t('workspace.archive')}
                 </Button>
               </div>
             </div>
@@ -447,7 +472,7 @@ export function HistoryManager({
             onClick={handleQuickArchive}
           >
             <Clock size={14} className="mr-1" />
-            快速存入
+            {t('workspace.quickArchive')}
           </Button>
         )}
 
@@ -455,41 +480,41 @@ export function HistoryManager({
         <Dialog open={showOverwriteConfirm} onOpenChange={setShowOverwriteConfirm}>
           <DialogContent className="history-dialog">
             <DialogHeader>
-              <DialogTitle>确认覆盖</DialogTitle>
+              <DialogTitle>{t('messages.confirmOverwrite') || 'Confirm Overwrite'}</DialogTitle>
             </DialogHeader>
-            <p>该记录已存在，是否覆盖之前的存档？</p>
+            <p>{t('messages.overwriteConfirm') || 'This record already exists. Overwrite the previous archive?'}</p>
             <div className="history-form-actions">
               <Button variant="outline" onClick={handleOverwriteCancel}>
-                取消
+                {t('common.cancel')}
               </Button>
               <Button onClick={handleOverwriteConfirm}>
-                覆盖
+                {t('common.confirm')}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
 
-        {/* 保存模板对话框 */}
+        {/* {t('common.save')}模板对话框 */}
         <Dialog open={showSaveTemplateDialog} onOpenChange={setShowSaveTemplateDialog}>
           <DialogContent className="history-dialog">
             <DialogHeader>
-              <DialogTitle>保存为模板</DialogTitle>
+              <DialogTitle>{t('template.saveAsTemplate')}</DialogTitle>
             </DialogHeader>
-            <p>将当前分区保存为模板</p>
+            <p>{t('template.saveAsTemplateDesc')}</p>
             <Input
               value={newTemplateName}
               onChange={(e) => setNewTemplateName(e.target.value)}
-              placeholder="输入模板名称"
+              placeholder={t('template.templateName')}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSaveTemplate();
               }}
             />
             <div className="history-form-actions">
               <Button variant="outline" onClick={() => setShowSaveTemplateDialog(false)}>
-                取消
+                {t('common.cancel')}
               </Button>
               <Button onClick={handleSaveTemplate} disabled={!newTemplateName.trim()}>
-                保存
+                {t('common.save')}
               </Button>
             </div>
           </DialogContent>
@@ -499,15 +524,15 @@ export function HistoryManager({
         <Dialog open={showDeleteTemplateConfirm} onOpenChange={setShowDeleteTemplateConfirm}>
           <DialogContent className="history-dialog">
             <DialogHeader>
-              <DialogTitle>删除模板</DialogTitle>
+              <DialogTitle>{t('template.deleteTemplate')}</DialogTitle>
             </DialogHeader>
-            <p>确定要删除这个模板吗？此操作无法撤销。</p>
+            <p>{t('messages.confirmDelete')}</p>
             <div className="history-form-actions">
               <Button variant="outline" onClick={cancelDeleteTemplate}>
-                取消
+                {t('common.cancel')}
               </Button>
               <Button onClick={confirmDeleteTemplate} className="bg-red-500 hover:bg-red-600">
-                删除
+                {t('common.delete')}
               </Button>
             </div>
           </DialogContent>
@@ -517,29 +542,29 @@ export function HistoryManager({
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="history-action-btn primary">
               <FolderPlus size={14} className="mr-1" />
-              新建工作区
+              {t('workspace.newWorkspace')}
             </Button>
           </DialogTrigger>
           <DialogContent className="template-dialog">
             <DialogHeader>
-              <DialogTitle>创建新工作区</DialogTitle>
+              <DialogTitle>{t('workspace.newWorkspace')}</DialogTitle>
             </DialogHeader>
             <div className="new-workspace-form">
               <Input
                 value={newWorkspaceName}
                 onChange={(e) => setNewWorkspaceName(e.target.value)}
-                placeholder="工作区名称（可选）"
+                placeholder={t('workspace.workspaceName') + ' (optional)'}
                 className="mb-4"
               />
-              <p className="template-label">选择模板（可选）</p>
+              <p className="template-label">{t('template.applyTemplate')} (optional)</p>
               <div className="template-list">
                 <button
                   className="template-item"
                   onClick={() => handleCreateNewWorkspace()}
                 >
                   <div className="template-info">
-                    <span className="template-name">空白工作区</span>
-                    <span className="template-desc">从零开始创建</span>
+                    <span className="template-name">{t('template.templateBlank')}</span>
+                    <span className="template-desc">{t('template.templateBlankDesc')}</span>
                   </div>
                 </button>
                 {templates.map((template) => (
@@ -549,8 +574,8 @@ export function HistoryManager({
                     onClick={() => handleCreateNewWorkspace(template.id)}
                   >
                     <div className="template-info">
-                      <span className="template-name">{template.name}</span>
-                      <span className="template-desc">{template.description}</span>
+                      <span className="template-name">{getTemplateName(template.id, template.name)}</span>
+                      <span className="template-desc">{getTemplateDesc(template.id, template.description)}</span>
                     </div>
                     <div className="template-zones">
                       {template.zones.map((z, i) => (
@@ -571,8 +596,8 @@ export function HistoryManager({
                     onClick={() => handleCreateNewWorkspace(template.id)}
                   >
                     <div className="template-info">
-                      <span className="template-name">{template.name}</span>
-                      <span className="template-desc">{template.description}</span>
+                      <span className="template-name">{getTemplateName(template.id, template.name)}</span>
+                      <span className="template-desc">{getTemplateDesc(template.id, template.description)}</span>
                     </div>
                     <div className="template-zones">
                       {template.zones.map((z, i) => (
@@ -596,14 +621,14 @@ export function HistoryManager({
                     </Button>
                   </button>
                 ))}
-                {/* 保存当前分区为模板按钮 */}
+                {/* {t('common.save')}当前分区为模板按钮 */}
                 {onSaveCustomTemplate && (
                   <button
                     className="template-item save-template-btn"
                     onClick={() => setShowSaveTemplateDialog(true)}
                   >
                     <Save size={16} />
-                    <span>保存当前分区为模板</span>
+                    <span>{t('template.saveAsTemplate')}</span>
                   </button>
                 )}
               </div>
@@ -615,7 +640,7 @@ export function HistoryManager({
         {onImportHistory && (
           <Button variant="outline" size="sm" className="history-action-btn" onClick={triggerImport}>
             <Upload size={14} className="mr-1" />
-            导入
+            {t('common.import')}
           </Button>
         )}
 
@@ -623,7 +648,7 @@ export function HistoryManager({
         {onExportAllHistory && historyWorkspaces.length > 0 && (
           <Button variant="outline" size="sm" className="history-action-btn" onClick={handleExportAll}>
             <Archive size={14} className="mr-1" />
-            全部导出
+            {t('workspace.exportAll')}
           </Button>
         )}
       </div>
@@ -634,8 +659,8 @@ export function HistoryManager({
           {historyWorkspaces.length === 0 ? (
             <div className="empty-state">
               <History size={48} className="empty-icon" />
-              <p>暂无历史工作区</p>
-              <p className="empty-hint">点击"存入历史"保存当前工作，或创建新工作区自动存档</p>
+              <p>{t('workspace.noHistory')}</p>
+              <p className="empty-hint">{t('workspace.noHistoryHint')}</p>
             </div>
           ) : (
             historyWorkspaces
@@ -684,7 +709,7 @@ export function HistoryManager({
                             setEditingId(workspace.id);
                             setEditName(workspace.name);
                           }}
-                          title="点击编辑名称"
+                          title={t('workspace.clickToEditName')}
                         >
                           {workspace.name}
                         </span>
@@ -709,7 +734,7 @@ export function HistoryManager({
                         onClick={(e) => e.stopPropagation()}
                         autoFocus
                         className="history-summary-edit-input"
-                        placeholder="添加摘要描述..."
+                        placeholder={t('workspace.addSummary')}
                       />
                     ) : (
                       <span
@@ -719,26 +744,26 @@ export function HistoryManager({
                           setEditingSummaryId(workspace.id);
                           setEditSummary(workspace.summary || '');
                         }}
-                        title="点击编辑摘要"
+                        title={t('workspace.clickToEditSummary')}
                       >
-                        {workspace.summary || `包含 ${workspace.zones.length} 个分区，${workspace.tasks.length} 个任务`}
+                        {workspace.summary || t('workspace.defaultSummary', { zones: workspace.zones.length, tasks: workspace.tasks.length })}
                       </span>
                     )}
 
                     <div className="history-stats">
                       <span className="history-stat">
                         <Clock size={10} />
-                        创建: {formatDate(workspace.createdAt)}
+                        {t('profile.createdAt')}: {formatDate(workspace.createdAt)}
                       </span>
                       {workspace.lastModified !== workspace.createdAt && (
                         <span className="history-stat modified">
-                          修改: {formatDate(workspace.lastModified)}
+                          {t('workspace.modified')}: {formatDate(workspace.lastModified)}
                         </span>
                       )}
-                      <span className="history-stat">{workspace.zones.length} 分区</span>
-                      <span className="history-stat">{workspace.tasks.length} 任务</span>
+                      <span className="history-stat">{workspace.zones.length} {t('zone.zones')}</span>
+                      <span className="history-stat">{workspace.tasks.length} {t('task.tasks')}</span>
                       <span className="history-stat">
-                        {workspace.tasks.filter(t => t.completed).length} 完成
+                        {workspace.tasks.filter(t => t.completed).length} {t('task.completed')}
                       </span>
                     </div>
                   </div>
@@ -750,7 +775,7 @@ export function HistoryManager({
                       variant="ghost"
                       className="history-action-btn restore"
                       onClick={() => handleRestoreWithConfirm(workspace.id)}
-                      title="恢复到当前工作区"
+                      title={t('workspace.restore')}
                     >
                       <RotateCcw size={14} />
                     </Button>
@@ -762,7 +787,7 @@ export function HistoryManager({
                         const data = JSON.stringify(workspace, null, 2);
                         navigator.clipboard.writeText(data);
                       }}
-                      title="复制数据"
+                      title={t('common.copyData')}
                     >
                       <Copy size={14} />
                     </Button>
@@ -772,7 +797,7 @@ export function HistoryManager({
                         variant="ghost"
                         className="history-action-btn export"
                         onClick={() => handleExport(workspace.id)}
-                        title="导出为文件"
+                        title={t('common.exportAsFile')}
                       >
                         <Download size={14} />
                       </Button>
@@ -782,7 +807,7 @@ export function HistoryManager({
                       variant="ghost"
                       className="history-action-btn delete"
                       onClick={() => onDelete(workspace.id)}
-                      title="删除"
+                      title={t('common.delete')}
                     >
                       <Trash2 size={14} />
                     </Button>
@@ -812,7 +837,7 @@ export function HistoryManager({
                         ))}
                         {workspace.tasks.length > 20 && (
                           <div className="history-task-item" style={{ opacity: 0.5, justifyContent: 'center' }}>
-                            ... 还有 {workspace.tasks.length - 20} 个任务
+                            {t('workspace.moreTasks', { count: workspace.tasks.length - 20 })}
                           </div>
                         )}
                       </div>
