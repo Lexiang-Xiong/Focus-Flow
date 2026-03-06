@@ -154,7 +154,7 @@ export function GlobalView({
 
   // Get child tasks for a parent
   const getChildTasks = (parentId: string): Task[] => {
-    return tasks.filter((t) => t.parentId === parentId).sort((a, b) => a.order - b.order);
+    return tasks.filter((t) => t.parentId === parentId && !t.completed).sort((a, b) => a.order - b.order);
   };
 
   // 计算任务的动态预期时间（优先使用预计算值，否则递归计算）
@@ -941,64 +941,35 @@ export function GlobalView({
 
                   {showCompleted && (
                     <div className="completed-tasks">
-                      {/* Only render root completed tasks recursively */}
-                      {completedTasks
-                        .filter((t) => t.parentId === null || t.parentId === undefined)
-                        .map((task) => {
-                          const taskChildren = getChildTasks(task.id);
-                          return (
-                            <div
-                              key={task.id}
-                              className="task-tree-item"
-                            >
-                              <TaskItem
-                                task={task}
-                                zoneColor={getZoneColor(task.zoneId)}
-                                isActive={false}
-                                isTimerRunning={false}
-                                onToggle={onToggleTask}
-                                onDelete={onDeleteTask}
-                                onUpdate={onUpdateTask}
-                                onToggleExpanded={onToggleExpanded}
-                                onSelect={onSelectTask}
-                                hasChildren={taskChildren.length > 0}
-                                depth={0}
-                                getTotalWorkTime={getTotalWorkTime}
-                                getEstimatedTime={getEstimatedTime}
-                              />
-                              {taskChildren.map((child) => {
-                                const renderChild = (c: Task, d: number): React.ReactNode => {
-                                  const grandchildren = getChildTasks(c.id);
-                                  return (
-                                    <div
-                                      key={c.id}
-                                      className="task-tree-item"
-                                      style={{ paddingLeft: d > 0 ? `${d * 24}px` : undefined }}
-                                    >
-                                      <TaskItem
-                                        task={c}
-                                        zoneColor={getZoneColor(c.zoneId)}
-                                        isActive={false}
-                                        isTimerRunning={false}
-                                        onToggle={onToggleTask}
-                                        onDelete={onDeleteTask}
-                                        onUpdate={onUpdateTask}
-                                        onToggleExpanded={onToggleExpanded}
-                                        onSelect={onSelectTask}
-                                        hasChildren={grandchildren.length > 0}
-                                        depth={0}
-                                        getTotalWorkTime={getTotalWorkTime}
-                                        getEstimatedTime={getEstimatedTime}
-                                      />
-                                      {grandchildren.map((gc) => renderChild(gc, d + 1))}
-                                    </div>
-                                  );
-                                };
-                                return renderChild(child, 1);
-                              })}
+                      {/* 将已完成列表改为扁平化渲染，无论是不是子任务都单独列出 */}
+                      {completedTasks.map((task) => (
+                        <div key={task.id} className="task-tree-item relative mb-1">
+                          {/* 添加轻量级的父任务面包屑提示，避免只看到子任务不知道归属 */}
+                          {task.parentId && (
+                            <div className="flex items-center gap-1 pl-7 pr-2 text-[10px] text-white/40 mb-0.5">
+                              <span>{getZoneName(task.zoneId)}</span>
+                              <span className="text-white/30">›</span>
+                              <span className="truncate max-w-[120px]">{tasks.find(t => t.id === task.parentId)?.title || '...'}</span>
                             </div>
-                          );
-                        })}
+                          )}
+                          <TaskItem
+                            task={task}
+                            zoneColor={getZoneColor(task.zoneId)}
+                            isActive={false}
+                            isTimerRunning={false}
+                            onToggle={onToggleTask}
+                            onDelete={onDeleteTask}
+                            onUpdate={onUpdateTask}
+                            onToggleExpanded={onToggleExpanded}
+                            onSelect={onSelectTask}
+                            hasChildren={false}
+                            depth={0}
+                            isDraggable={false}
+                            getTotalWorkTime={getTotalWorkTime}
+                            getEstimatedTime={getEstimatedTime}
+                          />
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

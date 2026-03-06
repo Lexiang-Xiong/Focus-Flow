@@ -4,48 +4,48 @@ import { dbGetItem, dbSetItem, dbRemoveItem } from '@/lib/db-legacy';
 export const sqliteStorage: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
     try {
-      console.log(`[SQLite] Loading state for key: ${name}`);
-
-      // 1. 尝试从 SQLite 读取
-      const value = await dbGetItem(name);
-
-      if (value) {
-        return value;
+      let sqliteValue = null;
+      try {
+        sqliteValue = await dbGetItem(name);
+      } catch (e) {
+        console.warn('[Storage] SQLite read failed, falling back to local', e);
       }
 
-      // 2. [迁移逻辑] 如果 SQLite 为空，检查 LocalStorage 是否有旧数据
-      const legacyData = localStorage.getItem(name);
-      if (legacyData) {
-        console.log('[SQLite] Migrating data from LocalStorage...');
-        // 将旧数据写入 SQLite
-        await dbSetItem(name, legacyData);
-        // 可选：迁移后清除旧数据，或者保留作为备份
-        // localStorage.removeItem(name);
-        return legacyData;
+      const localValue = localStorage.getItem(name);
+
+      // 核心修复：如果 SQLite 空了但本地缓存还在（说明上次异常断电），自动恢复数据
+      if (!sqliteValue && localValue) {
+        console.log('[Storage] Recovered data from LocalStorage backup');
+        try {
+          await dbSetItem(name, localValue); // 尝试修复回 SQLite
+        } catch (e) { /* ignore */ }
+        return localValue;
       }
 
-      return null;
+      return sqliteValue || localValue;
     } catch (error) {
-      console.error('[SQLite] Error loading state:', error);
-      // 降级回退：如果数据库挂了，尝试读 LocalStorage 防止白屏
+      console.error('[Storage] Fatal error loading state:', error);
       return localStorage.getItem(name);
     }
   },
 
   setItem: async (name: string, value: string): Promise<void> => {
+    // 核心修复：同步强制写入 LocalStorage，确保异常断电或关闭时数据绝对保留
+    localStorage.setItem(name, value);
     try {
-      // 写入 SQLite
+      // 异步写入 SQLite 作为持久化备份
       await dbSetItem(name, value);
     } catch (error) {
-      console.error('[SQLite] Error saving state:', error);
+      console.error('[Storage] Error saving to SQLite, ensured in local:', error);
     }
   },
 
   removeItem: async (name: string): Promise<void> => {
+    localStorage.removeItem(name);
     try {
       await dbRemoveItem(name);
     } catch (error) {
-      console.error('[SQLite] Error removing state:', error);
+      console.error('[Storage] Error removing state:', error);
     }
   },
 };

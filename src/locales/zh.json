@@ -61,7 +61,13 @@
     "saveAsSnapshot": "保存当前环境为快照",
     "editRule": "编辑规则",
     "selectZone": "选择分区",
-    "editZone": "编辑分区"
+    "editZone": "编辑分区",
+    "dataStorage": "数据存储位置",
+    "dataStorageDesc": "更改您的数据保存位置。您可以选择将数据保存在 OneDrive、iCloud 或坚果云等同步目录中，实现多端同步。",
+    "changeLocation": "修改存储位置",
+    "selectDbFolder": "请选择新的存储文件夹",
+    "migratingData": "正在迁移数据并重启，请稍候...",
+    "migrationFailed": "修改数据存储位置失败"
   },
   "timer": {
     "work": "专注中",

@@ -240,7 +240,7 @@ export function TaskList({
   const focusedRootTasks = useMemo(() => {
     if (!focusedTaskId) return incompleteTasks;
     // 直接使用完整扁平化数组，flattenedTasks 已经包含了所有应该显示的后代任务
-    return flattenedTasks;
+    return flattenedTasks.filter(t => !t.completed);
   }, [flattenedTasks, focusedTaskId, incompleteTasks]);
 
   // 显示的任务列表
@@ -248,7 +248,7 @@ export function TaskList({
 
   // 检查任务是否有子任务
   const checkHasChildren = (taskId: string): boolean => {
-    return tasks.some(t => t.parentId === taskId);
+    return tasks.some(t => t.parentId === taskId && !t.completed);
   };
 
   if (!zone) {
@@ -816,23 +816,30 @@ export function TaskList({
                   {showCompleted && (
                     <div className="completed-tasks">
                       {completedTasks.map((task) => (
-                        <TaskItem
-                          key={task.id}
-                          task={task}
-                          zoneColor={getZoneColor(task.zoneId)}
-                          isActive={false}
-                          isTimerRunning={false}
-                          onToggle={onToggleTask}
-                          onDelete={onDeleteTask}
-                          onUpdate={onUpdateTask}
-                          onToggleExpanded={onToggleExpanded}
-                          onSelect={onSelectTask}
-                          hasChildren={false}
-                          depth={(task as FlattenedTask).depth}
-                          isDraggable={false}
-                          getTotalWorkTime={getTotalWorkTime}
-                          getEstimatedTime={getEstimatedTime}
-                        />
+                        <div key={task.id} className="task-tree-item relative mb-1">
+                          {/* 添加父级任务标题提示，防止打平后不知道是哪个任务的子项 */}
+                          {task.parentId && (
+                            <div className="flex items-center gap-1 pl-7 pr-2 text-[10px] text-white/40 mb-0.5 leading-none">
+                              <span className="truncate max-w-[150px]">{tasks.find(t => t.id === task.parentId)?.title || '...'}</span>
+                            </div>
+                          )}
+                          <TaskItem
+                            task={task}
+                            zoneColor={getZoneColor(task.zoneId)}
+                            isActive={false}
+                            isTimerRunning={false}
+                            onToggle={onToggleTask}
+                            onDelete={onDeleteTask}
+                            onUpdate={onUpdateTask}
+                            onToggleExpanded={onToggleExpanded}
+                            onSelect={onSelectTask}
+                            hasChildren={false}
+                            depth={0}
+                            isDraggable={false}
+                            getTotalWorkTime={getTotalWorkTime}
+                            getEstimatedTime={getEstimatedTime}
+                          />
+                        </div>
                       ))}
                       <Button
                         variant="ghost"

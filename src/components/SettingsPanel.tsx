@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Settings, Clock, Volume2, RotateCcw, Flag, Zap, Repeat, Plus, Trash2, Edit2, Bookmark, Download, Upload, Save } from 'lucide-react';
+import { ArrowLeft, Settings, Clock, Volume2, RotateCcw, Flag, Zap, Repeat, Plus, Trash2, Edit2, Bookmark, Download, Upload, Save, Database, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -13,6 +13,7 @@ import { useAppStore } from '@/store';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { writeTextFile, readTextFile } from '@tauri-apps/plugin-fs';
 import { toast } from 'sonner';
+import { getDbPath, changeDbPath } from '@/lib/db';
 
 interface SettingsPanelProps {
   settings: AppState['settings'];
@@ -46,6 +47,9 @@ export function SettingsPanel({
   // deadlineWeight 由 priorityWeight 计算得出，保证两者之和为 100
   const deadlineWeight = useMemo(() => 100 - priorityWeight, [priorityWeight]);
 
+  // 数据存储路径相关状态
+  const [currentDbPath, setCurrentDbPath] = useState<string>('');
+
   // 定时任务配置弹窗状态
   const [showRecurringDialog, setShowRecurringDialog] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<RecurringTemplate | null>(null);
@@ -65,6 +69,11 @@ export function SettingsPanel({
   const [editingProfile, setEditingProfile] = useState<ConfigProfile | null>(null);
   const [editingProfileName, setEditingProfileName] = useState('');
 
+  // 加载当前数据库路径
+  useEffect(() => {
+    getDbPath().then(path => setCurrentDbPath(path)).catch(console.error);
+  }, []);
+
   // 初始化默认分区
   useEffect(() => {
     if (zones.length > 0 && !recZoneId) {
@@ -78,6 +87,25 @@ export function SettingsPanel({
       i18n.changeLanguage(settings.language);
     }
   }, [settings.language, i18n]);
+
+  // 更改数据库路径
+  const handleChangeDbPath = async () => {
+    try {
+      const selectedDir = await open({
+        directory: true, // 选择文件夹
+        multiple: false,
+        title: t('settings.selectDbFolder') || 'Select Storage Folder'
+      });
+
+      if (selectedDir && typeof selectedDir === 'string') {
+        toast.info(t('settings.migratingData') || 'Moving data, please wait...');
+        await changeDbPath(selectedDir);
+      }
+    } catch (e) {
+      console.error('Change DB path failed', e);
+      toast.error(t('settings.migrationFailed') || 'Failed to change data location');
+    }
+  };
 
   // 打开编辑弹窗
   const handleEditTemplate = (tpl: RecurringTemplate) => {
@@ -561,6 +589,32 @@ export function SettingsPanel({
               />
             </div>
           )}
+        </div>
+
+        {/* Data Storage Settings */}
+        <div className="settings-section">
+          <h3 className="settings-section-title">
+            <Database size={14} className="mr-2 text-emerald-400" />
+            {t('settings.dataStorage') || 'Data Storage'}
+          </h3>
+          <p className="settings-section-desc">
+            {t('settings.dataStorageDesc') || 'Change where your data is saved. Select a cloud drive folder (like OneDrive, iCloud, or Dropbox) to sync across devices.'}
+          </p>
+
+          <div className="setting-item flex flex-col gap-2">
+            <div className="text-xs text-white/50 break-all bg-black/20 p-2 rounded border border-white/10 flex items-center justify-between">
+              <span className="truncate">{currentDbPath || t('common.loading')}</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-fit"
+              onClick={handleChangeDbPath}
+            >
+              <FolderOpen size={14} className="mr-2" />
+              {t('settings.changeLocation') || 'Change Location'}
+            </Button>
+          </div>
         </div>
 
         {/* Recurring Tasks Settings */}

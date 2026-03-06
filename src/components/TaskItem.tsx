@@ -59,7 +59,7 @@ export function TaskItem({
   // rankScores 不再需要用于紧迫性显示（使用绝对时间）
   allTasks = [],
 }: TaskItemProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDescription, setEditDescription] = useState(task.description);
@@ -364,9 +364,18 @@ export function TaskItem({
               <div className="task-description">{task.description}</div>
             )}
 
-            {/* Deadline Display with Edit - always visible */}
+            {/* Deadline / Completed Display */}
             <div className="mt-1">
-              <Popover open={showDeadlinePicker} onOpenChange={setShowDeadlinePicker}>
+              {task.completed ? (
+                /* 如果任务已完成，直接渲染绿色徽章，不显示日历组件 */
+                <div className="text-[10px] w-fit flex items-center gap-1 px-1 py-0.5 rounded border border-green-500/50 text-green-400 bg-green-500/10 cursor-default">
+                  <Check size={10} />
+                  <span>
+                    {task.completedAt ? new Date(task.completedAt).toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US') : ''} ({t('task.completed')})
+                  </span>
+                </div>
+              ) : (
+                <Popover open={showDeadlinePicker} onOpenChange={setShowDeadlinePicker}>
                 <PopoverTrigger asChild>
                   <button
                     className={`text-[10px] flex items-center gap-1 hover:bg-white/10 px-1 py-0.5 rounded transition-colors border ${isOverdue ? 'text-red-500 font-bold border-red-500/50' : inheritedDeadline && inheritedDeadline > 0 ? 'text-green-400 border-green-500/50 hover:text-green-300 hover:border-green-400' : 'border-white/30 text-white/50 hover:text-white/80 hover:border-white/50'}`}
@@ -536,6 +545,7 @@ export function TaskItem({
                     </div>
                   </PopoverContent>
                 </Popover>
+              )}
             </div>
 
             {/* Work Time Display */}

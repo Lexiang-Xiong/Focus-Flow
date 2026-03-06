@@ -1,22 +1,92 @@
 import Database from '@tauri-apps/plugin-sql';
+import { appDataDir, join } from '@tauri-apps/api/path';
+import { exists, mkdir, copyFile } from '@tauri-apps/plugin-fs';
 import type { Task, CurrentWorkspace, HistoryWorkspace, Template } from '@/types';
 
-const DB_NAME = 'focus_flow.db';
+const DB_FILENAME = 'focus_flow.db';
+const PATH_STORAGE_KEY = 'FOCUS_FLOW_DB_PATH';
 
-// 单例模式保持数据库连接
+// 修复：使用 Promise 缓存，解决并发冲突
+let dbPromise: Promise<Database> | null = null;
 let dbInstance: Database | null = null;
 
-export async function getDb(): Promise<Database> {
-  if (dbInstance) return dbInstance;
-
-  try {
-    dbInstance = await Database.load(`sqlite:${DB_NAME}`);
-    await initializeTables(dbInstance);
-    return dbInstance;
-  } catch (error) {
-    console.error('Failed to load database:', error);
-    throw error;
+/**
+ * 获取当前的数据库绝对路径
+ */
+export async function getDbPath(): Promise<string> {
+  const customPath = localStorage.getItem(PATH_STORAGE_KEY);
+  if (customPath) {
+    return customPath;
   }
+
+  // 默认使用系统 AppData 目录
+  const appDataDirPath = await appDataDir();
+  const dirExists = await exists(appDataDirPath);
+  if (!dirExists) {
+    await mkdir(appDataDirPath, { recursive: true });
+  }
+  return await join(appDataDirPath, DB_FILENAME);
+}
+
+/**
+ * 更改数据库存储目录（由UI触发）
+ */
+export async function changeDbPath(newFolder: string): Promise<void> {
+  const currentPath = await getDbPath();
+  const newPath = await join(newFolder, DB_FILENAME);
+
+  if (currentPath === newPath) return;
+
+  // 关闭当前数据库连接
+  if (dbInstance) {
+    try {
+      await dbInstance.close();
+    } catch (e) {
+      console.warn('Error closing db:', e);
+    }
+  }
+  dbPromise = null;
+  dbInstance = null;
+
+  const newPathExists = await exists(newPath);
+  const currentExists = await exists(currentPath);
+
+  // 如果目标路径下还没有数据库文件，就把当前的复制过去
+  // 如果目标路径已经有数据库（例如云盘同步过来的），则直接使用，不覆盖！
+  if (!newPathExists && currentExists) {
+    await copyFile(currentPath, newPath);
+  }
+
+  // 记录新路径
+  localStorage.setItem(PATH_STORAGE_KEY, newPath);
+
+  // 强制刷新应用以重新加载状态和数据库
+  window.location.reload();
+}
+
+/**
+ * 获取数据库实例
+ */
+export async function getDb(): Promise<Database> {
+  if (dbPromise) return dbPromise;
+
+  dbPromise = (async () => {
+    try {
+      const dbPath = await getDbPath();
+      console.log('[DB] Loading database from:', dbPath);
+
+      dbInstance = await Database.load(`sqlite:${dbPath}`);
+      await initializeTables(dbInstance);
+
+      return dbInstance;
+    } catch (error) {
+      console.error('[DB] Failed to load database:', error);
+      dbPromise = null;
+      throw error;
+    }
+  })();
+
+  return dbPromise;
 }
 
 // 初始化关系型表结构

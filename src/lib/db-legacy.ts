@@ -1,34 +1,34 @@
 import Database from '@tauri-apps/plugin-sql';
+import { getDbPath } from './db';
 
-const DB_NAME = 'focus_flow.db';
-
-// 单例模式保持数据库连接
-let dbInstance: Database | null = null;
+// 使用单例 Promise 防止并发冲突
+let dbPromise: Promise<Database> | null = null;
 
 export async function getDb(): Promise<Database> {
-  if (dbInstance) return dbInstance;
+  if (dbPromise) return dbPromise;
 
-  try {
-    // 加载数据库
-    dbInstance = await Database.load(`sqlite:${DB_NAME}`);
+  dbPromise = (async () => {
+    try {
+      const dbPath = await getDbPath();
+      const db = await Database.load(`sqlite:${dbPath}`);
 
-    // 初始化表结构：我们使用一个简单的 Key-Value 表来存储 Zustand 的快照
-    await dbInstance.execute(`
-      CREATE TABLE IF NOT EXISTS store_snapshots (
-        key TEXT PRIMARY KEY,
-        value TEXT,
-        updated_at INTEGER
-      );
-    `);
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS store_snapshots (
+          key TEXT PRIMARY KEY,
+          value TEXT,
+          updated_at INTEGER
+        );
+      `);
 
-    // 预留：未来做附件功能时，会在这里创建 attachments 表
-    // await dbInstance.execute(`CREATE TABLE IF NOT EXISTS attachments ...`);
+      return db;
+    } catch (error) {
+      console.error('Failed to load legacy database:', error);
+      dbPromise = null;
+      throw error;
+    }
+  })();
 
-    return dbInstance;
-  } catch (error) {
-    console.error('Failed to load database:', error);
-    throw error;
-  }
+  return dbPromise;
 }
 
 // 核心 API：保存键值对

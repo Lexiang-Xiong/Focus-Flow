@@ -61,7 +61,13 @@
     "saveAsSnapshot": "Save Current as Snapshot",
     "editRule": "Edit Rule",
     "selectZone": "Select Zone",
-    "editZone": "Edit Zone"
+    "editZone": "Edit Zone",
+    "dataStorage": "Data Storage Location",
+    "dataStorageDesc": "Change where your data is saved. Select a cloud drive folder (like OneDrive, iCloud, or Dropbox) to sync across devices.",
+    "changeLocation": "Change Location",
+    "selectDbFolder": "Select New Storage Folder",
+    "migratingData": "Moving data and restarting, please wait...",
+    "migrationFailed": "Failed to change data location"
   },
   "timer": {
     "work": "Focusing",
