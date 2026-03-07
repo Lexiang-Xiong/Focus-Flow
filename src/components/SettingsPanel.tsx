@@ -71,7 +71,12 @@ export function SettingsPanel({
 
   // 加载当前数据库路径
   useEffect(() => {
-    getDbPath().then(path => setCurrentDbPath(path)).catch(console.error);
+    getDbPath()
+      .then(path => setCurrentDbPath(path))
+      .catch(err => {
+        console.error('获取路径失败:', err);
+        setCurrentDbPath('获取路径失败，使用默认相对路径');
+      });
   }, []);
 
   // 初始化默认分区

@@ -11,56 +11,81 @@ let dbPromise: Promise<Database> | null = null;
 let dbInstance: Database | null = null;
 
 /**
- * 获取当前的数据库绝对路径
+ * 获取当前的数据库绝对路径（高容错版）
  */
 export async function getDbPath(): Promise<string> {
+  // 1. 优先读取用户自定义路径
   const customPath = localStorage.getItem(PATH_STORAGE_KEY);
   if (customPath) {
     return customPath;
   }
 
-  // 默认使用系统 AppData 目录
-  const appDataDirPath = await appDataDir();
-  const dirExists = await exists(appDataDirPath);
-  if (!dirExists) {
-    await mkdir(appDataDirPath, { recursive: true });
+  try {
+    // 2. 尝试获取系统 AppData 目录
+    const appDataDirPath = await appDataDir();
+    const dbPath = await join(appDataDirPath, DB_FILENAME);
+
+    // 3. 尝试创建目录（如果因为权限报错，我们捕获它但不阻断流程）
+    try {
+      const dirExists = await exists(appDataDirPath);
+      if (!dirExists) {
+        await mkdir(appDataDirPath, { recursive: true });
+      }
+    } catch (fsError) {
+      console.warn('[DB] FS permission warning (mkdir/exists):', fsError);
+    }
+
+    return dbPath;
+  } catch (error) {
+    // 4. 终极兜底：如果不在 Tauri 环境或缺少 Path 权限，返回相对路径
+    console.error('[DB] Failed to resolve absolute DB path, falling back to relative:', error);
+    return DB_FILENAME;
   }
-  return await join(appDataDirPath, DB_FILENAME);
 }
 
 /**
- * 更改数据库存储目录（由UI触发）
+ * 更改数据库存储目录（由UI触发，高容错版）
  */
 export async function changeDbPath(newFolder: string): Promise<void> {
   const currentPath = await getDbPath();
-  const newPath = await join(newFolder, DB_FILENAME);
+  let newPath = '';
+
+  try {
+    newPath = await join(newFolder, DB_FILENAME);
+  } catch (e) {
+    throw new Error('Failed to join path');
+  }
 
   if (currentPath === newPath) return;
 
-  // 关闭当前数据库连接
+  // 安全关闭当前连接
   if (dbInstance) {
     try {
       await dbInstance.close();
     } catch (e) {
-      console.warn('Error closing db:', e);
+      console.warn('[DB] Error closing db:', e);
     }
   }
   dbPromise = null;
   dbInstance = null;
 
-  const newPathExists = await exists(newPath);
-  const currentExists = await exists(currentPath);
+  // 尝试迁移文件
+  try {
+    const newPathExists = await exists(newPath);
+    const currentExists = await exists(currentPath);
 
-  // 如果目标路径下还没有数据库文件，就把当前的复制过去
-  // 如果目标路径已经有数据库（例如云盘同步过来的），则直接使用，不覆盖！
-  if (!newPathExists && currentExists) {
-    await copyFile(currentPath, newPath);
+    // 如果目标路径没有数据库（说明是新目录），且当前有数据，则物理复制过去
+    if (!newPathExists && currentExists) {
+      await copyFile(currentPath, newPath);
+    }
+  } catch (fsError) {
+    console.error('[DB] Failed to copy file during migration (FS permission):', fsError);
+    // 即使复制失败（权限不足），也允许切换路径，只是相当于在新目录创建空库
+    alert("数据迁移遇到系统权限限制。已切换到新目录，但无法移动旧数据（旧数据仍保留在原处）。");
   }
 
-  // 记录新路径
+  // 记录新路径并强制刷新
   localStorage.setItem(PATH_STORAGE_KEY, newPath);
-
-  // 强制刷新应用以重新加载状态和数据库
   window.location.reload();
 }
 
