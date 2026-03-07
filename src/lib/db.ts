@@ -69,7 +69,7 @@ export async function changeDbPath(newFolder: string): Promise<void> {
   dbPromise = null;
   dbInstance = null;
 
-  // 尝试迁移文件
+  // 尝试迁移或同步文件
   try {
     const newPathExists = await exists(newPath);
     const currentExists = await exists(currentPath);
@@ -78,6 +78,30 @@ export async function changeDbPath(newFolder: string): Promise<void> {
     if (!newPathExists && currentExists) {
       await copyFile(currentPath, newPath);
     }
+    // --- Core Fix: If target directory already has database, force pre-read and overwrite local cache ---
+    else if (newPathExists) {
+      try {
+        console.log('[DB] Found existing DB at target, pre-loading data to prevent hydration override.');
+        // Temporarily connect to target database
+        const tempDb = await Database.load(`sqlite:${newPath}`);
+        // Extract Zustand core state snapshot (key must match store definition exactly)
+        const result = await tempDb.select<{ value: string }[]>(
+          `SELECT value FROM store_snapshots WHERE key = 'focus-flow-storage-v4'`
+        );
+        // If data extracted, forcibly overwrite to localStorage
+        if (result.length > 0 && result[0].value) {
+          localStorage.setItem('focus-flow-storage-v4', result[0].value);
+          console.log('[DB] Pre-loaded store snapshot to localStorage');
+        } else {
+          console.log('[DB] No existing store snapshot found in target DB');
+        }
+        await tempDb.close();
+      } catch (readError) {
+        console.error('[DB] Failed to pre-read new db during change path:', readError);
+        // Allow graceful degradation even if pre-read fails
+      }
+    }
+    // --- Fix end ---
   } catch (fsError) {
     console.error('[DB] Failed to copy file during migration (FS permission):', fsError);
     // 即使复制失败（权限不足），也允许切换路径，只是相当于在新目录创建空库
