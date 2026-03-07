@@ -234,7 +234,8 @@
     "sortByEstimatedTime": "By Estimated Time",
     "sortByTimeDiff": "By Time Difference",
     "zoomIn": "Click to enter task view",
-    "normal": "Normal"
+    "normal": "Normal",
+    "sortManual": "Manual Sort"
   },
   "profile": {
     "saveProfile": "Save Profile",

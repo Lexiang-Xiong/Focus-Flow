@@ -47,7 +47,7 @@
     "leafMode": "叶子节点模式",
     "leafModeDesc": "仅显示可执行的最底层任务",
     "sortMode": "排序方式",
-    "weightedSort": "加权排序设置",
+    "weightedSort": "加权排序",
     "weightedSortDesc": "在全局视图使用加权排序时，优先级和紧急度的权重比例",
     "priorityWeight": "优先级权重",
     "deadlineWeight": "紧急度权重",
@@ -234,7 +234,8 @@
     "sortByEstimatedTime": "按预期时间",
     "sortByTimeDiff": "按时间差",
     "zoomIn": "点击进入该任务视图",
-    "normal": "一般"
+    "normal": "一般",
+    "sortManual": "手动排序"
   },
   "profile": {
     "saveProfile": "保存配置快照",
@@ -351,5 +352,6 @@
     "collapseToBall": "收起为悬浮球",
     "minimize": "最小化",
     "close": "关闭"
-  }
+  },
+  "weightedSort": "加权排序"
 }

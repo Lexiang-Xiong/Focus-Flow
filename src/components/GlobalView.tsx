@@ -722,7 +722,7 @@ export function GlobalView({
               <ArrowUpDown size={14} />
               <SelectValue placeholder={t('view.sortMode')} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper">
               <SelectItem value="zone">
                 <div className="sort-option">
                   <Globe size={14} />

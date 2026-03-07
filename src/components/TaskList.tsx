@@ -13,16 +13,22 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, CheckCircle2, Circle, Trash2, ChevronDown, ChevronRight, Home, Calendar } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Trash2, ChevronDown, ChevronRight, Home, Calendar, Network, ArrowUpDown, Flag, Zap, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '@/components/ui/select';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { TaskItem } from './TaskItem';
 import type { Task, TaskPriority, TaskUrgency, DeadlineType, Zone } from '@/types';
-import { convertDeadlineType } from '@/lib/urgency-utils';
+import { convertDeadlineType, getInheritedDeadline } from '@/lib/urgency-utils';
 import { useAppStore } from '@/store';
 import { getFlattenedTasks, calculateNewPosition, type FlattenedTask } from '@/lib/tree-utils';
 import { useTranslation } from 'react-i18next';
@@ -86,6 +92,10 @@ export function TaskList({
       onSetFocusedTaskId(id);
     }
   };
+
+  // 新增：局部视图模式状态
+  const [isLeafMode, setIsLeafMode] = useState(false);
+  const [sortMode, setSortMode] = useState<'manual' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime'>('manual');
   const [addingSubtaskParentId, setAddingSubtaskParentId] = useState<string | null>(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [newSubtaskDescription, setNewSubtaskDescription] = useState('');
@@ -236,19 +246,117 @@ export function TaskList({
     return path;
   }, [tasks, focusedTaskId]);
 
-  // 计算当前焦点的根任务
-  const focusedRootTasks = useMemo(() => {
-    if (!focusedTaskId) return incompleteTasks;
-    // 直接使用完整扁平化数组，flattenedTasks 已经包含了所有应该显示的后代任务
-    return flattenedTasks.filter(t => !t.completed);
-  }, [flattenedTasks, focusedTaskId, incompleteTasks]);
+  // --- Core logic: calculate display task list ---
+  const processedDisplayTasks = useMemo(() => {
+    // 1. Get base task set (if no focus, get all zone tasks; if focus, get all descendants)
+    let baseTasks = tasks.filter(t => t.zoneId === zone?.id && !t.completed);
 
-  // 显示的任务列表
-  const displayTasks = focusedTaskId ? focusedRootTasks : incompleteTasks;
+    if (focusedTaskId) {
+      const getAllDescendants = (parentId: string): Task[] => {
+        const children = tasks.filter(t => t.parentId === parentId && !t.completed);
+        return [...children, ...children.flatMap(c => getAllDescendants(c.id))];
+      };
+      baseTasks = getAllDescendants(focusedTaskId);
+    }
+
+    // 2. Scenario A: Default tree manual sort mode
+    if (sortMode === 'manual' && !isLeafMode) {
+      return getFlattenedTasks(tasks, zone?.id || null, focusedTaskId).filter(t => !t.completed);
+    }
+
+    // Common sort function
+    const applySort = (tasksToSort: Task[]) => {
+      const priorityOrder: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
+
+      tasksToSort.sort((a, b) => {
+        switch (sortMode) {
+          case 'priority':
+            return priorityOrder[a.priority] - priorityOrder[b.priority];
+          case 'urgency':
+            const aDdl = getInheritedDeadline(a, tasks);
+            const bDdl = getInheritedDeadline(b, tasks);
+            if (!aDdl && !bDdl) return 0;
+            if (!aDdl) return 1;
+            if (!bDdl) return -1;
+            return aDdl - bDdl;
+          case 'workTime':
+            return (b.totalWorkTime || 0) - (a.totalWorkTime || 0);
+          case 'estimatedTime':
+            return (b.estimatedTime || 0) - (a.estimatedTime || 0);
+          case 'weighted': {
+            const aTaskAny = tasks.find(t => t.id === a.id) as any || {priorityWeight: 50, deadlineWeight: 50};
+            const bTaskAny = tasks.find(t => t.id === b.id) as any || {priorityWeight: 50, deadlineWeight: 50};
+            const aScoreDdl = getInheritedDeadline(a, tasks) || 0;
+            const bScoreDdl = getInheritedDeadline(b, tasks) || 0;
+            const aScore = (priorityOrder[a.priority] * (aTaskAny.priorityWeight || 50)) + ((aScoreDdl ? 10000000000 - aScoreDdl : 0) * (aTaskAny.deadlineWeight || 50));
+            const bScore = (priorityOrder[b.priority] * (bTaskAny.priorityWeight || 50)) + ((bScoreDdl ? 10000000000 - bScoreDdl : 0) * (bTaskAny.deadlineWeight || 50));
+            return aScore - bScore;
+          }
+          default:
+            return 0;
+        }
+      });
+    };
+
+    // 3. Scenario B: Pure leaf node mode (flatten all levels, only keep nodes without children)
+    if (isLeafMode) {
+      const parentIds = new Set(tasks.filter(t => !t.completed && t.parentId).map(t => t.parentId));
+      // Filter from ALL baseTasks, not just topLevel, so deep nested leaves can be found
+      const leafTasks = baseTasks.filter(t => !parentIds.has(t.id));
+
+      applySort(leafTasks);
+      return leafTasks.map(t => ({ ...t, depth: 0 } as FlattenedTask));
+    }
+
+    // 4. Scenario C: Tree structure + specified sort (only sort top level, recursively attach children)
+    const topLevelTasks = baseTasks.filter(t => focusedTaskId ? t.parentId === focusedTaskId : !t.parentId);
+    applySort(topLevelTasks);
+
+    const result: FlattenedTask[] = [];
+    const appendChildren = (parentId: string, currentDepth: number) => {
+      // Children keep original order sort, don't participate in advanced sorting
+      const children = tasks.filter(t => t.parentId === parentId && !t.completed).sort((a, b) => a.order - b.order);
+      for (const child of children) {
+        result.push({ ...child, depth: currentDepth } as FlattenedTask);
+        if (!child.isCollapsed) {
+          appendChildren(child.id, currentDepth + 1);
+        }
+      }
+    };
+
+    for (const topTask of topLevelTasks) {
+      result.push({ ...topTask, depth: 0 } as FlattenedTask);
+      if (!topTask.isCollapsed) {
+        appendChildren(topTask.id, 1);
+      }
+    }
+
+    return result;
+  }, [tasks, zone?.id, focusedTaskId, isLeafMode, sortMode]);
+
+  // Derived state: whether in non-draggable special view
+  const isSpecialView = isLeafMode || sortMode !== 'manual';
 
   // 检查任务是否有子任务
   const checkHasChildren = (taskId: string): boolean => {
     return tasks.some(t => t.parentId === taskId && !t.completed);
+  };
+
+  // 获取任务的面包屑路径（所有祖先任务）
+  const getTaskBreadcrumbs = (taskId: string): Task[] => {
+    const path: Task[] = [];
+    let current = tasks.find(t => t.id === taskId);
+    const visited = new Set<string>(); // 防止循环引用
+
+    while (current?.parentId && !visited.has(current.id)) {
+      visited.add(current.id);
+      const parent = tasks.find(t => t.id === current!.parentId);
+      if (parent) {
+        path.unshift(parent);
+        current = parent;
+      } else break;
+    }
+    return path;
   };
 
   if (!zone) {
@@ -272,16 +380,85 @@ export function TaskList({
   return (
     <div className="task-list-container">
       {/* Header */}
-      <div className="task-list-header">
-        <div className="task-list-title">
-          <div
-            className="zone-color-badge"
-            style={{ backgroundColor: zone.color }}
-          />
-          <span>{zone.name}</span>
-          <span className="task-count">
+      <div className="task-list-header flex items-center justify-between gap-2 pb-2 border-b border-white/5">
+        <div className="task-list-title flex-1 min-w-0 flex items-center gap-2">
+          <div className="zone-color-badge shrink-0" style={{ backgroundColor: zone.color }} />
+          <span className="truncate" title={zone.name}>{zone.name}</span>
+          <span className="task-count shrink-0 text-xs text-white/50">
             ({stats.completed}/{stats.total})
           </span>
+        </div>
+        <div className="flex items-center gap-1 shrink-0 ml-auto">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-7 px-2 ${isLeafMode ? 'bg-blue-500/10 text-blue-400' : 'text-white/40 hover:text-white'}`}
+            onClick={() => {
+              if (!isLeafMode) {
+                // 从树状切换到叶子模式：如果当前是手动排序，自动切换到加权排序
+                if (sortMode === 'manual') {
+                  setSortMode('weighted');
+                }
+              }
+              setIsLeafMode(!isLeafMode);
+            }}
+          >
+            <Network size={14} className={isLeafMode ? "" : "opacity-70"} />
+          </Button>
+          <Select value={sortMode} onValueChange={(val: any) => {
+            // 如果切换到手动排序，自动退出叶子节点模式
+            if (val === 'manual' && isLeafMode) {
+              setIsLeafMode(false);
+            }
+            setSortMode(val);
+          }}>
+            <SelectTrigger className="h-7 px-2 min-w-[32px] border border-white/10 bg-black/40 text-white/60 hover:text-white">
+              {sortMode === 'manual' ? <ArrowUpDown size={14} /> :
+               sortMode === 'priority' ? <Flag size={14} className="text-red-400"/> :
+               sortMode === 'urgency' ? <Zap size={14} className="text-orange-400" /> :
+               sortMode === 'weighted' ? <><Flag size={14} className="text-red-400"/><Zap size={14} className="text-orange-400"/></> :
+               <Clock size={14} className="text-blue-400" />}
+            </SelectTrigger>
+            <SelectContent position="popper">
+              <SelectItem value="manual">
+                <div className="sort-option flex items-center gap-2">
+                  <ArrowUpDown size={14} />
+                  <span>{t('view.sortManual')}</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="priority">
+                <div className="sort-option flex items-center gap-2">
+                  <Flag size={14} className="text-red-400" />
+                  <span>{t('view.sortByPriority')}</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="urgency">
+                <div className="sort-option flex items-center gap-2">
+                  <Zap size={14} className="text-orange-400" />
+                  <span>{t('view.sortByUrgency')}</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="weighted">
+                <div className="sort-option flex items-center gap-2">
+                  <Flag size={14} className="text-red-400" />
+                  <Zap size={14} className="text-orange-400" />
+                  <span>{t('settings.weightedSort')}</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="workTime">
+                <div className="sort-option flex items-center gap-2">
+                  <Clock size={14} className="text-blue-400" />
+                  <span>{t('view.sortByWorkTime')}</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="estimatedTime">
+                <div className="sort-option flex items-center gap-2">
+                  <Clock size={14} className="text-purple-400" />
+                  <span>{t('view.sortByEstimatedTime')}</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -534,18 +711,62 @@ export function TaskList({
             </div>
           ) : (
             <>
-              {/* Incomplete Tasks with DnD */}
-              <DndContext
-                sensors={sensors}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={displayTasks.map((t) => t.id)}
-                  strategy={verticalListSortingStrategy}
+              {/* 特殊视图：禁用拖拽，添加面包屑上下文 */}
+              {isSpecialView ? (
+                <div className="flex flex-col gap-1">
+                  {processedDisplayTasks.map((task) => {
+                    const breadcrumbs = getTaskBreadcrumbs(task.id);
+                    return (
+                    <div key={task.id} className="relative">
+                      {/* 完整面包屑路径：父任务1 > 父任务2 > ... */}
+                      {isLeafMode && breadcrumbs.length > 0 && (
+                        <div className="flex items-center gap-1 pl-2 text-[10px] text-white/30 mb-0.5 leading-none">
+                          {breadcrumbs.map((crumb, i) => (
+                            <span key={crumb.id} className="flex items-center gap-1">
+                              <span className="truncate max-w-[100px]" title={crumb.title}>
+                                {crumb.title}
+                              </span>
+                              {i < breadcrumbs.length - 1 && <ChevronRight size={10} />}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <TaskItem
+                        task={task}
+                        zoneColor={getZoneColor(task.zoneId)}
+                        isActive={task.id === activeTaskId}
+                        isTimerRunning={isTimerRunning && task.id === activeTaskId}
+                        isDragOver={task.id === overId}
+                        onToggle={onToggleTask}
+                        onDelete={onDeleteTask}
+                        onUpdate={onUpdateTask}
+                        onToggleExpanded={onToggleExpanded}
+                        onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
+                        onSelect={onSelectTask}
+                        onZoomIn={(id) => setFocusedTaskId(id)}
+                        hasChildren={!isLeafMode && tasks.some(t => t.parentId === task.id && !t.completed)}
+                        depth={task.depth}
+                        isDraggable={false}
+                        getTotalWorkTime={getTotalWorkTime}
+                        getEstimatedTime={getEstimatedTime}
+                      />
+                    </div>
+                  );
+                  })}
+                </div>
+              ) : (
+                /* 默认视图：保留拖拽功能 */
+                <DndContext
+                  sensors={sensors}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDragEnd={handleDragEnd}
                 >
-                  {displayTasks.map((task) => (
+                  <SortableContext
+                    items={processedDisplayTasks.map((t) => t.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {processedDisplayTasks.map((task) => (
                     <React.Fragment key={task.id}>
                       <TaskItem
                         task={task}
@@ -798,6 +1019,7 @@ export function TaskList({
                   ) : null}
                 </DragOverlay>
               </DndContext>
+              )}
 
               {/* Completed Tasks */}
               {completedTasks.length > 0 && (
