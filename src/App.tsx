@@ -16,6 +16,8 @@ import { toast } from 'sonner';
 import type { TimerMode } from '@/types';
 import { PREDEFINED_TEMPLATES } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { AutoTester } from '@/lib/auto-tester';
+import { startDataMonitor, stopDataMonitor } from '@/lib/db-monitor';
 import './App.css';
 
 function App() {
@@ -72,6 +74,12 @@ function App() {
     deleteRecurringTemplate,
   } = useAppStore();
   const { t, i18n } = useTranslation();
+
+  // 启动数据变化监控（用于调试数据丢失问题）
+  useEffect(() => {
+    startDataMonitor();
+    return () => stopDataMonitor();
+  }, []);
 
   // 同步 i18n 和 settings.language
   useEffect(() => {
@@ -457,6 +465,16 @@ function App() {
     const timer = setTimeout(() => setIsLoaded(true), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // 🚨 自动化测试检测：应用启动时检查是否需要继续测试
+  useEffect(() => {
+    if (isLoaded) {
+      // 延迟一点确保 Zustand hydration 完成
+      setTimeout(() => {
+        AutoTester.checkAndRun();
+      }, 500);
+    }
+  }, [isLoaded]);
 
   if (!isLoaded) {
     return (

@@ -14,6 +14,7 @@ import { save, open } from '@tauri-apps/plugin-dialog';
 import { writeTextFile, readTextFile } from '@tauri-apps/plugin-fs';
 import { toast } from 'sonner';
 import { getDbPath, changeDbPath } from '@/lib/db';
+import { recordDataSnapshotForSwitch } from '@/lib/storage-adapter';
 
 interface SettingsPanelProps {
   settings: AppState['settings'];
@@ -104,7 +105,12 @@ export function SettingsPanel({
 
       if (selectedDir && typeof selectedDir === 'string') {
         toast.info(t('settings.migratingData') || 'Moving data, please wait...');
+        // 🚀 记录切换前的数据快照
+        recordDataSnapshotForSwitch();
         await changeDbPath(selectedDir);
+        // 🚀 切换成功后更新 UI 显示的路径
+        const newPath = await getDbPath();
+        setCurrentDbPath(newPath);
       }
     } catch (e) {
       console.error('Change DB path failed', e);

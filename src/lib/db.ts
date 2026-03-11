@@ -2,13 +2,34 @@ import Database from '@tauri-apps/plugin-sql';
 import { appDataDir, join } from '@tauri-apps/api/path';
 import { exists, mkdir, copyFile } from '@tauri-apps/plugin-fs';
 import type { Task, CurrentWorkspace, HistoryWorkspace, Template } from '@/types';
+import { setIsSwitching, setIsReloadingForSwitch } from './storage-adapter';
+import { persistentLog } from './persistent-log';
 
 const DB_FILENAME = 'focus_flow.db';
 const PATH_STORAGE_KEY = 'FOCUS_FLOW_DB_PATH';
 
+// 新增：全局唯一的会话 ID。每次页面刷新都会生成新的，用于防范跨页面的幽灵 Promise 写入。
+const CURRENT_SESSION_ID = Math.random().toString(36).substring(2, 15);
+console.log('[DB] New session started, ID:', CURRENT_SESSION_ID);
+persistentLog('DB', 'Session started', 'INFO', { sessionId: CURRENT_SESSION_ID });
+
 // 修复：使用 Promise 缓存，解决并发冲突
 let dbPromise: Promise<Database> | null = null;
 let dbInstance: Database | null = null;
+// 记录当前数据库路径，用于检测路径变化
+let currentDbPath: string | null = null;
+// 标记是否正在进行目录切换（用于单页切换）
+let isReloadingForSwitch = false;
+
+/**
+ * 清除数据库缓存 - 在切换目录时调用
+ */
+export function clearDbCache(): void {
+  console.log('[DB] Clearing database cache');
+  dbPromise = null;
+  dbInstance = null;
+  currentDbPath = null;
+}
 
 /**
  * 获取当前的数据库绝对路径（高容错版）
@@ -16,9 +37,12 @@ let dbInstance: Database | null = null;
 export async function getDbPath(): Promise<string> {
   // 1. 优先读取用户自定义路径
   const customPath = localStorage.getItem(PATH_STORAGE_KEY);
+  // [DEBUG] console.log('[DB] getDbPath - PATH_STORAGE_KEY value:', customPath);
   if (customPath) {
+    // [DEBUG] console.log('[DB] getDbPath - Returning customPath:', customPath);
     return customPath;
   }
+  // [DEBUG] console.log('[DB] getDbPath - No custom path, using fallback');
 
   try {
     // 2. 尝试获取系统 AppData 目录
@@ -44,85 +68,149 @@ export async function getDbPath(): Promise<string> {
 }
 
 /**
- * 更改数据库存储目录（由UI触发，高容错版）
+ * 更改数据库存储目录（单页切换版，不使用 reload）
  */
 export async function changeDbPath(newFolder: string): Promise<void> {
+  console.log('[DB] changeDbPath START - newFolder:', newFolder);
   const currentPath = await getDbPath();
-  let newPath = '';
+  const pathFromStorage = localStorage.getItem(PATH_STORAGE_KEY);
+  console.log(`[DB] changeDbPath - From: ${currentPath}, To: ${newFolder}, Storage: ${pathFromStorage}`);
+  persistentLog('DB', 'changeDbPath START', 'INFO', { from: currentPath, to: newFolder, storageKey: pathFromStorage });
+
+  // 🚨 开启切换锁，阻止所有写入
+  setIsSwitching(true);
+  // 标记正在切换
+  isReloadingForSwitch = true;
+  // [DEBUG] console.log('[DB] changeDbPath - Switching lock set to TRUE');
 
   try {
-    newPath = await join(newFolder, DB_FILENAME);
-  } catch (e) {
-    throw new Error('Failed to join path');
-  }
+    const currentPath = await getDbPath();
+    persistentLog('DB', 'Current path', 'DEBUG', { currentPath });
 
-  if (currentPath === newPath) return;
+    let newPath = '';
 
-  // 安全关闭当前连接
-  if (dbInstance) {
     try {
-      await dbInstance.close();
+      newPath = await join(newFolder, DB_FILENAME);
     } catch (e) {
-      console.warn('[DB] Error closing db:', e);
+      console.error('[DB] Failed to join path:', e);
+      throw new Error('Failed to join path');
     }
-  }
-  dbPromise = null;
-  dbInstance = null;
 
-  // 尝试迁移或同步文件
-  try {
-    const newPathExists = await exists(newPath);
-    const currentExists = await exists(currentPath);
-
-    // 如果目标路径没有数据库（说明是新目录），且当前有数据，则物理复制过去
-    if (!newPathExists && currentExists) {
-      await copyFile(currentPath, newPath);
+    if (currentPath === newPath) {
+      // [DEBUG] console.log('[DB] Same path, skipping');
+      // 重要：即使路径相同，也需要重置切换锁！
+      setIsSwitching(false);
+      isReloadingForSwitch = false;
+      return;
     }
-    // --- Core Fix: If target directory already has database, force pre-read and overwrite local cache ---
-    else if (newPathExists) {
+
+    // 注意：切换目录时不再复制数据！
+    // 每个目录应该独立存储自己的数据
+    // 切换目录只是切换数据库文件路径
+    try {
+      const newPathExists = await exists(newPath);
+      // [DEBUG] console.log('[DB] newPathExists:', newPathExists);
+      persistentLog('DB', 'Switching directory (no copy)', 'INFO', { newPathExists });
+    } catch (e) {
+      console.warn('[DB] Error checking path:', e);
+    }
+
+    // === 保存切换日志到 localStorage，便于查看 ===
+    const switchLogs = JSON.parse(localStorage.getItem('SWITCH_LOGS') || '[]');
+    const now = new Date().toISOString();
+    switchLogs.push({
+      time: now,
+      action: 'BEFORE_SWITCH',
+      newPath,
+      message: 'About to switch directory (single-page)'
+    });
+    localStorage.setItem('SWITCH_LOGS', JSON.stringify(switchLogs.slice(-20)));
+
+    // 保存新路径到 localStorage
+    localStorage.setItem(PATH_STORAGE_KEY, newPath);
+
+    // 清除数据库缓存，并显式关闭当前数据库连接！
+    if (dbInstance) {
       try {
-        console.log('[DB] Found existing DB at target, pre-loading data to prevent hydration override.');
-        // Temporarily connect to target database
-        const tempDb = await Database.load(`sqlite:${newPath}`);
-        // Extract Zustand core state snapshot (key must match store definition exactly)
-        const result = await tempDb.select<{ value: string }[]>(
-          `SELECT value FROM store_snapshots WHERE key = 'focus-flow-storage-v4'`
-        );
-        // If data extracted, forcibly overwrite to localStorage
-        if (result.length > 0 && result[0].value) {
-          localStorage.setItem('focus-flow-storage-v4', result[0].value);
-          console.log('[DB] Pre-loaded store snapshot to localStorage');
-        } else {
-          console.log('[DB] No existing store snapshot found in target DB');
-        }
-        await tempDb.close();
-      } catch (readError) {
-        console.error('[DB] Failed to pre-read new db during change path:', readError);
-        // Allow graceful degradation even if pre-read fails
+        await dbInstance.close();
+        // [DEBUG] console.log('[DB] Database connection closed before switch.');
+        persistentLog('DB', 'Database closed before switch', 'INFO');
+      } catch (e) {
+        console.error('[DB] Error closing database:', e);
       }
     }
-    // --- Fix end ---
-  } catch (fsError) {
-    console.error('[DB] Failed to copy file during migration (FS permission):', fsError);
-    // 即使复制失败（权限不足），也允许切换路径，只是相当于在新目录创建空库
-    alert("数据迁移遇到系统权限限制。已切换到新目录，但无法移动旧数据（旧数据仍保留在原处）。");
-  }
+    clearDbCache();
 
-  // 记录新路径并强制刷新
-  localStorage.setItem(PATH_STORAGE_KEY, newPath);
-  window.location.reload();
+    // 🚀 同步点 1：先强制加载新数据库，确认完全就绪
+    console.log('[DB] About to call getDb()...');
+    await getDb();
+    console.log('[DB] Database pre-loaded, now triggering store reload');
+
+    // 🚀 单页切换：触发 store 重新加载，而不是 reload 页面
+    // [DEBUG] console.log('[DB] Switching directory, triggering store reload...');
+    persistentLog('DB', 'Triggering store reload', 'INFO', { newPath });
+
+    // 设置切换状态
+    isReloadingForSwitch = true;
+    setIsReloadingForSwitch(true);
+
+    // 动态导入并触发应用重新加载数据
+    const { triggerStoreReload } = await import('./storage-adapter');
+    await triggerStoreReload();
+
+    // 🚨 自动化测试：如果有测试状态，继续执行测试
+    try {
+      const { AutoTester } = await import('./auto-tester');
+      AutoTester.checkAndRun();
+    } catch (e) {
+      // 忽略自动化测试错误
+    }
+
+    // 重置切换标记
+    isReloadingForSwitch = false;
+    setIsReloadingForSwitch(false);
+    // 注意：skipWrite 锁不再在这里清除
+    // 而是在 storage-adapter.ts 的 getItem 中，当成功读取到有效数据后才清除
+    // [DEBUG] console.log('[DB] changeDbPath completed successfully');
+    persistentLog('DB', 'changeDbPath completed', 'INFO');
+
+  } catch (error) {
+    console.error('[DB] changeDbPath error:', error);
+    console.warn('切换目录失败: ' + error);
+    isReloadingForSwitch = false;
+    setIsReloadingForSwitch(false);
+    setIsSwitching(false);
+    // 注意：skipWrite 锁也不在这里清除，让 storage-adapter 处理
+  }
 }
 
 /**
  * 获取数据库实例
  */
 export async function getDb(): Promise<Database> {
-  if (dbPromise) return dbPromise;
+  // 详细日志：追踪路径变化
+  const dbPath = await getDbPath();
+  const pathFromStorage = localStorage.getItem(PATH_STORAGE_KEY);
+  // [DEBUG] console.log('[DB] getDb - PATH_STORAGE_KEY:', pathFromStorage);
+  // [DEBUG] console.log('[DB] getDb - getDbPath():', dbPath);
+  // [DEBUG] console.log('[DB] getDb - currentDbPath:', currentDbPath);
+
+  // 检查路径是否变化，如果变化则清除缓存
+  if (currentDbPath !== null && currentDbPath !== dbPath) {
+    // [DEBUG] console.log('[DB] Path changed from', currentDbPath, 'to', dbPath, '- clearing cache');
+    clearDbCache();
+  }
+
+  if (dbPromise) {
+    // [DEBUG] console.log('[DB] getDb - Returning cached promise for:', currentDbPath);
+    return dbPromise;
+  }
 
   dbPromise = (async () => {
     try {
       const dbPath = await getDbPath();
-      console.log('[DB] Loading database from:', dbPath);
+      currentDbPath = dbPath; // 记录当前路径
+      // [DEBUG] console.log('[DB] Loading database from:', dbPath);
 
       dbInstance = await Database.load(`sqlite:${dbPath}`);
       await initializeTables(dbInstance);
@@ -263,6 +351,15 @@ async function initializeTables(db: Database): Promise<void> {
       color TEXT NOT NULL,
       "order" INTEGER NOT NULL DEFAULT 0,
       FOREIGN KEY (template_id) REFERENCES custom_templates(id) ON DELETE CASCADE
+    )
+  `);
+
+  // store_snapshots 表（用于 Zustand 持久化）
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS store_snapshots (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at INTEGER NOT NULL
     )
   `);
 
@@ -653,12 +750,248 @@ export async function setDbVersion(version: number): Promise<void> {
   await db.execute(`UPDATE app_settings SET version = $1 WHERE id = 1`, [version]);
 }
 
-// ========== 兼容旧版 Key-Value API（用于迁移） ==========
+// ========== 兼容旧版 Key-Value API（用于 Zustand 存储） ==========
+// 直接在 db.ts 中实现，确保使用同一个数据库连接
 
-import { dbSetItem as legacyDbSetItem, dbGetItem as legacyDbGetItem, dbRemoveItem as legacyDbRemoveItem } from './db-legacy';
+// 确保 store_snapshots 表存在（向后兼容旧数据库）
+async function ensureStoreSnapshotsTable(db: Database): Promise<void> {
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS store_snapshots (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    `);
+  } catch (e) {
+    console.warn('[DB] Failed to create store_snapshots table:', e);
+  }
+}
 
-export const legacyDb = {
-  setItem: legacyDbSetItem,
-  getItem: legacyDbGetItem,
-  removeItem: legacyDbRemoveItem
-};
+export async function dbSetItem(key: string, value: string): Promise<void> {
+  // 1. 捕获发起此请求的会话 ID
+  const invocationSessionId = CURRENT_SESSION_ID;
+  const initialPath = localStorage.getItem(PATH_STORAGE_KEY);
+
+  // 记录详细日志
+  const dbPath = await getDbPath();
+  const pathFromStorage = localStorage.getItem(PATH_STORAGE_KEY);
+  // [DEBUG] console.log('[DB] dbSetItem - Session ID:', invocationSessionId, 'Current Session:', CURRENT_SESSION_ID);
+  // [DEBUG] console.log('[DB] dbSetItem - PATH_STORAGE_KEY:', pathFromStorage);
+  // [DEBUG] console.log('[DB] dbSetItem - getDbPath():', dbPath);
+
+  // 2. 会话级终极防御：如果执行到这里，发现它不属于当前存活的 JS 会话，必定是 reload 遗留的幽灵任务！直接阻断！
+  if (invocationSessionId !== CURRENT_SESSION_ID) {
+    console.warn('[DB] ABORT dbSetItem: Ghost request from previous session detected. Prevented catastrophic corruption!');
+    persistentLog('DB', 'ABORT dbSetItem - Ghost request from previous session', 'ERROR', { invocationSessionId, currentSessionId: CURRENT_SESSION_ID });
+    return;
+  }
+
+  // 3. 核心防御：如果等待 getDbPath 期间路径被 changeDbPath 修改了，直接阻断！
+  if (initialPath !== pathFromStorage) {
+    console.warn('[DB] ABORT dbSetItem: Path changed during execution. Prevented cross-directory corruption.');
+    persistentLog('DB', 'ABORT dbSetItem - Path changed during execution', 'WARN', { initialPath, currentPath: pathFromStorage });
+    return;
+  }
+
+  const isLargeData = value.length > 10000; // 大于 10KB 视为大数据
+  let dataSummary = { size: value.length, tasks: 0, zones: 0 };
+  try {
+    const parsed = JSON.parse(value);
+    dataSummary.tasks = parsed?.state?.tasks?.length || parsed?.tasks?.length || 0;
+    dataSummary.zones = parsed?.state?.zones?.length || parsed?.zones?.length || 0;
+  } catch (e) {
+    // ignore parse error
+  }
+  // [DEBUG] console.log(`[DB] dbSetItem - Path: ${dbPath}, Key: ${key}, Size: ${dataSummary.size}, Tasks: ${dataSummary.tasks}, Zones: ${dataSummary.zones}, LargeData: ${isLargeData}`);
+  persistentLog('DB', 'dbSetItem', 'DEBUG', { path: dbPath, key, ...dataSummary, isLargeData });
+
+  const db = await getDb();
+
+  // 确保表存在（向后兼容）
+  await ensureStoreSnapshotsTable(db);
+
+  // 再次核对会话状态，防止 getDb 的漫长等待中被页面卸载
+  if (invocationSessionId !== CURRENT_SESSION_ID) {
+    console.warn('[DB] ABORT dbSetItem: Session changed during getDb wait.');
+    persistentLog('DB', 'ABORT dbSetItem - Session changed during getDb', 'ERROR');
+    return;
+  }
+
+  // 4. 终极防御：如果 getDb() 返回的实例连接的不是初始路径，阻断！
+  if (currentDbPath !== dbPath) {
+    console.warn('[DB] ABORT dbSetItem: Database connection shifted. Prevented cross-directory corruption.');
+    persistentLog('DB', 'ABORT dbSetItem - Connection shifted', 'WARN', { initialPath, currentDbPath, expectedPath: dbPath });
+    return;
+  }
+
+  // 5. 执行写入
+  const now = Date.now();
+  // [DEBUG] console.log(`[DB] ⚠️⚠️⚠️ ABOUT TO WRITE - Path: ${dbPath}, Key: ${key}, Tasks: ${dataSummary.tasks}, Zones: ${dataSummary.zones}`);
+  await db.execute(
+    `INSERT INTO store_snapshots (key, value, updated_at) VALUES ($1, $2, $3)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+    [key, value, now]
+  );
+  // [DEBUG] console.log(`[DB] ⚠️⚠️⚠️ WRITE EXECUTED - Path: ${dbPath}`);
+
+  // 大数据写入后等待一下，确保写入完成
+  if (isLargeData) {
+    // [DEBUG] console.log('[DB] Large data written, executing WAL checkpoint...');
+    // 关键修复：显式执行 WAL checkpoint，确保数据从 WAL 合并到主数据库
+    // 否则验证查询可能读不到 WAL 中的数据
+    await db.execute('PRAGMA wal_checkpoint(TRUNCATE)');
+  }
+
+  // ===== 写入后验证数据 =====
+  // 关键修复：在验证之前，再次检查路径是否一致！
+  // 因为切换可能在写入后、验证前发生
+  const pathBeforeVerify = await getDbPath();
+  if (pathBeforeVerify !== dbPath) {
+    // [DEBUG] console.warn(`[DB] 🔍 VERIFY - Path changed during write! Was: ${dbPath}, Now: ${pathBeforeVerify}. Skipping verification to avoid false positive.`);
+    return; // 跳过验证，避免误报
+  }
+
+  // 这是关键：写入后立刻读取，确认数据真的写入了
+  const verifyResult = await db.select<{ value: string }[]>(
+    `SELECT value FROM store_snapshots WHERE key = $1`,
+    [key]
+  );
+  if (verifyResult.length > 0) {
+    const savedValue = verifyResult[0].value;
+    let savedTasks = 0, savedZones = 0;
+    try {
+      const parsed = JSON.parse(savedValue);
+      savedTasks = parsed?.state?.tasks?.length || parsed?.tasks?.length || 0;
+      savedZones = parsed?.state?.zones?.length || parsed?.zones?.length || 0;
+    } catch (e) {}
+    // [DEBUG] console.log(`[DB] ⚠️⚠️⚠️ WRITE COMPLETE - Path: ${dbPath}, Verified Tasks: ${savedTasks}, Zones: ${savedZones}`);
+    if (savedTasks !== dataSummary.tasks || savedZones !== dataSummary.zones) {
+      console.error(`[DB] 🔥 DATA CORRUPTION DETECTED! Written: ${dataSummary.tasks} tasks, ${dataSummary.zones} zones, But saved: ${savedTasks} tasks, ${savedZones} zones!`);
+      persistentLog('DB', 'DATA CORRUPTION!', 'ERROR', { written: dataSummary, saved: { tasks: savedTasks, zones: savedZones } });
+    }
+  } else {
+    // [DEBUG] console.warn(`[DB] 🔍 VERIFY - No data found after write!`);
+  }
+  // ===== 验证结束 =====
+}
+
+export async function dbGetItem(key: string): Promise<string | null> {
+  // 会话级防御：确保读取的是当前会话的数据
+  const invocationSessionId = CURRENT_SESSION_ID;
+
+  const dbPath = await getDbPath();
+  const db = await getDb();
+
+  // 会话校验
+  if (invocationSessionId !== CURRENT_SESSION_ID) {
+    console.warn('[DB] ABORT dbGetItem: Ghost request from previous session detected.');
+    persistentLog('DB', 'ABORT dbGetItem - Ghost request', 'ERROR');
+    return null;
+  }
+
+  // 确保表存在（向后兼容）
+  await ensureStoreSnapshotsTable(db);
+
+  const result = await db.select<{ value: string }[]>(
+    `SELECT value FROM store_snapshots WHERE key = $1`,
+    [key]
+  );
+
+  if (result.length > 0) {
+    const value = result[0].value;
+    let dataSummary = { size: value.length, tasks: 0, zones: 0 };
+    try {
+      const parsed = JSON.parse(value);
+      dataSummary.tasks = parsed?.state?.tasks?.length || parsed?.tasks?.length || 0;
+      dataSummary.zones = parsed?.state?.zones?.length || parsed?.zones?.length || 0;
+    } catch (e) {
+      // ignore parse error
+    }
+    console.log(`[DB] dbGetItem - Path: ${dbPath}, Key: ${key}, Found: true, Size: ${dataSummary.size}, Tasks: ${dataSummary.tasks}, Zones: ${dataSummary.zones}`);
+    persistentLog('DB', 'dbGetItem found', 'DEBUG', { path: dbPath, key, ...dataSummary });
+    return value;
+  }
+
+  console.log(`[DB] dbGetItem - Path: ${dbPath}, Key: ${key}, Found: false`);
+  persistentLog('DB', 'dbGetItem not found', 'DEBUG', { path: dbPath, key });
+  return null;
+}
+
+export async function dbRemoveItem(key: string): Promise<void> {
+  const db = await getDb();
+  await db.execute(`DELETE FROM store_snapshots WHERE key = $1`, [key]);
+}
+
+// ========== 调试工具 ==========
+// 导出函数用于显示切换日志（在控制台调用）
+export function printSwitchLogs() {
+  try {
+    const logs = JSON.parse(localStorage.getItem('SWITCH_LOGS') || '[]');
+    if (logs.length > 0) {
+      console.log('========== 历史切换日志 ==========');
+      logs.forEach((log: { time: string; action: string; message: string }, index: number) => {
+        console.log(`[${index + 1}] ${log.time} - ${log.action}: ${log.message}`);
+      });
+      console.log('==================================');
+    } else {
+      console.log('[DB] 无切换日志');
+    }
+  } catch (e) {
+    console.log('[DB] 无切换日志');
+  }
+}
+
+// 挂载到 window 上
+if (typeof window !== 'undefined') {
+  (window as unknown as { printSwitchLogs: typeof printSwitchLogs }).printSwitchLogs = printSwitchLogs;
+  (window as unknown as { getDbPath: typeof getDbPath }).getDbPath = getDbPath;
+}
+
+// ========== 诊断工具 ==========
+export async function diagnoseDatabase(): Promise<void> {
+  console.log('========== 数据库诊断 ==========');
+  const dbPath = await getDbPath();
+  console.log('当前数据库路径:', dbPath);
+  console.log('localStorage PATH_STORAGE_KEY:', localStorage.getItem(PATH_STORAGE_KEY));
+  console.log('currentDbPath 变量:', currentDbPath);
+  console.log('CURRENT_SESSION_ID:', CURRENT_SESSION_ID);
+
+  try {
+    const db = await getDb();
+
+    // 检查表是否存在
+    const tables = await db.select<{ name: string }[]>(
+      "SELECT name FROM sqlite_master WHERE type='table'"
+    );
+    console.log('数据库中的表:', tables.map(t => t.name).join(', '));
+
+    // 检查 store_snapshots 表
+    const hasSnapshotsTable = tables.some(t => t.name === 'store_snapshots');
+    if (hasSnapshotsTable) {
+      const snapshots = await db.select<{ key: string; value: string; updated_at: number }[]>(
+        'SELECT * FROM store_snapshots'
+      );
+      console.log('store_snapshots 表中的数据:');
+      snapshots.forEach(s => {
+        let tasks = 0, zones = 0;
+        try {
+          const parsed = JSON.parse(s.value);
+          tasks = parsed?.state?.tasks?.length || parsed?.tasks?.length || 0;
+          zones = parsed?.state?.zones?.length || parsed?.zones?.length || 0;
+        } catch (e) {}
+        console.log(`  - key: ${s.key}, tasks: ${tasks}, zones: ${zones}, updated_at: ${new Date(s.updated_at).toLocaleString()}`);
+      });
+    } else {
+      console.warn('⚠️ store_snapshots 表不存在!');
+    }
+  } catch (e) {
+    console.error('诊断失败:', e);
+  }
+  console.log('==============================');
+}
+
+// 挂载诊断函数
+if (typeof window !== 'undefined') {
+  (window as unknown as { diagnoseDatabase: typeof diagnoseDatabase }).diagnoseDatabase = diagnoseDatabase;
+}

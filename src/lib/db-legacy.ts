@@ -4,6 +4,12 @@ import { getDbPath } from './db';
 // 使用单例 Promise 防止并发冲突
 let dbPromise: Promise<Database> | null = null;
 
+// 导出清理函数，供 db.ts 在切换目录时调用
+export function clearDbLegacyCache() {
+  console.log('[DB-LEGACY] Clearing connection cache');
+  dbPromise = null;
+}
+
 export async function getDb(): Promise<Database> {
   if (dbPromise) return dbPromise;
 
