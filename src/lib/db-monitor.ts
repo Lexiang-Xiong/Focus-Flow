@@ -38,7 +38,7 @@ async function getDbState(): Promise<{ path: string; tasks: number; zones: numbe
   try {
     const dbPath = await getDbPath();
     const db = await getDb();
-    const result = await db.select(
+    const result = await db.select<{ value: string }[]>(
       'SELECT value FROM store_snapshots WHERE key = $1',
       ['focus-flow-storage-v4']
     );

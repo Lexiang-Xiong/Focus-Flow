@@ -1,4 +1,7 @@
-import { legacyDb, saveWorkspace, saveHistoryWorkspace, saveSettings, setDbVersion, getDbVersion, saveCustomTemplate as dbSaveCustomTemplate } from './db';
+// import { legacyDb, saveWorkspace, saveHistoryWorkspace, saveSettings, setDbVersion, getDbVersion, saveCustomTemplate as dbSaveCustomTemplate } from './db';
+import { saveWorkspace, saveHistoryWorkspace, saveSettings, setDbVersion, getDbVersion, saveCustomTemplate as dbSaveCustomTemplate } from './db';
+import { dbGetItem as legacyDbGetItem } from './db-legacy';
+
 import type { CurrentWorkspace } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
 
@@ -17,7 +20,7 @@ async function migrateV0ToV1(): Promise<void> {
 
   try {
     // 1. 从旧 store_snapshots 读取数据
-    const legacyData = await legacyDb.getItem(STORAGE_KEY_V4);
+    const legacyData = await legacyDbGetItem(STORAGE_KEY_V4);
 
     if (!legacyData) {
       console.log('[Migration] No legacy data found, creating default workspace');

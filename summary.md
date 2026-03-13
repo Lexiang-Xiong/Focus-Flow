@@ -120,23 +120,25 @@ F97: src/hooks/useClipboard.ts
 F98: src/hooks/useTimer.ts
 F99: src/lib/auto-tester.ts
 F100: src/lib/db-legacy.ts
-F101: src/lib/db.ts
-F102: src/lib/i18n.ts
-F103: src/lib/migration.ts
-F104: src/lib/storage-adapter.ts
-F105: src/lib/tree-utils.ts
-F106: src/lib/urgency-utils.ts
-F107: src/lib/utils.ts
-F108: src/locales/en.json
-F109: src/locales/zh.json
-F110: src/store/index.ts
-F111: src/store/slices/historySlice.ts
-F112: src/store/slices/settingsSlice.ts
-F113: src/store/slices/taskSlice.ts
-F114: src/store/slices/uiSlice.ts
-F115: src/store/slices/undoSlice.ts
-F116: src/store/slices/zoneSlice.ts
-F117: src/types/index.ts
+F101: src/lib/db-monitor.ts
+F102: src/lib/db.ts
+F103: src/lib/i18n.ts
+F104: src/lib/migration.ts
+F105: src/lib/persistent-log.ts
+F106: src/lib/storage-adapter.ts
+F107: src/lib/tree-utils.ts
+F108: src/lib/urgency-utils.ts
+F109: src/lib/utils.ts
+F110: src/locales/en.json
+F111: src/locales/zh.json
+F112: src/store/index.ts
+F113: src/store/slices/historySlice.ts
+F114: src/store/slices/settingsSlice.ts
+F115: src/store/slices/taskSlice.ts
+F116: src/store/slices/uiSlice.ts
+F117: src/store/slices/undoSlice.ts
+F118: src/store/slices/zoneSlice.ts
+F119: src/types/index.ts
 -----------------------
 - 配置文件: context_config.yaml
 
@@ -226,9 +228,11 @@ F117: src/types/index.ts
     ├── lib/
         ├── auto-tester.ts
         ├── db-legacy.ts
+        ├── db-monitor.ts
         ├── db.ts
         ├── i18n.ts
         ├── migration.ts
+        ├── persistent-log.ts
         ├── storage-adapter.ts
         ├── tree-utils.ts
         ├── urgency-utils.ts
@@ -1608,7 +1612,12 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F20:12]|       "@": path.resolve(__dirname, "./src"),
 [F20:13]|     },
 [F20:14]|   },
-[F20:15]| });
+[F20:15]|   server: {
+[F20:16]|     port: 3000,
+[F20:17]|     strictPort: false,
+[F20:18]|     host: '0.0.0.0',
+[F20:19]|   },
+[F20:20]| });
 
 ================================================================================
 文件路径: .github\workflows\build.yml(F21) (约合大小: 4 KB)
@@ -4706,7 +4715,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F29:2889]| }
 
 ================================================================================
-文件路径: src\App.tsx(F30) (约合大小: 24 KB)
+文件路径: src\App.tsx(F30) (约合大小: 25 KB)
 ================================================================================
 [F30:1]| import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 [F30:2]| import { FloatWindow } from '@/components/FloatWindow';
@@ -4726,668 +4735,686 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F30:16]| import type { TimerMode } from '@/types';
 [F30:17]| import { PREDEFINED_TEMPLATES } from '@/types';
 [F30:18]| import { useTranslation } from 'react-i18next';
-[F30:19]| import './App.css';
-[F30:20]| 
-[F30:21]| function App() {
-[F30:22]|   const {
-[F30:23]|     currentWorkspace,
-[F30:24]|     settings,
-[F30:25]|     currentView,
-[F30:26]|     activeZoneId,
-[F30:27]|     focusedTaskId,
-[F30:28]|     historyWorkspaces,
-[F30:29]|     zones,
-[F30:30]|     tasks,
-[F30:31]|     setCurrentView,
-[F30:32]|     setActiveZoneId,
-[F30:33]|     setFocusedTaskId,
-[F30:34]|     updateSettings,
-[F30:35]|     getZoneById,
-[F30:36]|     getTasksByZone,
-[F30:37]|     toggleTask,
-[F30:38]|     deleteTask,
-[F30:39]|     updateTask,
-[F30:40]|     reorderTasks,
-[F30:41]|     toggleExpanded,
-[F30:42]|     toggleSubtasksCollapsed,
-[F30:43]|     clearCompleted,
-[F30:44]|     archiveCurrentWorkspace,
-[F30:45]|     quickArchiveCurrentWorkspace,
-[F30:46]|     autoSaveSnapshot,
-[F30:47]|     overwriteHistoryWorkspace,
-[F30:48]|     restoreFromHistory,
-[F30:49]|     createNewWorkspace,
-[F30:50]|     deleteHistoryWorkspace,
-[F30:51]|     renameHistoryWorkspace,
-[F30:52]|     updateHistorySummary,
-[F30:53]|     exportHistoryToJson,
-[F30:54]|     exportAllHistoryToJson,
-[F30:55]|     importHistoryFromJson,
-[F30:56]|     importAllHistoryFromJson,
-[F30:57]|     customTemplates,
-[F30:58]|     saveCustomTemplate,
-[F30:59]|     deleteCustomTemplate,
-[F30:60]|     getStats,
-[F30:61]|     addWorkTime,
-[F30:62]|     getTotalWorkTime,
-[F30:63]|     getEstimatedTime,
-[F30:64]|     addZone,
-[F30:65]|     hasUnsavedChanges,
-[F30:66]|     undo,
-[F30:67]|     redo,
-[F30:68]|     checkRecurringTasks,
-[F30:69]|     recurringTemplates,
-[F30:70]|     addRecurringTemplate,
-[F30:71]|     updateRecurringTemplate,
-[F30:72]|     deleteRecurringTemplate,
-[F30:73]|   } = useAppStore();
-[F30:74]|   const { t, i18n } = useTranslation();
-[F30:75]| 
-[F30:76]|   // 同步 i18n 和 settings.language
-[F30:77]|   useEffect(() => {
-[F30:78]|     if (settings.language && i18n.language !== settings.language) {
-[F30:79]|       i18n.changeLanguage(settings.language);
-[F30:80]|     }
-[F30:81]|   }, [settings.language, i18n]);
-[F30:82]| 
-[F30:83]|   // 预计算所有任务时间（避免渲染时递归计算）
-[F30:84]|   const taskComputedTimes = useMemo(() => {
-[F30:85]|     const computed: Record<string, { totalWorkTime: number; estimatedTime: number }> = {};
-[F30:86]|     if (!tasks || tasks.length === 0) return computed;
-[F30:87]| 
-[F30:88]|     // 计算 estimatedTime（自底向上）
-[F30:89]|     const computeEstimated = (taskId: string): number => {
-[F30:90]|       const task = tasks.find(t => t.id === taskId);
-[F30:91]|       if (!task) return 0;
-[F30:92]| 
-[F30:93]|       if (task.estimatedTime !== undefined && task.estimatedTime > 0) {
-[F30:94]|         computed[taskId] = computed[taskId] || { totalWorkTime: 0, estimatedTime: 0 };
-[F30:95]|         computed[taskId].estimatedTime = task.estimatedTime;
-[F30:96]|         return task.estimatedTime;
-[F30:97]|       }
-[F30:98]| 
-[F30:99]|       const children = tasks.filter(t => t.parentId === taskId);
-[F30:100]|       const childrenEst = children.reduce((sum, child) => sum + computeEstimated(child.id), 0);
-[F30:101]| 
-[F30:102]|       computed[taskId] = computed[taskId] || { totalWorkTime: 0, estimatedTime: 0 };
-[F30:103]|       computed[taskId].estimatedTime = childrenEst;
-[F30:104]|       return childrenEst;
-[F30:105]|     };
+[F30:19]| import { AutoTester } from '@/lib/auto-tester';
+[F30:20]| import { startDataMonitor, stopDataMonitor } from '@/lib/db-monitor';
+[F30:21]| import './App.css';
+[F30:22]| 
+[F30:23]| function App() {
+[F30:24]|   const {
+[F30:25]|     currentWorkspace,
+[F30:26]|     settings,
+[F30:27]|     currentView,
+[F30:28]|     activeZoneId,
+[F30:29]|     focusedTaskId,
+[F30:30]|     historyWorkspaces,
+[F30:31]|     zones,
+[F30:32]|     tasks,
+[F30:33]|     setCurrentView,
+[F30:34]|     setActiveZoneId,
+[F30:35]|     setFocusedTaskId,
+[F30:36]|     updateSettings,
+[F30:37]|     getZoneById,
+[F30:38]|     getTasksByZone,
+[F30:39]|     toggleTask,
+[F30:40]|     deleteTask,
+[F30:41]|     updateTask,
+[F30:42]|     reorderTasks,
+[F30:43]|     toggleExpanded,
+[F30:44]|     toggleSubtasksCollapsed,
+[F30:45]|     clearCompleted,
+[F30:46]|     archiveCurrentWorkspace,
+[F30:47]|     quickArchiveCurrentWorkspace,
+[F30:48]|     autoSaveSnapshot,
+[F30:49]|     overwriteHistoryWorkspace,
+[F30:50]|     restoreFromHistory,
+[F30:51]|     createNewWorkspace,
+[F30:52]|     deleteHistoryWorkspace,
+[F30:53]|     renameHistoryWorkspace,
+[F30:54]|     updateHistorySummary,
+[F30:55]|     exportHistoryToJson,
+[F30:56]|     exportAllHistoryToJson,
+[F30:57]|     importHistoryFromJson,
+[F30:58]|     importAllHistoryFromJson,
+[F30:59]|     customTemplates,
+[F30:60]|     saveCustomTemplate,
+[F30:61]|     deleteCustomTemplate,
+[F30:62]|     getStats,
+[F30:63]|     addWorkTime,
+[F30:64]|     getTotalWorkTime,
+[F30:65]|     getEstimatedTime,
+[F30:66]|     addZone,
+[F30:67]|     hasUnsavedChanges,
+[F30:68]|     undo,
+[F30:69]|     redo,
+[F30:70]|     checkRecurringTasks,
+[F30:71]|     recurringTemplates,
+[F30:72]|     addRecurringTemplate,
+[F30:73]|     updateRecurringTemplate,
+[F30:74]|     deleteRecurringTemplate,
+[F30:75]|   } = useAppStore();
+[F30:76]|   const { t, i18n } = useTranslation();
+[F30:77]| 
+[F30:78]|   // 启动数据变化监控（用于调试数据丢失问题）
+[F30:79]|   useEffect(() => {
+[F30:80]|     startDataMonitor();
+[F30:81]|     return () => stopDataMonitor();
+[F30:82]|   }, []);
+[F30:83]| 
+[F30:84]|   // 同步 i18n 和 settings.language
+[F30:85]|   useEffect(() => {
+[F30:86]|     if (settings.language && i18n.language !== settings.language) {
+[F30:87]|       i18n.changeLanguage(settings.language);
+[F30:88]|     }
+[F30:89]|   }, [settings.language, i18n]);
+[F30:90]| 
+[F30:91]|   // 预计算所有任务时间（避免渲染时递归计算）
+[F30:92]|   const taskComputedTimes = useMemo(() => {
+[F30:93]|     const computed: Record<string, { totalWorkTime: number; estimatedTime: number }> = {};
+[F30:94]|     if (!tasks || tasks.length === 0) return computed;
+[F30:95]| 
+[F30:96]|     // 计算 estimatedTime（自底向上）
+[F30:97]|     const computeEstimated = (taskId: string): number => {
+[F30:98]|       const task = tasks.find(t => t.id === taskId);
+[F30:99]|       if (!task) return 0;
+[F30:100]| 
+[F30:101]|       if (task.estimatedTime !== undefined && task.estimatedTime > 0) {
+[F30:102]|         computed[taskId] = computed[taskId] || { totalWorkTime: 0, estimatedTime: 0 };
+[F30:103]|         computed[taskId].estimatedTime = task.estimatedTime;
+[F30:104]|         return task.estimatedTime;
+[F30:105]|       }
 [F30:106]| 
-[F30:107]|     // 计算 totalWorkTime（自底向上）
-[F30:108]|     const computeTotalWorkTime = (taskId: string): number => {
-[F30:109]|       const task = tasks.find(t => t.id === taskId);
-[F30:110]|       if (!task) return 0;
-[F30:111]| 
-[F30:112]|       const children = tasks.filter(t => t.parentId === taskId);
-[F30:113]|       const childrenTotal = children.reduce((sum, child) => sum + computeTotalWorkTime(child.id), 0);
+[F30:107]|       const children = tasks.filter(t => t.parentId === taskId);
+[F30:108]|       const childrenEst = children.reduce((sum, child) => sum + computeEstimated(child.id), 0);
+[F30:109]| 
+[F30:110]|       computed[taskId] = computed[taskId] || { totalWorkTime: 0, estimatedTime: 0 };
+[F30:111]|       computed[taskId].estimatedTime = childrenEst;
+[F30:112]|       return childrenEst;
+[F30:113]|     };
 [F30:114]| 
-[F30:115]|       const total = (task.ownTime || 0) + childrenTotal;
-[F30:116]| 
-[F30:117]|       if (!computed[taskId]) {
-[F30:118]|         computed[taskId] = { totalWorkTime: 0, estimatedTime: 0 };
-[F30:119]|       }
-[F30:120]|       computed[taskId].totalWorkTime = total;
-[F30:121]| 
-[F30:122]|       return total;
-[F30:123]|     };
+[F30:115]|     // 计算 totalWorkTime（自底向上）
+[F30:116]|     const computeTotalWorkTime = (taskId: string): number => {
+[F30:117]|       const task = tasks.find(t => t.id === taskId);
+[F30:118]|       if (!task) return 0;
+[F30:119]| 
+[F30:120]|       const children = tasks.filter(t => t.parentId === taskId);
+[F30:121]|       const childrenTotal = children.reduce((sum, child) => sum + computeTotalWorkTime(child.id), 0);
+[F30:122]| 
+[F30:123]|       const total = (task.ownTime || 0) + childrenTotal;
 [F30:124]| 
-[F30:125]|     const rootTasks = tasks.filter(t => !t.parentId);
-[F30:126]|     rootTasks.forEach(t => {
-[F30:127]|       computeEstimated(t.id);
-[F30:128]|       computeTotalWorkTime(t.id);
-[F30:129]|     });
-[F30:130]| 
-[F30:131]|     return computed;
-[F30:132]|   }, [tasks]);
-[F30:133]| 
-[F30:134]|   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
-[F30:135]| 
-[F30:136]|   // 使用ref存储activeTaskId和tasks，确保计时器回调中能获取最新值
-[F30:137]|   const activeTaskIdRef = useRef<string | null>(null);
-[F30:138]|   const tasksRef = useRef<typeof tasks>([]);
-[F30:139]|   const timerRef = useRef<{ isRunning: boolean; mode: string }>({ isRunning: false, mode: 'idle' });
-[F30:140]| 
-[F30:141]|   // 同步ref和state
-[F30:142]|   useEffect(() => {
-[F30:143]|     activeTaskIdRef.current = activeTaskId;
-[F30:144]|   }, [activeTaskId]);
-[F30:145]| 
-[F30:146]|   useEffect(() => {
-[F30:147]|     tasksRef.current = tasks;
-[F30:148]|   }, [tasks]);
-[F30:149]| 
-[F30:150]|   // 使用 ref 保持 addWorkTime 稳定，避免计时器回调重复创建
-[F30:151]|   const addWorkTimeRef = useRef(addWorkTime);
-[F30:152]|   addWorkTimeRef.current = addWorkTime;
+[F30:125]|       if (!computed[taskId]) {
+[F30:126]|         computed[taskId] = { totalWorkTime: 0, estimatedTime: 0 };
+[F30:127]|       }
+[F30:128]|       computed[taskId].totalWorkTime = total;
+[F30:129]| 
+[F30:130]|       return total;
+[F30:131]|     };
+[F30:132]| 
+[F30:133]|     const rootTasks = tasks.filter(t => !t.parentId);
+[F30:134]|     rootTasks.forEach(t => {
+[F30:135]|       computeEstimated(t.id);
+[F30:136]|       computeTotalWorkTime(t.id);
+[F30:137]|     });
+[F30:138]| 
+[F30:139]|     return computed;
+[F30:140]|   }, [tasks]);
+[F30:141]| 
+[F30:142]|   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+[F30:143]| 
+[F30:144]|   // 使用ref存储activeTaskId和tasks，确保计时器回调中能获取最新值
+[F30:145]|   const activeTaskIdRef = useRef<string | null>(null);
+[F30:146]|   const tasksRef = useRef<typeof tasks>([]);
+[F30:147]|   const timerRef = useRef<{ isRunning: boolean; mode: string }>({ isRunning: false, mode: 'idle' });
+[F30:148]| 
+[F30:149]|   // 同步ref和state
+[F30:150]|   useEffect(() => {
+[F30:151]|     activeTaskIdRef.current = activeTaskId;
+[F30:152]|   }, [activeTaskId]);
 [F30:153]| 
-[F30:154]|   // 处理计时器滴答，累计任务时间
-[F30:155]|   const handleTimerTick = useCallback(() => {
-[F30:156]|     const currentActiveTaskId = activeTaskIdRef.current;
-[F30:157]|     const currentTimer = timerRef.current;
-[F30:158]| 
-[F30:159]|     if (currentActiveTaskId && currentTimer.isRunning && currentTimer.mode === 'work') {
-[F30:160]|       // 使用 addWorkTime 累加时间：当前任务增加 ownTime
-[F30:161]|       addWorkTimeRef.current(currentActiveTaskId, 1);
-[F30:162]|     }
-[F30:163]|   }, []);
-[F30:164]| 
-[F30:165]|   const handleTimerComplete = useCallback((mode: TimerMode) => {
-[F30:166]|     if (mode === 'work' && activeTaskId) {
-[F30:167]|       const task = tasks.find(t => t.id === activeTaskId);
-[F30:168]|       if (task) {
-[F30:169]|         const minutes = Math.floor((task.totalWorkTime || 0) / 60);
-[F30:170]|         toast.success(t('toast.focusComplete'), {
-[F30:171]|           description: t('toast.taskAccumulated', { title: task.title, minutes }),
-[F30:172]|         });
-[F30:173]|       }
-[F30:174]|     } else if (mode === 'break' || mode === 'longBreak') {
-[F30:175]|       toast.info(t('toast.breakEnd'), {
-[F30:176]|         description: t('toast.readyForNext'),
-[F30:177]|       });
-[F30:178]|     }
-[F30:179]|   }, [activeTaskId, tasks, t]);
-[F30:180]| 
-[F30:181]|   const timer = useTimer({
-[F30:182]|     workDuration: settings.workDuration,
-[F30:183]|     breakDuration: settings.breakDuration,
-[F30:184]|     longBreakDuration: settings.longBreakDuration,
-[F30:185]|     autoStartBreak: settings.autoStartBreak,
-[F30:186]|     soundEnabled: settings.soundEnabled,
-[F30:187]|     onComplete: handleTimerComplete,
-[F30:188]|     onTick: handleTimerTick,
-[F30:189]|   });
-[F30:190]| 
-[F30:191]|   // 剪贴板功能
-[F30:192]|   const {
-[F30:193]|     copyTask,
-[F30:194]|     copyZone,
-[F30:195]|     pasteTask,
-[F30:196]|     pasteZone,
-[F30:197]|     getOriginalParentId,
-[F30:198]|     hasTask,
-[F30:199]|     hasZone,
-[F30:200]|   } = useClipboard();
-[F30:201]| 
-[F30:202]|   // 同步timerRef
-[F30:203]|   useEffect(() => {
-[F30:204]|     timerRef.current = { isRunning: timer.isRunning, mode: timer.mode };
-[F30:205]|   }, [timer.isRunning, timer.mode]);
-[F30:206]| 
-[F30:207]|   // 使用 ref 追踪当前模式
-[F30:208]|   const currentModeRef = useRef<TimerMode>('work');
-[F30:209]|   useEffect(() => {
-[F30:210]|     currentModeRef.current = timer.mode;
-[F30:211]|   }, [timer.mode]);
-[F30:212]| 
-[F30:213]|   // 监听 settings 变化
-[F30:214]|   useEffect(() => {
-[F30:215]|     if (timer.mode === 'idle' && !timer.isRunning) {
-[F30:216]|       const targetDuration = currentModeRef.current === 'break'
-[F30:217]|         ? settings.breakDuration
-[F30:218]|         : currentModeRef.current === 'longBreak'
-[F30:219]|         ? settings.longBreakDuration
-[F30:220]|         : settings.workDuration;
-[F30:221]| 
-[F30:222]|       if (timer.timeRemaining !== targetDuration) {
-[F30:223]|         timer.updateTime(targetDuration);
-[F30:224]|       }
-[F30:225]|     }
-[F30:226]|   }, [settings.workDuration, settings.breakDuration, settings.longBreakDuration, timer]);
-[F30:227]| 
-[F30:228]|   // 键盘快捷键监听
-[F30:229]|   useEffect(() => {
-[F30:230]|     const handleKeyDown = (e: KeyboardEvent) => {
-[F30:231]|       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-[F30:232]|         return;
-[F30:233]|       }
-[F30:234]| 
-[F30:235]|       // Ctrl+Z 撤销
-[F30:236]|       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-[F30:237]|         e.preventDefault();
-[F30:238]|         undo();
-[F30:239]|         toast.info(t('toast.undo'));
+[F30:154]|   useEffect(() => {
+[F30:155]|     tasksRef.current = tasks;
+[F30:156]|   }, [tasks]);
+[F30:157]| 
+[F30:158]|   // 使用 ref 保持 addWorkTime 稳定，避免计时器回调重复创建
+[F30:159]|   const addWorkTimeRef = useRef(addWorkTime);
+[F30:160]|   addWorkTimeRef.current = addWorkTime;
+[F30:161]| 
+[F30:162]|   // 处理计时器滴答，累计任务时间
+[F30:163]|   const handleTimerTick = useCallback(() => {
+[F30:164]|     const currentActiveTaskId = activeTaskIdRef.current;
+[F30:165]|     const currentTimer = timerRef.current;
+[F30:166]| 
+[F30:167]|     if (currentActiveTaskId && currentTimer.isRunning && currentTimer.mode === 'work') {
+[F30:168]|       // 使用 addWorkTime 累加时间：当前任务增加 ownTime
+[F30:169]|       addWorkTimeRef.current(currentActiveTaskId, 1);
+[F30:170]|     }
+[F30:171]|   }, []);
+[F30:172]| 
+[F30:173]|   const handleTimerComplete = useCallback((mode: TimerMode) => {
+[F30:174]|     if (mode === 'work' && activeTaskId) {
+[F30:175]|       const task = tasks.find(t => t.id === activeTaskId);
+[F30:176]|       if (task) {
+[F30:177]|         const minutes = Math.floor((task.totalWorkTime || 0) / 60);
+[F30:178]|         toast.success(t('toast.focusComplete'), {
+[F30:179]|           description: t('toast.taskAccumulated', { title: task.title, minutes }),
+[F30:180]|         });
+[F30:181]|       }
+[F30:182]|     } else if (mode === 'break' || mode === 'longBreak') {
+[F30:183]|       toast.info(t('toast.breakEnd'), {
+[F30:184]|         description: t('toast.readyForNext'),
+[F30:185]|       });
+[F30:186]|     }
+[F30:187]|   }, [activeTaskId, tasks, t]);
+[F30:188]| 
+[F30:189]|   const timer = useTimer({
+[F30:190]|     workDuration: settings.workDuration,
+[F30:191]|     breakDuration: settings.breakDuration,
+[F30:192]|     longBreakDuration: settings.longBreakDuration,
+[F30:193]|     autoStartBreak: settings.autoStartBreak,
+[F30:194]|     soundEnabled: settings.soundEnabled,
+[F30:195]|     onComplete: handleTimerComplete,
+[F30:196]|     onTick: handleTimerTick,
+[F30:197]|   });
+[F30:198]| 
+[F30:199]|   // 剪贴板功能
+[F30:200]|   const {
+[F30:201]|     copyTask,
+[F30:202]|     copyZone,
+[F30:203]|     pasteTask,
+[F30:204]|     pasteZone,
+[F30:205]|     getOriginalParentId,
+[F30:206]|     hasTask,
+[F30:207]|     hasZone,
+[F30:208]|   } = useClipboard();
+[F30:209]| 
+[F30:210]|   // 同步timerRef
+[F30:211]|   useEffect(() => {
+[F30:212]|     timerRef.current = { isRunning: timer.isRunning, mode: timer.mode };
+[F30:213]|   }, [timer.isRunning, timer.mode]);
+[F30:214]| 
+[F30:215]|   // 使用 ref 追踪当前模式
+[F30:216]|   const currentModeRef = useRef<TimerMode>('work');
+[F30:217]|   useEffect(() => {
+[F30:218]|     currentModeRef.current = timer.mode;
+[F30:219]|   }, [timer.mode]);
+[F30:220]| 
+[F30:221]|   // 监听 settings 变化
+[F30:222]|   useEffect(() => {
+[F30:223]|     if (timer.mode === 'idle' && !timer.isRunning) {
+[F30:224]|       const targetDuration = currentModeRef.current === 'break'
+[F30:225]|         ? settings.breakDuration
+[F30:226]|         : currentModeRef.current === 'longBreak'
+[F30:227]|         ? settings.longBreakDuration
+[F30:228]|         : settings.workDuration;
+[F30:229]| 
+[F30:230]|       if (timer.timeRemaining !== targetDuration) {
+[F30:231]|         timer.updateTime(targetDuration);
+[F30:232]|       }
+[F30:233]|     }
+[F30:234]|   }, [settings.workDuration, settings.breakDuration, settings.longBreakDuration, timer]);
+[F30:235]| 
+[F30:236]|   // 键盘快捷键监听
+[F30:237]|   useEffect(() => {
+[F30:238]|     const handleKeyDown = (e: KeyboardEvent) => {
+[F30:239]|       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
 [F30:240]|         return;
 [F30:241]|       }
 [F30:242]| 
-[F30:243]|       // Ctrl+Shift+Z 或 Ctrl+Y 重做
-[F30:244]|       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+[F30:243]|       // Ctrl+Z 撤销
+[F30:244]|       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
 [F30:245]|         e.preventDefault();
-[F30:246]|         redo();
-[F30:247]|         toast.info(t('toast.redo'));
+[F30:246]|         undo();
+[F30:247]|         toast.info(t('toast.undo'));
 [F30:248]|         return;
 [F30:249]|       }
 [F30:250]| 
-[F30:251]|       // 尝试获取当前操作的区域上下文
-[F30:252]|       let currentZone = getZoneById(activeZoneId || '') || null;
-[F30:253]| 
-[F30:254]|       // 如果没有选中分区，尝试通过"选中任务"或"当前聚焦的任务"来推断分区
-[F30:255]|       if (!currentZone) {
-[F30:256]|         const contextTaskId = activeTaskId || focusedTaskId;
-[F30:257]|         if (contextTaskId) {
-[F30:258]|           const contextTask = tasks.find(t => t.id === contextTaskId);
-[F30:259]|           if (contextTask) {
-[F30:260]|             currentZone = getZoneById(contextTask.zoneId) || null;
-[F30:261]|           }
-[F30:262]|         }
-[F30:263]|       }
-[F30:264]| 
-[F30:265]|       if (e.ctrlKey && e.key === 'c') {
-[F30:266]|         if (activeTaskId) {
-[F30:267]|           const task = tasks.find(t => t.id === activeTaskId);
-[F30:268]|           if (task) {
-[F30:269]|             copyTask(task);
-[F30:270]|             toast.success(t('toast.taskCopied'));
-[F30:271]|             return;
-[F30:272]|           }
-[F30:273]|         }
-[F30:274]|         if (currentZone) {
-[F30:275]|           const zoneTasks = tasks.filter(t => t.zoneId === currentZone.id);
-[F30:276]|           if (zoneTasks.length > 0) {
-[F30:277]|             copyZone(currentZone, zoneTasks);
-[F30:278]|             toast.success(t('toast.zoneCopied', { name: currentZone.name }));
-[F30:279]|           }
-[F30:280]|         }
-[F30:281]|       }
-[F30:282]| 
-[F30:283]|       if (e.ctrlKey && e.key === 'v') {
-[F30:284]|         if (hasZone && currentZone) {
-[F30:285]|           const result = pasteZone(zones);
-[F30:286]|           if (result) {
-[F30:287]|             // 直接更新 store
-[F30:288]|             result.zone.id = `zone-${Date.now()}`;
-[F30:289]|             addZone(result.zone.name || t('common.unnamed'), result.zone.color);
-[F30:290]|             const newTasks = result.tasks.map(t => ({ ...t, id: `task-${Date.now()}-${Math.random()}`, zoneId: result.zone.id }));
-[F30:291]|             newTasks.forEach(t => {
-[F30:292]|               useAppStore.getState().addTask(t.zoneId, t.title, t.description, t.priority, t.urgency, t.deadline || null, t.deadlineType || 'none', t.parentId);
-[F30:293]|             });
-[F30:294]|             toast.success(t('toast.zonePasted', { name: result.zone.name || t('common.unnamed') }));
-[F30:295]|           }
-[F30:296]|         } else if (hasTask && currentZone) {
-[F30:297]|           const newTask = pasteTask(currentZone.id);
-[F30:298]|           if (newTask) {
-[F30:299]|             let targetZoneId = currentZone.id;
-[F30:300]|             let parentId: string | null = null;
-[F30:301]| 
-[F30:302]|             if (currentView === 'global') {
-[F30:303]|               // 1. 全局模式下：无视当前的聚焦路径，直接粘贴在被复制者的同一层级
-[F30:304]|               parentId = getOriginalParentId();
-[F30:305]|               if (parentId) {
-[F30:306]|                 const parentTask = tasks.find(t => t.id === parentId);
-[F30:307]|                 if (parentTask) {
-[F30:308]|                   targetZoneId = parentTask.zoneId;
-[F30:309]|                 }
-[F30:310]|               }
-[F30:311]|             } else if (focusedTaskId) {
-[F30:312]|               // 2. 分区模式且有聚焦（面包屑路径）：粘贴为当前所处路径（文件夹）的子任务，与选中的 activeTaskId 无关
-[F30:313]|               const focusedTask = tasks.find(t => t.id === focusedTaskId);
-[F30:314]|               if (focusedTask) {
-[F30:315]|                 parentId = focusedTaskId;
-[F30:316]|                 targetZoneId = focusedTask.zoneId;
-[F30:317]|               }
-[F30:318]|             } else {
-[F30:319]|               // 3. 普通分区视图，无聚焦：粘贴为根级任务
-[F30:320]|               parentId = null;
-[F30:321]|             }
-[F30:322]| 
-[F30:323]|             useAppStore.getState().addTask(
-[F30:324]|               targetZoneId,
-[F30:325]|               newTask.title,
-[F30:326]|               newTask.description,
-[F30:327]|               newTask.priority,
-[F30:328]|               newTask.urgency,
-[F30:329]|               newTask.deadline || null,
-[F30:330]|               newTask.deadlineType || 'none',
-[F30:331]|               parentId
-[F30:332]|             );
-[F30:333]|             toast.success(parentId ? t('toast.subtaskPasted') : t('toast.taskPasted'));
-[F30:334]|           }
-[F30:335]|         }
-[F30:336]|       }
-[F30:337]| 
-[F30:338]|       // Delete 键删除选中的任务
-[F30:339]|       if (e.key === 'Delete' && activeTaskId) {
-[F30:340]|         const task = tasks.find(t => t.id === activeTaskId);
-[F30:341]|         if (task) {
-[F30:342]|           deleteTask(activeTaskId);
-[F30:343]|           toast.success(t('toast.taskDeleted'));
-[F30:344]|           setActiveTaskId(null);
-[F30:345]|         }
-[F30:346]|       }
-[F30:347]|     };
-[F30:348]| 
-[F30:349]|     window.addEventListener('keydown', handleKeyDown);
-[F30:350]|     return () => window.removeEventListener('keydown', handleKeyDown);
-[F30:351]|   }, [activeTaskId, tasks, zones, getZoneById, activeZoneId, focusedTaskId, currentView, copyTask, copyZone, pasteTask, pasteZone, getOriginalParentId, hasTask, hasZone, addZone, deleteTask]);
-[F30:352]| 
-[F30:353]|   const handleStartTimer = useCallback(() => {
-[F30:354]|     const incompleteTasksList = tasks.filter((t) => !t.completed);
-[F30:355]|     if (incompleteTasksList.length > 0 && !activeTaskId) {
-[F30:356]|       setActiveTaskId(incompleteTasksList[0].id);
-[F30:357]|       timer.start('work', incompleteTasksList[0].id);
-[F30:358]|     } else {
-[F30:359]|       timer.start('work', activeTaskId);
-[F30:360]|     }
-[F30:361]|   }, [timer, tasks, activeTaskId]);
-[F30:362]| 
-[F30:363]|   const handleSelectTask = useCallback((taskId: string) => {
-[F30:364]|     setActiveTaskId(taskId);
-[F30:365]|     if (timer.mode === 'idle') {
-[F30:366]|       const task = tasks.find(t => t.id === taskId);
-[F30:367]|       toast.info(t('toast.taskSelected'), {
-[F30:368]|         description: task ? t('toast.clickToStartTimer', { title: task.title }) : t('toast.clickToStart'),
-[F30:369]|       });
-[F30:370]|     }
-[F30:371]|   }, [timer.mode, tasks, t]);
-[F30:372]| 
-[F30:373]|   // 窗口尺寸常量
-[F30:374]|   const NORMAL_SIZE = { width: 750, height: 650 };
-[F30:375]|   const COLLAPSED_SIZE = { width: 280, height: 40 };
-[F30:376]| 
-[F30:377]|   const handleToggleCollapse = useCallback(async () => {
-[F30:378]|     const willCollapse = !settings.collapsed;
-[F30:379]| 
-[F30:380]|     try {
-[F30:381]|       const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
-[F30:382]|       const win = getCurrentWindow();
-[F30:383]| 
-[F30:384]|       if (willCollapse) {
-[F30:385]|         await win.setSize(new LogicalSize(COLLAPSED_SIZE.width, COLLAPSED_SIZE.height));
-[F30:386]|       } else {
-[F30:387]|         await win.setSize(new LogicalSize(NORMAL_SIZE.width, NORMAL_SIZE.height));
-[F30:388]|         await win.setFocus();
-[F30:389]|       }
-[F30:390]|     } catch (e) {
-[F30:391]|       console.error('调整窗口大小失败:', e);
-[F30:392]|     }
-[F30:393]| 
-[F30:394]|     updateSettings({ collapsed: willCollapse });
-[F30:395]|   }, [settings.collapsed, updateSettings]);
-[F30:396]| 
-[F30:397]|   const handleArchiveCurrent = useCallback((name: string, summary: string) => {
-[F30:398]|     const id = archiveCurrentWorkspace(name, summary);
-[F30:399]|     toast.success(t('toast.archived'), {
-[F30:400]|       description: t('toast.archiveSuccessDesc', { name }),
-[F30:401]|     });
-[F30:402]|     return id;
-[F30:403]|   }, [archiveCurrentWorkspace, t]);
+[F30:251]|       // Ctrl+Shift+Z 或 Ctrl+Y 重做
+[F30:252]|       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+[F30:253]|         e.preventDefault();
+[F30:254]|         redo();
+[F30:255]|         toast.info(t('toast.redo'));
+[F30:256]|         return;
+[F30:257]|       }
+[F30:258]| 
+[F30:259]|       // 尝试获取当前操作的区域上下文
+[F30:260]|       let currentZone = getZoneById(activeZoneId || '') || null;
+[F30:261]| 
+[F30:262]|       // 如果没有选中分区，尝试通过"选中任务"或"当前聚焦的任务"来推断分区
+[F30:263]|       if (!currentZone) {
+[F30:264]|         const contextTaskId = activeTaskId || focusedTaskId;
+[F30:265]|         if (contextTaskId) {
+[F30:266]|           const contextTask = tasks.find(t => t.id === contextTaskId);
+[F30:267]|           if (contextTask) {
+[F30:268]|             currentZone = getZoneById(contextTask.zoneId) || null;
+[F30:269]|           }
+[F30:270]|         }
+[F30:271]|       }
+[F30:272]| 
+[F30:273]|       if (e.ctrlKey && e.key === 'c') {
+[F30:274]|         if (activeTaskId) {
+[F30:275]|           const task = tasks.find(t => t.id === activeTaskId);
+[F30:276]|           if (task) {
+[F30:277]|             copyTask(task);
+[F30:278]|             toast.success(t('toast.taskCopied'));
+[F30:279]|             return;
+[F30:280]|           }
+[F30:281]|         }
+[F30:282]|         if (currentZone) {
+[F30:283]|           const zoneTasks = tasks.filter(t => t.zoneId === currentZone.id);
+[F30:284]|           if (zoneTasks.length > 0) {
+[F30:285]|             copyZone(currentZone, zoneTasks);
+[F30:286]|             toast.success(t('toast.zoneCopied', { name: currentZone.name }));
+[F30:287]|           }
+[F30:288]|         }
+[F30:289]|       }
+[F30:290]| 
+[F30:291]|       if (e.ctrlKey && e.key === 'v') {
+[F30:292]|         if (hasZone && currentZone) {
+[F30:293]|           const result = pasteZone(zones);
+[F30:294]|           if (result) {
+[F30:295]|             // 直接更新 store
+[F30:296]|             result.zone.id = `zone-${Date.now()}`;
+[F30:297]|             addZone(result.zone.name || t('common.unnamed'), result.zone.color);
+[F30:298]|             const newTasks = result.tasks.map(t => ({ ...t, id: `task-${Date.now()}-${Math.random()}`, zoneId: result.zone.id }));
+[F30:299]|             newTasks.forEach(t => {
+[F30:300]|               useAppStore.getState().addTask(t.zoneId, t.title, t.description, t.priority, t.urgency, t.deadline || null, t.deadlineType || 'none', t.parentId);
+[F30:301]|             });
+[F30:302]|             toast.success(t('toast.zonePasted', { name: result.zone.name || t('common.unnamed') }));
+[F30:303]|           }
+[F30:304]|         } else if (hasTask && currentZone) {
+[F30:305]|           const newTask = pasteTask(currentZone.id);
+[F30:306]|           if (newTask) {
+[F30:307]|             let targetZoneId = currentZone.id;
+[F30:308]|             let parentId: string | null = null;
+[F30:309]| 
+[F30:310]|             if (currentView === 'global') {
+[F30:311]|               // 1. 全局模式下：无视当前的聚焦路径，直接粘贴在被复制者的同一层级
+[F30:312]|               parentId = getOriginalParentId();
+[F30:313]|               if (parentId) {
+[F30:314]|                 const parentTask = tasks.find(t => t.id === parentId);
+[F30:315]|                 if (parentTask) {
+[F30:316]|                   targetZoneId = parentTask.zoneId;
+[F30:317]|                 }
+[F30:318]|               }
+[F30:319]|             } else if (focusedTaskId) {
+[F30:320]|               // 2. 分区模式且有聚焦（面包屑路径）：粘贴为当前所处路径（文件夹）的子任务，与选中的 activeTaskId 无关
+[F30:321]|               const focusedTask = tasks.find(t => t.id === focusedTaskId);
+[F30:322]|               if (focusedTask) {
+[F30:323]|                 parentId = focusedTaskId;
+[F30:324]|                 targetZoneId = focusedTask.zoneId;
+[F30:325]|               }
+[F30:326]|             } else {
+[F30:327]|               // 3. 普通分区视图，无聚焦：粘贴为根级任务
+[F30:328]|               parentId = null;
+[F30:329]|             }
+[F30:330]| 
+[F30:331]|             useAppStore.getState().addTask(
+[F30:332]|               targetZoneId,
+[F30:333]|               newTask.title,
+[F30:334]|               newTask.description,
+[F30:335]|               newTask.priority,
+[F30:336]|               newTask.urgency,
+[F30:337]|               newTask.deadline || null,
+[F30:338]|               newTask.deadlineType || 'none',
+[F30:339]|               parentId
+[F30:340]|             );
+[F30:341]|             toast.success(parentId ? t('toast.subtaskPasted') : t('toast.taskPasted'));
+[F30:342]|           }
+[F30:343]|         }
+[F30:344]|       }
+[F30:345]| 
+[F30:346]|       // Delete 键删除选中的任务
+[F30:347]|       if (e.key === 'Delete' && activeTaskId) {
+[F30:348]|         const task = tasks.find(t => t.id === activeTaskId);
+[F30:349]|         if (task) {
+[F30:350]|           deleteTask(activeTaskId);
+[F30:351]|           toast.success(t('toast.taskDeleted'));
+[F30:352]|           setActiveTaskId(null);
+[F30:353]|         }
+[F30:354]|       }
+[F30:355]|     };
+[F30:356]| 
+[F30:357]|     window.addEventListener('keydown', handleKeyDown);
+[F30:358]|     return () => window.removeEventListener('keydown', handleKeyDown);
+[F30:359]|   }, [activeTaskId, tasks, zones, getZoneById, activeZoneId, focusedTaskId, currentView, copyTask, copyZone, pasteTask, pasteZone, getOriginalParentId, hasTask, hasZone, addZone, deleteTask]);
+[F30:360]| 
+[F30:361]|   const handleStartTimer = useCallback(() => {
+[F30:362]|     const incompleteTasksList = tasks.filter((t) => !t.completed);
+[F30:363]|     if (incompleteTasksList.length > 0 && !activeTaskId) {
+[F30:364]|       setActiveTaskId(incompleteTasksList[0].id);
+[F30:365]|       timer.start('work', incompleteTasksList[0].id);
+[F30:366]|     } else {
+[F30:367]|       timer.start('work', activeTaskId);
+[F30:368]|     }
+[F30:369]|   }, [timer, tasks, activeTaskId]);
+[F30:370]| 
+[F30:371]|   const handleSelectTask = useCallback((taskId: string) => {
+[F30:372]|     setActiveTaskId(taskId);
+[F30:373]|     if (timer.mode === 'idle') {
+[F30:374]|       const task = tasks.find(t => t.id === taskId);
+[F30:375]|       toast.info(t('toast.taskSelected'), {
+[F30:376]|         description: task ? t('toast.clickToStartTimer', { title: task.title }) : t('toast.clickToStart'),
+[F30:377]|       });
+[F30:378]|     }
+[F30:379]|   }, [timer.mode, tasks, t]);
+[F30:380]| 
+[F30:381]|   // 窗口尺寸常量
+[F30:382]|   const NORMAL_SIZE = { width: 750, height: 650 };
+[F30:383]|   const COLLAPSED_SIZE = { width: 280, height: 40 };
+[F30:384]| 
+[F30:385]|   const handleToggleCollapse = useCallback(async () => {
+[F30:386]|     const willCollapse = !settings.collapsed;
+[F30:387]| 
+[F30:388]|     try {
+[F30:389]|       const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
+[F30:390]|       const win = getCurrentWindow();
+[F30:391]| 
+[F30:392]|       if (willCollapse) {
+[F30:393]|         await win.setSize(new LogicalSize(COLLAPSED_SIZE.width, COLLAPSED_SIZE.height));
+[F30:394]|       } else {
+[F30:395]|         await win.setSize(new LogicalSize(NORMAL_SIZE.width, NORMAL_SIZE.height));
+[F30:396]|         await win.setFocus();
+[F30:397]|       }
+[F30:398]|     } catch (e) {
+[F30:399]|       console.error('调整窗口大小失败:', e);
+[F30:400]|     }
+[F30:401]| 
+[F30:402]|     updateSettings({ collapsed: willCollapse });
+[F30:403]|   }, [settings.collapsed, updateSettings]);
 [F30:404]| 
-[F30:405]|   const handleCreateNewWorkspace = useCallback((name?: string, templateId?: string) => {
-[F30:406]|     createNewWorkspace(name, templateId);
-[F30:407]|     if (templateId) {
-[F30:408]|       toast.success(t('toast.workspaceCreatedTemplate'));
-[F30:409]|     } else {
-[F30:410]|       toast.success(t('toast.workspaceCreatedBlank'));
-[F30:411]|     }
-[F30:412]|   }, [createNewWorkspace, t]);
-[F30:413]| 
-[F30:414]|   const handleRestoreFromHistory = useCallback((historyId: string) => {
-[F30:415]|     restoreFromHistory(historyId);
-[F30:416]|     toast.success(t('messages.workspaceRestored'));
-[F30:417]|   }, [restoreFromHistory]);
-[F30:418]| 
-[F30:419]|   // Update timer when active task changes
-[F30:420]|   useEffect(() => {
-[F30:421]|     if (timer.currentTaskId && timer.currentTaskId !== activeTaskId) {
-[F30:422]|       setActiveTaskId(timer.currentTaskId);
-[F30:423]|     }
-[F30:424]|   }, [timer.currentTaskId, activeTaskId]);
-[F30:425]| 
-[F30:426]|   // 自动保存历史
-[F30:427]|   useEffect(() => {
-[F30:428]|     if (!settings.autoSaveEnabled) return;
-[F30:429]| 
-[F30:430]|     const interval = settings.autoSaveInterval * 1000; // 转换为毫秒
-[F30:431]|     const intervalId = setInterval(() => {
-[F30:432]|       if (hasUnsavedChanges()) {
-[F30:433]|         autoSaveSnapshot();
-[F30:434]|         toast.success(t('toast.autoSaved'));
-[F30:435]|       }
-[F30:436]|     }, interval);
+[F30:405]|   const handleArchiveCurrent = useCallback((name: string, summary: string) => {
+[F30:406]|     const id = archiveCurrentWorkspace(name, summary);
+[F30:407]|     toast.success(t('toast.archived'), {
+[F30:408]|       description: t('toast.archiveSuccessDesc', { name }),
+[F30:409]|     });
+[F30:410]|     return id;
+[F30:411]|   }, [archiveCurrentWorkspace, t]);
+[F30:412]| 
+[F30:413]|   const handleCreateNewWorkspace = useCallback((name?: string, templateId?: string) => {
+[F30:414]|     createNewWorkspace(name, templateId);
+[F30:415]|     if (templateId) {
+[F30:416]|       toast.success(t('toast.workspaceCreatedTemplate'));
+[F30:417]|     } else {
+[F30:418]|       toast.success(t('toast.workspaceCreatedBlank'));
+[F30:419]|     }
+[F30:420]|   }, [createNewWorkspace, t]);
+[F30:421]| 
+[F30:422]|   const handleRestoreFromHistory = useCallback((historyId: string) => {
+[F30:423]|     restoreFromHistory(historyId);
+[F30:424]|     toast.success(t('messages.workspaceRestored'));
+[F30:425]|   }, [restoreFromHistory]);
+[F30:426]| 
+[F30:427]|   // Update timer when active task changes
+[F30:428]|   useEffect(() => {
+[F30:429]|     if (timer.currentTaskId && timer.currentTaskId !== activeTaskId) {
+[F30:430]|       setActiveTaskId(timer.currentTaskId);
+[F30:431]|     }
+[F30:432]|   }, [timer.currentTaskId, activeTaskId]);
+[F30:433]| 
+[F30:434]|   // 自动保存历史
+[F30:435]|   useEffect(() => {
+[F30:436]|     if (!settings.autoSaveEnabled) return;
 [F30:437]| 
-[F30:438]|     return () => clearInterval(intervalId);
-[F30:439]|   }, [settings.autoSaveEnabled, settings.autoSaveInterval, hasUnsavedChanges, autoSaveSnapshot, t]);
-[F30:440]| 
-[F30:441]|   // 定时任务心跳 - 每分钟检查一次
-[F30:442]|   useEffect(() => {
-[F30:443]|     // 首次加载检查一次
-[F30:444]|     checkRecurringTasks();
+[F30:438]|     const interval = settings.autoSaveInterval * 1000; // 转换为毫秒
+[F30:439]|     const intervalId = setInterval(() => {
+[F30:440]|       if (hasUnsavedChanges()) {
+[F30:441]|         autoSaveSnapshot();
+[F30:442]|         toast.success(t('toast.autoSaved'));
+[F30:443]|       }
+[F30:444]|     }, interval);
 [F30:445]| 
-[F30:446]|     const interval = setInterval(() => {
-[F30:447]|       checkRecurringTasks();
-[F30:448]|     }, 60000); // 60秒
-[F30:449]| 
-[F30:450]|     return () => clearInterval(interval);
-[F30:451]|   }, [checkRecurringTasks]);
-[F30:452]| 
-[F30:453]|   // Loading state
-[F30:454]|   const [isLoaded, setIsLoaded] = useState(false);
-[F30:455]|   useEffect(() => {
-[F30:456]|     // 短暂延迟确保 store 已初始化
-[F30:457]|     const timer = setTimeout(() => setIsLoaded(true), 100);
-[F30:458]|     return () => clearTimeout(timer);
-[F30:459]|   }, []);
+[F30:446]|     return () => clearInterval(intervalId);
+[F30:447]|   }, [settings.autoSaveEnabled, settings.autoSaveInterval, hasUnsavedChanges, autoSaveSnapshot, t]);
+[F30:448]| 
+[F30:449]|   // 定时任务心跳 - 每分钟检查一次
+[F30:450]|   useEffect(() => {
+[F30:451]|     // 首次加载检查一次
+[F30:452]|     checkRecurringTasks();
+[F30:453]| 
+[F30:454]|     const interval = setInterval(() => {
+[F30:455]|       checkRecurringTasks();
+[F30:456]|     }, 60000); // 60秒
+[F30:457]| 
+[F30:458]|     return () => clearInterval(interval);
+[F30:459]|   }, [checkRecurringTasks]);
 [F30:460]| 
-[F30:461]|   if (!isLoaded) {
-[F30:462]|     return (
-[F30:463]|       <div className="loading-screen">
-[F30:464]|         <div className="loading-spinner" />
-[F30:465]|         <span>{t('common.loading')}</span>
-[F30:466]|       </div>
-[F30:467]|     );
-[F30:468]|   }
-[F30:469]| 
-[F30:470]|   // 悬浮条模式
-[F30:471]|   if (settings.collapsed) {
-[F30:472]|     const activeTask = tasks.find(t => t.id === activeTaskId);
-[F30:473]|     const stats = getStats();
-[F30:474]| 
-[F30:475]|     return (
-[F30:476]|       <>
-[F30:477]|         <CollapseButton
-[F30:478]|           pendingTasks={stats.pending}
-[F30:479]|           isTimerRunning={timer.isRunning}
-[F30:480]|           timerMode={timer.mode}
-[F30:481]|           formattedTime={timer.formattedTime}
-[F30:482]|           activeTaskId={activeTaskId}
-[F30:483]|           taskTitle={activeTask?.title || t('timer.noTaskSelected')}
-[F30:484]|           progress={timer.progress}
-[F30:485]|           onStart={() => timer.start('work', activeTaskId)}
-[F30:486]|           onPause={timer.pause}
-[F30:487]|           onResume={timer.resume}
-[F30:488]|           onExpand={handleToggleCollapse}
-[F30:489]|         />
-[F30:490]|         <Toaster position="top-center" />
-[F30:491]|       </>
-[F30:492]|     );
-[F30:493]|   }
-[F30:494]| 
-[F30:495]|   const activeZone = getZoneById(activeZoneId || '') || null;
-[F30:496]|   const currentZoneTasks = activeZone ? getTasksByZone(activeZone.id) : [];
-[F30:497]| 
-[F30:498]|   return (
-[F30:499]|     <>
-[F30:500]|       <FloatWindow onCollapse={handleToggleCollapse}>
-[F30:501]|         <div className="app-container">
-[F30:502]|           {/* Timer Section */}
-[F30:503]|           <PomodoroTimer
-[F30:504]|             mode={timer.mode}
-[F30:505]|             formattedTime={timer.formattedTime}
-[F30:506]|             timeRemaining={timer.timeRemaining}
-[F30:507]|             isRunning={timer.isRunning}
-[F30:508]|             progress={timer.progress}
-[F30:509]|             completedSessions={timer.completedSessions}
-[F30:510]|             workDuration={settings.workDuration}
-[F30:511]|             breakDuration={settings.breakDuration}
-[F30:512]|             longBreakDuration={settings.longBreakDuration}
-[F30:513]|             onStart={handleStartTimer}
-[F30:514]|             onPause={timer.pause}
-[F30:515]|             onResume={timer.resume}
-[F30:516]|             onStop={timer.stop}
-[F30:517]|             onSkip={timer.skip}
-[F30:518]|             onUpdateTime={(seconds, mode) => {
-[F30:519]|               if (mode === 'work') {
-[F30:520]|                 updateSettings({ workDuration: seconds });
-[F30:521]|               } else if (mode === 'break') {
-[F30:522]|                 updateSettings({ breakDuration: seconds });
-[F30:523]|               } else if (mode === 'longBreak') {
-[F30:524]|                 updateSettings({ longBreakDuration: seconds });
-[F30:525]|               }
-[F30:526]|               timer.updateTime(seconds);
-[F30:527]|             }}
-[F30:528]|             onSetMode={(newMode) => {
-[F30:529]|               timer.setMode(newMode);
-[F30:530]|             }}
-[F30:531]|           />
-[F30:532]| 
-[F30:533]|           {/* Divider */}
-[F30:534]|           <div className="section-divider" />
-[F30:535]| 
-[F30:536]|           {/* Main Content */}
-[F30:537]|           <ResizablePanelGroup direction="horizontal" className="main-content">
-[F30:538]|             <ResizablePanel defaultSize="40%" minSize="5%" maxSize="95%">
-[F30:539]|               <ZoneManager
-[F30:540]|                 zones={zones}
-[F30:541]|                 activeZoneId={activeZoneId}
-[F30:542]|                 templates={PREDEFINED_TEMPLATES}
-[F30:543]|                 customTemplates={customTemplates}
-[F30:544]|                 onSelectZone={(zoneId) => {
-[F30:545]|                   setActiveZoneId(zoneId);
-[F30:546]|                   setCurrentView(zoneId === null ? 'global' : 'zones');
-[F30:547]|                 }}
-[F30:548]|                 onAddZone={addZone}
-[F30:549]|                 onUpdateZone={useAppStore.getState().updateZone}
-[F30:550]|                 onDeleteZone={useAppStore.getState().deleteZone}
-[F30:551]|                 onReorderZones={useAppStore.getState().reorderZones}
-[F30:552]|                 onApplyTemplate={(templateId) => {
-[F30:553]|                   // 应用模板前先自动保存当前工作区
-[F30:554]|                   if (currentWorkspace.tasks.length > 0) {
-[F30:555]|                     archiveCurrentWorkspace();
-[F30:556]|                   }
-[F30:557]|                   useAppStore.getState().applyTemplate(templateId);
-[F30:558]|                 }}
-[F30:559]|                 onViewChange={(view) => {
-[F30:560]|                   setCurrentView(view);
-[F30:561]|                   if (view === 'global') setActiveZoneId(null);
-[F30:562]|                 }}
-[F30:563]|                 onOpenHistory={() => setCurrentView('history')}
-[F30:564]|                 onOpenSettings={() => setCurrentView('settings')}
-[F30:565]|                 onSaveAsTemplate={saveCustomTemplate}
-[F30:566]|                 onDeleteCustomTemplate={deleteCustomTemplate}
-[F30:567]|               />
-[F30:568]|             </ResizablePanel>
-[F30:569]| 
-[F30:570]|             <ResizableHandle className="resize-handle" withHandle />
-[F30:571]| 
-[F30:572]|             <ResizablePanel defaultSize="60%" minSize="5%">
-[F30:573]|               <div className="content-area">
-[F30:574]|                 {currentView === 'history' ? (
-[F30:575]|                   <HistoryManager
-[F30:576]|                     historyWorkspaces={historyWorkspaces}
-[F30:577]|                     templates={PREDEFINED_TEMPLATES}
-[F30:578]|                     currentSourceHistoryId={currentWorkspace.sourceHistoryId}
-[F30:579]|                     hasUnsavedChanges={hasUnsavedChanges}
-[F30:580]|                     onBack={() => setCurrentView('zones')}
-[F30:581]|                     onRestore={handleRestoreFromHistory}
-[F30:582]|                     onDelete={deleteHistoryWorkspace}
-[F30:583]|                     onRename={renameHistoryWorkspace}
-[F30:584]|                     onUpdateSummary={updateHistorySummary}
-[F30:585]|                     onCreateNewWorkspace={handleCreateNewWorkspace}
-[F30:586]|                     onArchiveCurrent={handleArchiveCurrent}
-[F30:587]|                     onQuickArchive={quickArchiveCurrentWorkspace}
-[F30:588]|                     onOverwriteHistory={overwriteHistoryWorkspace}
-[F30:589]|                     onExportHistory={exportHistoryToJson}
-[F30:590]|                     onExportAllHistory={exportAllHistoryToJson}
-[F30:591]|                     onImportHistory={importHistoryFromJson}
-[F30:592]|                     onImportAllHistory={importAllHistoryFromJson}
-[F30:593]|                     customTemplates={customTemplates}
-[F30:594]|                     onSaveCustomTemplate={saveCustomTemplate}
-[F30:595]|                     onDeleteCustomTemplate={deleteCustomTemplate}
-[F30:596]|                   />
-[F30:597]|                 ) : currentView === 'settings' ? (
-[F30:598]|                   <SettingsPanel
-[F30:599]|                     settings={settings}
-[F30:600]|                     zones={zones}
-[F30:601]|                     recurringTemplates={recurringTemplates}
-[F30:602]|                     onAddRecurringTemplate={addRecurringTemplate}
-[F30:603]|                     onUpdateRecurringTemplate={updateRecurringTemplate}
-[F30:604]|                     onDeleteRecurringTemplate={deleteRecurringTemplate}
-[F30:605]|                     onBack={() => setCurrentView('zones')}
-[F30:606]|                     onUpdateSettings={updateSettings}
-[F30:607]|                     onPreviewMode={timer.setMode}
-[F30:608]|                   />
-[F30:609]|                 ) : currentView === 'global' ? (
-[F30:610]|                   <GlobalView
-[F30:611]|                     zones={zones}
-[F30:612]|                     tasks={tasks}
-[F30:613]|                     activeTaskId={activeTaskId}
-[F30:614]|                     isTimerRunning={timer.isRunning}
-[F30:615]|                     sortConfig={settings.globalViewSort}
-[F30:616]|                     isLeafMode={settings.globalViewLeafMode}
-[F30:617]|                     onLeafModeChange={(isLeaf) => updateSettings({ globalViewLeafMode: isLeaf })}
-[F30:618]|                     onBack={() => {
-[F30:619]|                       setCurrentView('zones');
-[F30:620]|                       if (zones.length > 0) {
-[F30:621]|                         setActiveZoneId(zones[0].id);
-[F30:622]|                       }
-[F30:623]|                     }}
-[F30:624]|                     onToggleTask={toggleTask}
-[F30:625]|                     onDeleteTask={deleteTask}
-[F30:626]|                     onUpdateTask={updateTask}
-[F30:627]|                     onToggleExpanded={toggleExpanded}
-[F30:628]|                     onToggleSubtasksCollapsed={toggleSubtasksCollapsed}
-[F30:629]|                     onReorderTasks={reorderTasks}
-[F30:630]|                     onSelectTask={handleSelectTask}
-[F30:631]|                     onSortConfigChange={(config) => updateSettings({ globalViewSort: config })}
-[F30:632]|                     onNavigateToZone={(zoneId, taskId) => {
-[F30:633]|                       setActiveZoneId(zoneId);
-[F30:634]|                       setFocusedTaskId(taskId);
-[F30:635]|                       setCurrentView('zones');
-[F30:636]|                     }}
-[F30:637]|                     getTotalWorkTime={getTotalWorkTime}
-[F30:638]|                     getEstimatedTime={getEstimatedTime}
-[F30:639]|                     taskComputedTimes={taskComputedTimes}
-[F30:640]|                   />
-[F30:641]|                 ) : (
-[F30:642]|                   <TaskList
-[F30:643]|                     zone={activeZone}
-[F30:644]|                     zones={zones}
-[F30:645]|                     tasks={currentZoneTasks}
-[F30:646]|                     activeTaskId={activeTaskId}
-[F30:647]|                     isTimerRunning={timer.isRunning}
-[F30:648]|                     focusedTaskId={focusedTaskId}
-[F30:649]|                     onSetFocusedTaskId={setFocusedTaskId}
-[F30:650]|                     onAddTask={useAppStore.getState().addTask}
-[F30:651]|                     onToggleTask={toggleTask}
-[F30:652]|                     onDeleteTask={deleteTask}
-[F30:653]|                     onUpdateTask={updateTask}
-[F30:654]|                     onToggleExpanded={toggleExpanded}
-[F30:655]|                     onToggleSubtasksCollapsed={toggleSubtasksCollapsed}
-[F30:656]|                     onReorderTasks={reorderTasks}
-[F30:657]|                     onSelectTask={handleSelectTask}
-[F30:658]|                     onClearCompleted={clearCompleted}
-[F30:659]|                   />
-[F30:660]|                 )}
-[F30:661]|               </div>
-[F30:662]|             </ResizablePanel>
-[F30:663]|           </ResizablePanelGroup>
-[F30:664]|         </div>
-[F30:665]|       </FloatWindow>
-[F30:666]|       <Toaster
-[F30:667]|         position="top-center"
-[F30:668]|         toastOptions={{
-[F30:669]|           style: {
-[F30:670]|             background: 'rgba(30, 30, 40, 0.95)',
-[F30:671]|             border: '1px solid rgba(255, 255, 255, 0.1)',
-[F30:672]|             color: '#fff',
-[F30:673]|           },
-[F30:674]|         }}
-[F30:675]|       />
-[F30:676]|     </>
-[F30:677]|   );
-[F30:678]| }
-[F30:679]| 
-[F30:680]| export default App;
+[F30:461]|   // Loading state
+[F30:462]|   const [isLoaded, setIsLoaded] = useState(false);
+[F30:463]|   useEffect(() => {
+[F30:464]|     // 短暂延迟确保 store 已初始化
+[F30:465]|     const timer = setTimeout(() => setIsLoaded(true), 100);
+[F30:466]|     return () => clearTimeout(timer);
+[F30:467]|   }, []);
+[F30:468]| 
+[F30:469]|   // 🚨 自动化测试检测：应用启动时检查是否需要继续测试
+[F30:470]|   useEffect(() => {
+[F30:471]|     if (isLoaded) {
+[F30:472]|       // 延迟一点确保 Zustand hydration 完成
+[F30:473]|       setTimeout(() => {
+[F30:474]|         AutoTester.checkAndRun();
+[F30:475]|       }, 500);
+[F30:476]|     }
+[F30:477]|   }, [isLoaded]);
+[F30:478]| 
+[F30:479]|   if (!isLoaded) {
+[F30:480]|     return (
+[F30:481]|       <div className="loading-screen">
+[F30:482]|         <div className="loading-spinner" />
+[F30:483]|         <span>{t('common.loading')}</span>
+[F30:484]|       </div>
+[F30:485]|     );
+[F30:486]|   }
+[F30:487]| 
+[F30:488]|   // 悬浮条模式
+[F30:489]|   if (settings.collapsed) {
+[F30:490]|     const activeTask = tasks.find(t => t.id === activeTaskId);
+[F30:491]|     const stats = getStats();
+[F30:492]| 
+[F30:493]|     return (
+[F30:494]|       <>
+[F30:495]|         <CollapseButton
+[F30:496]|           pendingTasks={stats.pending}
+[F30:497]|           isTimerRunning={timer.isRunning}
+[F30:498]|           timerMode={timer.mode}
+[F30:499]|           formattedTime={timer.formattedTime}
+[F30:500]|           activeTaskId={activeTaskId}
+[F30:501]|           taskTitle={activeTask?.title || t('timer.noTaskSelected')}
+[F30:502]|           progress={timer.progress}
+[F30:503]|           onStart={() => timer.start('work', activeTaskId)}
+[F30:504]|           onPause={timer.pause}
+[F30:505]|           onResume={timer.resume}
+[F30:506]|           onExpand={handleToggleCollapse}
+[F30:507]|         />
+[F30:508]|         <Toaster position="top-center" />
+[F30:509]|       </>
+[F30:510]|     );
+[F30:511]|   }
+[F30:512]| 
+[F30:513]|   const activeZone = getZoneById(activeZoneId || '') || null;
+[F30:514]|   const currentZoneTasks = activeZone ? getTasksByZone(activeZone.id) : [];
+[F30:515]| 
+[F30:516]|   return (
+[F30:517]|     <>
+[F30:518]|       <FloatWindow onCollapse={handleToggleCollapse}>
+[F30:519]|         <div className="app-container">
+[F30:520]|           {/* Timer Section */}
+[F30:521]|           <PomodoroTimer
+[F30:522]|             mode={timer.mode}
+[F30:523]|             formattedTime={timer.formattedTime}
+[F30:524]|             timeRemaining={timer.timeRemaining}
+[F30:525]|             isRunning={timer.isRunning}
+[F30:526]|             progress={timer.progress}
+[F30:527]|             completedSessions={timer.completedSessions}
+[F30:528]|             workDuration={settings.workDuration}
+[F30:529]|             breakDuration={settings.breakDuration}
+[F30:530]|             longBreakDuration={settings.longBreakDuration}
+[F30:531]|             onStart={handleStartTimer}
+[F30:532]|             onPause={timer.pause}
+[F30:533]|             onResume={timer.resume}
+[F30:534]|             onStop={timer.stop}
+[F30:535]|             onSkip={timer.skip}
+[F30:536]|             onUpdateTime={(seconds, mode) => {
+[F30:537]|               if (mode === 'work') {
+[F30:538]|                 updateSettings({ workDuration: seconds });
+[F30:539]|               } else if (mode === 'break') {
+[F30:540]|                 updateSettings({ breakDuration: seconds });
+[F30:541]|               } else if (mode === 'longBreak') {
+[F30:542]|                 updateSettings({ longBreakDuration: seconds });
+[F30:543]|               }
+[F30:544]|               timer.updateTime(seconds);
+[F30:545]|             }}
+[F30:546]|             onSetMode={(newMode) => {
+[F30:547]|               timer.setMode(newMode);
+[F30:548]|             }}
+[F30:549]|           />
+[F30:550]| 
+[F30:551]|           {/* Divider */}
+[F30:552]|           <div className="section-divider" />
+[F30:553]| 
+[F30:554]|           {/* Main Content */}
+[F30:555]|           <ResizablePanelGroup direction="horizontal" className="main-content">
+[F30:556]|             <ResizablePanel defaultSize="40%" minSize="5%" maxSize="95%">
+[F30:557]|               <ZoneManager
+[F30:558]|                 zones={zones}
+[F30:559]|                 activeZoneId={activeZoneId}
+[F30:560]|                 templates={PREDEFINED_TEMPLATES}
+[F30:561]|                 customTemplates={customTemplates}
+[F30:562]|                 onSelectZone={(zoneId) => {
+[F30:563]|                   setActiveZoneId(zoneId);
+[F30:564]|                   setCurrentView(zoneId === null ? 'global' : 'zones');
+[F30:565]|                 }}
+[F30:566]|                 onAddZone={addZone}
+[F30:567]|                 onUpdateZone={useAppStore.getState().updateZone}
+[F30:568]|                 onDeleteZone={useAppStore.getState().deleteZone}
+[F30:569]|                 onReorderZones={useAppStore.getState().reorderZones}
+[F30:570]|                 onApplyTemplate={(templateId) => {
+[F30:571]|                   // 应用模板前先自动保存当前工作区
+[F30:572]|                   if (currentWorkspace.tasks.length > 0) {
+[F30:573]|                     archiveCurrentWorkspace();
+[F30:574]|                   }
+[F30:575]|                   useAppStore.getState().applyTemplate(templateId);
+[F30:576]|                 }}
+[F30:577]|                 onViewChange={(view) => {
+[F30:578]|                   setCurrentView(view);
+[F30:579]|                   if (view === 'global') setActiveZoneId(null);
+[F30:580]|                 }}
+[F30:581]|                 onOpenHistory={() => setCurrentView('history')}
+[F30:582]|                 onOpenSettings={() => setCurrentView('settings')}
+[F30:583]|                 onSaveAsTemplate={saveCustomTemplate}
+[F30:584]|                 onDeleteCustomTemplate={deleteCustomTemplate}
+[F30:585]|               />
+[F30:586]|             </ResizablePanel>
+[F30:587]| 
+[F30:588]|             <ResizableHandle className="resize-handle" withHandle />
+[F30:589]| 
+[F30:590]|             <ResizablePanel defaultSize="60%" minSize="5%">
+[F30:591]|               <div className="content-area">
+[F30:592]|                 {currentView === 'history' ? (
+[F30:593]|                   <HistoryManager
+[F30:594]|                     historyWorkspaces={historyWorkspaces}
+[F30:595]|                     templates={PREDEFINED_TEMPLATES}
+[F30:596]|                     currentSourceHistoryId={currentWorkspace.sourceHistoryId}
+[F30:597]|                     hasUnsavedChanges={hasUnsavedChanges}
+[F30:598]|                     onBack={() => setCurrentView('zones')}
+[F30:599]|                     onRestore={handleRestoreFromHistory}
+[F30:600]|                     onDelete={deleteHistoryWorkspace}
+[F30:601]|                     onRename={renameHistoryWorkspace}
+[F30:602]|                     onUpdateSummary={updateHistorySummary}
+[F30:603]|                     onCreateNewWorkspace={handleCreateNewWorkspace}
+[F30:604]|                     onArchiveCurrent={handleArchiveCurrent}
+[F30:605]|                     onQuickArchive={quickArchiveCurrentWorkspace}
+[F30:606]|                     onOverwriteHistory={overwriteHistoryWorkspace}
+[F30:607]|                     onExportHistory={exportHistoryToJson}
+[F30:608]|                     onExportAllHistory={exportAllHistoryToJson}
+[F30:609]|                     onImportHistory={importHistoryFromJson}
+[F30:610]|                     onImportAllHistory={importAllHistoryFromJson}
+[F30:611]|                     customTemplates={customTemplates}
+[F30:612]|                     onSaveCustomTemplate={saveCustomTemplate}
+[F30:613]|                     onDeleteCustomTemplate={deleteCustomTemplate}
+[F30:614]|                   />
+[F30:615]|                 ) : currentView === 'settings' ? (
+[F30:616]|                   <SettingsPanel
+[F30:617]|                     settings={settings}
+[F30:618]|                     zones={zones}
+[F30:619]|                     recurringTemplates={recurringTemplates}
+[F30:620]|                     onAddRecurringTemplate={addRecurringTemplate}
+[F30:621]|                     onUpdateRecurringTemplate={updateRecurringTemplate}
+[F30:622]|                     onDeleteRecurringTemplate={deleteRecurringTemplate}
+[F30:623]|                     onBack={() => setCurrentView('zones')}
+[F30:624]|                     onUpdateSettings={updateSettings}
+[F30:625]|                     onPreviewMode={timer.setMode}
+[F30:626]|                   />
+[F30:627]|                 ) : currentView === 'global' ? (
+[F30:628]|                   <GlobalView
+[F30:629]|                     zones={zones}
+[F30:630]|                     tasks={tasks}
+[F30:631]|                     activeTaskId={activeTaskId}
+[F30:632]|                     isTimerRunning={timer.isRunning}
+[F30:633]|                     sortConfig={settings.globalViewSort}
+[F30:634]|                     isLeafMode={settings.globalViewLeafMode}
+[F30:635]|                     onLeafModeChange={(isLeaf) => updateSettings({ globalViewLeafMode: isLeaf })}
+[F30:636]|                     onBack={() => {
+[F30:637]|                       setCurrentView('zones');
+[F30:638]|                       if (zones.length > 0) {
+[F30:639]|                         setActiveZoneId(zones[0].id);
+[F30:640]|                       }
+[F30:641]|                     }}
+[F30:642]|                     onToggleTask={toggleTask}
+[F30:643]|                     onDeleteTask={deleteTask}
+[F30:644]|                     onUpdateTask={updateTask}
+[F30:645]|                     onToggleExpanded={toggleExpanded}
+[F30:646]|                     onToggleSubtasksCollapsed={toggleSubtasksCollapsed}
+[F30:647]|                     onReorderTasks={reorderTasks}
+[F30:648]|                     onSelectTask={handleSelectTask}
+[F30:649]|                     onSortConfigChange={(config) => updateSettings({ globalViewSort: config })}
+[F30:650]|                     onNavigateToZone={(zoneId, taskId) => {
+[F30:651]|                       setActiveZoneId(zoneId);
+[F30:652]|                       setFocusedTaskId(taskId);
+[F30:653]|                       setCurrentView('zones');
+[F30:654]|                     }}
+[F30:655]|                     getTotalWorkTime={getTotalWorkTime}
+[F30:656]|                     getEstimatedTime={getEstimatedTime}
+[F30:657]|                     taskComputedTimes={taskComputedTimes}
+[F30:658]|                   />
+[F30:659]|                 ) : (
+[F30:660]|                   <TaskList
+[F30:661]|                     zone={activeZone}
+[F30:662]|                     zones={zones}
+[F30:663]|                     tasks={currentZoneTasks}
+[F30:664]|                     activeTaskId={activeTaskId}
+[F30:665]|                     isTimerRunning={timer.isRunning}
+[F30:666]|                     focusedTaskId={focusedTaskId}
+[F30:667]|                     onSetFocusedTaskId={setFocusedTaskId}
+[F30:668]|                     onAddTask={useAppStore.getState().addTask}
+[F30:669]|                     onToggleTask={toggleTask}
+[F30:670]|                     onDeleteTask={deleteTask}
+[F30:671]|                     onUpdateTask={updateTask}
+[F30:672]|                     onToggleExpanded={toggleExpanded}
+[F30:673]|                     onToggleSubtasksCollapsed={toggleSubtasksCollapsed}
+[F30:674]|                     onReorderTasks={reorderTasks}
+[F30:675]|                     onSelectTask={handleSelectTask}
+[F30:676]|                     onClearCompleted={clearCompleted}
+[F30:677]|                   />
+[F30:678]|                 )}
+[F30:679]|               </div>
+[F30:680]|             </ResizablePanel>
+[F30:681]|           </ResizablePanelGroup>
+[F30:682]|         </div>
+[F30:683]|       </FloatWindow>
+[F30:684]|       <Toaster
+[F30:685]|         position="top-center"
+[F30:686]|         toastOptions={{
+[F30:687]|           style: {
+[F30:688]|             background: 'rgba(30, 30, 40, 0.95)',
+[F30:689]|             border: '1px solid rgba(255, 255, 255, 0.1)',
+[F30:690]|             color: '#fff',
+[F30:691]|           },
+[F30:692]|         }}
+[F30:693]|       />
+[F30:694]|     </>
+[F30:695]|   );
+[F30:696]| }
+[F30:697]| 
+[F30:698]| export default App;
 
 ================================================================================
 文件路径: src\index.css(F31) (约合大小: 4 KB)
@@ -8347,904 +8374,910 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F39:14]| import { writeTextFile, readTextFile } from '@tauri-apps/plugin-fs';
 [F39:15]| import { toast } from 'sonner';
 [F39:16]| import { getDbPath, changeDbPath } from '@/lib/db';
-[F39:17]| 
-[F39:18]| interface SettingsPanelProps {
-[F39:19]|   settings: AppState['settings'];
-[F39:20]|   zones: Zone[];
-[F39:21]|   recurringTemplates: RecurringTemplate[];
-[F39:22]|   onAddRecurringTemplate: (template: Omit<RecurringTemplate, 'id' | 'lastTriggeredAt'>) => void;
-[F39:23]|   onUpdateRecurringTemplate: (id: string, updates: Partial<RecurringTemplate>) => void;
-[F39:24]|   onDeleteRecurringTemplate: (id: string) => void;
-[F39:25]|   onBack: () => void;
-[F39:26]|   onUpdateSettings: (settings: Partial<AppState['settings']>) => void;
-[F39:27]|   onPreviewMode?: (mode: TimerMode) => void;
-[F39:28]| }
-[F39:29]| 
-[F39:30]| export function SettingsPanel({
-[F39:31]|   settings,
-[F39:32]|   zones,
-[F39:33]|   recurringTemplates,
-[F39:34]|   onAddRecurringTemplate,
-[F39:35]|   onUpdateRecurringTemplate,
-[F39:36]|   onDeleteRecurringTemplate,
-[F39:37]|   onBack,
-[F39:38]|   onUpdateSettings,
-[F39:39]|   onPreviewMode,
-[F39:40]| }: SettingsPanelProps) {
-[F39:41]|   const { t, i18n } = useTranslation();
-[F39:42]|   const [workMinutes, setWorkMinutes] = useState(Math.floor(settings.workDuration / 60));
-[F39:43]|   const [breakMinutes, setBreakMinutes] = useState(Math.floor(settings.breakDuration / 60));
-[F39:44]|   const [longBreakMinutes, setLongBreakMinutes] = useState(Math.floor(settings.longBreakDuration / 60));
-[F39:45]|   const [priorityWeight, setPriorityWeight] = useState(settings.globalViewSort.priorityWeight * 100);
-[F39:46]|   const [autoSaveInterval, setAutoSaveInterval] = useState(settings.autoSaveInterval || 60);
-[F39:47]|   // deadlineWeight 由 priorityWeight 计算得出，保证两者之和为 100
-[F39:48]|   const deadlineWeight = useMemo(() => 100 - priorityWeight, [priorityWeight]);
-[F39:49]| 
-[F39:50]|   // 数据存储路径相关状态
-[F39:51]|   const [currentDbPath, setCurrentDbPath] = useState<string>('');
-[F39:52]| 
-[F39:53]|   // 定时任务配置弹窗状态
-[F39:54]|   const [showRecurringDialog, setShowRecurringDialog] = useState(false);
-[F39:55]|   const [editingTemplate, setEditingTemplate] = useState<RecurringTemplate | null>(null);
-[F39:56]|   const [recTitle, setRecTitle] = useState('');
-[F39:57]|   const [recDesc, setRecDesc] = useState('');
-[F39:58]|   const [recZoneId, setRecZoneId] = useState('');
-[F39:59]|   const [recPriority, setRecPriority] = useState<TaskPriority>('medium');
-[F39:60]|   const [recIntervalValue, setRecIntervalValue] = useState(1);
-[F39:61]|   const [recIntervalUnit, setRecIntervalUnit] = useState<'minutes' | 'hours' | 'days'>('days');
-[F39:62]|   const [recDeadlineValue, setRecDeadlineValue] = useState(2);
-[F39:63]|   const [recDeadlineUnit, setRecDeadlineUnit] = useState<'hours' | 'days'>('days');
-[F39:64]| 
-[F39:65]|   // 配置快照相关状态
-[F39:66]|   const { configProfiles, saveConfigProfile, applyConfigProfile, deleteConfigProfile, updateConfigProfile, importConfigProfile } = useAppStore();
-[F39:67]|   const [showSaveProfileDialog, setShowSaveProfileDialog] = useState(false);
-[F39:68]|   const [profileName, setProfileName] = useState('');
-[F39:69]|   const [editingProfile, setEditingProfile] = useState<ConfigProfile | null>(null);
-[F39:70]|   const [editingProfileName, setEditingProfileName] = useState('');
-[F39:71]| 
-[F39:72]|   // 加载当前数据库路径
-[F39:73]|   useEffect(() => {
-[F39:74]|     getDbPath()
-[F39:75]|       .then(path => setCurrentDbPath(path))
-[F39:76]|       .catch(err => {
-[F39:77]|         console.error('获取路径失败:', err);
-[F39:78]|         setCurrentDbPath('获取路径失败，使用默认相对路径');
-[F39:79]|       });
-[F39:80]|   }, []);
-[F39:81]| 
-[F39:82]|   // 初始化默认分区
-[F39:83]|   useEffect(() => {
-[F39:84]|     if (zones.length > 0 && !recZoneId) {
-[F39:85]|       setRecZoneId(zones[0].id);
-[F39:86]|     }
-[F39:87]|   }, [zones, recZoneId]);
-[F39:88]| 
-[F39:89]|   // 同步语言设置
-[F39:90]|   useEffect(() => {
-[F39:91]|     if (settings.language && settings.language !== i18n.language) {
-[F39:92]|       i18n.changeLanguage(settings.language);
-[F39:93]|     }
-[F39:94]|   }, [settings.language, i18n]);
-[F39:95]| 
-[F39:96]|   // 更改数据库路径
-[F39:97]|   const handleChangeDbPath = async () => {
-[F39:98]|     try {
-[F39:99]|       const selectedDir = await open({
-[F39:100]|         directory: true, // 选择文件夹
-[F39:101]|         multiple: false,
-[F39:102]|         title: t('settings.selectDbFolder') || 'Select Storage Folder'
-[F39:103]|       });
-[F39:104]| 
-[F39:105]|       if (selectedDir && typeof selectedDir === 'string') {
-[F39:106]|         toast.info(t('settings.migratingData') || 'Moving data, please wait...');
-[F39:107]|         await changeDbPath(selectedDir);
-[F39:108]|       }
-[F39:109]|     } catch (e) {
-[F39:110]|       console.error('Change DB path failed', e);
-[F39:111]|       toast.error(t('settings.migrationFailed') || 'Failed to change data location');
-[F39:112]|     }
-[F39:113]|   };
-[F39:114]| 
-[F39:115]|   // 打开编辑弹窗
-[F39:116]|   const handleEditTemplate = (tpl: RecurringTemplate) => {
-[F39:117]|     setEditingTemplate(tpl);
-[F39:118]|     setRecTitle(tpl.title);
-[F39:119]|     setRecDesc(tpl.description);
-[F39:120]|     setRecZoneId(tpl.zoneId);
-[F39:121]|     setRecPriority(tpl.priority);
-[F39:122]| 
-[F39:123]|     // 反推 interval 单位
-[F39:124]|     if (tpl.intervalMinutes < 60) {
-[F39:125]|       setRecIntervalValue(tpl.intervalMinutes);
-[F39:126]|       setRecIntervalUnit('minutes');
-[F39:127]|     } else if (tpl.intervalMinutes < 1440) {
-[F39:128]|       setRecIntervalValue(Math.round(tpl.intervalMinutes / 60));
-[F39:129]|       setRecIntervalUnit('hours');
-[F39:130]|     } else {
-[F39:131]|       setRecIntervalValue(Math.round(tpl.intervalMinutes / 1440));
-[F39:132]|       setRecIntervalUnit('days');
-[F39:133]|     }
-[F39:134]| 
-[F39:135]|     // 反推 deadline 单位
-[F39:136]|     if (tpl.deadlineOffsetHours < 24) {
-[F39:137]|       setRecDeadlineValue(tpl.deadlineOffsetHours);
-[F39:138]|       setRecDeadlineUnit('hours');
-[F39:139]|     } else {
-[F39:140]|       setRecDeadlineValue(Math.round(tpl.deadlineOffsetHours / 24));
-[F39:141]|       setRecDeadlineUnit('days');
-[F39:142]|     }
-[F39:143]| 
-[F39:144]|     setShowRecurringDialog(true);
-[F39:145]|   };
-[F39:146]| 
-[F39:147]|   const handleSaveRecurring = () => {
-[F39:148]|     if (!recTitle.trim() || !recZoneId) return;
+[F39:17]| import { recordDataSnapshotForSwitch } from '@/lib/storage-adapter';
+[F39:18]| 
+[F39:19]| interface SettingsPanelProps {
+[F39:20]|   settings: AppState['settings'];
+[F39:21]|   zones: Zone[];
+[F39:22]|   recurringTemplates: RecurringTemplate[];
+[F39:23]|   onAddRecurringTemplate: (template: Omit<RecurringTemplate, 'id' | 'lastTriggeredAt'>) => void;
+[F39:24]|   onUpdateRecurringTemplate: (id: string, updates: Partial<RecurringTemplate>) => void;
+[F39:25]|   onDeleteRecurringTemplate: (id: string) => void;
+[F39:26]|   onBack: () => void;
+[F39:27]|   onUpdateSettings: (settings: Partial<AppState['settings']>) => void;
+[F39:28]|   onPreviewMode?: (mode: TimerMode) => void;
+[F39:29]| }
+[F39:30]| 
+[F39:31]| export function SettingsPanel({
+[F39:32]|   settings,
+[F39:33]|   zones,
+[F39:34]|   recurringTemplates,
+[F39:35]|   onAddRecurringTemplate,
+[F39:36]|   onUpdateRecurringTemplate,
+[F39:37]|   onDeleteRecurringTemplate,
+[F39:38]|   onBack,
+[F39:39]|   onUpdateSettings,
+[F39:40]|   onPreviewMode,
+[F39:41]| }: SettingsPanelProps) {
+[F39:42]|   const { t, i18n } = useTranslation();
+[F39:43]|   const [workMinutes, setWorkMinutes] = useState(Math.floor(settings.workDuration / 60));
+[F39:44]|   const [breakMinutes, setBreakMinutes] = useState(Math.floor(settings.breakDuration / 60));
+[F39:45]|   const [longBreakMinutes, setLongBreakMinutes] = useState(Math.floor(settings.longBreakDuration / 60));
+[F39:46]|   const [priorityWeight, setPriorityWeight] = useState(settings.globalViewSort.priorityWeight * 100);
+[F39:47]|   const [autoSaveInterval, setAutoSaveInterval] = useState(settings.autoSaveInterval || 60);
+[F39:48]|   // deadlineWeight 由 priorityWeight 计算得出，保证两者之和为 100
+[F39:49]|   const deadlineWeight = useMemo(() => 100 - priorityWeight, [priorityWeight]);
+[F39:50]| 
+[F39:51]|   // 数据存储路径相关状态
+[F39:52]|   const [currentDbPath, setCurrentDbPath] = useState<string>('');
+[F39:53]| 
+[F39:54]|   // 定时任务配置弹窗状态
+[F39:55]|   const [showRecurringDialog, setShowRecurringDialog] = useState(false);
+[F39:56]|   const [editingTemplate, setEditingTemplate] = useState<RecurringTemplate | null>(null);
+[F39:57]|   const [recTitle, setRecTitle] = useState('');
+[F39:58]|   const [recDesc, setRecDesc] = useState('');
+[F39:59]|   const [recZoneId, setRecZoneId] = useState('');
+[F39:60]|   const [recPriority, setRecPriority] = useState<TaskPriority>('medium');
+[F39:61]|   const [recIntervalValue, setRecIntervalValue] = useState(1);
+[F39:62]|   const [recIntervalUnit, setRecIntervalUnit] = useState<'minutes' | 'hours' | 'days'>('days');
+[F39:63]|   const [recDeadlineValue, setRecDeadlineValue] = useState(2);
+[F39:64]|   const [recDeadlineUnit, setRecDeadlineUnit] = useState<'hours' | 'days'>('days');
+[F39:65]| 
+[F39:66]|   // 配置快照相关状态
+[F39:67]|   const { configProfiles, saveConfigProfile, applyConfigProfile, deleteConfigProfile, updateConfigProfile, importConfigProfile } = useAppStore();
+[F39:68]|   const [showSaveProfileDialog, setShowSaveProfileDialog] = useState(false);
+[F39:69]|   const [profileName, setProfileName] = useState('');
+[F39:70]|   const [editingProfile, setEditingProfile] = useState<ConfigProfile | null>(null);
+[F39:71]|   const [editingProfileName, setEditingProfileName] = useState('');
+[F39:72]| 
+[F39:73]|   // 加载当前数据库路径
+[F39:74]|   useEffect(() => {
+[F39:75]|     getDbPath()
+[F39:76]|       .then(path => setCurrentDbPath(path))
+[F39:77]|       .catch(err => {
+[F39:78]|         console.error('获取路径失败:', err);
+[F39:79]|         setCurrentDbPath('获取路径失败，使用默认相对路径');
+[F39:80]|       });
+[F39:81]|   }, []);
+[F39:82]| 
+[F39:83]|   // 初始化默认分区
+[F39:84]|   useEffect(() => {
+[F39:85]|     if (zones.length > 0 && !recZoneId) {
+[F39:86]|       setRecZoneId(zones[0].id);
+[F39:87]|     }
+[F39:88]|   }, [zones, recZoneId]);
+[F39:89]| 
+[F39:90]|   // 同步语言设置
+[F39:91]|   useEffect(() => {
+[F39:92]|     if (settings.language && settings.language !== i18n.language) {
+[F39:93]|       i18n.changeLanguage(settings.language);
+[F39:94]|     }
+[F39:95]|   }, [settings.language, i18n]);
+[F39:96]| 
+[F39:97]|   // 更改数据库路径
+[F39:98]|   const handleChangeDbPath = async () => {
+[F39:99]|     try {
+[F39:100]|       const selectedDir = await open({
+[F39:101]|         directory: true, // 选择文件夹
+[F39:102]|         multiple: false,
+[F39:103]|         title: t('settings.selectDbFolder') || 'Select Storage Folder'
+[F39:104]|       });
+[F39:105]| 
+[F39:106]|       if (selectedDir && typeof selectedDir === 'string') {
+[F39:107]|         toast.info(t('settings.migratingData') || 'Moving data, please wait...');
+[F39:108]|         // 🚀 记录切换前的数据快照
+[F39:109]|         recordDataSnapshotForSwitch();
+[F39:110]|         await changeDbPath(selectedDir);
+[F39:111]|         // 🚀 切换成功后更新 UI 显示的路径
+[F39:112]|         const newPath = await getDbPath();
+[F39:113]|         setCurrentDbPath(newPath);
+[F39:114]|       }
+[F39:115]|     } catch (e) {
+[F39:116]|       console.error('Change DB path failed', e);
+[F39:117]|       toast.error(t('settings.migrationFailed') || 'Failed to change data location');
+[F39:118]|     }
+[F39:119]|   };
+[F39:120]| 
+[F39:121]|   // 打开编辑弹窗
+[F39:122]|   const handleEditTemplate = (tpl: RecurringTemplate) => {
+[F39:123]|     setEditingTemplate(tpl);
+[F39:124]|     setRecTitle(tpl.title);
+[F39:125]|     setRecDesc(tpl.description);
+[F39:126]|     setRecZoneId(tpl.zoneId);
+[F39:127]|     setRecPriority(tpl.priority);
+[F39:128]| 
+[F39:129]|     // 反推 interval 单位
+[F39:130]|     if (tpl.intervalMinutes < 60) {
+[F39:131]|       setRecIntervalValue(tpl.intervalMinutes);
+[F39:132]|       setRecIntervalUnit('minutes');
+[F39:133]|     } else if (tpl.intervalMinutes < 1440) {
+[F39:134]|       setRecIntervalValue(Math.round(tpl.intervalMinutes / 60));
+[F39:135]|       setRecIntervalUnit('hours');
+[F39:136]|     } else {
+[F39:137]|       setRecIntervalValue(Math.round(tpl.intervalMinutes / 1440));
+[F39:138]|       setRecIntervalUnit('days');
+[F39:139]|     }
+[F39:140]| 
+[F39:141]|     // 反推 deadline 单位
+[F39:142]|     if (tpl.deadlineOffsetHours < 24) {
+[F39:143]|       setRecDeadlineValue(tpl.deadlineOffsetHours);
+[F39:144]|       setRecDeadlineUnit('hours');
+[F39:145]|     } else {
+[F39:146]|       setRecDeadlineValue(Math.round(tpl.deadlineOffsetHours / 24));
+[F39:147]|       setRecDeadlineUnit('days');
+[F39:148]|     }
 [F39:149]| 
-[F39:150]|     // 转换为底层需要的单位，并强制最低 5 分钟安全限制
-[F39:151]|     let intervalMinutes = recIntervalUnit === 'days'
-[F39:152]|       ? recIntervalValue * 24 * 60
-[F39:153]|       : recIntervalUnit === 'hours'
-[F39:154]|         ? recIntervalValue * 60
-[F39:155]|         : recIntervalValue;
-[F39:156]| 
-[F39:157]|     // 强制防刷屏限制：任何任务的生成间隔不得低于 5 分钟
-[F39:158]|     if (intervalMinutes < 5) {
-[F39:159]|       intervalMinutes = 5;
-[F39:160]|     }
-[F39:161]| 
-[F39:162]|     const deadlineOffsetHours = recDeadlineUnit === 'days' ? recDeadlineValue * 24 : recDeadlineValue;
-[F39:163]| 
-[F39:164]|     if (editingTemplate) {
-[F39:165]|       // 编辑模式
-[F39:166]|       onUpdateRecurringTemplate(editingTemplate.id, {
-[F39:167]|         title: recTitle.trim(),
-[F39:168]|         description: recDesc.trim(),
-[F39:169]|         zoneId: recZoneId,
-[F39:170]|         priority: recPriority,
-[F39:171]|         intervalMinutes,
-[F39:172]|         deadlineOffsetHours,
-[F39:173]|       });
-[F39:174]|     } else {
-[F39:175]|       // 新建模式
-[F39:176]|       onAddRecurringTemplate({
-[F39:177]|         title: recTitle.trim(),
-[F39:178]|         description: recDesc.trim(),
-[F39:179]|         zoneId: recZoneId,
-[F39:180]|         priority: recPriority,
-[F39:181]|         intervalMinutes,
-[F39:182]|         deadlineOffsetHours,
-[F39:183]|         isActive: true,
-[F39:184]|         scope: 'global',
-[F39:185]|       });
-[F39:186]|     }
-[F39:187]| 
-[F39:188]|     setShowRecurringDialog(false);
-[F39:189]|     setEditingTemplate(null);
-[F39:190]|     setRecTitle('');
-[F39:191]|     setRecDesc('');
-[F39:192]|     setRecIntervalValue(1);
-[F39:193]|     setRecDeadlineValue(2);
-[F39:194]|   };
-[F39:195]| 
-[F39:196]|   // 导出配置
-[F39:197]|   const handleExportConfig = async () => {
-[F39:198]|     try {
-[F39:199]|       const state = useAppStore.getState();
-[F39:200]|       const exportData = {
-[F39:201]|         version: 1,
-[F39:202]|         name: `${t('profile.exportName') || 'Environment Backup'} ${new Date().toLocaleDateString()}`,
-[F39:203]|         settings: state.settings,
-[F39:204]|         customTemplates: state.customTemplates,
-[F39:205]|         recurringTemplates: state.recurringTemplates.filter((r: RecurringTemplate) => r.scope === 'global' || !r.scope)
-[F39:206]|       };
-[F39:207]| 
-[F39:208]|       const filePath = await save({
-[F39:209]|         defaultPath: `focus-flow-env-${Date.now()}.json`,
-[F39:210]|         filters:[{ name: 'JSON', extensions: ['json'] }]
-[F39:211]|       });
-[F39:212]| 
-[F39:213]|       if (filePath) {
-[F39:214]|         await writeTextFile(filePath, JSON.stringify(exportData, null, 2));
-[F39:215]|         toast.success(t('profile.exportSuccess'));
-[F39:216]|       }
-[F39:217]|     } catch (e) {
-[F39:218]|       console.error('导出配置失败', e);
-[F39:219]|       toast.error(t('profile.exportFailed') || 'Export failed');
-[F39:220]|     }
-[F39:221]|   };
-[F39:222]| 
-[F39:223]|   // 导入配置
-[F39:224]|   const handleImportConfig = async () => {
-[F39:225]|     try {
-[F39:226]|       const selected = await open({
-[F39:227]|         multiple: false,
-[F39:228]|         filters: [{ name: 'JSON', extensions: ['json'] }]
-[F39:229]|       });
-[F39:230]| 
-[F39:231]|       if (selected && typeof selected === 'string') {
-[F39:232]|         const content = await readTextFile(selected);
-[F39:233]|         const success = importConfigProfile(JSON.parse(content));
-[F39:234]|         if (success) {
-[F39:235]|           toast.success(t('profile.profileImported'));
-[F39:236]|         } else {
-[F39:237]|           toast.error(t('profile.importFailed'));
-[F39:238]|         }
-[F39:239]|       }
-[F39:240]|     } catch (e) {
-[F39:241]|       console.error('导入配置失败', e);
-[F39:242]|       toast.error(t('profile.importFailed'));
-[F39:243]|     }
-[F39:244]|   };
-[F39:245]| 
-[F39:246]|   // 同步外部 settings 变化到本地状态
-[F39:247]|   useEffect(() => {
-[F39:248]|     setWorkMinutes(Math.floor(settings.workDuration / 60));
-[F39:249]|   }, [settings.workDuration]);
-[F39:250]| 
-[F39:251]|   useEffect(() => {
-[F39:252]|     setBreakMinutes(Math.floor(settings.breakDuration / 60));
-[F39:253]|   }, [settings.breakDuration]);
-[F39:254]| 
-[F39:255]|   useEffect(() => {
-[F39:256]|     setLongBreakMinutes(Math.floor(settings.longBreakDuration / 60));
-[F39:257]|   }, [settings.longBreakDuration]);
-[F39:258]| 
-[F39:259]|   useEffect(() => {
-[F39:260]|     setAutoSaveInterval(settings.autoSaveInterval || 60);
-[F39:261]|   }, [settings.autoSaveInterval]);
-[F39:262]| 
-[F39:263]|   const handleWorkDurationChange = (value: number[]) => {
-[F39:264]|     const minutes = value[0];
-[F39:265]|     setWorkMinutes(minutes);
-[F39:266]|     onUpdateSettings({ workDuration: minutes * 60 });
-[F39:267]|   };
+[F39:150]|     setShowRecurringDialog(true);
+[F39:151]|   };
+[F39:152]| 
+[F39:153]|   const handleSaveRecurring = () => {
+[F39:154]|     if (!recTitle.trim() || !recZoneId) return;
+[F39:155]| 
+[F39:156]|     // 转换为底层需要的单位，并强制最低 5 分钟安全限制
+[F39:157]|     let intervalMinutes = recIntervalUnit === 'days'
+[F39:158]|       ? recIntervalValue * 24 * 60
+[F39:159]|       : recIntervalUnit === 'hours'
+[F39:160]|         ? recIntervalValue * 60
+[F39:161]|         : recIntervalValue;
+[F39:162]| 
+[F39:163]|     // 强制防刷屏限制：任何任务的生成间隔不得低于 5 分钟
+[F39:164]|     if (intervalMinutes < 5) {
+[F39:165]|       intervalMinutes = 5;
+[F39:166]|     }
+[F39:167]| 
+[F39:168]|     const deadlineOffsetHours = recDeadlineUnit === 'days' ? recDeadlineValue * 24 : recDeadlineValue;
+[F39:169]| 
+[F39:170]|     if (editingTemplate) {
+[F39:171]|       // 编辑模式
+[F39:172]|       onUpdateRecurringTemplate(editingTemplate.id, {
+[F39:173]|         title: recTitle.trim(),
+[F39:174]|         description: recDesc.trim(),
+[F39:175]|         zoneId: recZoneId,
+[F39:176]|         priority: recPriority,
+[F39:177]|         intervalMinutes,
+[F39:178]|         deadlineOffsetHours,
+[F39:179]|       });
+[F39:180]|     } else {
+[F39:181]|       // 新建模式
+[F39:182]|       onAddRecurringTemplate({
+[F39:183]|         title: recTitle.trim(),
+[F39:184]|         description: recDesc.trim(),
+[F39:185]|         zoneId: recZoneId,
+[F39:186]|         priority: recPriority,
+[F39:187]|         intervalMinutes,
+[F39:188]|         deadlineOffsetHours,
+[F39:189]|         isActive: true,
+[F39:190]|         scope: 'global',
+[F39:191]|       });
+[F39:192]|     }
+[F39:193]| 
+[F39:194]|     setShowRecurringDialog(false);
+[F39:195]|     setEditingTemplate(null);
+[F39:196]|     setRecTitle('');
+[F39:197]|     setRecDesc('');
+[F39:198]|     setRecIntervalValue(1);
+[F39:199]|     setRecDeadlineValue(2);
+[F39:200]|   };
+[F39:201]| 
+[F39:202]|   // 导出配置
+[F39:203]|   const handleExportConfig = async () => {
+[F39:204]|     try {
+[F39:205]|       const state = useAppStore.getState();
+[F39:206]|       const exportData = {
+[F39:207]|         version: 1,
+[F39:208]|         name: `${t('profile.exportName') || 'Environment Backup'} ${new Date().toLocaleDateString()}`,
+[F39:209]|         settings: state.settings,
+[F39:210]|         customTemplates: state.customTemplates,
+[F39:211]|         recurringTemplates: state.recurringTemplates.filter((r: RecurringTemplate) => r.scope === 'global' || !r.scope)
+[F39:212]|       };
+[F39:213]| 
+[F39:214]|       const filePath = await save({
+[F39:215]|         defaultPath: `focus-flow-env-${Date.now()}.json`,
+[F39:216]|         filters:[{ name: 'JSON', extensions: ['json'] }]
+[F39:217]|       });
+[F39:218]| 
+[F39:219]|       if (filePath) {
+[F39:220]|         await writeTextFile(filePath, JSON.stringify(exportData, null, 2));
+[F39:221]|         toast.success(t('profile.exportSuccess'));
+[F39:222]|       }
+[F39:223]|     } catch (e) {
+[F39:224]|       console.error('导出配置失败', e);
+[F39:225]|       toast.error(t('profile.exportFailed') || 'Export failed');
+[F39:226]|     }
+[F39:227]|   };
+[F39:228]| 
+[F39:229]|   // 导入配置
+[F39:230]|   const handleImportConfig = async () => {
+[F39:231]|     try {
+[F39:232]|       const selected = await open({
+[F39:233]|         multiple: false,
+[F39:234]|         filters: [{ name: 'JSON', extensions: ['json'] }]
+[F39:235]|       });
+[F39:236]| 
+[F39:237]|       if (selected && typeof selected === 'string') {
+[F39:238]|         const content = await readTextFile(selected);
+[F39:239]|         const success = importConfigProfile(JSON.parse(content));
+[F39:240]|         if (success) {
+[F39:241]|           toast.success(t('profile.profileImported'));
+[F39:242]|         } else {
+[F39:243]|           toast.error(t('profile.importFailed'));
+[F39:244]|         }
+[F39:245]|       }
+[F39:246]|     } catch (e) {
+[F39:247]|       console.error('导入配置失败', e);
+[F39:248]|       toast.error(t('profile.importFailed'));
+[F39:249]|     }
+[F39:250]|   };
+[F39:251]| 
+[F39:252]|   // 同步外部 settings 变化到本地状态
+[F39:253]|   useEffect(() => {
+[F39:254]|     setWorkMinutes(Math.floor(settings.workDuration / 60));
+[F39:255]|   }, [settings.workDuration]);
+[F39:256]| 
+[F39:257]|   useEffect(() => {
+[F39:258]|     setBreakMinutes(Math.floor(settings.breakDuration / 60));
+[F39:259]|   }, [settings.breakDuration]);
+[F39:260]| 
+[F39:261]|   useEffect(() => {
+[F39:262]|     setLongBreakMinutes(Math.floor(settings.longBreakDuration / 60));
+[F39:263]|   }, [settings.longBreakDuration]);
+[F39:264]| 
+[F39:265]|   useEffect(() => {
+[F39:266]|     setAutoSaveInterval(settings.autoSaveInterval || 60);
+[F39:267]|   }, [settings.autoSaveInterval]);
 [F39:268]| 
-[F39:269]|   const handleBreakDurationChange = (value: number[]) => {
+[F39:269]|   const handleWorkDurationChange = (value: number[]) => {
 [F39:270]|     const minutes = value[0];
-[F39:271]|     setBreakMinutes(minutes);
-[F39:272]|     onUpdateSettings({ breakDuration: minutes * 60 });
+[F39:271]|     setWorkMinutes(minutes);
+[F39:272]|     onUpdateSettings({ workDuration: minutes * 60 });
 [F39:273]|   };
 [F39:274]| 
-[F39:275]|   const handleLongBreakDurationChange = (value: number[]) => {
+[F39:275]|   const handleBreakDurationChange = (value: number[]) => {
 [F39:276]|     const minutes = value[0];
-[F39:277]|     setLongBreakMinutes(minutes);
-[F39:278]|     onUpdateSettings({ longBreakDuration: minutes * 60 });
+[F39:277]|     setBreakMinutes(minutes);
+[F39:278]|     onUpdateSettings({ breakDuration: minutes * 60 });
 [F39:279]|   };
 [F39:280]| 
-[F39:281]|   // 预览模式 - 只在完成拖动后触发
-[F39:282]|   const handleWorkDurationCommit = () => {
-[F39:283]|     onPreviewMode?.('work');
-[F39:284]|   };
-[F39:285]| 
-[F39:286]|   const handleBreakDurationCommit = () => {
-[F39:287]|     onPreviewMode?.('break');
-[F39:288]|   };
-[F39:289]| 
-[F39:290]|   const handleLongBreakDurationCommit = () => {
-[F39:291]|     onPreviewMode?.('longBreak');
-[F39:292]|   };
-[F39:293]| 
-[F39:294]|   const handlePriorityWeightChange = (value: number[]) => {
-[F39:295]|     const weight = value[0];
-[F39:296]|     setPriorityWeight(weight);
-[F39:297]|     // deadlineWeight 会通过 useMemo 自动计算
-[F39:298]|     onUpdateSettings({
-[F39:299]|       globalViewSort: {
-[F39:300]|         mode: settings.globalViewSort.mode as GlobalViewSortMode,
-[F39:301]|         priorityWeight: weight / 100,
-[F39:302]|         deadlineWeight: (100 - weight) / 100,
-[F39:303]|       },
-[F39:304]|     });
-[F39:305]|   };
-[F39:306]| 
-[F39:307]|   const handleDeadlineWeightChange = (value: number[]) => {
-[F39:308]|     // 紧急度 Slider 正向联动：拖动紧急度时，优先级跟随反向变动
-[F39:309]|     const dWeight = value[0];
-[F39:310]|     const pWeight = 100 - dWeight;
-[F39:311]|     setPriorityWeight(pWeight);
-[F39:312]|     onUpdateSettings({
-[F39:313]|       globalViewSort: {
-[F39:314]|         mode: settings.globalViewSort.mode as GlobalViewSortMode,
-[F39:315]|         priorityWeight: pWeight / 100,
-[F39:316]|         deadlineWeight: dWeight / 100,
-[F39:317]|       },
-[F39:318]|     });
-[F39:319]|   };
-[F39:320]| 
-[F39:321]|   const handleReset = () => {
-[F39:322]|     setWorkMinutes(25);
-[F39:323]|     setBreakMinutes(5);
-[F39:324]|     setLongBreakMinutes(15);
-[F39:325]|     setPriorityWeight(DEFAULT_SETTINGS.globalViewSort.priorityWeight * 100);
-[F39:326]|     setAutoSaveInterval(DEFAULT_SETTINGS.autoSaveInterval);
-[F39:327]|     // deadlineWeight 会通过 useMemo 自动计算
-[F39:328]|     onUpdateSettings({
-[F39:329]|       workDuration: DEFAULT_SETTINGS.workDuration,
-[F39:330]|       breakDuration: DEFAULT_SETTINGS.breakDuration,
-[F39:331]|       longBreakDuration: DEFAULT_SETTINGS.longBreakDuration,
-[F39:332]|       autoStartBreak: DEFAULT_SETTINGS.autoStartBreak,
-[F39:333]|       soundEnabled: DEFAULT_SETTINGS.soundEnabled,
-[F39:334]|       globalViewSort: DEFAULT_SETTINGS.globalViewSort,
-[F39:335]|       autoSaveEnabled: DEFAULT_SETTINGS.autoSaveEnabled,
-[F39:336]|       autoSaveInterval: DEFAULT_SETTINGS.autoSaveInterval,
-[F39:337]|     });
-[F39:338]|   };
-[F39:339]| 
-[F39:340]|   return (
-[F39:341]|     <div className="settings-panel-container">
-[F39:342]|       {/* Header */}
-[F39:343]|       <div className="settings-panel-header">
-[F39:344]|         <Button
-[F39:345]|           size="icon"
-[F39:346]|           variant="ghost"
-[F39:347]|           className="back-btn"
-[F39:348]|           onClick={onBack}
-[F39:349]|         >
-[F39:350]|           <ArrowLeft size={18} />
-[F39:351]|         </Button>
-[F39:352]|         <div className="settings-panel-title">
-[F39:353]|           <Settings size={18} className="text-blue-400" />
-[F39:354]|           <span>{t('settings.title')}</span>
-[F39:355]|         </div>
-[F39:356]|       </div>
-[F39:357]| 
-[F39:358]|       {/* Settings Content */}
-[F39:359]|       <div className="settings-content">
-[F39:360]|         {/* Language Settings */}
-[F39:361]|         <div className="settings-section">
-[F39:362]|           <h3 className="settings-section-title">
-[F39:363]|             <Settings size={14} className="mr-2" />
-[F39:364]|             {t('settings.language')}
-[F39:365]|           </h3>
-[F39:366]|           <div className="setting-item">
-[F39:367]|             <div className="setting-label">
-[F39:368]|               <span>{t('settings.language')}</span>
-[F39:369]|               <Select
-[F39:370]|                 value={settings.language || 'zh'}
-[F39:371]|                 onValueChange={(val) => {
-[F39:372]|                   onUpdateSettings({ language: val });
-[F39:373]|                   i18n.changeLanguage(val);
-[F39:374]|                 }}
-[F39:375]|               >
-[F39:376]|                 <SelectTrigger className="w-32">
-[F39:377]|                   <SelectValue />
-[F39:378]|                 </SelectTrigger>
-[F39:379]|                 <SelectContent>
-[F39:380]|                   <SelectItem value="zh">简体中文</SelectItem>
-[F39:381]|                   <SelectItem value="en">English</SelectItem>
-[F39:382]|                 </SelectContent>
-[F39:383]|               </Select>
-[F39:384]|             </div>
-[F39:385]|           </div>
-[F39:386]|         </div>
-[F39:387]| 
-[F39:388]|         {/* Timer Settings */}
-[F39:389]|         <div className="settings-section">
-[F39:390]|           <h3 className="settings-section-title">
-[F39:391]|             <Clock size={14} className="mr-2" />
-[F39:392]|             {t('settings.timerSettings')}
-[F39:393]|           </h3>
-[F39:394]| 
-[F39:395]|           {/* Work Duration */}
-[F39:396]|           <div className="setting-item">
-[F39:397]|             <div className="setting-label">
-[F39:398]|               <span>{t('settings.workDuration')} {t('settings.workDurationMinutes')}</span>
-[F39:399]|               <Input
-[F39:400]|                 type="number"
-[F39:401]|                 value={workMinutes}
-[F39:402]|                 onChange={(e) => {
-[F39:403]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
-[F39:404]|                   setWorkMinutes(val);
-[F39:405]|                   onUpdateSettings({ workDuration: val * 60 });
-[F39:406]|                 }}
-[F39:407]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
-[F39:408]|                 min={1}
-[F39:409]|               />
-[F39:410]|             </div>
-[F39:411]|             <Slider
-[F39:412]|               value={[workMinutes]}
-[F39:413]|               onValueChange={handleWorkDurationChange}
-[F39:414]|               onValueCommit={handleWorkDurationCommit}
-[F39:415]|               min={1}
-[F39:416]|               max={120}
-[F39:417]|               step={1}
-[F39:418]|               className="setting-slider mt-2"
-[F39:419]|             />
-[F39:420]|           </div>
-[F39:421]| 
-[F39:422]|           {/* Break Duration */}
-[F39:423]|           <div className="setting-item">
-[F39:424]|             <div className="setting-label">
-[F39:425]|               <span>{t('settings.breakDuration')} {t('settings.workDurationMinutes')}</span>
-[F39:426]|               <Input
-[F39:427]|                 type="number"
-[F39:428]|                 value={breakMinutes}
-[F39:429]|                 onChange={(e) => {
-[F39:430]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
-[F39:431]|                   setBreakMinutes(val);
-[F39:432]|                   onUpdateSettings({ breakDuration: val * 60 });
-[F39:433]|                 }}
-[F39:434]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
-[F39:435]|                 min={1}
-[F39:436]|               />
-[F39:437]|             </div>
-[F39:438]|             <Slider
-[F39:439]|               value={[breakMinutes]}
-[F39:440]|               onValueChange={handleBreakDurationChange}
-[F39:441]|               onValueCommit={handleBreakDurationCommit}
-[F39:442]|               min={1}
-[F39:443]|               max={60}
-[F39:444]|               step={1}
-[F39:445]|               className="setting-slider mt-2"
-[F39:446]|             />
-[F39:447]|           </div>
-[F39:448]| 
-[F39:449]|           {/* Long Break Duration */}
-[F39:450]|           <div className="setting-item">
-[F39:451]|             <div className="setting-label">
-[F39:452]|               <span>{t('settings.longBreakDuration')} {t('settings.workDurationMinutes')}</span>
-[F39:453]|               <Input
-[F39:454]|                 type="number"
-[F39:455]|                 value={longBreakMinutes}
-[F39:456]|                 onChange={(e) => {
-[F39:457]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
-[F39:458]|                   setLongBreakMinutes(val);
-[F39:459]|                   onUpdateSettings({ longBreakDuration: val * 60 });
-[F39:460]|                 }}
-[F39:461]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
-[F39:462]|                 min={1}
-[F39:463]|               />
-[F39:464]|             </div>
-[F39:465]|             <Slider
-[F39:466]|               value={[longBreakMinutes]}
-[F39:467]|               onValueChange={handleLongBreakDurationChange}
-[F39:468]|               onValueCommit={handleLongBreakDurationCommit}
-[F39:469]|               min={1}
-[F39:470]|               max={90}
-[F39:471]|               step={1}
-[F39:472]|               className="setting-slider mt-2"
-[F39:473]|             />
-[F39:474]|           </div>
-[F39:475]|         </div>
-[F39:476]| 
-[F39:477]|         {/* Weighted Sort Settings */}
-[F39:478]|         <div className="settings-section">
-[F39:479]|           <h3 className="settings-section-title">
-[F39:480]|             <Flag size={14} className="mr-2" />
-[F39:481]|             {t('settings.weightedSort')}
-[F39:482]|           </h3>
-[F39:483]|           <p className="settings-section-desc">
-[F39:484]|             {t('settings.weightedSortDesc')}
-[F39:485]|           </p>
-[F39:486]| 
-[F39:487]|           {/* Priority Weight */}
-[F39:488]|           <div className="setting-item">
-[F39:489]|             <div className="setting-label">
-[F39:490]|               <Flag size={14} className="mr-2 text-red-400" />
-[F39:491]|               <span>{t('settings.priorityWeight')}</span>
-[F39:492]|               <span className="setting-value">{priorityWeight}%</span>
-[F39:493]|             </div>
-[F39:494]|             <Slider
-[F39:495]|               value={[priorityWeight]}
-[F39:496]|               onValueChange={handlePriorityWeightChange}
-[F39:497]|               min={0}
-[F39:498]|               max={100}
-[F39:499]|               step={10}
-[F39:500]|               className="setting-slider mt-2"
-[F39:501]|             />
-[F39:502]|           </div>
-[F39:503]| 
-[F39:504]|           {/* Urgency Weight */}
-[F39:505]|           <div className="setting-item">
-[F39:506]|             <div className="setting-label">
-[F39:507]|               <Zap size={14} className="mr-2 text-orange-400" />
-[F39:508]|               <span>{t('settings.deadlineWeight')}</span>
-[F39:509]|               <span className="setting-value">{deadlineWeight}%</span>
-[F39:510]|             </div>
-[F39:511]|             <Slider
-[F39:512]|               value={[deadlineWeight]}
-[F39:513]|               onValueChange={handleDeadlineWeightChange}
-[F39:514]|               min={0}
-[F39:515]|               max={100}
-[F39:516]|               step={10}
-[F39:517]|               className="setting-slider mt-2"
-[F39:518]|             />
-[F39:519]|           </div>
-[F39:520]|         </div>
-[F39:521]| 
-[F39:522]|         {/* Other Settings */}
-[F39:523]|         <div className="settings-section">
-[F39:524]|           <h3 className="settings-section-title">
-[F39:525]|             <Volume2 size={14} className="mr-2" />
-[F39:526]|             {t('settings.otherSettings')}
-[F39:527]|           </h3>
-[F39:528]| 
-[F39:529]|           {/* Auto Start Break */}
-[F39:530]|           <div className="setting-item switch">
-[F39:531]|             <div className="setting-label">
-[F39:532]|               <span>{t('settings.autoStartBreak')}</span>
-[F39:533]|               <span className="setting-desc">{t('settings.autoStartBreakDesc')}</span>
-[F39:534]|             </div>
-[F39:535]|             <Switch
-[F39:536]|               checked={settings.autoStartBreak}
-[F39:537]|               onCheckedChange={(checked) => onUpdateSettings({ autoStartBreak: checked })}
-[F39:538]|             />
-[F39:539]|           </div>
-[F39:540]| 
-[F39:541]|           {/* Sound Enabled */}
-[F39:542]|           <div className="setting-item switch">
-[F39:543]|             <div className="setting-label">
-[F39:544]|               <span>{t('settings.soundEnabled')}</span>
-[F39:545]|               <span className="setting-desc">{t('settings.soundEnabledDesc')}</span>
-[F39:546]|             </div>
-[F39:547]|             <Switch
-[F39:548]|               checked={settings.soundEnabled}
-[F39:549]|               onCheckedChange={(checked) => onUpdateSettings({ soundEnabled: checked })}
-[F39:550]|             />
-[F39:551]|           </div>
-[F39:552]| 
-[F39:553]|           {/* Auto Save Enabled */}
-[F39:554]|           <div className="setting-item switch">
-[F39:555]|             <div className="setting-label">
-[F39:556]|               <span>{t('settings.autoSaveEnabled')}</span>
-[F39:557]|               <span className="setting-desc">{t('settings.autoSaveEnabledDesc')}</span>
-[F39:558]|             </div>
-[F39:559]|             <Switch
-[F39:560]|               checked={settings.autoSaveEnabled || false}
-[F39:561]|               onCheckedChange={(checked) => onUpdateSettings({ autoSaveEnabled: checked })}
-[F39:562]|             />
-[F39:563]|           </div>
-[F39:564]| 
-[F39:565]|           {/* Auto Save Interval */}
-[F39:566]|           {settings.autoSaveEnabled && (
-[F39:567]|             <div className="setting-item">
-[F39:568]|               <div className="setting-label">
-[F39:569]|                 <span>{t('settings.autoSaveInterval')} {t('settings.autoSaveIntervalSeconds')}</span>
-[F39:570]|                 <Input
-[F39:571]|                   type="number"
-[F39:572]|                   value={autoSaveInterval}
-[F39:573]|                   onChange={(e) => {
-[F39:574]|                     const val = Math.max(10, parseInt(e.target.value) || 60);
-[F39:575]|                     setAutoSaveInterval(val);
-[F39:576]|                     onUpdateSettings({ autoSaveInterval: val });
-[F39:577]|                   }}
-[F39:578]|                   className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
-[F39:579]|                   min={10}
-[F39:580]|                 />
-[F39:581]|               </div>
-[F39:582]|               <Slider
-[F39:583]|                 value={[autoSaveInterval]}
-[F39:584]|                 onValueChange={(value) => {
-[F39:585]|                   setAutoSaveInterval(value[0]);
-[F39:586]|                 }}
-[F39:587]|                 onValueCommit={(value) => {
-[F39:588]|                   onUpdateSettings({ autoSaveInterval: value[0] });
-[F39:589]|                 }}
-[F39:590]|                 min={10}
-[F39:591]|                 max={300}
-[F39:592]|                 step={10}
-[F39:593]|                 className="setting-slider mt-2"
-[F39:594]|               />
-[F39:595]|             </div>
-[F39:596]|           )}
-[F39:597]|         </div>
-[F39:598]| 
-[F39:599]|         {/* Data Storage Settings */}
-[F39:600]|         <div className="settings-section">
-[F39:601]|           <h3 className="settings-section-title">
-[F39:602]|             <Database size={14} className="mr-2 text-emerald-400" />
-[F39:603]|             {t('settings.dataStorage') || 'Data Storage'}
-[F39:604]|           </h3>
-[F39:605]|           <p className="settings-section-desc">
-[F39:606]|             {t('settings.dataStorageDesc') || 'Change where your data is saved. Select a cloud drive folder (like OneDrive, iCloud, or Dropbox) to sync across devices.'}
-[F39:607]|           </p>
-[F39:608]| 
-[F39:609]|           <div className="setting-item flex flex-col gap-2">
-[F39:610]|             <div className="text-xs text-white/50 break-all bg-black/20 p-2 rounded border border-white/10 flex items-center justify-between">
-[F39:611]|               <span className="truncate">{currentDbPath || t('common.loading')}</span>
-[F39:612]|             </div>
-[F39:613]|             <Button
-[F39:614]|               variant="outline"
-[F39:615]|               size="sm"
-[F39:616]|               className="w-fit"
-[F39:617]|               onClick={handleChangeDbPath}
-[F39:618]|             >
-[F39:619]|               <FolderOpen size={14} className="mr-2" />
-[F39:620]|               {t('settings.changeLocation') || 'Change Location'}
-[F39:621]|             </Button>
-[F39:622]|           </div>
-[F39:623]|         </div>
-[F39:624]| 
-[F39:625]|         {/* Recurring Tasks Settings */}
-[F39:626]|         <div className="settings-section">
-[F39:627]|           <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
-[F39:628]|             <h3 className="flex items-center text-xs font-semibold text-white/70">
-[F39:629]|               <Repeat size={14} className="mr-2 text-green-400" />
-[F39:630]|               {t('settings.recurringTasks')}
-[F39:631]|             </h3>
-[F39:632]|             <Button size="sm" className="h-6 text-xs px-2 bg-blue-600 hover:bg-blue-500 text-white" onClick={() => setShowRecurringDialog(true)}>
-[F39:633]|               <Plus size={12} className="mr-1" />
-[F39:634]|               {t('settings.newRule')}
-[F39:635]|             </Button>
-[F39:636]|           </div>
-[F39:637]|           <p className="settings-section-desc mb-3">
-[F39:638]|             {t('settings.recurringTasksDesc')}
-[F39:639]|           </p>
-[F39:640]| 
-[F39:641]|           <div className="flex flex-col gap-2">
-[F39:642]|             {!recurringTemplates || recurringTemplates.length === 0 ? (
-[F39:643]|               <div className="text-center py-4 text-xs text-white/30 bg-black/10 rounded-md border border-dashed border-white/10">
-[F39:644]|                 {t('recurring.noRules')}
-[F39:645]|               </div>
-[F39:646]|             ) : (
-[F39:647]|               recurringTemplates.map(tpl => (
-[F39:648]|                 <div key={tpl.id} className="flex flex-col gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
-[F39:649]|                   <div className="flex items-center justify-between">
-[F39:650]|                     <span className="text-sm font-medium text-white/90">{tpl.title}</span>
-[F39:651]|                     <div className="flex items-center gap-2">
-[F39:652]|                       <Switch
-[F39:653]|                         checked={tpl.isActive}
-[F39:654]|                         onCheckedChange={(c) => onUpdateRecurringTemplate(tpl.id, { isActive: c })}
-[F39:655]|                       />
-[F39:656]|                       <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-blue-400 hover:bg-blue-400/10" onClick={() => handleEditTemplate(tpl)} title={t('settings.editRule')}>
-[F39:657]|                         <Edit2 size={12} />
-[F39:658]|                       </Button>
-[F39:659]|                       <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10" onClick={() => onDeleteRecurringTemplate(tpl.id)}>
-[F39:660]|                         <Trash2 size={12} />
-[F39:661]|                       </Button>
-[F39:662]|                     </div>
-[F39:663]|                   </div>
-[F39:664]|                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/50">
-[F39:665]|                     <span className="flex items-center">
-[F39:666]|                       <Repeat size={10} className="mr-1" />
-[F39:667]|                       {t('recurring.every')} {tpl.intervalMinutes >= 1440 ? `${tpl.intervalMinutes / 1440} ${t('recurring.days')}` : tpl.intervalMinutes >= 60 ? `${tpl.intervalMinutes / 60} ${t('recurring.hours')}` : `${tpl.intervalMinutes} ${t('recurring.minutes')}`}
-[F39:668]|                     </span>
-[F39:669]|                     <span className="flex items-center">
-[F39:670]|                       <Clock size={10} className="mr-1" />
-[F39:671]|                       {t('recurring.ddl')}: {t('recurring.afterGeneration')} {tpl.deadlineOffsetHours >= 24 ? `${tpl.deadlineOffsetHours / 24} ${t('recurring.days')}` : `${tpl.deadlineOffsetHours} ${t('recurring.hours')}`}
-[F39:672]|                     </span>
-[F39:673]|                     <span className="flex items-center">
-[F39:674]|                       <Flag size={10} className="mr-1" />
-[F39:675]|                       {t('recurring.targetZone')}: {zones.find(z => z.id === tpl.zoneId)?.name || t('recurring.unknownZone')}
-[F39:676]|                     </span>
-[F39:677]|                   </div>
-[F39:678]|                 </div>
-[F39:679]|               ))
-[F39:680]|             )}
-[F39:681]|           </div>
-[F39:682]|         </div>
-[F39:683]| 
-[F39:684]|         {/* 新建定时任务的弹窗 */}
-[F39:685]|         <Dialog open={showRecurringDialog} onOpenChange={setShowRecurringDialog}>
-[F39:686]|           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
-[F39:687]|             <DialogHeader>
-[F39:688]|               <DialogTitle>{editingTemplate ? t('recurring.editRule') : t('recurring.addRule')}</DialogTitle>
-[F39:689]|             </DialogHeader>
-[F39:690]|             <div className="flex flex-col gap-4 py-2">
-[F39:691]|               <div className="flex flex-col gap-2">
-[F39:692]|                 <label className="text-xs text-white/60">{t('recurring.ruleTitle')}</label>
-[F39:693]|                 <Input value={recTitle} onChange={e => setRecTitle(e.target.value)} className="bg-black/30 border-white/20" placeholder={t('recurring.ruleTitlePlaceholder')} />
-[F39:694]|               </div>
-[F39:695]| 
-[F39:696]|               <div className="flex flex-col gap-2">
-[F39:697]|                 <label className="text-xs text-white/60">{t('recurring.ruleDescription')}</label>
-[F39:698]|                 <Input value={recDesc} onChange={e => setRecDesc(e.target.value)} className="bg-black/30 border-white/20" placeholder={t('recurring.ruleDescriptionPlaceholder')} />
-[F39:699]|               </div>
-[F39:700]| 
-[F39:701]|               <div className="flex gap-4">
-[F39:702]|                 <div className="flex flex-col gap-2 flex-1">
-[F39:703]|                   <label className="text-xs text-white/60">{t('recurring.triggerInterval')} <span className="text-white/30 text-[10px]">{t('recurring.minInterval')}</span></label>
-[F39:704]|                   <div className="flex items-center gap-2">
-[F39:705]|                     <Input
-[F39:706]|                       type="number"
-[F39:707]|                       min={recIntervalUnit === 'minutes' ? 5 : 1}
-[F39:708]|                       value={recIntervalValue}
-[F39:709]|                       onChange={e => {
-[F39:710]|                         const val = Number(e.target.value);
-[F39:711]|                         // 如果单位是分钟，限制最低输入为5
-[F39:712]|                         if (recIntervalUnit === 'minutes' && val < 5 && val !== 0) {
-[F39:713]|                           setRecIntervalValue(5);
-[F39:714]|                         } else {
-[F39:715]|                           setRecIntervalValue(val);
-[F39:716]|                         }
-[F39:717]|                       }}
-[F39:718]|                       className="bg-black/30 border-white/20"
-[F39:719]|                     />
-[F39:720]|                     <Select value={recIntervalUnit} onValueChange={(v: 'minutes' | 'hours' | 'days') => {
-[F39:721]|                       setRecIntervalUnit(v);
-[F39:722]|                       if (v === 'minutes' && recIntervalValue < 5) {
-[F39:723]|                         setRecIntervalValue(5);
-[F39:724]|                       }
-[F39:725]|                     }}>
-[F39:726]|                       <SelectTrigger className="w-[80px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
-[F39:727]|                       <SelectContent><SelectItem value="minutes">{t('recurring.minutes')}</SelectItem><SelectItem value="hours">{t('recurring.hours')}</SelectItem><SelectItem value="days">{t('recurring.days')}</SelectItem></SelectContent>
-[F39:728]|                     </Select>
-[F39:729]|                   </div>
-[F39:730]|                 </div>
-[F39:731]|                 <div className="flex flex-col gap-2 flex-1">
-[F39:732]|                   <label className="text-xs text-white/60">{t('recurring.targetZone')}</label>
-[F39:733]|                   <Select value={recZoneId} onValueChange={setRecZoneId}>
-[F39:734]|                     <SelectTrigger className="bg-black/30 border-white/20"><SelectValue placeholder={t('recurring.selectZone')} /></SelectTrigger>
-[F39:735]|                     <SelectContent>
-[F39:736]|                       {zones.map(z => <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>)}
-[F39:737]|                     </SelectContent>
-[F39:738]|                   </Select>
-[F39:739]|                 </div>
-[F39:740]|               </div>
-[F39:741]| 
-[F39:742]|               <div className="flex gap-4">
-[F39:743]|                 <div className="flex flex-col gap-2 flex-1">
-[F39:744]|                   <label className="text-xs text-white/60">{t('recurring.autoDeadline')} {t('recurring.afterGeneration')}</label>
-[F39:745]|                   <div className="flex items-center gap-2">
-[F39:746]|                     <Input type="number" min={0} value={recDeadlineValue} onChange={e => setRecDeadlineValue(Number(e.target.value))} className="bg-black/30 border-white/20" />
-[F39:747]|                     <Select value={recDeadlineUnit} onValueChange={(v: 'hours' | 'days') => setRecDeadlineUnit(v)}>
-[F39:748]|                       <SelectTrigger className="w-[80px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
-[F39:749]|                       <SelectContent><SelectItem value="hours">{t('recurring.hours')}</SelectItem><SelectItem value="days">{t('recurring.days')}</SelectItem></SelectContent>
-[F39:750]|                     </Select>
-[F39:751]|                   </div>
-[F39:752]|                 </div>
-[F39:753]|                 <div className="flex flex-col gap-2 flex-1">
-[F39:754]|                   <label className="text-xs text-white/60">{t('recurring.priority')}</label>
-[F39:755]|                   <Select value={recPriority} onValueChange={(v: TaskPriority) => setRecPriority(v)}>
-[F39:756]|                     <SelectTrigger className="bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
-[F39:757]|                     <SelectContent>
-[F39:758]|                       <SelectItem value="high">{t('task.priorityHigh')}</SelectItem>
-[F39:759]|                       <SelectItem value="medium">{t('task.priorityMedium')}</SelectItem>
-[F39:760]|                       <SelectItem value="low">{t('task.priorityLow')}</SelectItem>
-[F39:761]|                     </SelectContent>
-[F39:762]|                   </Select>
-[F39:763]|                 </div>
-[F39:764]|               </div>
-[F39:765]|             </div>
-[F39:766]|             <div className="flex justify-end gap-2 mt-4">
-[F39:767]|               <Button variant="ghost" onClick={() => setShowRecurringDialog(false)}>{t('common.cancel')}</Button>
-[F39:768]|               <Button className="bg-blue-600 hover:bg-blue-500 text-white" onClick={handleSaveRecurring} disabled={!recTitle.trim()}>
-[F39:769]|                 {t('recurring.saveRule')}
-[F39:770]|               </Button>
+[F39:281]|   const handleLongBreakDurationChange = (value: number[]) => {
+[F39:282]|     const minutes = value[0];
+[F39:283]|     setLongBreakMinutes(minutes);
+[F39:284]|     onUpdateSettings({ longBreakDuration: minutes * 60 });
+[F39:285]|   };
+[F39:286]| 
+[F39:287]|   // 预览模式 - 只在完成拖动后触发
+[F39:288]|   const handleWorkDurationCommit = () => {
+[F39:289]|     onPreviewMode?.('work');
+[F39:290]|   };
+[F39:291]| 
+[F39:292]|   const handleBreakDurationCommit = () => {
+[F39:293]|     onPreviewMode?.('break');
+[F39:294]|   };
+[F39:295]| 
+[F39:296]|   const handleLongBreakDurationCommit = () => {
+[F39:297]|     onPreviewMode?.('longBreak');
+[F39:298]|   };
+[F39:299]| 
+[F39:300]|   const handlePriorityWeightChange = (value: number[]) => {
+[F39:301]|     const weight = value[0];
+[F39:302]|     setPriorityWeight(weight);
+[F39:303]|     // deadlineWeight 会通过 useMemo 自动计算
+[F39:304]|     onUpdateSettings({
+[F39:305]|       globalViewSort: {
+[F39:306]|         mode: settings.globalViewSort.mode as GlobalViewSortMode,
+[F39:307]|         priorityWeight: weight / 100,
+[F39:308]|         deadlineWeight: (100 - weight) / 100,
+[F39:309]|       },
+[F39:310]|     });
+[F39:311]|   };
+[F39:312]| 
+[F39:313]|   const handleDeadlineWeightChange = (value: number[]) => {
+[F39:314]|     // 紧急度 Slider 正向联动：拖动紧急度时，优先级跟随反向变动
+[F39:315]|     const dWeight = value[0];
+[F39:316]|     const pWeight = 100 - dWeight;
+[F39:317]|     setPriorityWeight(pWeight);
+[F39:318]|     onUpdateSettings({
+[F39:319]|       globalViewSort: {
+[F39:320]|         mode: settings.globalViewSort.mode as GlobalViewSortMode,
+[F39:321]|         priorityWeight: pWeight / 100,
+[F39:322]|         deadlineWeight: dWeight / 100,
+[F39:323]|       },
+[F39:324]|     });
+[F39:325]|   };
+[F39:326]| 
+[F39:327]|   const handleReset = () => {
+[F39:328]|     setWorkMinutes(25);
+[F39:329]|     setBreakMinutes(5);
+[F39:330]|     setLongBreakMinutes(15);
+[F39:331]|     setPriorityWeight(DEFAULT_SETTINGS.globalViewSort.priorityWeight * 100);
+[F39:332]|     setAutoSaveInterval(DEFAULT_SETTINGS.autoSaveInterval);
+[F39:333]|     // deadlineWeight 会通过 useMemo 自动计算
+[F39:334]|     onUpdateSettings({
+[F39:335]|       workDuration: DEFAULT_SETTINGS.workDuration,
+[F39:336]|       breakDuration: DEFAULT_SETTINGS.breakDuration,
+[F39:337]|       longBreakDuration: DEFAULT_SETTINGS.longBreakDuration,
+[F39:338]|       autoStartBreak: DEFAULT_SETTINGS.autoStartBreak,
+[F39:339]|       soundEnabled: DEFAULT_SETTINGS.soundEnabled,
+[F39:340]|       globalViewSort: DEFAULT_SETTINGS.globalViewSort,
+[F39:341]|       autoSaveEnabled: DEFAULT_SETTINGS.autoSaveEnabled,
+[F39:342]|       autoSaveInterval: DEFAULT_SETTINGS.autoSaveInterval,
+[F39:343]|     });
+[F39:344]|   };
+[F39:345]| 
+[F39:346]|   return (
+[F39:347]|     <div className="settings-panel-container">
+[F39:348]|       {/* Header */}
+[F39:349]|       <div className="settings-panel-header">
+[F39:350]|         <Button
+[F39:351]|           size="icon"
+[F39:352]|           variant="ghost"
+[F39:353]|           className="back-btn"
+[F39:354]|           onClick={onBack}
+[F39:355]|         >
+[F39:356]|           <ArrowLeft size={18} />
+[F39:357]|         </Button>
+[F39:358]|         <div className="settings-panel-title">
+[F39:359]|           <Settings size={18} className="text-blue-400" />
+[F39:360]|           <span>{t('settings.title')}</span>
+[F39:361]|         </div>
+[F39:362]|       </div>
+[F39:363]| 
+[F39:364]|       {/* Settings Content */}
+[F39:365]|       <div className="settings-content">
+[F39:366]|         {/* Language Settings */}
+[F39:367]|         <div className="settings-section">
+[F39:368]|           <h3 className="settings-section-title">
+[F39:369]|             <Settings size={14} className="mr-2" />
+[F39:370]|             {t('settings.language')}
+[F39:371]|           </h3>
+[F39:372]|           <div className="setting-item">
+[F39:373]|             <div className="setting-label">
+[F39:374]|               <span>{t('settings.language')}</span>
+[F39:375]|               <Select
+[F39:376]|                 value={settings.language || 'zh'}
+[F39:377]|                 onValueChange={(val) => {
+[F39:378]|                   onUpdateSettings({ language: val });
+[F39:379]|                   i18n.changeLanguage(val);
+[F39:380]|                 }}
+[F39:381]|               >
+[F39:382]|                 <SelectTrigger className="w-32">
+[F39:383]|                   <SelectValue />
+[F39:384]|                 </SelectTrigger>
+[F39:385]|                 <SelectContent>
+[F39:386]|                   <SelectItem value="zh">简体中文</SelectItem>
+[F39:387]|                   <SelectItem value="en">English</SelectItem>
+[F39:388]|                 </SelectContent>
+[F39:389]|               </Select>
+[F39:390]|             </div>
+[F39:391]|           </div>
+[F39:392]|         </div>
+[F39:393]| 
+[F39:394]|         {/* Timer Settings */}
+[F39:395]|         <div className="settings-section">
+[F39:396]|           <h3 className="settings-section-title">
+[F39:397]|             <Clock size={14} className="mr-2" />
+[F39:398]|             {t('settings.timerSettings')}
+[F39:399]|           </h3>
+[F39:400]| 
+[F39:401]|           {/* Work Duration */}
+[F39:402]|           <div className="setting-item">
+[F39:403]|             <div className="setting-label">
+[F39:404]|               <span>{t('settings.workDuration')} {t('settings.workDurationMinutes')}</span>
+[F39:405]|               <Input
+[F39:406]|                 type="number"
+[F39:407]|                 value={workMinutes}
+[F39:408]|                 onChange={(e) => {
+[F39:409]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
+[F39:410]|                   setWorkMinutes(val);
+[F39:411]|                   onUpdateSettings({ workDuration: val * 60 });
+[F39:412]|                 }}
+[F39:413]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+[F39:414]|                 min={1}
+[F39:415]|               />
+[F39:416]|             </div>
+[F39:417]|             <Slider
+[F39:418]|               value={[workMinutes]}
+[F39:419]|               onValueChange={handleWorkDurationChange}
+[F39:420]|               onValueCommit={handleWorkDurationCommit}
+[F39:421]|               min={1}
+[F39:422]|               max={120}
+[F39:423]|               step={1}
+[F39:424]|               className="setting-slider mt-2"
+[F39:425]|             />
+[F39:426]|           </div>
+[F39:427]| 
+[F39:428]|           {/* Break Duration */}
+[F39:429]|           <div className="setting-item">
+[F39:430]|             <div className="setting-label">
+[F39:431]|               <span>{t('settings.breakDuration')} {t('settings.workDurationMinutes')}</span>
+[F39:432]|               <Input
+[F39:433]|                 type="number"
+[F39:434]|                 value={breakMinutes}
+[F39:435]|                 onChange={(e) => {
+[F39:436]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
+[F39:437]|                   setBreakMinutes(val);
+[F39:438]|                   onUpdateSettings({ breakDuration: val * 60 });
+[F39:439]|                 }}
+[F39:440]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+[F39:441]|                 min={1}
+[F39:442]|               />
+[F39:443]|             </div>
+[F39:444]|             <Slider
+[F39:445]|               value={[breakMinutes]}
+[F39:446]|               onValueChange={handleBreakDurationChange}
+[F39:447]|               onValueCommit={handleBreakDurationCommit}
+[F39:448]|               min={1}
+[F39:449]|               max={60}
+[F39:450]|               step={1}
+[F39:451]|               className="setting-slider mt-2"
+[F39:452]|             />
+[F39:453]|           </div>
+[F39:454]| 
+[F39:455]|           {/* Long Break Duration */}
+[F39:456]|           <div className="setting-item">
+[F39:457]|             <div className="setting-label">
+[F39:458]|               <span>{t('settings.longBreakDuration')} {t('settings.workDurationMinutes')}</span>
+[F39:459]|               <Input
+[F39:460]|                 type="number"
+[F39:461]|                 value={longBreakMinutes}
+[F39:462]|                 onChange={(e) => {
+[F39:463]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
+[F39:464]|                   setLongBreakMinutes(val);
+[F39:465]|                   onUpdateSettings({ longBreakDuration: val * 60 });
+[F39:466]|                 }}
+[F39:467]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+[F39:468]|                 min={1}
+[F39:469]|               />
+[F39:470]|             </div>
+[F39:471]|             <Slider
+[F39:472]|               value={[longBreakMinutes]}
+[F39:473]|               onValueChange={handleLongBreakDurationChange}
+[F39:474]|               onValueCommit={handleLongBreakDurationCommit}
+[F39:475]|               min={1}
+[F39:476]|               max={90}
+[F39:477]|               step={1}
+[F39:478]|               className="setting-slider mt-2"
+[F39:479]|             />
+[F39:480]|           </div>
+[F39:481]|         </div>
+[F39:482]| 
+[F39:483]|         {/* Weighted Sort Settings */}
+[F39:484]|         <div className="settings-section">
+[F39:485]|           <h3 className="settings-section-title">
+[F39:486]|             <Flag size={14} className="mr-2" />
+[F39:487]|             {t('settings.weightedSort')}
+[F39:488]|           </h3>
+[F39:489]|           <p className="settings-section-desc">
+[F39:490]|             {t('settings.weightedSortDesc')}
+[F39:491]|           </p>
+[F39:492]| 
+[F39:493]|           {/* Priority Weight */}
+[F39:494]|           <div className="setting-item">
+[F39:495]|             <div className="setting-label">
+[F39:496]|               <Flag size={14} className="mr-2 text-red-400" />
+[F39:497]|               <span>{t('settings.priorityWeight')}</span>
+[F39:498]|               <span className="setting-value">{priorityWeight}%</span>
+[F39:499]|             </div>
+[F39:500]|             <Slider
+[F39:501]|               value={[priorityWeight]}
+[F39:502]|               onValueChange={handlePriorityWeightChange}
+[F39:503]|               min={0}
+[F39:504]|               max={100}
+[F39:505]|               step={10}
+[F39:506]|               className="setting-slider mt-2"
+[F39:507]|             />
+[F39:508]|           </div>
+[F39:509]| 
+[F39:510]|           {/* Urgency Weight */}
+[F39:511]|           <div className="setting-item">
+[F39:512]|             <div className="setting-label">
+[F39:513]|               <Zap size={14} className="mr-2 text-orange-400" />
+[F39:514]|               <span>{t('settings.deadlineWeight')}</span>
+[F39:515]|               <span className="setting-value">{deadlineWeight}%</span>
+[F39:516]|             </div>
+[F39:517]|             <Slider
+[F39:518]|               value={[deadlineWeight]}
+[F39:519]|               onValueChange={handleDeadlineWeightChange}
+[F39:520]|               min={0}
+[F39:521]|               max={100}
+[F39:522]|               step={10}
+[F39:523]|               className="setting-slider mt-2"
+[F39:524]|             />
+[F39:525]|           </div>
+[F39:526]|         </div>
+[F39:527]| 
+[F39:528]|         {/* Other Settings */}
+[F39:529]|         <div className="settings-section">
+[F39:530]|           <h3 className="settings-section-title">
+[F39:531]|             <Volume2 size={14} className="mr-2" />
+[F39:532]|             {t('settings.otherSettings')}
+[F39:533]|           </h3>
+[F39:534]| 
+[F39:535]|           {/* Auto Start Break */}
+[F39:536]|           <div className="setting-item switch">
+[F39:537]|             <div className="setting-label">
+[F39:538]|               <span>{t('settings.autoStartBreak')}</span>
+[F39:539]|               <span className="setting-desc">{t('settings.autoStartBreakDesc')}</span>
+[F39:540]|             </div>
+[F39:541]|             <Switch
+[F39:542]|               checked={settings.autoStartBreak}
+[F39:543]|               onCheckedChange={(checked) => onUpdateSettings({ autoStartBreak: checked })}
+[F39:544]|             />
+[F39:545]|           </div>
+[F39:546]| 
+[F39:547]|           {/* Sound Enabled */}
+[F39:548]|           <div className="setting-item switch">
+[F39:549]|             <div className="setting-label">
+[F39:550]|               <span>{t('settings.soundEnabled')}</span>
+[F39:551]|               <span className="setting-desc">{t('settings.soundEnabledDesc')}</span>
+[F39:552]|             </div>
+[F39:553]|             <Switch
+[F39:554]|               checked={settings.soundEnabled}
+[F39:555]|               onCheckedChange={(checked) => onUpdateSettings({ soundEnabled: checked })}
+[F39:556]|             />
+[F39:557]|           </div>
+[F39:558]| 
+[F39:559]|           {/* Auto Save Enabled */}
+[F39:560]|           <div className="setting-item switch">
+[F39:561]|             <div className="setting-label">
+[F39:562]|               <span>{t('settings.autoSaveEnabled')}</span>
+[F39:563]|               <span className="setting-desc">{t('settings.autoSaveEnabledDesc')}</span>
+[F39:564]|             </div>
+[F39:565]|             <Switch
+[F39:566]|               checked={settings.autoSaveEnabled || false}
+[F39:567]|               onCheckedChange={(checked) => onUpdateSettings({ autoSaveEnabled: checked })}
+[F39:568]|             />
+[F39:569]|           </div>
+[F39:570]| 
+[F39:571]|           {/* Auto Save Interval */}
+[F39:572]|           {settings.autoSaveEnabled && (
+[F39:573]|             <div className="setting-item">
+[F39:574]|               <div className="setting-label">
+[F39:575]|                 <span>{t('settings.autoSaveInterval')} {t('settings.autoSaveIntervalSeconds')}</span>
+[F39:576]|                 <Input
+[F39:577]|                   type="number"
+[F39:578]|                   value={autoSaveInterval}
+[F39:579]|                   onChange={(e) => {
+[F39:580]|                     const val = Math.max(10, parseInt(e.target.value) || 60);
+[F39:581]|                     setAutoSaveInterval(val);
+[F39:582]|                     onUpdateSettings({ autoSaveInterval: val });
+[F39:583]|                   }}
+[F39:584]|                   className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+[F39:585]|                   min={10}
+[F39:586]|                 />
+[F39:587]|               </div>
+[F39:588]|               <Slider
+[F39:589]|                 value={[autoSaveInterval]}
+[F39:590]|                 onValueChange={(value) => {
+[F39:591]|                   setAutoSaveInterval(value[0]);
+[F39:592]|                 }}
+[F39:593]|                 onValueCommit={(value) => {
+[F39:594]|                   onUpdateSettings({ autoSaveInterval: value[0] });
+[F39:595]|                 }}
+[F39:596]|                 min={10}
+[F39:597]|                 max={300}
+[F39:598]|                 step={10}
+[F39:599]|                 className="setting-slider mt-2"
+[F39:600]|               />
+[F39:601]|             </div>
+[F39:602]|           )}
+[F39:603]|         </div>
+[F39:604]| 
+[F39:605]|         {/* Data Storage Settings */}
+[F39:606]|         <div className="settings-section">
+[F39:607]|           <h3 className="settings-section-title">
+[F39:608]|             <Database size={14} className="mr-2 text-emerald-400" />
+[F39:609]|             {t('settings.dataStorage') || 'Data Storage'}
+[F39:610]|           </h3>
+[F39:611]|           <p className="settings-section-desc">
+[F39:612]|             {t('settings.dataStorageDesc') || 'Change where your data is saved. Select a cloud drive folder (like OneDrive, iCloud, or Dropbox) to sync across devices.'}
+[F39:613]|           </p>
+[F39:614]| 
+[F39:615]|           <div className="setting-item flex flex-col gap-2">
+[F39:616]|             <div className="text-xs text-white/50 break-all bg-black/20 p-2 rounded border border-white/10 flex items-center justify-between">
+[F39:617]|               <span className="truncate">{currentDbPath || t('common.loading')}</span>
+[F39:618]|             </div>
+[F39:619]|             <Button
+[F39:620]|               variant="outline"
+[F39:621]|               size="sm"
+[F39:622]|               className="w-fit"
+[F39:623]|               onClick={handleChangeDbPath}
+[F39:624]|             >
+[F39:625]|               <FolderOpen size={14} className="mr-2" />
+[F39:626]|               {t('settings.changeLocation') || 'Change Location'}
+[F39:627]|             </Button>
+[F39:628]|           </div>
+[F39:629]|         </div>
+[F39:630]| 
+[F39:631]|         {/* Recurring Tasks Settings */}
+[F39:632]|         <div className="settings-section">
+[F39:633]|           <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
+[F39:634]|             <h3 className="flex items-center text-xs font-semibold text-white/70">
+[F39:635]|               <Repeat size={14} className="mr-2 text-green-400" />
+[F39:636]|               {t('settings.recurringTasks')}
+[F39:637]|             </h3>
+[F39:638]|             <Button size="sm" className="h-6 text-xs px-2 bg-blue-600 hover:bg-blue-500 text-white" onClick={() => setShowRecurringDialog(true)}>
+[F39:639]|               <Plus size={12} className="mr-1" />
+[F39:640]|               {t('settings.newRule')}
+[F39:641]|             </Button>
+[F39:642]|           </div>
+[F39:643]|           <p className="settings-section-desc mb-3">
+[F39:644]|             {t('settings.recurringTasksDesc')}
+[F39:645]|           </p>
+[F39:646]| 
+[F39:647]|           <div className="flex flex-col gap-2">
+[F39:648]|             {!recurringTemplates || recurringTemplates.length === 0 ? (
+[F39:649]|               <div className="text-center py-4 text-xs text-white/30 bg-black/10 rounded-md border border-dashed border-white/10">
+[F39:650]|                 {t('recurring.noRules')}
+[F39:651]|               </div>
+[F39:652]|             ) : (
+[F39:653]|               recurringTemplates.map(tpl => (
+[F39:654]|                 <div key={tpl.id} className="flex flex-col gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
+[F39:655]|                   <div className="flex items-center justify-between">
+[F39:656]|                     <span className="text-sm font-medium text-white/90">{tpl.title}</span>
+[F39:657]|                     <div className="flex items-center gap-2">
+[F39:658]|                       <Switch
+[F39:659]|                         checked={tpl.isActive}
+[F39:660]|                         onCheckedChange={(c) => onUpdateRecurringTemplate(tpl.id, { isActive: c })}
+[F39:661]|                       />
+[F39:662]|                       <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-blue-400 hover:bg-blue-400/10" onClick={() => handleEditTemplate(tpl)} title={t('settings.editRule')}>
+[F39:663]|                         <Edit2 size={12} />
+[F39:664]|                       </Button>
+[F39:665]|                       <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10" onClick={() => onDeleteRecurringTemplate(tpl.id)}>
+[F39:666]|                         <Trash2 size={12} />
+[F39:667]|                       </Button>
+[F39:668]|                     </div>
+[F39:669]|                   </div>
+[F39:670]|                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/50">
+[F39:671]|                     <span className="flex items-center">
+[F39:672]|                       <Repeat size={10} className="mr-1" />
+[F39:673]|                       {t('recurring.every')} {tpl.intervalMinutes >= 1440 ? `${tpl.intervalMinutes / 1440} ${t('recurring.days')}` : tpl.intervalMinutes >= 60 ? `${tpl.intervalMinutes / 60} ${t('recurring.hours')}` : `${tpl.intervalMinutes} ${t('recurring.minutes')}`}
+[F39:674]|                     </span>
+[F39:675]|                     <span className="flex items-center">
+[F39:676]|                       <Clock size={10} className="mr-1" />
+[F39:677]|                       {t('recurring.ddl')}: {t('recurring.afterGeneration')} {tpl.deadlineOffsetHours >= 24 ? `${tpl.deadlineOffsetHours / 24} ${t('recurring.days')}` : `${tpl.deadlineOffsetHours} ${t('recurring.hours')}`}
+[F39:678]|                     </span>
+[F39:679]|                     <span className="flex items-center">
+[F39:680]|                       <Flag size={10} className="mr-1" />
+[F39:681]|                       {t('recurring.targetZone')}: {zones.find(z => z.id === tpl.zoneId)?.name || t('recurring.unknownZone')}
+[F39:682]|                     </span>
+[F39:683]|                   </div>
+[F39:684]|                 </div>
+[F39:685]|               ))
+[F39:686]|             )}
+[F39:687]|           </div>
+[F39:688]|         </div>
+[F39:689]| 
+[F39:690]|         {/* 新建定时任务的弹窗 */}
+[F39:691]|         <Dialog open={showRecurringDialog} onOpenChange={setShowRecurringDialog}>
+[F39:692]|           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
+[F39:693]|             <DialogHeader>
+[F39:694]|               <DialogTitle>{editingTemplate ? t('recurring.editRule') : t('recurring.addRule')}</DialogTitle>
+[F39:695]|             </DialogHeader>
+[F39:696]|             <div className="flex flex-col gap-4 py-2">
+[F39:697]|               <div className="flex flex-col gap-2">
+[F39:698]|                 <label className="text-xs text-white/60">{t('recurring.ruleTitle')}</label>
+[F39:699]|                 <Input value={recTitle} onChange={e => setRecTitle(e.target.value)} className="bg-black/30 border-white/20" placeholder={t('recurring.ruleTitlePlaceholder')} />
+[F39:700]|               </div>
+[F39:701]| 
+[F39:702]|               <div className="flex flex-col gap-2">
+[F39:703]|                 <label className="text-xs text-white/60">{t('recurring.ruleDescription')}</label>
+[F39:704]|                 <Input value={recDesc} onChange={e => setRecDesc(e.target.value)} className="bg-black/30 border-white/20" placeholder={t('recurring.ruleDescriptionPlaceholder')} />
+[F39:705]|               </div>
+[F39:706]| 
+[F39:707]|               <div className="flex gap-4">
+[F39:708]|                 <div className="flex flex-col gap-2 flex-1">
+[F39:709]|                   <label className="text-xs text-white/60">{t('recurring.triggerInterval')} <span className="text-white/30 text-[10px]">{t('recurring.minInterval')}</span></label>
+[F39:710]|                   <div className="flex items-center gap-2">
+[F39:711]|                     <Input
+[F39:712]|                       type="number"
+[F39:713]|                       min={recIntervalUnit === 'minutes' ? 5 : 1}
+[F39:714]|                       value={recIntervalValue}
+[F39:715]|                       onChange={e => {
+[F39:716]|                         const val = Number(e.target.value);
+[F39:717]|                         // 如果单位是分钟，限制最低输入为5
+[F39:718]|                         if (recIntervalUnit === 'minutes' && val < 5 && val !== 0) {
+[F39:719]|                           setRecIntervalValue(5);
+[F39:720]|                         } else {
+[F39:721]|                           setRecIntervalValue(val);
+[F39:722]|                         }
+[F39:723]|                       }}
+[F39:724]|                       className="bg-black/30 border-white/20"
+[F39:725]|                     />
+[F39:726]|                     <Select value={recIntervalUnit} onValueChange={(v: 'minutes' | 'hours' | 'days') => {
+[F39:727]|                       setRecIntervalUnit(v);
+[F39:728]|                       if (v === 'minutes' && recIntervalValue < 5) {
+[F39:729]|                         setRecIntervalValue(5);
+[F39:730]|                       }
+[F39:731]|                     }}>
+[F39:732]|                       <SelectTrigger className="w-[80px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
+[F39:733]|                       <SelectContent><SelectItem value="minutes">{t('recurring.minutes')}</SelectItem><SelectItem value="hours">{t('recurring.hours')}</SelectItem><SelectItem value="days">{t('recurring.days')}</SelectItem></SelectContent>
+[F39:734]|                     </Select>
+[F39:735]|                   </div>
+[F39:736]|                 </div>
+[F39:737]|                 <div className="flex flex-col gap-2 flex-1">
+[F39:738]|                   <label className="text-xs text-white/60">{t('recurring.targetZone')}</label>
+[F39:739]|                   <Select value={recZoneId} onValueChange={setRecZoneId}>
+[F39:740]|                     <SelectTrigger className="bg-black/30 border-white/20"><SelectValue placeholder={t('recurring.selectZone')} /></SelectTrigger>
+[F39:741]|                     <SelectContent>
+[F39:742]|                       {zones.map(z => <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>)}
+[F39:743]|                     </SelectContent>
+[F39:744]|                   </Select>
+[F39:745]|                 </div>
+[F39:746]|               </div>
+[F39:747]| 
+[F39:748]|               <div className="flex gap-4">
+[F39:749]|                 <div className="flex flex-col gap-2 flex-1">
+[F39:750]|                   <label className="text-xs text-white/60">{t('recurring.autoDeadline')} {t('recurring.afterGeneration')}</label>
+[F39:751]|                   <div className="flex items-center gap-2">
+[F39:752]|                     <Input type="number" min={0} value={recDeadlineValue} onChange={e => setRecDeadlineValue(Number(e.target.value))} className="bg-black/30 border-white/20" />
+[F39:753]|                     <Select value={recDeadlineUnit} onValueChange={(v: 'hours' | 'days') => setRecDeadlineUnit(v)}>
+[F39:754]|                       <SelectTrigger className="w-[80px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
+[F39:755]|                       <SelectContent><SelectItem value="hours">{t('recurring.hours')}</SelectItem><SelectItem value="days">{t('recurring.days')}</SelectItem></SelectContent>
+[F39:756]|                     </Select>
+[F39:757]|                   </div>
+[F39:758]|                 </div>
+[F39:759]|                 <div className="flex flex-col gap-2 flex-1">
+[F39:760]|                   <label className="text-xs text-white/60">{t('recurring.priority')}</label>
+[F39:761]|                   <Select value={recPriority} onValueChange={(v: TaskPriority) => setRecPriority(v)}>
+[F39:762]|                     <SelectTrigger className="bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
+[F39:763]|                     <SelectContent>
+[F39:764]|                       <SelectItem value="high">{t('task.priorityHigh')}</SelectItem>
+[F39:765]|                       <SelectItem value="medium">{t('task.priorityMedium')}</SelectItem>
+[F39:766]|                       <SelectItem value="low">{t('task.priorityLow')}</SelectItem>
+[F39:767]|                     </SelectContent>
+[F39:768]|                   </Select>
+[F39:769]|                 </div>
+[F39:770]|               </div>
 [F39:771]|             </div>
-[F39:772]|           </DialogContent>
-[F39:773]|         </Dialog>
-[F39:774]| 
-[F39:775]|         {/* Environment Profiles Section */}
-[F39:776]|         <div className="settings-section mt-6">
-[F39:777]|           <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
-[F39:778]|             <h3 className="flex items-center text-xs font-semibold text-white/70">
-[F39:779]|               <Bookmark size={14} className="mr-2 text-indigo-400" />
-[F39:780]|               {t('settings.environmentProfiles')}
-[F39:781]|             </h3>
-[F39:782]|             <div className="flex gap-2">
-[F39:783]|               <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleImportConfig}>
-[F39:784]|                 <Upload size={12} className="mr-1" /> {t('common.import')}
-[F39:785]|               </Button>
-[F39:786]|               <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleExportConfig}>
-[F39:787]|                 <Download size={12} className="mr-1" /> {t('common.export')}
-[F39:788]|               </Button>
-[F39:789]|             </div>
-[F39:790]|           </div>
-[F39:791]|           <p className="settings-section-desc mb-3">
-[F39:792]|             {t('settings.environmentProfilesDesc')}
-[F39:793]|           </p>
-[F39:794]| 
-[F39:795]|           <Button
-[F39:796]|             variant="outline"
-[F39:797]|             className="w-full mb-3 border-dashed border-indigo-500/50 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
-[F39:798]|             onClick={() => setShowSaveProfileDialog(true)}
-[F39:799]|           >
-[F39:800]|             <Save size={14} className="mr-2" /> {t('settings.saveAsSnapshot')}
-[F39:801]|           </Button>
-[F39:802]| 
-[F39:803]|           <div className="flex flex-col gap-2">
-[F39:804]|             {(!configProfiles || configProfiles.length === 0) && (
-[F39:805]|               <div className="text-center py-4 text-xs text-white/30 bg-black/10 rounded-md border border-white/5">
-[F39:806]|                 {t('profile.noProfiles')}
-[F39:807]|               </div>
-[F39:808]|             )}
-[F39:809]|             {(configProfiles || []).map(profile => (
-[F39:810]|               <div key={profile.id} className="flex flex-col gap-2 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-indigo-500/30 transition-colors">
-[F39:811]|                 <div className="flex items-center justify-between">
-[F39:812]|                   <span className="text-sm font-medium text-white/90">{profile.name}</span>
-[F39:813]|                   <div className="flex items-center gap-2">
-[F39:814]|                     <Button size="sm" className="h-6 text-xs px-2 bg-indigo-600 hover:bg-indigo-500 text-white" onClick={() => {
-[F39:815]|                       applyConfigProfile(profile.id);
-[F39:816]|                       toast.success(`${t('profile.profileApplied')}: ${profile.name}`);
-[F39:817]|                     }}>
-[F39:818]|                       {t('common.apply')}
-[F39:819]|                     </Button>
-[F39:820]|                     <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-blue-400 hover:bg-blue-400/10" onClick={() => {
-[F39:821]|                       setEditingProfile(profile);
-[F39:822]|                       setEditingProfileName(profile.name);
+[F39:772]|             <div className="flex justify-end gap-2 mt-4">
+[F39:773]|               <Button variant="ghost" onClick={() => setShowRecurringDialog(false)}>{t('common.cancel')}</Button>
+[F39:774]|               <Button className="bg-blue-600 hover:bg-blue-500 text-white" onClick={handleSaveRecurring} disabled={!recTitle.trim()}>
+[F39:775]|                 {t('recurring.saveRule')}
+[F39:776]|               </Button>
+[F39:777]|             </div>
+[F39:778]|           </DialogContent>
+[F39:779]|         </Dialog>
+[F39:780]| 
+[F39:781]|         {/* Environment Profiles Section */}
+[F39:782]|         <div className="settings-section mt-6">
+[F39:783]|           <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
+[F39:784]|             <h3 className="flex items-center text-xs font-semibold text-white/70">
+[F39:785]|               <Bookmark size={14} className="mr-2 text-indigo-400" />
+[F39:786]|               {t('settings.environmentProfiles')}
+[F39:787]|             </h3>
+[F39:788]|             <div className="flex gap-2">
+[F39:789]|               <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleImportConfig}>
+[F39:790]|                 <Upload size={12} className="mr-1" /> {t('common.import')}
+[F39:791]|               </Button>
+[F39:792]|               <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleExportConfig}>
+[F39:793]|                 <Download size={12} className="mr-1" /> {t('common.export')}
+[F39:794]|               </Button>
+[F39:795]|             </div>
+[F39:796]|           </div>
+[F39:797]|           <p className="settings-section-desc mb-3">
+[F39:798]|             {t('settings.environmentProfilesDesc')}
+[F39:799]|           </p>
+[F39:800]| 
+[F39:801]|           <Button
+[F39:802]|             variant="outline"
+[F39:803]|             className="w-full mb-3 border-dashed border-indigo-500/50 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
+[F39:804]|             onClick={() => setShowSaveProfileDialog(true)}
+[F39:805]|           >
+[F39:806]|             <Save size={14} className="mr-2" /> {t('settings.saveAsSnapshot')}
+[F39:807]|           </Button>
+[F39:808]| 
+[F39:809]|           <div className="flex flex-col gap-2">
+[F39:810]|             {(!configProfiles || configProfiles.length === 0) && (
+[F39:811]|               <div className="text-center py-4 text-xs text-white/30 bg-black/10 rounded-md border border-white/5">
+[F39:812]|                 {t('profile.noProfiles')}
+[F39:813]|               </div>
+[F39:814]|             )}
+[F39:815]|             {(configProfiles || []).map(profile => (
+[F39:816]|               <div key={profile.id} className="flex flex-col gap-2 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-indigo-500/30 transition-colors">
+[F39:817]|                 <div className="flex items-center justify-between">
+[F39:818]|                   <span className="text-sm font-medium text-white/90">{profile.name}</span>
+[F39:819]|                   <div className="flex items-center gap-2">
+[F39:820]|                     <Button size="sm" className="h-6 text-xs px-2 bg-indigo-600 hover:bg-indigo-500 text-white" onClick={() => {
+[F39:821]|                       applyConfigProfile(profile.id);
+[F39:822]|                       toast.success(`${t('profile.profileApplied')}: ${profile.name}`);
 [F39:823]|                     }}>
-[F39:824]|                       <Edit2 size={12} />
+[F39:824]|                       {t('common.apply')}
 [F39:825]|                     </Button>
-[F39:826]|                     <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10" onClick={() => deleteConfigProfile(profile.id)}>
-[F39:827]|                       <Trash2 size={12} />
-[F39:828]|                     </Button>
-[F39:829]|                   </div>
-[F39:830]|                 </div>
-[F39:831]|                 <div className="text-[10px] text-white/40">
-[F39:832]|                   {t('profile.createdAt')}: {new Date(profile.createdAt).toLocaleString()} · {t('profile.containsRules', { count: profile.recurringTemplates.length })}
-[F39:833]|                 </div>
-[F39:834]|               </div>
-[F39:835]|             ))}
-[F39:836]|           </div>
-[F39:837]|         </div>
-[F39:838]| 
-[F39:839]|         {/* Save Profile Dialog */}
-[F39:840]|         <Dialog open={showSaveProfileDialog} onOpenChange={setShowSaveProfileDialog}>
-[F39:841]|           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
-[F39:842]|             <DialogHeader>
-[F39:843]|               <DialogTitle>{t('profile.saveProfile')}</DialogTitle>
-[F39:844]|             </DialogHeader>
-[F39:845]|             <div className="flex flex-col gap-4 py-2">
-[F39:846]|               <Input
-[F39:847]|                 value={profileName}
-[F39:848]|                 onChange={e => setProfileName(e.target.value)}
-[F39:849]|                 placeholder={t('profile.exampleMode')}
-[F39:850]|                 className="bg-black/30 border-white/20"
-[F39:851]|                 autoFocus
-[F39:852]|               />
-[F39:853]|             </div>
-[F39:854]|             <div className="flex justify-end gap-2 mt-2">
-[F39:855]|               <Button variant="ghost" onClick={() => setShowSaveProfileDialog(false)}>{t('common.cancel')}</Button>
-[F39:856]|               <Button className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!profileName.trim()} onClick={() => {
-[F39:857]|                 saveConfigProfile(profileName.trim(), recurringTemplates.filter((r: RecurringTemplate) => r.scope === 'global' || !r.scope));
-[F39:858]|                 setProfileName('');
-[F39:859]|                 setShowSaveProfileDialog(false);
-[F39:860]|                 toast.success(t('profile.profileSaved'));
-[F39:861]|               }}>
-[F39:862]|                 {t('common.save')}
-[F39:863]|               </Button>
-[F39:864]|             </div>
-[F39:865]|           </DialogContent>
-[F39:866]|         </Dialog>
-[F39:867]| 
-[F39:868]|         {/* Edit Profile Dialog */}
-[F39:869]|         <Dialog open={!!editingProfile} onOpenChange={(open) => !open && setEditingProfile(null)}>
-[F39:870]|           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
-[F39:871]|             <DialogHeader>
-[F39:872]|               <DialogTitle>{t('profile.editProfile') || 'Edit Profile'}</DialogTitle>
-[F39:873]|             </DialogHeader>
-[F39:874]|             <div className="flex flex-col gap-4 py-2">
-[F39:875]|               <Input
-[F39:876]|                 value={editingProfileName}
-[F39:877]|                 onChange={e => setEditingProfileName(e.target.value)}
-[F39:878]|                 placeholder={t('profile.snapshotName')}
-[F39:879]|                 className="bg-black/30 border-white/20"
-[F39:880]|                 autoFocus
-[F39:881]|               />
-[F39:882]|             </div>
-[F39:883]|             <div className="flex justify-end gap-2 mt-2">
-[F39:884]|               <Button variant="ghost" onClick={() => setEditingProfile(null)}>{t('common.cancel')}</Button>
-[F39:885]|               <Button className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!editingProfileName.trim()} onClick={() => {
-[F39:886]|                 if (editingProfile) {
-[F39:887]|                   updateConfigProfile(editingProfile.id, { name: editingProfileName.trim() });
-[F39:888]|                   toast.success(t('profile.profileSaved'));
-[F39:889]|                 }
-[F39:890]|                 setEditingProfile(null);
-[F39:891]|                 setEditingProfileName('');
-[F39:892]|               }}>
-[F39:893]|                 {t('common.save')}
-[F39:894]|               </Button>
-[F39:895]|             </div>
-[F39:896]|           </DialogContent>
-[F39:897]|         </Dialog>
-[F39:898]| 
-[F39:899]|         {/* Reset Button */}
-[F39:900]|         <div className="settings-footer">
-[F39:901]|           <Button
-[F39:902]|             variant="outline"
-[F39:903]|             size="sm"
-[F39:904]|             className="reset-btn"
-[F39:905]|             onClick={handleReset}
-[F39:906]|           >
-[F39:907]|             <RotateCcw size={14} className="mr-1" />
-[F39:908]|             {t('settings.resetSettings')}
-[F39:909]|           </Button>
-[F39:910]|         </div>
-[F39:911]|       </div>
-[F39:912]|     </div>
-[F39:913]|   );
-[F39:914]| }
+[F39:826]|                     <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-blue-400 hover:bg-blue-400/10" onClick={() => {
+[F39:827]|                       setEditingProfile(profile);
+[F39:828]|                       setEditingProfileName(profile.name);
+[F39:829]|                     }}>
+[F39:830]|                       <Edit2 size={12} />
+[F39:831]|                     </Button>
+[F39:832]|                     <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10" onClick={() => deleteConfigProfile(profile.id)}>
+[F39:833]|                       <Trash2 size={12} />
+[F39:834]|                     </Button>
+[F39:835]|                   </div>
+[F39:836]|                 </div>
+[F39:837]|                 <div className="text-[10px] text-white/40">
+[F39:838]|                   {t('profile.createdAt')}: {new Date(profile.createdAt).toLocaleString()} · {t('profile.containsRules', { count: profile.recurringTemplates.length })}
+[F39:839]|                 </div>
+[F39:840]|               </div>
+[F39:841]|             ))}
+[F39:842]|           </div>
+[F39:843]|         </div>
+[F39:844]| 
+[F39:845]|         {/* Save Profile Dialog */}
+[F39:846]|         <Dialog open={showSaveProfileDialog} onOpenChange={setShowSaveProfileDialog}>
+[F39:847]|           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
+[F39:848]|             <DialogHeader>
+[F39:849]|               <DialogTitle>{t('profile.saveProfile')}</DialogTitle>
+[F39:850]|             </DialogHeader>
+[F39:851]|             <div className="flex flex-col gap-4 py-2">
+[F39:852]|               <Input
+[F39:853]|                 value={profileName}
+[F39:854]|                 onChange={e => setProfileName(e.target.value)}
+[F39:855]|                 placeholder={t('profile.exampleMode')}
+[F39:856]|                 className="bg-black/30 border-white/20"
+[F39:857]|                 autoFocus
+[F39:858]|               />
+[F39:859]|             </div>
+[F39:860]|             <div className="flex justify-end gap-2 mt-2">
+[F39:861]|               <Button variant="ghost" onClick={() => setShowSaveProfileDialog(false)}>{t('common.cancel')}</Button>
+[F39:862]|               <Button className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!profileName.trim()} onClick={() => {
+[F39:863]|                 saveConfigProfile(profileName.trim(), recurringTemplates.filter((r: RecurringTemplate) => r.scope === 'global' || !r.scope));
+[F39:864]|                 setProfileName('');
+[F39:865]|                 setShowSaveProfileDialog(false);
+[F39:866]|                 toast.success(t('profile.profileSaved'));
+[F39:867]|               }}>
+[F39:868]|                 {t('common.save')}
+[F39:869]|               </Button>
+[F39:870]|             </div>
+[F39:871]|           </DialogContent>
+[F39:872]|         </Dialog>
+[F39:873]| 
+[F39:874]|         {/* Edit Profile Dialog */}
+[F39:875]|         <Dialog open={!!editingProfile} onOpenChange={(open) => !open && setEditingProfile(null)}>
+[F39:876]|           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
+[F39:877]|             <DialogHeader>
+[F39:878]|               <DialogTitle>{t('profile.editProfile') || 'Edit Profile'}</DialogTitle>
+[F39:879]|             </DialogHeader>
+[F39:880]|             <div className="flex flex-col gap-4 py-2">
+[F39:881]|               <Input
+[F39:882]|                 value={editingProfileName}
+[F39:883]|                 onChange={e => setEditingProfileName(e.target.value)}
+[F39:884]|                 placeholder={t('profile.snapshotName')}
+[F39:885]|                 className="bg-black/30 border-white/20"
+[F39:886]|                 autoFocus
+[F39:887]|               />
+[F39:888]|             </div>
+[F39:889]|             <div className="flex justify-end gap-2 mt-2">
+[F39:890]|               <Button variant="ghost" onClick={() => setEditingProfile(null)}>{t('common.cancel')}</Button>
+[F39:891]|               <Button className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!editingProfileName.trim()} onClick={() => {
+[F39:892]|                 if (editingProfile) {
+[F39:893]|                   updateConfigProfile(editingProfile.id, { name: editingProfileName.trim() });
+[F39:894]|                   toast.success(t('profile.profileSaved'));
+[F39:895]|                 }
+[F39:896]|                 setEditingProfile(null);
+[F39:897]|                 setEditingProfileName('');
+[F39:898]|               }}>
+[F39:899]|                 {t('common.save')}
+[F39:900]|               </Button>
+[F39:901]|             </div>
+[F39:902]|           </DialogContent>
+[F39:903]|         </Dialog>
+[F39:904]| 
+[F39:905]|         {/* Reset Button */}
+[F39:906]|         <div className="settings-footer">
+[F39:907]|           <Button
+[F39:908]|             variant="outline"
+[F39:909]|             size="sm"
+[F39:910]|             className="reset-btn"
+[F39:911]|             onClick={handleReset}
+[F39:912]|           >
+[F39:913]|             <RotateCcw size={14} className="mr-1" />
+[F39:914]|             {t('settings.resetSettings')}
+[F39:915]|           </Button>
+[F39:916]|         </div>
+[F39:917]|       </div>
+[F39:918]|     </div>
+[F39:919]|   );
+[F39:920]| }
 
 ================================================================================
 文件路径: src\components\TaskItem.tsx(F40) (约合大小: 27 KB)
@@ -18245,12 +18278,12 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F98:278]| }
 
 ================================================================================
-文件路径: src\lib\auto-tester.ts(F99) (约合大小: 3 KB)
+文件路径: src\lib\auto-tester.ts(F99) (约合大小: 9 KB)
 ================================================================================
 [F99:1]| import { useAppStore } from '@/store';
 [F99:2]| import { changeDbPath } from '@/lib/db';
-[F99:3]| import { debugLog } from '@/lib/utils';
-[F99:4]| import { toast } from 'sonner';
+[F99:3]| import { toast } from 'sonner';
+[F99:4]| import { getIsHydrated, setIsSwitching } from './storage-adapter';
 [F99:5]| 
 [F99:6]| const TEST_KEY = 'FOCUS_FLOW_AUTO_TEST_STATE';
 [F99:7]| 
@@ -18263,113 +18296,257 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F99:14]|   currentDir: 'A' | 'B';
 [F99:15]| }
 [F99:16]| 
-[F99:17]| export const AutoTester = {
-[F99:18]|   // 启动测试
-[F99:19]|   start: (dirA: string, dirB: string, maxIterations: number = 20) => {
-[F99:20]|     const state: TestState = {
-[F99:21]|       isRunning: true,
-[F99:22]|       iteration: 0,
-[F99:23]|       maxIterations,
-[F99:24]|       dirA,
-[F99:25]|       dirB,
-[F99:26]|       currentDir: 'A' // 初始状态假设在 A，或者即将切往 A
-[F99:27]|     };
-[F99:28]|     localStorage.setItem(TEST_KEY, JSON.stringify(state));
-[F99:29]|     debugLog('TEST_START', state);
-[F99:30]| 
-[F99:31]|     // 立即开始第一次切换
-[F99:32]|     AutoTester.runCycle();
-[F99:33]|   },
-[F99:34]| 
-[F99:35]|   // 停止测试
-[F99:36]|   stop: () => {
-[F99:37]|     localStorage.removeItem(TEST_KEY);
-[F99:38]|     debugLog('TEST_STOPPED_BY_USER');
-[F99:39]|     toast.info("自动化测试已停止");
-[F99:40]|   },
-[F99:41]| 
-[F99:42]|   // 执行切换循环
-[F99:43]|   runCycle: async () => {
-[F99:44]|     const rawState = localStorage.getItem(TEST_KEY);
-[F99:45]|     if (!rawState) return;
-[F99:46]| 
-[F99:47]|     const state: TestState = JSON.parse(rawState);
-[F99:48]|     if (!state.isRunning) return;
-[F99:49]| 
-[F99:50]|     // 准备下一次切换
-[F99:51]|     const nextDirTarget = state.currentDir === 'A' ? 'B' : 'A';
-[F99:52]|     const nextPath = nextDirTarget === 'A' ? state.dirA : state.dirB;
-[F99:53]| 
-[F99:54]|     debugLog('TEST_SWITCHING_TO', { nextDirTarget, nextPath });
-[F99:55]| 
-[F99:56]|     // 更新状态
-[F99:57]|     state.iteration++;
-[F99:58]|     state.currentDir = nextDirTarget;
-[F99:59]|     localStorage.setItem(TEST_KEY, JSON.stringify(state));
-[F99:60]| 
-[F99:61]|     toast.loading(`自动化测试进行中: ${state.iteration}/${state.maxIterations}`);
-[F99:62]| 
-[F99:63]|     // 触发切换
-[F99:64]|     await changeDbPath(nextPath);
-[F99:65]|   },
-[F99:66]| 
-[F99:67]|   // 每次应用启动时调用此函数
-[F99:68]|   checkAndRun: async () => {
-[F99:69]|     const rawState = localStorage.getItem(TEST_KEY);
-[F99:70]|     if (!rawState) return;
+[F99:17]| const debugLog = (msg: string, data?: unknown) => {
+[F99:18]|   console.log(`[AutoTester] ${msg}`, data || '');
+[F99:19]| };
+[F99:20]| 
+[F99:21]| // 进度 DOM 元素引用
+[F99:22]| let _progressElement: HTMLElement | null = null;
+[F99:23]| 
+[F99:24]| // 创建进度显示元素
+[F99:25]| function createProgressElement(): HTMLElement {
+[F99:26]|   if (_progressElement) return _progressElement;
+[F99:27]| 
+[F99:28]|   const el = document.createElement('div');
+[F99:29]|   el.id = 'auto-test-progress';
+[F99:30]|   el.style.cssText = `
+[F99:31]|     position: fixed;
+[F99:32]|     top: 10px;
+[F99:33]|     left: 50%;
+[F99:34]|     transform: translateX(-50%);
+[F99:35]|     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+[F99:36]|     color: white;
+[F99:37]|     padding: 12px 24px;
+[F99:38]|     border-radius: 8px;
+[F99:39]|     font-family: system-ui, -apple-system, sans-serif;
+[F99:40]|     font-size: 16px;
+[F99:41]|     font-weight: 600;
+[F99:42]|     z-index: 9999;
+[F99:43]|     box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+[F99:44]|     display: flex;
+[F99:45]|     align-items: center;
+[F99:46]|     gap: 12px;
+[F99:47]|   `;
+[F99:48]|   document.body.appendChild(el);
+[F99:49]|   _progressElement = el;
+[F99:50]|   return el;
+[F99:51]| }
+[F99:52]| 
+[F99:53]| // 更新进度显示
+[F99:54]| function updateProgress(current: number, total: number, message: string = '') {
+[F99:55]|   const el = createProgressElement();
+[F99:56]|   const percent = Math.round((current / total) * 100);
+[F99:57]|   el.innerHTML = `
+[F99:58]|     <span style="font-size: 20px;">🔄</span>
+[F99:59]|     <span>测试进度: ${current}/${total} (${percent}%)</span>
+[F99:60]|     <span style="opacity: 0.8; margin-left: 8px;">${message}</span>
+[F99:61]|   `;
+[F99:62]| }
+[F99:63]| 
+[F99:64]| // 清除进度显示
+[F99:65]| function clearProgress() {
+[F99:66]|   if (_progressElement) {
+[F99:67]|     _progressElement.remove();
+[F99:68]|     _progressElement = null;
+[F99:69]|   }
+[F99:70]| }
 [F99:71]| 
-[F99:72]|     const state: TestState = JSON.parse(rawState);
-[F99:73]|     if (!state.isRunning) return;
-[F99:74]| 
-[F99:75]|     debugLog('TEST_RESUME_CHECK', { iteration: state.iteration });
-[F99:76]| 
-[F99:77]|     // 1. 验证数据完整性 (核心：检查数据是否被清空)
-[F99:78]|     // 等待 Zustand Hydration
-[F99:79]|     await new Promise(resolve => setTimeout(resolve, 2000));
-[F99:80]| 
-[F99:81]|     const tasks = useAppStore.getState().tasks;
-[F99:82]|     debugLog('TEST_DATA_CHECK', { taskCount: tasks.length });
+[F99:72]| const AutoTesterObject = {
+[F99:73]|   // 启动测试
+[F99:74]|   start: (dirA: string, dirB: string, maxIterations: number = 20) => {
+[F99:75]|     // 检测当前路径，确定我们已经在哪个目录
+[F99:76]|     const currentDbPath = localStorage.getItem('FOCUS_FLOW_DB_PATH') || '';
+[F99:77]|     let currentDir: 'A' | 'B' = 'A';
+[F99:78]| 
+[F99:79]|     // 如果当前路径包含 dirB 的路径，说明已经在 B
+[F99:80]|     if (currentDbPath.includes(dirB.replace(/\\/g, '/'))) {
+[F99:81]|       currentDir = 'B';
+[F99:82]|     }
 [F99:83]| 
-[F99:84]|     if (tasks.length === 0 && state.iteration > 0) {
-[F99:85]|       // 严重错误：非初次运行，但数据为空！
-[F99:86]|       debugLog('TEST_FAILURE_DATA_LOST', 'Tasks are empty!');
-[F99:87]|       alert(`[测试失败] 第 ${state.iteration} 次迭代后数据丢失！请查看控制台日志。`);
-[F99:88]|       AutoTester.stop();
-[F99:89]|       return;
-[F99:90]|     }
-[F99:91]| 
-[F99:92]|     // 2. 检查是否完成
-[F99:93]|     if (state.iteration >= state.maxIterations) {
-[F99:94]|       debugLog('TEST_COMPLETE_SUCCESS');
-[F99:95]|       alert(`[测试通过] 成功完成了 ${state.maxIterations} 次切换，未发现数据丢失。`);
-[F99:96]|       AutoTester.stop();
-[F99:97]|       return;
-[F99:98]|     }
-[F99:99]| 
-[F99:100]|     // 3. 如果当前没有数据，先创建一点模拟数据，确保"有数据可丢"
-[F99:101]|     if (tasks.length === 0) {
-[F99:102]|       debugLog('TEST_SEEDING_DATA');
-[F99:103]|       const zones = useAppStore.getState().zones;
-[F99:104]|       if (zones.length > 0) {
-[F99:105]|         useAppStore.getState().addTask(zones[0].id, `Test Task ${Date.now()}`, '');
-[F99:106]|         // 等待保存
-[F99:107]|         await new Promise(resolve => setTimeout(resolve, 1000));
-[F99:108]|       } else {
-[F99:109]|         // 如果没有 zone，先创建一个
-[F99:110]|         useAppStore.getState().addZone('Test Zone', '#ff0000');
-[F99:111]|         await new Promise(resolve => setTimeout(resolve, 500));
-[F99:112]|         const newZones = useAppStore.getState().zones;
-[F99:113]|         if (newZones.length > 0) {
-[F99:114]|           useAppStore.getState().addTask(newZones[0].id, `Test Task ${Date.now()}`, '');
-[F99:115]|           await new Promise(resolve => setTimeout(resolve, 1000));
-[F99:116]|         }
-[F99:117]|       }
-[F99:118]|     }
+[F99:84]|     console.log('[AutoTester] Detected current path:', currentDbPath);
+[F99:85]|     console.log('[AutoTester] Detected current directory:', currentDir);
+[F99:86]| 
+[F99:87]|     const state: TestState = {
+[F99:88]|       isRunning: true,
+[F99:89]|       iteration: 0,
+[F99:90]|       maxIterations,
+[F99:91]|       dirA,
+[F99:92]|       dirB,
+[F99:93]|       currentDir: currentDir
+[F99:94]|     };
+[F99:95]|     localStorage.setItem(TEST_KEY, JSON.stringify(state));
+[F99:96]|     debugLog('TEST_START', state);
+[F99:97]| 
+[F99:98]|     // 显示进度条
+[F99:99]|     updateProgress(0, maxIterations, '正在启动测试...');
+[F99:100]| 
+[F99:101]|     // 立即开始第一次切换
+[F99:102]|     AutoTesterObject.runCycle();
+[F99:103]|   },
+[F99:104]| 
+[F99:105]|   // 停止测试
+[F99:106]|   stop: () => {
+[F99:107]|     localStorage.removeItem(TEST_KEY);
+[F99:108]|     debugLog('TEST_STOPPED_BY_USER');
+[F99:109]|     toast.info("自动化测试已停止");
+[F99:110]|   },
+[F99:111]| 
+[F99:112]|   // 执行切换循环
+[F99:113]|   runCycle: async () => {
+[F99:114]|     const rawState = localStorage.getItem(TEST_KEY);
+[F99:115]|     if (!rawState) return;
+[F99:116]| 
+[F99:117]|     const state: TestState = JSON.parse(rawState);
+[F99:118]|     if (!state.isRunning) return;
 [F99:119]| 
-[F99:120]|     // 4. 执行切换
-[F99:121]|     AutoTester.runCycle();
-[F99:122]|   }
-[F99:123]| };
+[F99:120]|     // 准备下一次切换
+[F99:121]|     const nextDirTarget = state.currentDir === 'A' ? 'B' : 'A';
+[F99:122]|     // 标准化路径格式（统一使用 /）
+[F99:123]|     const nextPath = (nextDirTarget === 'A' ? state.dirA : state.dirB).replace(/\\/g, '/');
+[F99:124]| 
+[F99:125]|     console.log(`[AutoTester] 🔄 Switching to ${nextDirTarget} (iteration ${state.iteration + 1}/${state.maxIterations})`);
+[F99:126]|     debugLog('TEST_SWITCHING_TO', { nextDirTarget, nextPath });
+[F99:127]| 
+[F99:128]|     // 更新状态 - 注意：在切换之前更新状态，这样 reload 后可以继续
+[F99:129]|     state.iteration++;
+[F99:130]|     state.currentDir = nextDirTarget;
+[F99:131]|     localStorage.setItem(TEST_KEY, JSON.stringify(state));
+[F99:132]| 
+[F99:133]|     // 更新进度条
+[F99:134]|     updateProgress(state.iteration, state.maxIterations, `→ 切换到目录${nextDirTarget}`);
+[F99:135]| 
+[F99:136]|     console.log(`[AutoTester] 🚀 About to call changeDbPath to: ${nextPath}`);
+[F99:137]|     toast.loading(`自动化测试进行中: ${state.iteration}/${state.maxIterations}，页面即将切换...`);
+[F99:138]| 
+[F99:139]|     // 🚨 关键修复：清除保存的路径，强制执行切换
+[F99:140]|     // 否则 changeDbPath 会检测到相同路径而提前返回
+[F99:141]|     localStorage.removeItem('FOCUS_FLOW_DB_PATH');
+[F99:142]| 
+[F99:143]|     // 触发切换
+[F99:144]|     try {
+[F99:145]|       await changeDbPath(nextPath);
+[F99:146]| 
+[F99:147]|       // 🚨 强制刷新页面以确保状态完全重置
+[F99:148]|       console.log('[AutoTester] Forcing page reload...');
+[F99:149]|       window.location.reload();
+[F99:150]|     } catch (error) {
+[F99:151]|       console.error('[AutoTester] changeDbPath failed:', error);
+[F99:152]|       debugLog('TEST_SWITCH_FAILED', String(error));
+[F99:153]|       // 失败后停止测试
+[F99:154]|       AutoTesterObject.stop();
+[F99:155]|     }
+[F99:156]|   },
+[F99:157]| 
+[F99:158]|   // 每次应用启动时调用此函数
+[F99:159]|   checkAndRun: async () => {
+[F99:160]|     // 重要：重置切换锁，防止卡死
+[F99:161]|     console.log('[AutoTester] Resetting switch lock on resume');
+[F99:162]|     setIsSwitching(false);
+[F99:163]| 
+[F99:164]|     const rawState = localStorage.getItem(TEST_KEY);
+[F99:165]|     console.log('[AutoTester] checkAndRun called, rawState:', rawState);
+[F99:166]|     if (!rawState) {
+[F99:167]|       console.log('[AutoTester] No test state found, returning');
+[F99:168]|       return;
+[F99:169]|     }
+[F99:170]| 
+[F99:171]|     const state: TestState = JSON.parse(rawState);
+[F99:172]|     console.log('[AutoTester] Parsed state:', state);
+[F99:173]| 
+[F99:174]|     // 如果测试没有在运行，直接返回
+[F99:175]|     if (!state.isRunning) {
+[F99:176]|       console.log('[AutoTester] Test not running, returning');
+[F99:177]|       return;
+[F99:178]|     }
+[F99:179]| 
+[F99:180]|     // 检查是否刚刚切换过目录（避免无限循环）
+[F99:181]|     const debugAction = localStorage.getItem('DEBUG_LAST_ACTION');
+[F99:182]|     console.log('[AutoTester] DEBUG_LAST_ACTION:', debugAction);
+[F99:183]| 
+[F99:184]|     debugLog('TEST_RESUME_CHECK', { iteration: state.iteration, isHydrated: getIsHydrated() });
+[F99:185]| 
+[F99:186]|     console.log(`[AutoTester] ⏳ Waiting for hydration (iteration ${state.iteration})...`);
+[F99:187]| 
+[F99:188]|     // 等待 Zustand Hydration
+[F99:189]|     await new Promise(resolve => setTimeout(resolve, 2000));
+[F99:190]| 
+[F99:191]|     console.log('[AutoTester] ✅ Hydration complete, isHydrated:', getIsHydrated());
+[F99:192]| 
+[F99:193]|     const tasks = useAppStore.getState().tasks;
+[F99:194]|     const zones = useAppStore.getState().zones;
+[F99:195]|     // 记录当前目录路径用于调试
+[F99:196]|     const currentPath = localStorage.getItem('focus-flow-db-path');
+[F99:197]|     debugLog('TEST_DATA_CHECK', { taskCount: tasks.length, zoneCount: zones.length, iteration: state.iteration, currentPath });
+[F99:198]| 
+[F99:199]|     // === 新逻辑：先判断是否需要播种数据 ===
+[F99:200]| 
+[F99:201]|     // 如果还没有任何数据（第一次运行或数据确实丢失），先播种
+[F99:202]|     if (tasks.length === 0) {
+[F99:203]|       debugLog('TEST_SEEDING_DATA', { iteration: state.iteration });
+[F99:204]| 
+[F99:205]|       // 如果没有 zone，先创建一个
+[F99:206]|       if (zones.length === 0) {
+[F99:207]|         useAppStore.getState().addZone('Test Zone', '#ff0000');
+[F99:208]|         await new Promise(resolve => setTimeout(resolve, 500));
+[F99:209]|       }
+[F99:210]| 
+[F99:211]|       const currentZones = useAppStore.getState().zones;
+[F99:212]|       if (currentZones.length > 0) {
+[F99:213]|         useAppStore.getState().addTask(currentZones[0].id, `Test Task ${Date.now()}`, '');
+[F99:214]|         // 等待保存到存储
+[F99:215]|         await new Promise(resolve => setTimeout(resolve, 1500));
+[F99:216]|       }
+[F99:217]| 
+[F99:218]|       // 播种完成后再检查一次数据
+[F99:219]|       const tasksAfterSeed = useAppStore.getState().tasks;
+[F99:220]|       debugLog('TEST_SEEDED_DATA', { taskCount: tasksAfterSeed.length });
+[F99:221]| 
+[F99:222]|       // 如果这是第一次运行（iteration === 0），播种完后直接执行切换
+[F99:223]|       if (state.iteration === 0) {
+[F99:224]|         debugLog('TEST_FIRST_RUN_SEEDED');
+[F99:225]|         // 延迟一下确保数据已保存
+[F99:226]|         await new Promise(resolve => setTimeout(resolve, 500));
+[F99:227]|         AutoTesterObject.runCycle();
+[F99:228]|         return;
+[F99:229]|       }
+[F99:230]|     }
+[F99:231]| 
+[F99:232]|     // === 数据检查逻辑 ===
+[F99:233]|     // 只有在 iteration > 0 且数据为空时才报错
+[F99:234]|     // 重新获取一次 tasks，因为上面可能播种了数据
+[F99:235]|     const finalTasks = useAppStore.getState().tasks;
+[F99:236]|     debugLog('FINAL_DATA_CHECK', { taskCount: finalTasks.length, iteration: state.iteration });
+[F99:237]| 
+[F99:238]|     console.log(`[AutoTester] 📊 Data check: ${finalTasks.length} tasks, iteration: ${state.iteration}`);
+[F99:239]| 
+[F99:240]|     if (finalTasks.length === 0 && state.iteration > 0) {
+[F99:241]|       // 严重错误：非初次运行，但数据为空！
+[F99:242]|       debugLog('TEST_FAILURE_DATA_LOST', 'Tasks are empty!');
+[F99:243]|       alert(`[测试失败] 第 ${state.iteration} 次迭代后数据丢失！请查看控制台日志。`);
+[F99:244]|       AutoTesterObject.stop();
+[F99:245]|       return;
+[F99:246]|     }
+[F99:247]| 
+[F99:248]|     // 2. 检查是否完成
+[F99:249]|     if (state.iteration >= state.maxIterations) {
+[F99:250]|       debugLog('TEST_COMPLETE_SUCCESS');
+[F99:251]|       alert(`[测试通过] 成功完成了 ${state.maxIterations} 次切换，未发现数据丢失。`);
+[F99:252]|       AutoTesterObject.stop();
+[F99:253]|       return;
+[F99:254]|     }
+[F99:255]| 
+[F99:256]|     // 4. 执行切换
+[F99:257]|     console.log(`[AutoTester] ⏩ Proceeding to next iteration (${state.iteration + 1}/${state.maxIterations})`);
+[F99:258]|     // 延迟一下确保数据已保存
+[F99:259]|     await new Promise(resolve => setTimeout(resolve, 500));
+[F99:260]|     AutoTesterObject.runCycle();
+[F99:261]|   }
+[F99:262]| };
+[F99:263]| 
+[F99:264]| // 挂载到 window 上以便在控制台中访问
+[F99:265]| (window as unknown as { AutoTester: typeof AutoTesterObject }).AutoTester = AutoTesterObject;
+[F99:266]| 
+[F99:267]| export const AutoTester = AutoTesterObject;
 
 ================================================================================
 文件路径: src\lib\db-legacy.ts(F100) (约合大小: 1 KB)
@@ -18380,3676 +18557,4716 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F100:4]| // 使用单例 Promise 防止并发冲突
 [F100:5]| let dbPromise: Promise<Database> | null = null;
 [F100:6]| 
-[F100:7]| export async function getDb(): Promise<Database> {
-[F100:8]|   if (dbPromise) return dbPromise;
-[F100:9]| 
-[F100:10]|   dbPromise = (async () => {
-[F100:11]|     try {
-[F100:12]|       const dbPath = await getDbPath();
-[F100:13]|       const db = await Database.load(`sqlite:${dbPath}`);
-[F100:14]| 
-[F100:15]|       await db.execute(`
-[F100:16]|         CREATE TABLE IF NOT EXISTS store_snapshots (
-[F100:17]|           key TEXT PRIMARY KEY,
-[F100:18]|           value TEXT,
-[F100:19]|           updated_at INTEGER
-[F100:20]|         );
-[F100:21]|       `);
-[F100:22]| 
-[F100:23]|       return db;
-[F100:24]|     } catch (error) {
-[F100:25]|       console.error('Failed to load legacy database:', error);
-[F100:26]|       dbPromise = null;
-[F100:27]|       throw error;
-[F100:28]|     }
-[F100:29]|   })();
-[F100:30]| 
-[F100:31]|   return dbPromise;
-[F100:32]| }
-[F100:33]| 
-[F100:34]| // 核心 API：保存键值对
-[F100:35]| export async function dbSetItem(key: string, value: string): Promise<void> {
-[F100:36]|   const db = await getDb();
-[F100:37]|   const now = Date.now();
-[F100:38]|   // upsert 逻辑：如果存在则更新，不存在则插入
-[F100:39]|   await db.execute(
-[F100:40]|     `INSERT INTO store_snapshots (key, value, updated_at) VALUES ($1, $2, $3)
-[F100:41]|      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
-[F100:42]|     [key, value, now]
-[F100:43]|   );
-[F100:44]| }
-[F100:45]| 
-[F100:46]| // 核心 API：读取键值对
-[F100:47]| export async function dbGetItem(key: string): Promise<string | null> {
-[F100:48]|   const db = await getDb();
-[F100:49]|   const result = await db.select<{ value: string }[]>(
-[F100:50]|     `SELECT value FROM store_snapshots WHERE key = $1`,
-[F100:51]|     [key]
-[F100:52]|   );
-[F100:53]|   return result.length > 0 ? result[0].value : null;
-[F100:54]| }
-[F100:55]| 
-[F100:56]| // 核心 API：删除键值对
-[F100:57]| export async function dbRemoveItem(key: string): Promise<void> {
-[F100:58]|   const db = await getDb();
-[F100:59]|   await db.execute(`DELETE FROM store_snapshots WHERE key = $1`, [key]);
+[F100:7]| // 导出清理函数，供 db.ts 在切换目录时调用
+[F100:8]| export function clearDbLegacyCache() {
+[F100:9]|   console.log('[DB-LEGACY] Clearing connection cache');
+[F100:10]|   dbPromise = null;
+[F100:11]| }
+[F100:12]| 
+[F100:13]| export async function getDb(): Promise<Database> {
+[F100:14]|   if (dbPromise) return dbPromise;
+[F100:15]| 
+[F100:16]|   dbPromise = (async () => {
+[F100:17]|     try {
+[F100:18]|       const dbPath = await getDbPath();
+[F100:19]|       const db = await Database.load(`sqlite:${dbPath}`);
+[F100:20]| 
+[F100:21]|       await db.execute(`
+[F100:22]|         CREATE TABLE IF NOT EXISTS store_snapshots (
+[F100:23]|           key TEXT PRIMARY KEY,
+[F100:24]|           value TEXT,
+[F100:25]|           updated_at INTEGER
+[F100:26]|         );
+[F100:27]|       `);
+[F100:28]| 
+[F100:29]|       return db;
+[F100:30]|     } catch (error) {
+[F100:31]|       console.error('Failed to load legacy database:', error);
+[F100:32]|       dbPromise = null;
+[F100:33]|       throw error;
+[F100:34]|     }
+[F100:35]|   })();
+[F100:36]| 
+[F100:37]|   return dbPromise;
+[F100:38]| }
+[F100:39]| 
+[F100:40]| // 核心 API：保存键值对
+[F100:41]| export async function dbSetItem(key: string, value: string): Promise<void> {
+[F100:42]|   const db = await getDb();
+[F100:43]|   const now = Date.now();
+[F100:44]|   // upsert 逻辑：如果存在则更新，不存在则插入
+[F100:45]|   await db.execute(
+[F100:46]|     `INSERT INTO store_snapshots (key, value, updated_at) VALUES ($1, $2, $3)
+[F100:47]|      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+[F100:48]|     [key, value, now]
+[F100:49]|   );
+[F100:50]| }
+[F100:51]| 
+[F100:52]| // 核心 API：读取键值对
+[F100:53]| export async function dbGetItem(key: string): Promise<string | null> {
+[F100:54]|   const db = await getDb();
+[F100:55]|   const result = await db.select<{ value: string }[]>(
+[F100:56]|     `SELECT value FROM store_snapshots WHERE key = $1`,
+[F100:57]|     [key]
+[F100:58]|   );
+[F100:59]|   return result.length > 0 ? result[0].value : null;
 [F100:60]| }
+[F100:61]| 
+[F100:62]| // 核心 API：删除键值对
+[F100:63]| export async function dbRemoveItem(key: string): Promise<void> {
+[F100:64]|   const db = await getDb();
+[F100:65]|   await db.execute(`DELETE FROM store_snapshots WHERE key = $1`, [key]);
+[F100:66]| }
 
 ================================================================================
-文件路径: src\lib\db.ts(F101) (约合大小: 23 KB)
+文件路径: src\lib\db-monitor.ts(F101) (约合大小: 6 KB)
 ================================================================================
-[F101:1]| import Database from '@tauri-apps/plugin-sql';
-[F101:2]| import { appDataDir, join } from '@tauri-apps/api/path';
-[F101:3]| import { exists, mkdir, copyFile } from '@tauri-apps/plugin-fs';
-[F101:4]| import type { Task, CurrentWorkspace, HistoryWorkspace, Template } from '@/types';
-[F101:5]| 
-[F101:6]| const DB_FILENAME = 'focus_flow.db';
-[F101:7]| const PATH_STORAGE_KEY = 'FOCUS_FLOW_DB_PATH';
+[F101:1]| /**
+[F101:2]|  * 数据变化实时监控模块
+[F101:3]|  *
+[F101:4]|  * 用于追踪：
+[F101:5]|  * 1. 数据库中数据的变化（任务数、区域数）
+[F101:6]|  * 2. 内存状态与数据库状态的一致性
+[F101:7]|  */
 [F101:8]| 
-[F101:9]| // 修复：使用 Promise 缓存，解决并发冲突
-[F101:10]| let dbPromise: Promise<Database> | null = null;
-[F101:11]| let dbInstance: Database | null = null;
-[F101:12]| 
-[F101:13]| /**
-[F101:14]|  * 获取当前的数据库绝对路径（高容错版）
-[F101:15]|  */
-[F101:16]| export async function getDbPath(): Promise<string> {
-[F101:17]|   // 1. 优先读取用户自定义路径
-[F101:18]|   const customPath = localStorage.getItem(PATH_STORAGE_KEY);
-[F101:19]|   if (customPath) {
-[F101:20]|     return customPath;
-[F101:21]|   }
-[F101:22]| 
-[F101:23]|   try {
-[F101:24]|     // 2. 尝试获取系统 AppData 目录
-[F101:25]|     const appDataDirPath = await appDataDir();
-[F101:26]|     const dbPath = await join(appDataDirPath, DB_FILENAME);
-[F101:27]| 
-[F101:28]|     // 3. 尝试创建目录（如果因为权限报错，我们捕获它但不阻断流程）
-[F101:29]|     try {
-[F101:30]|       const dirExists = await exists(appDataDirPath);
-[F101:31]|       if (!dirExists) {
-[F101:32]|         await mkdir(appDataDirPath, { recursive: true });
-[F101:33]|       }
-[F101:34]|     } catch (fsError) {
-[F101:35]|       console.warn('[DB] FS permission warning (mkdir/exists):', fsError);
-[F101:36]|     }
-[F101:37]| 
-[F101:38]|     return dbPath;
-[F101:39]|   } catch (error) {
-[F101:40]|     // 4. 终极兜底：如果不在 Tauri 环境或缺少 Path 权限，返回相对路径
-[F101:41]|     console.error('[DB] Failed to resolve absolute DB path, falling back to relative:', error);
-[F101:42]|     return DB_FILENAME;
-[F101:43]|   }
-[F101:44]| }
+[F101:9]| import { getDbPath, getDb } from './db';
+[F101:10]| import { persistentLog } from './persistent-log';
+[F101:11]| 
+[F101:12]| let _dbMonitorInterval: ReturnType<typeof setInterval> | null = null;
+[F101:13]| let _memoryMonitorInterval: ReturnType<typeof setInterval> | null = null;
+[F101:14]| 
+[F101:15]| // 数据库快照
+[F101:16]| let _lastDbData: { path: string; tasks: number; zones: number; timestamp: number } | null = null;
+[F101:17]| // 内存快照（从 Zustand store）
+[F101:18]| let _lastMemoryData: { tasks: number; zones: number; timestamp: number } | null = null;
+[F101:19]| 
+[F101:20]| /**
+[F101:21]|  * 从 SQLite 数据中解析任务数和区域数
+[F101:22]|  */
+[F101:23]| function parseDataCounts(value: string): { tasks: number; zones: number } {
+[F101:24]|   try {
+[F101:25]|     const parsed = JSON.parse(value);
+[F101:26]|     const tasks = parsed?.state?.tasks?.length || parsed?.tasks?.length || 0;
+[F101:27]|     const zones = parsed?.state?.zones?.length || parsed?.zones?.length || 0;
+[F101:28]|     return { tasks, zones };
+[F101:29]|   } catch {
+[F101:30]|     return { tasks: 0, zones: 0 };
+[F101:31]|   }
+[F101:32]| }
+[F101:33]| 
+[F101:34]| /**
+[F101:35]|  * 获取数据库当前状态
+[F101:36]|  */
+[F101:37]| async function getDbState(): Promise<{ path: string; tasks: number; zones: number } | null> {
+[F101:38]|   try {
+[F101:39]|     const dbPath = await getDbPath();
+[F101:40]|     const db = await getDb();
+[F101:41]|     const result = await db.select(
+[F101:42]|       'SELECT value FROM store_snapshots WHERE key = $1',
+[F101:43]|       ['focus-flow-storage-v4']
+[F101:44]|     );
 [F101:45]| 
-[F101:46]| /**
-[F101:47]|  * 更改数据库存储目录（由UI触发，高容错版）
-[F101:48]|  */
-[F101:49]| export async function changeDbPath(newFolder: string): Promise<void> {
-[F101:50]|   const currentPath = await getDbPath();
-[F101:51]|   let newPath = '';
-[F101:52]| 
-[F101:53]|   try {
-[F101:54]|     newPath = await join(newFolder, DB_FILENAME);
-[F101:55]|   } catch (e) {
-[F101:56]|     throw new Error('Failed to join path');
-[F101:57]|   }
-[F101:58]| 
-[F101:59]|   if (currentPath === newPath) return;
-[F101:60]| 
-[F101:61]|   // 安全关闭当前连接
-[F101:62]|   if (dbInstance) {
-[F101:63]|     try {
-[F101:64]|       await dbInstance.close();
-[F101:65]|     } catch (e) {
-[F101:66]|       console.warn('[DB] Error closing db:', e);
-[F101:67]|     }
-[F101:68]|   }
-[F101:69]|   dbPromise = null;
-[F101:70]|   dbInstance = null;
-[F101:71]| 
-[F101:72]|   // 尝试迁移或同步文件
-[F101:73]|   try {
-[F101:74]|     const newPathExists = await exists(newPath);
-[F101:75]|     const currentExists = await exists(currentPath);
-[F101:76]| 
-[F101:77]|     // 如果目标路径没有数据库（说明是新目录），且当前有数据，则物理复制过去
-[F101:78]|     if (!newPathExists && currentExists) {
-[F101:79]|       await copyFile(currentPath, newPath);
-[F101:80]|     }
-[F101:81]|     // --- Core Fix: If target directory already has database, force pre-read and overwrite local cache ---
-[F101:82]|     else if (newPathExists) {
-[F101:83]|       try {
-[F101:84]|         console.log('[DB] Found existing DB at target, pre-loading data to prevent hydration override.');
-[F101:85]|         // Temporarily connect to target database
-[F101:86]|         const tempDb = await Database.load(`sqlite:${newPath}`);
-[F101:87]|         // Extract Zustand core state snapshot (key must match store definition exactly)
-[F101:88]|         const result = await tempDb.select<{ value: string }[]>(
-[F101:89]|           `SELECT value FROM store_snapshots WHERE key = 'focus-flow-storage-v4'`
-[F101:90]|         );
-[F101:91]|         // If data extracted, forcibly overwrite to localStorage
-[F101:92]|         if (result.length > 0 && result[0].value) {
-[F101:93]|           localStorage.setItem('focus-flow-storage-v4', result[0].value);
-[F101:94]|           console.log('[DB] Pre-loaded store snapshot to localStorage');
-[F101:95]|         } else {
-[F101:96]|           console.log('[DB] No existing store snapshot found in target DB');
-[F101:97]|         }
-[F101:98]|         await tempDb.close();
-[F101:99]|       } catch (readError) {
-[F101:100]|         console.error('[DB] Failed to pre-read new db during change path:', readError);
-[F101:101]|         // Allow graceful degradation even if pre-read fails
-[F101:102]|       }
-[F101:103]|     }
-[F101:104]|     // --- Fix end ---
-[F101:105]|   } catch (fsError) {
-[F101:106]|     console.error('[DB] Failed to copy file during migration (FS permission):', fsError);
-[F101:107]|     // 即使复制失败（权限不足），也允许切换路径，只是相当于在新目录创建空库
-[F101:108]|     alert("数据迁移遇到系统权限限制。已切换到新目录，但无法移动旧数据（旧数据仍保留在原处）。");
-[F101:109]|   }
-[F101:110]| 
-[F101:111]|   // 记录新路径并强制刷新
-[F101:112]|   localStorage.setItem(PATH_STORAGE_KEY, newPath);
-[F101:113]|   window.location.reload();
-[F101:114]| }
+[F101:46]|     if (result.length === 0) {
+[F101:47]|       return { path: dbPath, tasks: 0, zones: 0 };
+[F101:48]|     }
+[F101:49]| 
+[F101:50]|     const { tasks, zones } = parseDataCounts(result[0].value);
+[F101:51]|     return { path: dbPath, tasks, zones };
+[F101:52]|   } catch (e) {
+[F101:53]|     console.log('[MONITOR-DB] Error getting db state:', e);
+[F101:54]|     return null;
+[F101:55]|   }
+[F101:56]| }
+[F101:57]| 
+[F101:58]| /**
+[F101:59]|  * 启动数据监控
+[F101:60]|  */
+[F101:61]| export function startDataMonitor(): void {
+[F101:62]|   if (_dbMonitorInterval) {
+[F101:63]|     console.log('[MONITOR] Already running');
+[F101:64]|     return;
+[F101:65]|   }
+[F101:66]| 
+[F101:67]|   console.log('[MONITOR] 🔥 Data monitor started');
+[F101:68]| 
+[F101:69]|   // === 监控1：数据库数据变化 ===
+[F101:70]|   _dbMonitorInterval = setInterval(async () => {
+[F101:71]|     const dbState = await getDbState();
+[F101:72]|     if (!dbState) return;
+[F101:73]| 
+[F101:74]|     const { path: dbPath, tasks: currentTasks, zones: currentZones } = dbState;
+[F101:75]| 
+[F101:76]|     if (_lastDbData && _lastDbData.path === dbPath) {
+[F101:77]|       // 检测数据减少
+[F101:78]|       if (currentTasks < _lastDbData.tasks) {
+[F101:79]|         const delta = _lastDbData.tasks - currentTasks;
+[F101:80]|         console.error(`[MONITOR-DB] 🔥🔥🔥 DATA LOSS in DB! Tasks: ${_lastDbData.tasks}→${currentTasks} (-${delta})`);
+[F101:81]|         console.error(`[MONITOR-DB] Time delta: ${Date.now() - _lastDbData.timestamp}ms`);
+[F101:82]|         console.error(`[MONITOR-DB] Current call stack:`, new Error().stack);
+[F101:83]|         persistentLog('MONITOR', 'DB DATA LOSS', 'ERROR', {
+[F101:84]|           wasTasks: _lastDbData.tasks,
+[F101:85]|           nowTasks: currentTasks,
+[F101:86]|           delta,
+[F101:87]|           timeDelta: Date.now() - _lastDbData.timestamp,
+[F101:88]|         });
+[F101:89]|       }
+[F101:90]|       if (currentZones < _lastDbData.zones) {
+[F101:91]|         const delta = _lastDbData.zones - currentZones;
+[F101:92]|         console.error(`[MONITOR-DB] 🔥🔥🔥 ZONES DATA LOSS in DB! Zones: ${_lastDbData.zones}→${currentZones} (-${delta})`);
+[F101:93]|         console.error(`[MONITOR-DB] Time delta: ${Date.now() - _lastDbData.timestamp}ms`);
+[F101:94]|       }
+[F101:95]|     }
+[F101:96]| 
+[F101:97]|     _lastDbData = {
+[F101:98]|       path: dbPath,
+[F101:99]|       tasks: currentTasks,
+[F101:100]|       zones: currentZones,
+[F101:101]|       timestamp: Date.now(),
+[F101:102]|     };
+[F101:103]|   }, 200); // 200ms 采样
+[F101:104]| 
+[F101:105]|   // === 监控2：内存 vs 数据库 一致性 ===
+[F101:106]|   _memoryMonitorInterval = setInterval(async () => {
+[F101:107]|     // 动态导入以避免循环依赖
+[F101:108]|     const { useAppStore } = await import('@/store');
+[F101:109]| 
+[F101:110]|     try {
+[F101:111]|       // 获取内存状态
+[F101:112]|       const storeState = useAppStore.getState();
+[F101:113]|       const memoryTasks = storeState.tasks?.length || 0;
+[F101:114]|       const memoryZones = storeState.zones?.length || 0;
 [F101:115]| 
-[F101:116]| /**
-[F101:117]|  * 获取数据库实例
-[F101:118]|  */
-[F101:119]| export async function getDb(): Promise<Database> {
-[F101:120]|   if (dbPromise) return dbPromise;
+[F101:116]|       // 获取数据库状态
+[F101:117]|       const dbState = await getDbState();
+[F101:118]|       if (!dbState) return;
+[F101:119]| 
+[F101:120]|       const { tasks: dbTasks, zones: dbZones } = dbState;
 [F101:121]| 
-[F101:122]|   dbPromise = (async () => {
-[F101:123]|     try {
-[F101:124]|       const dbPath = await getDbPath();
-[F101:125]|       console.log('[DB] Loading database from:', dbPath);
-[F101:126]| 
-[F101:127]|       dbInstance = await Database.load(`sqlite:${dbPath}`);
-[F101:128]|       await initializeTables(dbInstance);
-[F101:129]| 
-[F101:130]|       return dbInstance;
-[F101:131]|     } catch (error) {
-[F101:132]|       console.error('[DB] Failed to load database:', error);
-[F101:133]|       dbPromise = null;
-[F101:134]|       throw error;
-[F101:135]|     }
-[F101:136]|   })();
-[F101:137]| 
-[F101:138]|   return dbPromise;
-[F101:139]| }
-[F101:140]| 
-[F101:141]| // 初始化关系型表结构
-[F101:142]| async function initializeTables(db: Database): Promise<void> {
-[F101:143]|   // app_settings 表 (单行配置)
-[F101:144]|   await db.execute(`
-[F101:145]|     CREATE TABLE IF NOT EXISTS app_settings (
-[F101:146]|       id INTEGER PRIMARY KEY CHECK (id = 1),
-[F101:147]|       version INTEGER NOT NULL DEFAULT 1,
-[F101:148]|       work_duration INTEGER NOT NULL DEFAULT 1500,
-[F101:149]|       break_duration INTEGER NOT NULL DEFAULT 300,
-[F101:150]|       long_break_duration INTEGER NOT NULL DEFAULT 900,
-[F101:151]|       auto_start_break INTEGER NOT NULL DEFAULT 0,
-[F101:152]|       sound_enabled INTEGER NOT NULL DEFAULT 1,
-[F101:153]|       collapsed INTEGER NOT NULL DEFAULT 0,
-[F101:154]|       collapse_position_x REAL NOT NULL DEFAULT 100,
-[F101:155]|       collapse_position_y REAL NOT NULL DEFAULT 100,
-[F101:156]|       sort_mode TEXT NOT NULL DEFAULT 'zone',
-[F101:157]|       priority_weight REAL NOT NULL DEFAULT 0.4,
-[F101:158]|       urgency_weight REAL NOT NULL DEFAULT 0.6
-[F101:159]|     )
-[F101:160]|   `);
-[F101:161]| 
-[F101:162]|   // 插入默认设置（如果不存在）
-[F101:163]|   await db.execute(`
-[F101:164]|     INSERT OR IGNORE INTO app_settings (id, version) VALUES (1, 1)
-[F101:165]|   `);
-[F101:166]| 
-[F101:167]|   // workspaces 表
-[F101:168]|   await db.execute(`
-[F101:169]|     CREATE TABLE IF NOT EXISTS workspaces (
-[F101:170]|       id TEXT PRIMARY KEY,
-[F101:171]|       name TEXT NOT NULL,
-[F101:172]|       created_at INTEGER NOT NULL,
-[F101:173]|       last_modified INTEGER NOT NULL,
-[F101:174]|       source_history_id TEXT,
-[F101:175]|       is_current INTEGER NOT NULL DEFAULT 1
-[F101:176]|     )
-[F101:177]|   `);
-[F101:178]| 
-[F101:179]|   // history_workspaces 表
-[F101:180]|   await db.execute(`
-[F101:181]|     CREATE TABLE IF NOT EXISTS history_workspaces (
-[F101:182]|       id TEXT PRIMARY KEY,
-[F101:183]|       name TEXT NOT NULL,
-[F101:184]|       summary TEXT DEFAULT '',
-[F101:185]|       created_at INTEGER NOT NULL,
-[F101:186]|       last_modified INTEGER NOT NULL
-[F101:187]|     )
-[F101:188]|   `);
-[F101:189]| 
-[F101:190]|   // zones 表
-[F101:191]|   await db.execute(`
-[F101:192]|     CREATE TABLE IF NOT EXISTS zones (
-[F101:193]|       id TEXT PRIMARY KEY,
-[F101:194]|       name TEXT NOT NULL,
-[F101:195]|       color TEXT NOT NULL,
-[F101:196]|       "order" INTEGER NOT NULL DEFAULT 0,
-[F101:197]|       created_at INTEGER NOT NULL,
-[F101:198]|       workspace_id TEXT NOT NULL,
-[F101:199]|       FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
-[F101:200]|     )
-[F101:201]|   `);
-[F101:202]| 
-[F101:203]|   // tasks 表
-[F101:204]|   await db.execute(`
-[F101:205]|     CREATE TABLE IF NOT EXISTS tasks (
-[F101:206]|       id TEXT PRIMARY KEY,
-[F101:207]|       zone_id TEXT NOT NULL,
-[F101:208]|       parent_id TEXT,
-[F101:209]|       title TEXT NOT NULL,
-[F101:210]|       description TEXT DEFAULT '',
-[F101:211]|       completed INTEGER NOT NULL DEFAULT 0,
-[F101:212]|       priority TEXT NOT NULL DEFAULT 'medium',
-[F101:213]|       urgency TEXT NOT NULL DEFAULT 'low',
-[F101:214]|       deadline INTEGER,
-[F101:215]|       deadline_type TEXT DEFAULT 'none',
-[F101:216]|       "order" INTEGER NOT NULL DEFAULT 0,
-[F101:217]|       created_at INTEGER NOT NULL,
-[F101:218]|       completed_at INTEGER,
-[F101:219]|       expanded INTEGER NOT NULL DEFAULT 0,
-[F101:220]|       is_collapsed INTEGER NOT NULL DEFAULT 0,
-[F101:221]|       total_work_time INTEGER NOT NULL DEFAULT 0,
-[F101:222]|       own_time INTEGER NOT NULL DEFAULT 0,
-[F101:223]|       workspace_id TEXT NOT NULL,
-[F101:224]|       estimated_time,
-[F101:225]|       prevent_auto_complete INTEGER NOT NULL DEFAULT 0,
-[F101:226]|       FOREIGN KEY (zone_id) REFERENCES zones(id) ON DELETE CASCADE,
-[F101:227]|       FOREIGN KEY (parent_id) REFERENCES tasks(id) ON DELETE CASCADE,
-[F101:228]|       FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
-[F101:229]|     )
-[F101:230]|   `);
-[F101:231]| 
-[F101:232]|   // pomodoro_sessions 表
-[F101:233]|   await db.execute(`
-[F101:234]|     CREATE TABLE IF NOT EXISTS pomodoro_sessions (
-[F101:235]|       id TEXT PRIMARY KEY,
-[F101:236]|       task_id TEXT NOT NULL,
-[F101:237]|       start_time INTEGER NOT NULL,
-[F101:238]|       end_time INTEGER,
-[F101:239]|       completed INTEGER NOT NULL DEFAULT 0,
-[F101:240]|       workspace_id TEXT NOT NULL,
-[F101:241]|       FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-[F101:242]|       FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
-[F101:243]|     )
-[F101:244]|   `);
-[F101:245]| 
-[F101:246]|   // custom_templates 表
-[F101:247]|   await db.execute(`
-[F101:248]|     CREATE TABLE IF NOT EXISTS custom_templates (
-[F101:249]|       id TEXT PRIMARY KEY,
-[F101:250]|       name TEXT NOT NULL,
-[F101:251]|       description TEXT DEFAULT '',
-[F101:252]|       icon TEXT DEFAULT 'LayoutGrid',
-[F101:253]|       created_at INTEGER NOT NULL
-[F101:254]|     )
-[F101:255]|   `);
-[F101:256]| 
-[F101:257]|   // template_zones 表
-[F101:258]|   await db.execute(`
-[F101:259]|     CREATE TABLE IF NOT EXISTS template_zones (
-[F101:260]|       id TEXT PRIMARY KEY,
-[F101:261]|       template_id TEXT NOT NULL,
-[F101:262]|       name TEXT NOT NULL,
-[F101:263]|       color TEXT NOT NULL,
-[F101:264]|       "order" INTEGER NOT NULL DEFAULT 0,
-[F101:265]|       FOREIGN KEY (template_id) REFERENCES custom_templates(id) ON DELETE CASCADE
-[F101:266]|     )
-[F101:267]|   `);
-[F101:268]| 
-[F101:269]|   // 创建索引
-[F101:270]|   await db.execute(`CREATE INDEX IF NOT EXISTS idx_tasks_zone_id ON tasks(zone_id)`);
-[F101:271]|   await db.execute(`CREATE INDEX IF NOT EXISTS idx_tasks_parent_id ON tasks(parent_id)`);
-[F101:272]|   await db.execute(`CREATE INDEX IF NOT EXISTS idx_tasks_workspace_id ON tasks(workspace_id)`);
-[F101:273]|   await db.execute(`CREATE INDEX IF NOT EXISTS idx_zones_workspace_id ON zones(workspace_id)`);
-[F101:274]|   await db.execute(`CREATE INDEX IF NOT EXISTS idx_sessions_task_id ON pomodoro_sessions(task_id)`);
-[F101:275]|   await db.execute(`CREATE INDEX IF NOT EXISTS idx_sessions_workspace_id ON pomodoro_sessions(workspace_id)`);
-[F101:276]| }
-[F101:277]| 
-[F101:278]| // ========== Workspace CRUD ==========
-[F101:279]| 
-[F101:280]| export async function saveWorkspace(workspace: CurrentWorkspace): Promise<void> {
-[F101:281]|   const db = await getDb();
-[F101:282]| 
-[F101:283]|   await db.execute(
-[F101:284]|     `INSERT OR REPLACE INTO workspaces (id, name, created_at, last_modified, source_history_id, is_current)
-[F101:285]|      VALUES ($1, $2, $3, $4, $5, 1)`,
-[F101:286]|     [workspace.id, workspace.name, workspace.createdAt, workspace.lastModified, workspace.sourceHistoryId || null]
-[F101:287]|   );
-[F101:288]| 
-[F101:289]|   // 删除旧的 zones 和 tasks
-[F101:290]|   await db.execute(`DELETE FROM zones WHERE workspace_id = $1`, [workspace.id]);
-[F101:291]|   await db.execute(`DELETE FROM tasks WHERE workspace_id = $1`, [workspace.id]);
-[F101:292]|   await db.execute(`DELETE FROM pomodoro_sessions WHERE workspace_id = $1`, [workspace.id]);
-[F101:293]| 
-[F101:294]|   // 插入 zones
-[F101:295]|   for (const zone of workspace.zones) {
-[F101:296]|     await db.execute(
-[F101:297]|       `INSERT INTO zones (id, name, color, "order", created_at, workspace_id)
-[F101:298]|        VALUES ($1, $2, $3, $4, $5, $6)`,
-[F101:299]|       [zone.id, zone.name, zone.color, zone.order, zone.createdAt, workspace.id]
-[F101:300]|     );
-[F101:301]|   }
-[F101:302]| 
-[F101:303]|   // 插入 tasks
-[F101:304]|   for (const task of workspace.tasks) {
-[F101:305]|     await db.execute(
-[F101:306]|       `INSERT INTO tasks (id, zone_id, parent_id, title, description, completed, priority, urgency, "order", created_at, completed_at, expanded, is_collapsed, total_work_time, own_time, estimated_time, prevent_auto_complete, workspace_id)
-[F101:307]|        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
-[F101:308]|       [task.id, task.zoneId, task.parentId, task.title, task.description, task.completed ? 1 : 0, task.priority, task.urgency, task.order, task.createdAt, task.completedAt || null, task.expanded ? 1 : 0, task.isCollapsed ? 1 : 0, task.totalWorkTime, task.ownTime || 0, task.estimatedTime || null, task.preventAutoComplete ? 1 : 0, workspace.id]
-[F101:309]|     );
-[F101:310]|   }
-[F101:311]| 
-[F101:312]|   // 插入 sessions
-[F101:313]|   for (const session of workspace.sessions) {
-[F101:314]|     await db.execute(
-[F101:315]|       `INSERT INTO pomodoro_sessions (id, task_id, start_time, end_time, completed, workspace_id)
-[F101:316]|        VALUES ($1, $2, $3, $4, $5, $6)`,
-[F101:317]|       [session.id, session.taskId, session.startTime, session.endTime || null, session.completed ? 1 : 0, workspace.id]
-[F101:318]|     );
-[F101:319]|   }
-[F101:320]| }
-[F101:321]| 
-[F101:322]| export async function loadWorkspace(workspaceId: string): Promise<CurrentWorkspace | null> {
-[F101:323]|   const db = await getDb();
-[F101:324]| 
-[F101:325]|   const wsResult = await db.select<{ id: string; name: string; created_at: number; last_modified: number; source_history_id: string | null }[]>(
-[F101:326]|     `SELECT * FROM workspaces WHERE id = $1`,
-[F101:327]|     [workspaceId]
-[F101:328]|   );
-[F101:329]| 
-[F101:330]|   if (wsResult.length === 0) return null;
-[F101:331]| 
-[F101:332]|   const ws = wsResult[0];
-[F101:333]| 
-[F101:334]|   const zonesResult = await db.select<{ id: string; name: string; color: string; order: number; created_at: number }[]>(
-[F101:335]|     `SELECT * FROM zones WHERE workspace_id = $1 ORDER BY "order"`,
-[F101:336]|     [workspaceId]
-[F101:337]|   );
-[F101:338]| 
-[F101:339]|   const tasksResult = await db.select<{
-[F101:340]|     id: string; zone_id: string; parent_id: string | null; title: string; description: string;
-[F101:341]|     completed: number; priority: string; urgency: string; deadline: number | null; deadline_type: string;
-[F101:342]|     order: number; created_at: number;
-[F101:343]|     completed_at: number | null; expanded: number; is_collapsed: number; total_work_time: number;
-[F101:344]|     own_time: number; estimated_time: number | null; prevent_auto_complete: number;
-[F101:345]|   }[]>(
-[F101:346]|     `SELECT * FROM tasks WHERE workspace_id = $1 ORDER BY "order"`,
-[F101:347]|     [workspaceId]
-[F101:348]|   );
-[F101:349]| 
-[F101:350]|   const sessionsResult = await db.select<{ id: string; task_id: string; start_time: number; end_time: number | null; completed: number }[]>(
-[F101:351]|     `SELECT * FROM pomodoro_sessions WHERE workspace_id = $1`,
-[F101:352]|     [workspaceId]
-[F101:353]|   );
-[F101:354]| 
-[F101:355]|   return {
-[F101:356]|     id: ws.id,
-[F101:357]|     name: ws.name,
-[F101:358]|     zones: zonesResult.map(z => ({
-[F101:359]|       id: z.id,
-[F101:360]|       name: z.name,
-[F101:361]|       color: z.color,
-[F101:362]|       order: z.order,
-[F101:363]|       createdAt: z.created_at
-[F101:364]|     })),
-[F101:365]|     tasks: tasksResult.map(t => ({
-[F101:366]|       id: t.id,
-[F101:367]|       zoneId: t.zone_id,
-[F101:368]|       parentId: t.parent_id,
-[F101:369]|       title: t.title,
-[F101:370]|       description: t.description,
-[F101:371]|       completed: t.completed === 1,
-[F101:372]|       priority: t.priority as Task['priority'],
-[F101:373]|       urgency: t.urgency as Task['urgency'],
-[F101:374]|       deadline: t.deadline || null,
-[F101:375]|       deadlineType: (t.deadline_type || 'none') as Task['deadlineType'],
-[F101:376]|       order: t.order,
-[F101:377]|       createdAt: t.created_at,
-[F101:378]|       completedAt: t.completed_at || undefined,
-[F101:379]|       expanded: t.expanded === 1,
-[F101:380]|       isCollapsed: t.is_collapsed === 1,
-[F101:381]|       totalWorkTime: t.total_work_time,
-[F101:382]|       ownTime: t.own_time,
-[F101:383]|       estimatedTime: t.estimated_time || undefined,
-[F101:384]|       preventAutoComplete: t.prevent_auto_complete === 1
-[F101:385]|     })),
-[F101:386]|     sessions: sessionsResult.map(s => ({
-[F101:387]|       id: s.id,
-[F101:388]|       taskId: s.task_id,
-[F101:389]|       startTime: s.start_time,
-[F101:390]|       endTime: s.end_time || undefined,
-[F101:391]|       completed: s.completed === 1
-[F101:392]|     })),
-[F101:393]|     createdAt: ws.created_at,
-[F101:394]|     lastModified: ws.last_modified,
-[F101:395]|     sourceHistoryId: ws.source_history_id || undefined
-[F101:396]|   };
-[F101:397]| }
-[F101:398]| 
-[F101:399]| export async function getCurrentWorkspaceId(): Promise<string | null> {
-[F101:400]|   const db = await getDb();
-[F101:401]|   const result = await db.select<{ id: string }[]>(
-[F101:402]|     `SELECT id FROM workspaces WHERE is_current = 1 LIMIT 1`
-[F101:403]|   );
-[F101:404]|   return result.length > 0 ? result[0].id : null;
-[F101:405]| }
-[F101:406]| 
-[F101:407]| export async function setCurrentWorkspace(workspaceId: string): Promise<void> {
-[F101:408]|   const db = await getDb();
-[F101:409]|   await db.execute(`UPDATE workspaces SET is_current = 0`);
-[F101:410]|   await db.execute(`UPDATE workspaces SET is_current = 1 WHERE id = $1`, [workspaceId]);
-[F101:411]| }
-[F101:412]| 
-[F101:413]| // ========== History Workspace CRUD ==========
-[F101:414]| 
-[F101:415]| export async function saveHistoryWorkspace(history: HistoryWorkspace): Promise<void> {
-[F101:416]|   const db = await getDb();
-[F101:417]| 
-[F101:418]|   await db.execute(
-[F101:419]|     `INSERT OR REPLACE INTO history_workspaces (id, name, summary, created_at, last_modified)
-[F101:420]|      VALUES ($1, $2, $3, $4, $5)`,
-[F101:421]|     [history.id, history.name, history.summary, history.createdAt, history.lastModified]
-[F101:422]|   );
-[F101:423]| 
-[F101:424]|   // 删除旧数据
-[F101:425]|   await db.execute(`DELETE FROM zones WHERE workspace_id = $1`, [history.id]);
-[F101:426]|   await db.execute(`DELETE FROM tasks WHERE workspace_id = $1`, [history.id]);
-[F101:427]|   await db.execute(`DELETE FROM pomodoro_sessions WHERE workspace_id = $1`, [history.id]);
-[F101:428]| 
-[F101:429]|   // 插入 zones（使用历史ID作为workspace_id）
-[F101:430]|   for (const zone of history.zones) {
-[F101:431]|     await db.execute(
-[F101:432]|       `INSERT INTO zones (id, name, color, "order", created_at, workspace_id)
-[F101:433]|        VALUES ($1, $2, $3, $4, $5, $6)`,
-[F101:434]|       [zone.id, zone.name, zone.color, zone.order, zone.createdAt, history.id]
-[F101:435]|     );
-[F101:436]|   }
-[F101:437]| 
-[F101:438]|   // 插入 tasks
-[F101:439]|   for (const task of history.tasks) {
-[F101:440]|     await db.execute(
-[F101:441]|       `INSERT INTO tasks (id, zone_id, parent_id, title, description, completed, priority, urgency, "order", created_at, completed_at, expanded, is_collapsed, total_work_time, own_time, estimated_time, prevent_auto_complete, workspace_id)
-[F101:442]|        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
-[F101:443]|       [task.id, task.zoneId, task.parentId, task.title, task.description, task.completed ? 1 : 0, task.priority, task.urgency, task.order, task.createdAt, task.completedAt || null, task.expanded ? 1 : 0, task.isCollapsed ? 1 : 0, task.totalWorkTime, task.ownTime || 0, task.estimatedTime || null, task.preventAutoComplete ? 1 : 0, history.id]
-[F101:444]|     );
-[F101:445]|   }
-[F101:446]| 
-[F101:447]|   // 插入 sessions
-[F101:448]|   for (const session of history.sessions) {
-[F101:449]|     await db.execute(
-[F101:450]|       `INSERT INTO pomodoro_sessions (id, task_id, start_time, end_time, completed, workspace_id)
-[F101:451]|        VALUES ($1, $2, $3, $4, $5, $6)`,
-[F101:452]|       [session.id, session.taskId, session.startTime, session.endTime || null, session.completed ? 1 : 0, history.id]
-[F101:453]|     );
-[F101:454]|   }
-[F101:455]| }
-[F101:456]| 
-[F101:457]| export async function loadAllHistoryWorkspaces(): Promise<HistoryWorkspace[]> {
-[F101:458]|   const db = await getDb();
-[F101:459]| 
-[F101:460]|   const historyResult = await db.select<{ id: string; name: string; summary: string; created_at: number; last_modified: number }[]>(
-[F101:461]|     `SELECT * FROM history_workspaces ORDER BY last_modified DESC`
-[F101:462]|   );
-[F101:463]| 
-[F101:464]|   const histories: HistoryWorkspace[] = [];
-[F101:465]| 
-[F101:466]|   for (const h of historyResult) {
-[F101:467]|     const zonesResult = await db.select<{ id: string; name: string; color: string; order: number; created_at: number }[]>(
-[F101:468]|       `SELECT * FROM zones WHERE workspace_id = $1 ORDER BY "order"`,
-[F101:469]|       [h.id]
-[F101:470]|     );
-[F101:471]| 
-[F101:472]|     const tasksResult = await db.select<{
-[F101:473]|       id: string; zone_id: string; parent_id: string | null; title: string; description: string;
-[F101:474]|       completed: number; priority: string; urgency: string; deadline: number | null; deadline_type: string;
-[F101:475]|       order: number; created_at: number;
-[F101:476]|       completed_at: number | null; expanded: number; is_collapsed: number; total_work_time: number;
-[F101:477]|       own_time: number; estimated_time: number | null; prevent_auto_complete: number;
-[F101:478]|     }[]>(
-[F101:479]|       `SELECT * FROM tasks WHERE workspace_id = $1 ORDER BY "order"`,
-[F101:480]|       [h.id]
-[F101:481]|     );
-[F101:482]| 
-[F101:483]|     const sessionsResult = await db.select<{ id: string; task_id: string; start_time: number; end_time: number | null; completed: number }[]>(
-[F101:484]|       `SELECT * FROM pomodoro_sessions WHERE workspace_id = $1`,
-[F101:485]|       [h.id]
-[F101:486]|     );
-[F101:487]| 
-[F101:488]|     histories.push({
-[F101:489]|       id: h.id,
-[F101:490]|       name: h.name,
-[F101:491]|       summary: h.summary,
-[F101:492]|       zones: zonesResult.map(z => ({
-[F101:493]|         id: z.id,
-[F101:494]|         name: z.name,
-[F101:495]|         color: z.color,
-[F101:496]|         order: z.order,
-[F101:497]|         createdAt: z.created_at
-[F101:498]|       })),
-[F101:499]|       tasks: tasksResult.map(t => ({
-[F101:500]|         id: t.id,
-[F101:501]|         zoneId: t.zone_id,
-[F101:502]|         parentId: t.parent_id,
-[F101:503]|         title: t.title,
-[F101:504]|         description: t.description,
-[F101:505]|         completed: t.completed === 1,
-[F101:506]|         priority: t.priority as Task['priority'],
-[F101:507]|         urgency: t.urgency as Task['urgency'],
-[F101:508]|         deadline: t.deadline || null,
-[F101:509]|         deadlineType: (t.deadline_type || 'none') as Task['deadlineType'],
-[F101:510]|         order: t.order,
-[F101:511]|         createdAt: t.created_at,
-[F101:512]|         completedAt: t.completed_at || undefined,
-[F101:513]|         expanded: t.expanded === 1,
-[F101:514]|         isCollapsed: t.is_collapsed === 1,
-[F101:515]|         totalWorkTime: t.total_work_time,
-[F101:516]|         ownTime: t.own_time,
-[F101:517]|         estimatedTime: t.estimated_time || undefined,
-[F101:518]|         preventAutoComplete: t.prevent_auto_complete === 1
-[F101:519]|       })),
-[F101:520]|       sessions: sessionsResult.map(s => ({
-[F101:521]|         id: s.id,
-[F101:522]|         taskId: s.task_id,
-[F101:523]|         startTime: s.start_time,
-[F101:524]|         endTime: s.end_time || undefined,
-[F101:525]|         completed: s.completed === 1
-[F101:526]|       })),
-[F101:527]|       createdAt: h.created_at,
-[F101:528]|       lastModified: h.last_modified
-[F101:529]|     });
-[F101:530]|   }
-[F101:531]| 
-[F101:532]|   return histories;
-[F101:533]| }
-[F101:534]| 
-[F101:535]| export async function deleteHistoryWorkspace(id: string): Promise<void> {
-[F101:536]|   const db = await getDb();
-[F101:537]|   await db.execute(`DELETE FROM pomodoro_sessions WHERE workspace_id = $1`, [id]);
-[F101:538]|   await db.execute(`DELETE FROM tasks WHERE workspace_id = $1`, [id]);
-[F101:539]|   await db.execute(`DELETE FROM zones WHERE workspace_id = $1`, [id]);
-[F101:540]|   await db.execute(`DELETE FROM history_workspaces WHERE id = $1`, [id]);
-[F101:541]| }
-[F101:542]| 
-[F101:543]| // ========== Settings ==========
-[F101:544]| 
-[F101:545]| export interface AppSettingsRow {
-[F101:546]|   work_duration: number;
-[F101:547]|   break_duration: number;
-[F101:548]|   long_break_duration: number;
-[F101:549]|   auto_start_break: number;
-[F101:550]|   sound_enabled: number;
-[F101:551]|   collapsed: number;
-[F101:552]|   collapse_position_x: number;
-[F101:553]|   collapse_position_y: number;
-[F101:554]|   sort_mode: string;
-[F101:555]|   priority_weight: number;
-[F101:556]|   urgency_weight: number;
-[F101:557]| }
-[F101:558]| 
-[F101:559]| export async function loadSettings(): Promise<AppSettingsRow | null> {
-[F101:560]|   const db = await getDb();
-[F101:561]|   const result = await db.select<AppSettingsRow[]>(`SELECT * FROM app_settings WHERE id = 1`);
-[F101:562]|   return result.length > 0 ? result[0] : null;
-[F101:563]| }
-[F101:564]| 
-[F101:565]| export async function saveSettings(settings: Partial<AppSettingsRow>): Promise<void> {
-[F101:566]|   const db = await getDb();
-[F101:567]|   const fields: string[] = [];
-[F101:568]|   const values: (string | number)[] = [];
-[F101:569]|   let paramIndex = 1;
-[F101:570]| 
-[F101:571]|   for (const [key, value] of Object.entries(settings)) {
-[F101:572]|     fields.push(`${key} = $${paramIndex}`);
-[F101:573]|     values.push(value as string | number);
-[F101:574]|     paramIndex++;
-[F101:575]|   }
-[F101:576]| 
-[F101:577]|   if (fields.length > 0) {
-[F101:578]|     await db.execute(`UPDATE app_settings SET ${fields.join(', ')} WHERE id = 1`, values);
-[F101:579]|   }
-[F101:580]| }
-[F101:581]| 
-[F101:582]| // ========== Templates ==========
-[F101:583]| 
-[F101:584]| export async function saveCustomTemplate(template: Template): Promise<void> {
-[F101:585]|   const db = await getDb();
-[F101:586]| 
-[F101:587]|   await db.execute(
-[F101:588]|     `INSERT OR REPLACE INTO custom_templates (id, name, description, icon, created_at)
-[F101:589]|      VALUES ($1, $2, $3, $4, $5)`,
-[F101:590]|     [template.id, template.name, template.description, template.icon, Date.now()]
-[F101:591]|   );
-[F101:592]| 
-[F101:593]|   // 删除旧的 zones
-[F101:594]|   await db.execute(`DELETE FROM template_zones WHERE template_id = $1`, [template.id]);
-[F101:595]| 
-[F101:596]|   // 插入 zones
-[F101:597]|   for (const zone of template.zones) {
-[F101:598]|     await db.execute(
-[F101:599]|       `INSERT INTO template_zones (id, template_id, name, color, "order")
-[F101:600]|        VALUES ($1, $2, $3, $4, $5)`,
-[F101:601]|       [`${template.id}-${zone.order}`, template.id, zone.name, zone.color, zone.order]
-[F101:602]|     );
-[F101:603]|   }
-[F101:604]| }
-[F101:605]| 
-[F101:606]| export async function loadCustomTemplates(): Promise<Template[]> {
-[F101:607]|   const db = await getDb();
-[F101:608]| 
-[F101:609]|   const templatesResult = await db.select<{ id: string; name: string; description: string; icon: string; created_at: number }[]>(
-[F101:610]|     `SELECT * FROM custom_templates ORDER BY created_at DESC`
-[F101:611]|   );
-[F101:612]| 
-[F101:613]|   const templates: Template[] = [];
-[F101:614]| 
-[F101:615]|   for (const t of templatesResult) {
-[F101:616]|     const zonesResult = await db.select<{ id: string; name: string; color: string; order: number }[]>(
-[F101:617]|       `SELECT * FROM template_zones WHERE template_id = $1 ORDER BY "order"`,
-[F101:618]|       [t.id]
-[F101:619]|     );
-[F101:620]| 
-[F101:621]|     templates.push({
-[F101:622]|       id: t.id,
-[F101:623]|       name: t.name,
-[F101:624]|       description: t.description,
-[F101:625]|       icon: t.icon,
-[F101:626]|       zones: zonesResult.map(z => ({
-[F101:627]|         name: z.name,
-[F101:628]|         color: z.color,
-[F101:629]|         order: z.order
-[F101:630]|       }))
-[F101:631]|     });
-[F101:632]|   }
-[F101:633]| 
-[F101:634]|   return templates;
-[F101:635]| }
-[F101:636]| 
-[F101:637]| export async function deleteCustomTemplate(id: string): Promise<void> {
-[F101:638]|   const db = await getDb();
-[F101:639]|   await db.execute(`DELETE FROM template_zones WHERE template_id = $1`, [id]);
-[F101:640]|   await db.execute(`DELETE FROM custom_templates WHERE id = $1`, [id]);
-[F101:641]| }
-[F101:642]| 
-[F101:643]| // ========== 版本管理 ==========
-[F101:644]| 
-[F101:645]| export async function getDbVersion(): Promise<number> {
-[F101:646]|   const db = await getDb();
-[F101:647]|   const result = await db.select<{ version: number }[]>(`SELECT version FROM app_settings WHERE id = 1`);
-[F101:648]|   return result.length > 0 ? result[0].version : 0;
-[F101:649]| }
-[F101:650]| 
-[F101:651]| export async function setDbVersion(version: number): Promise<void> {
-[F101:652]|   const db = await getDb();
-[F101:653]|   await db.execute(`UPDATE app_settings SET version = $1 WHERE id = 1`, [version]);
-[F101:654]| }
-[F101:655]| 
-[F101:656]| // ========== 兼容旧版 Key-Value API（用于迁移） ==========
-[F101:657]| 
-[F101:658]| import { dbSetItem as legacyDbSetItem, dbGetItem as legacyDbGetItem, dbRemoveItem as legacyDbRemoveItem } from './db-legacy';
-[F101:659]| 
-[F101:660]| export const legacyDb = {
-[F101:661]|   setItem: legacyDbSetItem,
-[F101:662]|   getItem: legacyDbGetItem,
-[F101:663]|   removeItem: legacyDbRemoveItem
-[F101:664]| };
+[F101:122]|       // 对比内存与数据库
+[F101:123]|       if (memoryTasks !== dbTasks || memoryZones !== dbZones) {
+[F101:124]|         console.warn(`[MONITOR-MEM] ⚠️ MEMORY vs DB MISMATCH! Memory: ${memoryTasks}t/${memoryZones}z, DB: ${dbTasks}t/${dbZones}z`);
+[F101:125]|         persistentLog('MONITOR', 'MEMORY vs DB MISMATCH', 'WARN', {
+[F101:126]|           memory: { tasks: memoryTasks, zones: memoryZones },
+[F101:127]|           db: { tasks: dbTasks, zones: dbZones },
+[F101:128]|         });
+[F101:129]|       }
+[F101:130]| 
+[F101:131]|       _lastMemoryData = {
+[F101:132]|         tasks: memoryTasks,
+[F101:133]|         zones: memoryZones,
+[F101:134]|         timestamp: Date.now(),
+[F101:135]|       };
+[F101:136]|     } catch (e) {
+[F101:137]|       console.log('[MONITOR-MEM] Error:', e);
+[F101:138]|     }
+[F101:139]|   }, 500); // 500ms 采样（较低频率）
+[F101:140]| }
+[F101:141]| 
+[F101:142]| /**
+[F101:143]|  * 停止数据监控
+[F101:144]|  */
+[F101:145]| export function stopDataMonitor(): void {
+[F101:146]|   if (_dbMonitorInterval) {
+[F101:147]|     clearInterval(_dbMonitorInterval);
+[F101:148]|     _dbMonitorInterval = null;
+[F101:149]|     console.log('[MONITOR] DB monitor stopped');
+[F101:150]|   }
+[F101:151]|   if (_memoryMonitorInterval) {
+[F101:152]|     clearInterval(_memoryMonitorInterval);
+[F101:153]|     _memoryMonitorInterval = null;
+[F101:154]|     console.log('[MONITOR] MEM monitor stopped');
+[F101:155]|   }
+[F101:156]| }
+[F101:157]| 
+[F101:158]| /**
+[F101:159]|  * 获取当前监控状态（用于调试）
+[F101:160]|  */
+[F101:161]| export function getMonitorStatus(): {
+[F101:162]|   db: typeof _lastDbData;
+[F101:163]|   memory: typeof _lastMemoryData;
+[F101:164]|   running: boolean;
+[F101:165]| } {
+[F101:166]|   return {
+[F101:167]|     db: _lastDbData,
+[F101:168]|     memory: _lastMemoryData,
+[F101:169]|     running: _dbMonitorInterval !== null,
+[F101:170]|   };
+[F101:171]| }
+[F101:172]| 
+[F101:173]| /**
+[F101:174]|  * 手动触发一次数据检查（用于调试）
+[F101:175]|  */
+[F101:176]| export async function checkDataNow(): Promise<void> {
+[F101:177]|   console.log('[MONITOR] Manual check triggered');
+[F101:178]|   const dbState = await getDbState();
+[F101:179]|   if (dbState) {
+[F101:180]|     console.log('[MONITOR] Current DB state:', dbState);
+[F101:181]|   }
+[F101:182]| 
+[F101:183]|   const { useAppStore } = await import('@/store');
+[F101:184]|   const storeState = useAppStore.getState();
+[F101:185]|   console.log('[MONITOR] Current Memory state:', {
+[F101:186]|     tasks: storeState.tasks?.length || 0,
+[F101:187]|     zones: storeState.zones?.length || 0,
+[F101:188]|   });
+[F101:189]| }
+[F101:190]| 
+[F101:191]| // 挂载到 window 用于调试
+[F101:192]| if (typeof window !== 'undefined') {
+[F101:193]|   (window as unknown as { startDataMonitor: typeof startDataMonitor; stopDataMonitor: typeof stopDataMonitor; checkDataNow: typeof checkDataNow; getMonitorStatus: typeof getMonitorStatus }).startDataMonitor = startDataMonitor;
+[F101:194]|   (window as unknown as { startDataMonitor: typeof startDataMonitor; stopDataMonitor: typeof stopDataMonitor; checkDataNow: typeof checkDataNow; getMonitorStatus: typeof getMonitorStatus }).stopDataMonitor = stopDataMonitor;
+[F101:195]|   (window as unknown as { startDataMonitor: typeof startDataMonitor; stopDataMonitor: typeof stopDataMonitor; checkDataNow: typeof checkDataNow; getMonitorStatus: typeof getMonitorStatus }).checkDataNow = checkDataNow;
+[F101:196]|   (window as unknown as { startDataMonitor: typeof startDataMonitor; stopDataMonitor: typeof stopDataMonitor; checkDataNow: typeof checkDataNow; getMonitorStatus: typeof getMonitorStatus }).getMonitorStatus = getMonitorStatus;
+[F101:197]| }
 
 ================================================================================
-文件路径: src\lib\i18n.ts(F102) (约合大小: 1 KB)
+文件路径: src\lib\db.ts(F102) (约合大小: 38 KB)
 ================================================================================
-[F102:1]| import i18n from 'i18next';
-[F102:2]| import { initReactI18next } from 'react-i18next';
-[F102:3]| import LanguageDetector from 'i18next-browser-languagedetector';
-[F102:4]| 
-[F102:5]| import en from '../locales/en.json';
-[F102:6]| import zh from '../locales/zh.json';
+[F102:1]| import Database from '@tauri-apps/plugin-sql';
+[F102:2]| import { appDataDir, join } from '@tauri-apps/api/path';
+[F102:3]| import { exists, mkdir, copyFile } from '@tauri-apps/plugin-fs';
+[F102:4]| import type { Task, CurrentWorkspace, HistoryWorkspace, Template } from '@/types';
+[F102:5]| import { setIsSwitching, setIsReloadingForSwitch } from './storage-adapter';
+[F102:6]| import { persistentLog } from './persistent-log';
 [F102:7]| 
-[F102:8]| i18n
-[F102:9]|   .use(LanguageDetector)
-[F102:10]|   .use(initReactI18next)
-[F102:11]|   .init({
-[F102:12]|     resources: {
-[F102:13]|       en: { translation: en },
-[F102:14]|       zh: { translation: zh }
-[F102:15]|     },
-[F102:16]|     // 禁用缓存，只使用 Zustand 里的设置
-[F102:17]|     detection: {
-[F102:18]|       order: ['navigator'],
-[F102:19]|       caches: []
-[F102:20]|     },
-[F102:21]|     fallbackLng: 'zh',
-[F102:22]|     interpolation: {
-[F102:23]|       escapeValue: false
-[F102:24]|     }
-[F102:25]|   });
-[F102:26]| 
-[F102:27]| // 延迟初始化 store 订阅，等待 React 和 store 完全就绪
-[F102:28]| setTimeout(() => {
-[F102:29]|   try {
-[F102:30]|     // eslint-disable-next-line @typescript-eslint/no-var-requires
-[F102:31]|     const { useAppStore } = require('@/store');
-[F102:32]|     let previousLanguage = useAppStore.getState().settings.language;
-[F102:33]|     useAppStore.subscribe((state: { settings: { language: string } }) => {
-[F102:34]|       const currentLanguage = state.settings.language;
-[F102:35]|       if (currentLanguage !== previousLanguage && currentLanguage) {
-[F102:36]|         previousLanguage = currentLanguage;
-[F102:37]|         i18n.changeLanguage(currentLanguage);
-[F102:38]|       }
-[F102:39]|     });
-[F102:40]|   } catch (e) {
-[F102:41]|     console.warn('Failed to initialize i18n store subscription:', e);
-[F102:42]|   }
-[F102:43]| }, 0);
-[F102:44]| 
-[F102:45]| export default i18n;
+[F102:8]| const DB_FILENAME = 'focus_flow.db';
+[F102:9]| const PATH_STORAGE_KEY = 'FOCUS_FLOW_DB_PATH';
+[F102:10]| 
+[F102:11]| // 新增：全局唯一的会话 ID。每次页面刷新都会生成新的，用于防范跨页面的幽灵 Promise 写入。
+[F102:12]| const CURRENT_SESSION_ID = Math.random().toString(36).substring(2, 15);
+[F102:13]| console.log('[DB] New session started, ID:', CURRENT_SESSION_ID);
+[F102:14]| persistentLog('DB', 'Session started', 'INFO', { sessionId: CURRENT_SESSION_ID });
+[F102:15]| 
+[F102:16]| // 修复：使用 Promise 缓存，解决并发冲突
+[F102:17]| let dbPromise: Promise<Database> | null = null;
+[F102:18]| let dbInstance: Database | null = null;
+[F102:19]| // 记录当前数据库路径，用于检测路径变化
+[F102:20]| let currentDbPath: string | null = null;
+[F102:21]| // 标记是否正在进行目录切换（用于单页切换）
+[F102:22]| let isReloadingForSwitch = false;
+[F102:23]| 
+[F102:24]| /**
+[F102:25]|  * 清除数据库缓存 - 在切换目录时调用
+[F102:26]|  */
+[F102:27]| export function clearDbCache(): void {
+[F102:28]|   console.log('[DB] Clearing database cache');
+[F102:29]|   dbPromise = null;
+[F102:30]|   dbInstance = null;
+[F102:31]|   currentDbPath = null;
+[F102:32]| }
+[F102:33]| 
+[F102:34]| /**
+[F102:35]|  * 获取当前的数据库绝对路径（高容错版）
+[F102:36]|  */
+[F102:37]| export async function getDbPath(): Promise<string> {
+[F102:38]|   // 1. 优先读取用户自定义路径
+[F102:39]|   const customPath = localStorage.getItem(PATH_STORAGE_KEY);
+[F102:40]|   // [DEBUG] console.log('[DB] getDbPath - PATH_STORAGE_KEY value:', customPath);
+[F102:41]|   if (customPath) {
+[F102:42]|     // [DEBUG] console.log('[DB] getDbPath - Returning customPath:', customPath);
+[F102:43]|     return customPath;
+[F102:44]|   }
+[F102:45]|   // [DEBUG] console.log('[DB] getDbPath - No custom path, using fallback');
+[F102:46]| 
+[F102:47]|   try {
+[F102:48]|     // 2. 尝试获取系统 AppData 目录
+[F102:49]|     const appDataDirPath = await appDataDir();
+[F102:50]|     const dbPath = await join(appDataDirPath, DB_FILENAME);
+[F102:51]| 
+[F102:52]|     // 3. 尝试创建目录（如果因为权限报错，我们捕获它但不阻断流程）
+[F102:53]|     try {
+[F102:54]|       const dirExists = await exists(appDataDirPath);
+[F102:55]|       if (!dirExists) {
+[F102:56]|         await mkdir(appDataDirPath, { recursive: true });
+[F102:57]|       }
+[F102:58]|     } catch (fsError) {
+[F102:59]|       console.warn('[DB] FS permission warning (mkdir/exists):', fsError);
+[F102:60]|     }
+[F102:61]| 
+[F102:62]|     return dbPath;
+[F102:63]|   } catch (error) {
+[F102:64]|     // 4. 终极兜底：如果不在 Tauri 环境或缺少 Path 权限，返回相对路径
+[F102:65]|     console.error('[DB] Failed to resolve absolute DB path, falling back to relative:', error);
+[F102:66]|     return DB_FILENAME;
+[F102:67]|   }
+[F102:68]| }
+[F102:69]| 
+[F102:70]| /**
+[F102:71]|  * 更改数据库存储目录（单页切换版，不使用 reload）
+[F102:72]|  */
+[F102:73]| export async function changeDbPath(newFolder: string): Promise<void> {
+[F102:74]|   console.log('[DB] changeDbPath START - newFolder:', newFolder);
+[F102:75]|   const currentPath = await getDbPath();
+[F102:76]|   const pathFromStorage = localStorage.getItem(PATH_STORAGE_KEY);
+[F102:77]|   console.log(`[DB] changeDbPath - From: ${currentPath}, To: ${newFolder}, Storage: ${pathFromStorage}`);
+[F102:78]|   persistentLog('DB', 'changeDbPath START', 'INFO', { from: currentPath, to: newFolder, storageKey: pathFromStorage });
+[F102:79]| 
+[F102:80]|   // 🚨 开启切换锁，阻止所有写入
+[F102:81]|   setIsSwitching(true);
+[F102:82]|   // 标记正在切换
+[F102:83]|   isReloadingForSwitch = true;
+[F102:84]|   // [DEBUG] console.log('[DB] changeDbPath - Switching lock set to TRUE');
+[F102:85]| 
+[F102:86]|   try {
+[F102:87]|     const currentPath = await getDbPath();
+[F102:88]|     persistentLog('DB', 'Current path', 'DEBUG', { currentPath });
+[F102:89]| 
+[F102:90]|     let newPath = '';
+[F102:91]| 
+[F102:92]|     try {
+[F102:93]|       newPath = await join(newFolder, DB_FILENAME);
+[F102:94]|     } catch (e) {
+[F102:95]|       console.error('[DB] Failed to join path:', e);
+[F102:96]|       throw new Error('Failed to join path');
+[F102:97]|     }
+[F102:98]| 
+[F102:99]|     if (currentPath === newPath) {
+[F102:100]|       // [DEBUG] console.log('[DB] Same path, skipping');
+[F102:101]|       // 重要：即使路径相同，也需要重置切换锁！
+[F102:102]|       setIsSwitching(false);
+[F102:103]|       isReloadingForSwitch = false;
+[F102:104]|       return;
+[F102:105]|     }
+[F102:106]| 
+[F102:107]|     // 注意：切换目录时不再复制数据！
+[F102:108]|     // 每个目录应该独立存储自己的数据
+[F102:109]|     // 切换目录只是切换数据库文件路径
+[F102:110]|     try {
+[F102:111]|       const newPathExists = await exists(newPath);
+[F102:112]|       // [DEBUG] console.log('[DB] newPathExists:', newPathExists);
+[F102:113]|       persistentLog('DB', 'Switching directory (no copy)', 'INFO', { newPathExists });
+[F102:114]|     } catch (e) {
+[F102:115]|       console.warn('[DB] Error checking path:', e);
+[F102:116]|     }
+[F102:117]| 
+[F102:118]|     // === 保存切换日志到 localStorage，便于查看 ===
+[F102:119]|     const switchLogs = JSON.parse(localStorage.getItem('SWITCH_LOGS') || '[]');
+[F102:120]|     const now = new Date().toISOString();
+[F102:121]|     switchLogs.push({
+[F102:122]|       time: now,
+[F102:123]|       action: 'BEFORE_SWITCH',
+[F102:124]|       newPath,
+[F102:125]|       message: 'About to switch directory (single-page)'
+[F102:126]|     });
+[F102:127]|     localStorage.setItem('SWITCH_LOGS', JSON.stringify(switchLogs.slice(-20)));
+[F102:128]| 
+[F102:129]|     // 保存新路径到 localStorage
+[F102:130]|     localStorage.setItem(PATH_STORAGE_KEY, newPath);
+[F102:131]| 
+[F102:132]|     // 清除数据库缓存，并显式关闭当前数据库连接！
+[F102:133]|     if (dbInstance) {
+[F102:134]|       try {
+[F102:135]|         await dbInstance.close();
+[F102:136]|         // [DEBUG] console.log('[DB] Database connection closed before switch.');
+[F102:137]|         persistentLog('DB', 'Database closed before switch', 'INFO');
+[F102:138]|       } catch (e) {
+[F102:139]|         console.error('[DB] Error closing database:', e);
+[F102:140]|       }
+[F102:141]|     }
+[F102:142]|     clearDbCache();
+[F102:143]| 
+[F102:144]|     // 🚀 同步点 1：先强制加载新数据库，确认完全就绪
+[F102:145]|     console.log('[DB] About to call getDb()...');
+[F102:146]|     await getDb();
+[F102:147]|     console.log('[DB] Database pre-loaded, now triggering store reload');
+[F102:148]| 
+[F102:149]|     // 🚀 单页切换：触发 store 重新加载，而不是 reload 页面
+[F102:150]|     // [DEBUG] console.log('[DB] Switching directory, triggering store reload...');
+[F102:151]|     persistentLog('DB', 'Triggering store reload', 'INFO', { newPath });
+[F102:152]| 
+[F102:153]|     // 设置切换状态
+[F102:154]|     isReloadingForSwitch = true;
+[F102:155]|     setIsReloadingForSwitch(true);
+[F102:156]| 
+[F102:157]|     // 动态导入并触发应用重新加载数据
+[F102:158]|     const { triggerStoreReload } = await import('./storage-adapter');
+[F102:159]|     await triggerStoreReload();
+[F102:160]| 
+[F102:161]|     // 🚨 自动化测试：如果有测试状态，继续执行测试
+[F102:162]|     try {
+[F102:163]|       const { AutoTester } = await import('./auto-tester');
+[F102:164]|       AutoTester.checkAndRun();
+[F102:165]|     } catch (e) {
+[F102:166]|       // 忽略自动化测试错误
+[F102:167]|     }
+[F102:168]| 
+[F102:169]|     // 重置切换标记
+[F102:170]|     isReloadingForSwitch = false;
+[F102:171]|     setIsReloadingForSwitch(false);
+[F102:172]|     // 注意：skipWrite 锁不再在这里清除
+[F102:173]|     // 而是在 storage-adapter.ts 的 getItem 中，当成功读取到有效数据后才清除
+[F102:174]|     // [DEBUG] console.log('[DB] changeDbPath completed successfully');
+[F102:175]|     persistentLog('DB', 'changeDbPath completed', 'INFO');
+[F102:176]| 
+[F102:177]|   } catch (error) {
+[F102:178]|     console.error('[DB] changeDbPath error:', error);
+[F102:179]|     console.warn('切换目录失败: ' + error);
+[F102:180]|     isReloadingForSwitch = false;
+[F102:181]|     setIsReloadingForSwitch(false);
+[F102:182]|     setIsSwitching(false);
+[F102:183]|     // 注意：skipWrite 锁也不在这里清除，让 storage-adapter 处理
+[F102:184]|   }
+[F102:185]| }
+[F102:186]| 
+[F102:187]| /**
+[F102:188]|  * 获取数据库实例
+[F102:189]|  */
+[F102:190]| export async function getDb(): Promise<Database> {
+[F102:191]|   // 详细日志：追踪路径变化
+[F102:192]|   const dbPath = await getDbPath();
+[F102:193]|   const pathFromStorage = localStorage.getItem(PATH_STORAGE_KEY);
+[F102:194]|   // [DEBUG] console.log('[DB] getDb - PATH_STORAGE_KEY:', pathFromStorage);
+[F102:195]|   // [DEBUG] console.log('[DB] getDb - getDbPath():', dbPath);
+[F102:196]|   // [DEBUG] console.log('[DB] getDb - currentDbPath:', currentDbPath);
+[F102:197]| 
+[F102:198]|   // 检查路径是否变化，如果变化则清除缓存
+[F102:199]|   if (currentDbPath !== null && currentDbPath !== dbPath) {
+[F102:200]|     // [DEBUG] console.log('[DB] Path changed from', currentDbPath, 'to', dbPath, '- clearing cache');
+[F102:201]|     clearDbCache();
+[F102:202]|   }
+[F102:203]| 
+[F102:204]|   if (dbPromise) {
+[F102:205]|     // [DEBUG] console.log('[DB] getDb - Returning cached promise for:', currentDbPath);
+[F102:206]|     return dbPromise;
+[F102:207]|   }
+[F102:208]| 
+[F102:209]|   dbPromise = (async () => {
+[F102:210]|     try {
+[F102:211]|       const dbPath = await getDbPath();
+[F102:212]|       currentDbPath = dbPath; // 记录当前路径
+[F102:213]|       // [DEBUG] console.log('[DB] Loading database from:', dbPath);
+[F102:214]| 
+[F102:215]|       dbInstance = await Database.load(`sqlite:${dbPath}`);
+[F102:216]|       await initializeTables(dbInstance);
+[F102:217]| 
+[F102:218]|       return dbInstance;
+[F102:219]|     } catch (error) {
+[F102:220]|       console.error('[DB] Failed to load database:', error);
+[F102:221]|       dbPromise = null;
+[F102:222]|       throw error;
+[F102:223]|     }
+[F102:224]|   })();
+[F102:225]| 
+[F102:226]|   return dbPromise;
+[F102:227]| }
+[F102:228]| 
+[F102:229]| // 初始化关系型表结构
+[F102:230]| async function initializeTables(db: Database): Promise<void> {
+[F102:231]|   // app_settings 表 (单行配置)
+[F102:232]|   await db.execute(`
+[F102:233]|     CREATE TABLE IF NOT EXISTS app_settings (
+[F102:234]|       id INTEGER PRIMARY KEY CHECK (id = 1),
+[F102:235]|       version INTEGER NOT NULL DEFAULT 1,
+[F102:236]|       work_duration INTEGER NOT NULL DEFAULT 1500,
+[F102:237]|       break_duration INTEGER NOT NULL DEFAULT 300,
+[F102:238]|       long_break_duration INTEGER NOT NULL DEFAULT 900,
+[F102:239]|       auto_start_break INTEGER NOT NULL DEFAULT 0,
+[F102:240]|       sound_enabled INTEGER NOT NULL DEFAULT 1,
+[F102:241]|       collapsed INTEGER NOT NULL DEFAULT 0,
+[F102:242]|       collapse_position_x REAL NOT NULL DEFAULT 100,
+[F102:243]|       collapse_position_y REAL NOT NULL DEFAULT 100,
+[F102:244]|       sort_mode TEXT NOT NULL DEFAULT 'zone',
+[F102:245]|       priority_weight REAL NOT NULL DEFAULT 0.4,
+[F102:246]|       urgency_weight REAL NOT NULL DEFAULT 0.6
+[F102:247]|     )
+[F102:248]|   `);
+[F102:249]| 
+[F102:250]|   // 插入默认设置（如果不存在）
+[F102:251]|   await db.execute(`
+[F102:252]|     INSERT OR IGNORE INTO app_settings (id, version) VALUES (1, 1)
+[F102:253]|   `);
+[F102:254]| 
+[F102:255]|   // workspaces 表
+[F102:256]|   await db.execute(`
+[F102:257]|     CREATE TABLE IF NOT EXISTS workspaces (
+[F102:258]|       id TEXT PRIMARY KEY,
+[F102:259]|       name TEXT NOT NULL,
+[F102:260]|       created_at INTEGER NOT NULL,
+[F102:261]|       last_modified INTEGER NOT NULL,
+[F102:262]|       source_history_id TEXT,
+[F102:263]|       is_current INTEGER NOT NULL DEFAULT 1
+[F102:264]|     )
+[F102:265]|   `);
+[F102:266]| 
+[F102:267]|   // history_workspaces 表
+[F102:268]|   await db.execute(`
+[F102:269]|     CREATE TABLE IF NOT EXISTS history_workspaces (
+[F102:270]|       id TEXT PRIMARY KEY,
+[F102:271]|       name TEXT NOT NULL,
+[F102:272]|       summary TEXT DEFAULT '',
+[F102:273]|       created_at INTEGER NOT NULL,
+[F102:274]|       last_modified INTEGER NOT NULL
+[F102:275]|     )
+[F102:276]|   `);
+[F102:277]| 
+[F102:278]|   // zones 表
+[F102:279]|   await db.execute(`
+[F102:280]|     CREATE TABLE IF NOT EXISTS zones (
+[F102:281]|       id TEXT PRIMARY KEY,
+[F102:282]|       name TEXT NOT NULL,
+[F102:283]|       color TEXT NOT NULL,
+[F102:284]|       "order" INTEGER NOT NULL DEFAULT 0,
+[F102:285]|       created_at INTEGER NOT NULL,
+[F102:286]|       workspace_id TEXT NOT NULL,
+[F102:287]|       FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+[F102:288]|     )
+[F102:289]|   `);
+[F102:290]| 
+[F102:291]|   // tasks 表
+[F102:292]|   await db.execute(`
+[F102:293]|     CREATE TABLE IF NOT EXISTS tasks (
+[F102:294]|       id TEXT PRIMARY KEY,
+[F102:295]|       zone_id TEXT NOT NULL,
+[F102:296]|       parent_id TEXT,
+[F102:297]|       title TEXT NOT NULL,
+[F102:298]|       description TEXT DEFAULT '',
+[F102:299]|       completed INTEGER NOT NULL DEFAULT 0,
+[F102:300]|       priority TEXT NOT NULL DEFAULT 'medium',
+[F102:301]|       urgency TEXT NOT NULL DEFAULT 'low',
+[F102:302]|       deadline INTEGER,
+[F102:303]|       deadline_type TEXT DEFAULT 'none',
+[F102:304]|       "order" INTEGER NOT NULL DEFAULT 0,
+[F102:305]|       created_at INTEGER NOT NULL,
+[F102:306]|       completed_at INTEGER,
+[F102:307]|       expanded INTEGER NOT NULL DEFAULT 0,
+[F102:308]|       is_collapsed INTEGER NOT NULL DEFAULT 0,
+[F102:309]|       total_work_time INTEGER NOT NULL DEFAULT 0,
+[F102:310]|       own_time INTEGER NOT NULL DEFAULT 0,
+[F102:311]|       workspace_id TEXT NOT NULL,
+[F102:312]|       estimated_time,
+[F102:313]|       prevent_auto_complete INTEGER NOT NULL DEFAULT 0,
+[F102:314]|       FOREIGN KEY (zone_id) REFERENCES zones(id) ON DELETE CASCADE,
+[F102:315]|       FOREIGN KEY (parent_id) REFERENCES tasks(id) ON DELETE CASCADE,
+[F102:316]|       FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+[F102:317]|     )
+[F102:318]|   `);
+[F102:319]| 
+[F102:320]|   // pomodoro_sessions 表
+[F102:321]|   await db.execute(`
+[F102:322]|     CREATE TABLE IF NOT EXISTS pomodoro_sessions (
+[F102:323]|       id TEXT PRIMARY KEY,
+[F102:324]|       task_id TEXT NOT NULL,
+[F102:325]|       start_time INTEGER NOT NULL,
+[F102:326]|       end_time INTEGER,
+[F102:327]|       completed INTEGER NOT NULL DEFAULT 0,
+[F102:328]|       workspace_id TEXT NOT NULL,
+[F102:329]|       FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+[F102:330]|       FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+[F102:331]|     )
+[F102:332]|   `);
+[F102:333]| 
+[F102:334]|   // custom_templates 表
+[F102:335]|   await db.execute(`
+[F102:336]|     CREATE TABLE IF NOT EXISTS custom_templates (
+[F102:337]|       id TEXT PRIMARY KEY,
+[F102:338]|       name TEXT NOT NULL,
+[F102:339]|       description TEXT DEFAULT '',
+[F102:340]|       icon TEXT DEFAULT 'LayoutGrid',
+[F102:341]|       created_at INTEGER NOT NULL
+[F102:342]|     )
+[F102:343]|   `);
+[F102:344]| 
+[F102:345]|   // template_zones 表
+[F102:346]|   await db.execute(`
+[F102:347]|     CREATE TABLE IF NOT EXISTS template_zones (
+[F102:348]|       id TEXT PRIMARY KEY,
+[F102:349]|       template_id TEXT NOT NULL,
+[F102:350]|       name TEXT NOT NULL,
+[F102:351]|       color TEXT NOT NULL,
+[F102:352]|       "order" INTEGER NOT NULL DEFAULT 0,
+[F102:353]|       FOREIGN KEY (template_id) REFERENCES custom_templates(id) ON DELETE CASCADE
+[F102:354]|     )
+[F102:355]|   `);
+[F102:356]| 
+[F102:357]|   // store_snapshots 表（用于 Zustand 持久化）
+[F102:358]|   await db.execute(`
+[F102:359]|     CREATE TABLE IF NOT EXISTS store_snapshots (
+[F102:360]|       key TEXT PRIMARY KEY,
+[F102:361]|       value TEXT NOT NULL,
+[F102:362]|       updated_at INTEGER NOT NULL
+[F102:363]|     )
+[F102:364]|   `);
+[F102:365]| 
+[F102:366]|   // 创建索引
+[F102:367]|   await db.execute(`CREATE INDEX IF NOT EXISTS idx_tasks_zone_id ON tasks(zone_id)`);
+[F102:368]|   await db.execute(`CREATE INDEX IF NOT EXISTS idx_tasks_parent_id ON tasks(parent_id)`);
+[F102:369]|   await db.execute(`CREATE INDEX IF NOT EXISTS idx_tasks_workspace_id ON tasks(workspace_id)`);
+[F102:370]|   await db.execute(`CREATE INDEX IF NOT EXISTS idx_zones_workspace_id ON zones(workspace_id)`);
+[F102:371]|   await db.execute(`CREATE INDEX IF NOT EXISTS idx_sessions_task_id ON pomodoro_sessions(task_id)`);
+[F102:372]|   await db.execute(`CREATE INDEX IF NOT EXISTS idx_sessions_workspace_id ON pomodoro_sessions(workspace_id)`);
+[F102:373]| }
+[F102:374]| 
+[F102:375]| // ========== Workspace CRUD ==========
+[F102:376]| 
+[F102:377]| export async function saveWorkspace(workspace: CurrentWorkspace): Promise<void> {
+[F102:378]|   const db = await getDb();
+[F102:379]| 
+[F102:380]|   await db.execute(
+[F102:381]|     `INSERT OR REPLACE INTO workspaces (id, name, created_at, last_modified, source_history_id, is_current)
+[F102:382]|      VALUES ($1, $2, $3, $4, $5, 1)`,
+[F102:383]|     [workspace.id, workspace.name, workspace.createdAt, workspace.lastModified, workspace.sourceHistoryId || null]
+[F102:384]|   );
+[F102:385]| 
+[F102:386]|   // 删除旧的 zones 和 tasks
+[F102:387]|   await db.execute(`DELETE FROM zones WHERE workspace_id = $1`, [workspace.id]);
+[F102:388]|   await db.execute(`DELETE FROM tasks WHERE workspace_id = $1`, [workspace.id]);
+[F102:389]|   await db.execute(`DELETE FROM pomodoro_sessions WHERE workspace_id = $1`, [workspace.id]);
+[F102:390]| 
+[F102:391]|   // 插入 zones
+[F102:392]|   for (const zone of workspace.zones) {
+[F102:393]|     await db.execute(
+[F102:394]|       `INSERT INTO zones (id, name, color, "order", created_at, workspace_id)
+[F102:395]|        VALUES ($1, $2, $3, $4, $5, $6)`,
+[F102:396]|       [zone.id, zone.name, zone.color, zone.order, zone.createdAt, workspace.id]
+[F102:397]|     );
+[F102:398]|   }
+[F102:399]| 
+[F102:400]|   // 插入 tasks
+[F102:401]|   for (const task of workspace.tasks) {
+[F102:402]|     await db.execute(
+[F102:403]|       `INSERT INTO tasks (id, zone_id, parent_id, title, description, completed, priority, urgency, "order", created_at, completed_at, expanded, is_collapsed, total_work_time, own_time, estimated_time, prevent_auto_complete, workspace_id)
+[F102:404]|        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+[F102:405]|       [task.id, task.zoneId, task.parentId, task.title, task.description, task.completed ? 1 : 0, task.priority, task.urgency, task.order, task.createdAt, task.completedAt || null, task.expanded ? 1 : 0, task.isCollapsed ? 1 : 0, task.totalWorkTime, task.ownTime || 0, task.estimatedTime || null, task.preventAutoComplete ? 1 : 0, workspace.id]
+[F102:406]|     );
+[F102:407]|   }
+[F102:408]| 
+[F102:409]|   // 插入 sessions
+[F102:410]|   for (const session of workspace.sessions) {
+[F102:411]|     await db.execute(
+[F102:412]|       `INSERT INTO pomodoro_sessions (id, task_id, start_time, end_time, completed, workspace_id)
+[F102:413]|        VALUES ($1, $2, $3, $4, $5, $6)`,
+[F102:414]|       [session.id, session.taskId, session.startTime, session.endTime || null, session.completed ? 1 : 0, workspace.id]
+[F102:415]|     );
+[F102:416]|   }
+[F102:417]| }
+[F102:418]| 
+[F102:419]| export async function loadWorkspace(workspaceId: string): Promise<CurrentWorkspace | null> {
+[F102:420]|   const db = await getDb();
+[F102:421]| 
+[F102:422]|   const wsResult = await db.select<{ id: string; name: string; created_at: number; last_modified: number; source_history_id: string | null }[]>(
+[F102:423]|     `SELECT * FROM workspaces WHERE id = $1`,
+[F102:424]|     [workspaceId]
+[F102:425]|   );
+[F102:426]| 
+[F102:427]|   if (wsResult.length === 0) return null;
+[F102:428]| 
+[F102:429]|   const ws = wsResult[0];
+[F102:430]| 
+[F102:431]|   const zonesResult = await db.select<{ id: string; name: string; color: string; order: number; created_at: number }[]>(
+[F102:432]|     `SELECT * FROM zones WHERE workspace_id = $1 ORDER BY "order"`,
+[F102:433]|     [workspaceId]
+[F102:434]|   );
+[F102:435]| 
+[F102:436]|   const tasksResult = await db.select<{
+[F102:437]|     id: string; zone_id: string; parent_id: string | null; title: string; description: string;
+[F102:438]|     completed: number; priority: string; urgency: string; deadline: number | null; deadline_type: string;
+[F102:439]|     order: number; created_at: number;
+[F102:440]|     completed_at: number | null; expanded: number; is_collapsed: number; total_work_time: number;
+[F102:441]|     own_time: number; estimated_time: number | null; prevent_auto_complete: number;
+[F102:442]|   }[]>(
+[F102:443]|     `SELECT * FROM tasks WHERE workspace_id = $1 ORDER BY "order"`,
+[F102:444]|     [workspaceId]
+[F102:445]|   );
+[F102:446]| 
+[F102:447]|   const sessionsResult = await db.select<{ id: string; task_id: string; start_time: number; end_time: number | null; completed: number }[]>(
+[F102:448]|     `SELECT * FROM pomodoro_sessions WHERE workspace_id = $1`,
+[F102:449]|     [workspaceId]
+[F102:450]|   );
+[F102:451]| 
+[F102:452]|   return {
+[F102:453]|     id: ws.id,
+[F102:454]|     name: ws.name,
+[F102:455]|     zones: zonesResult.map(z => ({
+[F102:456]|       id: z.id,
+[F102:457]|       name: z.name,
+[F102:458]|       color: z.color,
+[F102:459]|       order: z.order,
+[F102:460]|       createdAt: z.created_at
+[F102:461]|     })),
+[F102:462]|     tasks: tasksResult.map(t => ({
+[F102:463]|       id: t.id,
+[F102:464]|       zoneId: t.zone_id,
+[F102:465]|       parentId: t.parent_id,
+[F102:466]|       title: t.title,
+[F102:467]|       description: t.description,
+[F102:468]|       completed: t.completed === 1,
+[F102:469]|       priority: t.priority as Task['priority'],
+[F102:470]|       urgency: t.urgency as Task['urgency'],
+[F102:471]|       deadline: t.deadline || null,
+[F102:472]|       deadlineType: (t.deadline_type || 'none') as Task['deadlineType'],
+[F102:473]|       order: t.order,
+[F102:474]|       createdAt: t.created_at,
+[F102:475]|       completedAt: t.completed_at || undefined,
+[F102:476]|       expanded: t.expanded === 1,
+[F102:477]|       isCollapsed: t.is_collapsed === 1,
+[F102:478]|       totalWorkTime: t.total_work_time,
+[F102:479]|       ownTime: t.own_time,
+[F102:480]|       estimatedTime: t.estimated_time || undefined,
+[F102:481]|       preventAutoComplete: t.prevent_auto_complete === 1
+[F102:482]|     })),
+[F102:483]|     sessions: sessionsResult.map(s => ({
+[F102:484]|       id: s.id,
+[F102:485]|       taskId: s.task_id,
+[F102:486]|       startTime: s.start_time,
+[F102:487]|       endTime: s.end_time || undefined,
+[F102:488]|       completed: s.completed === 1
+[F102:489]|     })),
+[F102:490]|     createdAt: ws.created_at,
+[F102:491]|     lastModified: ws.last_modified,
+[F102:492]|     sourceHistoryId: ws.source_history_id || undefined
+[F102:493]|   };
+[F102:494]| }
+[F102:495]| 
+[F102:496]| export async function getCurrentWorkspaceId(): Promise<string | null> {
+[F102:497]|   const db = await getDb();
+[F102:498]|   const result = await db.select<{ id: string }[]>(
+[F102:499]|     `SELECT id FROM workspaces WHERE is_current = 1 LIMIT 1`
+[F102:500]|   );
+[F102:501]|   return result.length > 0 ? result[0].id : null;
+[F102:502]| }
+[F102:503]| 
+[F102:504]| export async function setCurrentWorkspace(workspaceId: string): Promise<void> {
+[F102:505]|   const db = await getDb();
+[F102:506]|   await db.execute(`UPDATE workspaces SET is_current = 0`);
+[F102:507]|   await db.execute(`UPDATE workspaces SET is_current = 1 WHERE id = $1`, [workspaceId]);
+[F102:508]| }
+[F102:509]| 
+[F102:510]| // ========== History Workspace CRUD ==========
+[F102:511]| 
+[F102:512]| export async function saveHistoryWorkspace(history: HistoryWorkspace): Promise<void> {
+[F102:513]|   const db = await getDb();
+[F102:514]| 
+[F102:515]|   await db.execute(
+[F102:516]|     `INSERT OR REPLACE INTO history_workspaces (id, name, summary, created_at, last_modified)
+[F102:517]|      VALUES ($1, $2, $3, $4, $5)`,
+[F102:518]|     [history.id, history.name, history.summary, history.createdAt, history.lastModified]
+[F102:519]|   );
+[F102:520]| 
+[F102:521]|   // 删除旧数据
+[F102:522]|   await db.execute(`DELETE FROM zones WHERE workspace_id = $1`, [history.id]);
+[F102:523]|   await db.execute(`DELETE FROM tasks WHERE workspace_id = $1`, [history.id]);
+[F102:524]|   await db.execute(`DELETE FROM pomodoro_sessions WHERE workspace_id = $1`, [history.id]);
+[F102:525]| 
+[F102:526]|   // 插入 zones（使用历史ID作为workspace_id）
+[F102:527]|   for (const zone of history.zones) {
+[F102:528]|     await db.execute(
+[F102:529]|       `INSERT INTO zones (id, name, color, "order", created_at, workspace_id)
+[F102:530]|        VALUES ($1, $2, $3, $4, $5, $6)`,
+[F102:531]|       [zone.id, zone.name, zone.color, zone.order, zone.createdAt, history.id]
+[F102:532]|     );
+[F102:533]|   }
+[F102:534]| 
+[F102:535]|   // 插入 tasks
+[F102:536]|   for (const task of history.tasks) {
+[F102:537]|     await db.execute(
+[F102:538]|       `INSERT INTO tasks (id, zone_id, parent_id, title, description, completed, priority, urgency, "order", created_at, completed_at, expanded, is_collapsed, total_work_time, own_time, estimated_time, prevent_auto_complete, workspace_id)
+[F102:539]|        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+[F102:540]|       [task.id, task.zoneId, task.parentId, task.title, task.description, task.completed ? 1 : 0, task.priority, task.urgency, task.order, task.createdAt, task.completedAt || null, task.expanded ? 1 : 0, task.isCollapsed ? 1 : 0, task.totalWorkTime, task.ownTime || 0, task.estimatedTime || null, task.preventAutoComplete ? 1 : 0, history.id]
+[F102:541]|     );
+[F102:542]|   }
+[F102:543]| 
+[F102:544]|   // 插入 sessions
+[F102:545]|   for (const session of history.sessions) {
+[F102:546]|     await db.execute(
+[F102:547]|       `INSERT INTO pomodoro_sessions (id, task_id, start_time, end_time, completed, workspace_id)
+[F102:548]|        VALUES ($1, $2, $3, $4, $5, $6)`,
+[F102:549]|       [session.id, session.taskId, session.startTime, session.endTime || null, session.completed ? 1 : 0, history.id]
+[F102:550]|     );
+[F102:551]|   }
+[F102:552]| }
+[F102:553]| 
+[F102:554]| export async function loadAllHistoryWorkspaces(): Promise<HistoryWorkspace[]> {
+[F102:555]|   const db = await getDb();
+[F102:556]| 
+[F102:557]|   const historyResult = await db.select<{ id: string; name: string; summary: string; created_at: number; last_modified: number }[]>(
+[F102:558]|     `SELECT * FROM history_workspaces ORDER BY last_modified DESC`
+[F102:559]|   );
+[F102:560]| 
+[F102:561]|   const histories: HistoryWorkspace[] = [];
+[F102:562]| 
+[F102:563]|   for (const h of historyResult) {
+[F102:564]|     const zonesResult = await db.select<{ id: string; name: string; color: string; order: number; created_at: number }[]>(
+[F102:565]|       `SELECT * FROM zones WHERE workspace_id = $1 ORDER BY "order"`,
+[F102:566]|       [h.id]
+[F102:567]|     );
+[F102:568]| 
+[F102:569]|     const tasksResult = await db.select<{
+[F102:570]|       id: string; zone_id: string; parent_id: string | null; title: string; description: string;
+[F102:571]|       completed: number; priority: string; urgency: string; deadline: number | null; deadline_type: string;
+[F102:572]|       order: number; created_at: number;
+[F102:573]|       completed_at: number | null; expanded: number; is_collapsed: number; total_work_time: number;
+[F102:574]|       own_time: number; estimated_time: number | null; prevent_auto_complete: number;
+[F102:575]|     }[]>(
+[F102:576]|       `SELECT * FROM tasks WHERE workspace_id = $1 ORDER BY "order"`,
+[F102:577]|       [h.id]
+[F102:578]|     );
+[F102:579]| 
+[F102:580]|     const sessionsResult = await db.select<{ id: string; task_id: string; start_time: number; end_time: number | null; completed: number }[]>(
+[F102:581]|       `SELECT * FROM pomodoro_sessions WHERE workspace_id = $1`,
+[F102:582]|       [h.id]
+[F102:583]|     );
+[F102:584]| 
+[F102:585]|     histories.push({
+[F102:586]|       id: h.id,
+[F102:587]|       name: h.name,
+[F102:588]|       summary: h.summary,
+[F102:589]|       zones: zonesResult.map(z => ({
+[F102:590]|         id: z.id,
+[F102:591]|         name: z.name,
+[F102:592]|         color: z.color,
+[F102:593]|         order: z.order,
+[F102:594]|         createdAt: z.created_at
+[F102:595]|       })),
+[F102:596]|       tasks: tasksResult.map(t => ({
+[F102:597]|         id: t.id,
+[F102:598]|         zoneId: t.zone_id,
+[F102:599]|         parentId: t.parent_id,
+[F102:600]|         title: t.title,
+[F102:601]|         description: t.description,
+[F102:602]|         completed: t.completed === 1,
+[F102:603]|         priority: t.priority as Task['priority'],
+[F102:604]|         urgency: t.urgency as Task['urgency'],
+[F102:605]|         deadline: t.deadline || null,
+[F102:606]|         deadlineType: (t.deadline_type || 'none') as Task['deadlineType'],
+[F102:607]|         order: t.order,
+[F102:608]|         createdAt: t.created_at,
+[F102:609]|         completedAt: t.completed_at || undefined,
+[F102:610]|         expanded: t.expanded === 1,
+[F102:611]|         isCollapsed: t.is_collapsed === 1,
+[F102:612]|         totalWorkTime: t.total_work_time,
+[F102:613]|         ownTime: t.own_time,
+[F102:614]|         estimatedTime: t.estimated_time || undefined,
+[F102:615]|         preventAutoComplete: t.prevent_auto_complete === 1
+[F102:616]|       })),
+[F102:617]|       sessions: sessionsResult.map(s => ({
+[F102:618]|         id: s.id,
+[F102:619]|         taskId: s.task_id,
+[F102:620]|         startTime: s.start_time,
+[F102:621]|         endTime: s.end_time || undefined,
+[F102:622]|         completed: s.completed === 1
+[F102:623]|       })),
+[F102:624]|       createdAt: h.created_at,
+[F102:625]|       lastModified: h.last_modified
+[F102:626]|     });
+[F102:627]|   }
+[F102:628]| 
+[F102:629]|   return histories;
+[F102:630]| }
+[F102:631]| 
+[F102:632]| export async function deleteHistoryWorkspace(id: string): Promise<void> {
+[F102:633]|   const db = await getDb();
+[F102:634]|   await db.execute(`DELETE FROM pomodoro_sessions WHERE workspace_id = $1`, [id]);
+[F102:635]|   await db.execute(`DELETE FROM tasks WHERE workspace_id = $1`, [id]);
+[F102:636]|   await db.execute(`DELETE FROM zones WHERE workspace_id = $1`, [id]);
+[F102:637]|   await db.execute(`DELETE FROM history_workspaces WHERE id = $1`, [id]);
+[F102:638]| }
+[F102:639]| 
+[F102:640]| // ========== Settings ==========
+[F102:641]| 
+[F102:642]| export interface AppSettingsRow {
+[F102:643]|   work_duration: number;
+[F102:644]|   break_duration: number;
+[F102:645]|   long_break_duration: number;
+[F102:646]|   auto_start_break: number;
+[F102:647]|   sound_enabled: number;
+[F102:648]|   collapsed: number;
+[F102:649]|   collapse_position_x: number;
+[F102:650]|   collapse_position_y: number;
+[F102:651]|   sort_mode: string;
+[F102:652]|   priority_weight: number;
+[F102:653]|   urgency_weight: number;
+[F102:654]| }
+[F102:655]| 
+[F102:656]| export async function loadSettings(): Promise<AppSettingsRow | null> {
+[F102:657]|   const db = await getDb();
+[F102:658]|   const result = await db.select<AppSettingsRow[]>(`SELECT * FROM app_settings WHERE id = 1`);
+[F102:659]|   return result.length > 0 ? result[0] : null;
+[F102:660]| }
+[F102:661]| 
+[F102:662]| export async function saveSettings(settings: Partial<AppSettingsRow>): Promise<void> {
+[F102:663]|   const db = await getDb();
+[F102:664]|   const fields: string[] = [];
+[F102:665]|   const values: (string | number)[] = [];
+[F102:666]|   let paramIndex = 1;
+[F102:667]| 
+[F102:668]|   for (const [key, value] of Object.entries(settings)) {
+[F102:669]|     fields.push(`${key} = $${paramIndex}`);
+[F102:670]|     values.push(value as string | number);
+[F102:671]|     paramIndex++;
+[F102:672]|   }
+[F102:673]| 
+[F102:674]|   if (fields.length > 0) {
+[F102:675]|     await db.execute(`UPDATE app_settings SET ${fields.join(', ')} WHERE id = 1`, values);
+[F102:676]|   }
+[F102:677]| }
+[F102:678]| 
+[F102:679]| // ========== Templates ==========
+[F102:680]| 
+[F102:681]| export async function saveCustomTemplate(template: Template): Promise<void> {
+[F102:682]|   const db = await getDb();
+[F102:683]| 
+[F102:684]|   await db.execute(
+[F102:685]|     `INSERT OR REPLACE INTO custom_templates (id, name, description, icon, created_at)
+[F102:686]|      VALUES ($1, $2, $3, $4, $5)`,
+[F102:687]|     [template.id, template.name, template.description, template.icon, Date.now()]
+[F102:688]|   );
+[F102:689]| 
+[F102:690]|   // 删除旧的 zones
+[F102:691]|   await db.execute(`DELETE FROM template_zones WHERE template_id = $1`, [template.id]);
+[F102:692]| 
+[F102:693]|   // 插入 zones
+[F102:694]|   for (const zone of template.zones) {
+[F102:695]|     await db.execute(
+[F102:696]|       `INSERT INTO template_zones (id, template_id, name, color, "order")
+[F102:697]|        VALUES ($1, $2, $3, $4, $5)`,
+[F102:698]|       [`${template.id}-${zone.order}`, template.id, zone.name, zone.color, zone.order]
+[F102:699]|     );
+[F102:700]|   }
+[F102:701]| }
+[F102:702]| 
+[F102:703]| export async function loadCustomTemplates(): Promise<Template[]> {
+[F102:704]|   const db = await getDb();
+[F102:705]| 
+[F102:706]|   const templatesResult = await db.select<{ id: string; name: string; description: string; icon: string; created_at: number }[]>(
+[F102:707]|     `SELECT * FROM custom_templates ORDER BY created_at DESC`
+[F102:708]|   );
+[F102:709]| 
+[F102:710]|   const templates: Template[] = [];
+[F102:711]| 
+[F102:712]|   for (const t of templatesResult) {
+[F102:713]|     const zonesResult = await db.select<{ id: string; name: string; color: string; order: number }[]>(
+[F102:714]|       `SELECT * FROM template_zones WHERE template_id = $1 ORDER BY "order"`,
+[F102:715]|       [t.id]
+[F102:716]|     );
+[F102:717]| 
+[F102:718]|     templates.push({
+[F102:719]|       id: t.id,
+[F102:720]|       name: t.name,
+[F102:721]|       description: t.description,
+[F102:722]|       icon: t.icon,
+[F102:723]|       zones: zonesResult.map(z => ({
+[F102:724]|         name: z.name,
+[F102:725]|         color: z.color,
+[F102:726]|         order: z.order
+[F102:727]|       }))
+[F102:728]|     });
+[F102:729]|   }
+[F102:730]| 
+[F102:731]|   return templates;
+[F102:732]| }
+[F102:733]| 
+[F102:734]| export async function deleteCustomTemplate(id: string): Promise<void> {
+[F102:735]|   const db = await getDb();
+[F102:736]|   await db.execute(`DELETE FROM template_zones WHERE template_id = $1`, [id]);
+[F102:737]|   await db.execute(`DELETE FROM custom_templates WHERE id = $1`, [id]);
+[F102:738]| }
+[F102:739]| 
+[F102:740]| // ========== 版本管理 ==========
+[F102:741]| 
+[F102:742]| export async function getDbVersion(): Promise<number> {
+[F102:743]|   const db = await getDb();
+[F102:744]|   const result = await db.select<{ version: number }[]>(`SELECT version FROM app_settings WHERE id = 1`);
+[F102:745]|   return result.length > 0 ? result[0].version : 0;
+[F102:746]| }
+[F102:747]| 
+[F102:748]| export async function setDbVersion(version: number): Promise<void> {
+[F102:749]|   const db = await getDb();
+[F102:750]|   await db.execute(`UPDATE app_settings SET version = $1 WHERE id = 1`, [version]);
+[F102:751]| }
+[F102:752]| 
+[F102:753]| // ========== 兼容旧版 Key-Value API（用于 Zustand 存储） ==========
+[F102:754]| // 直接在 db.ts 中实现，确保使用同一个数据库连接
+[F102:755]| 
+[F102:756]| // 确保 store_snapshots 表存在（向后兼容旧数据库）
+[F102:757]| async function ensureStoreSnapshotsTable(db: Database): Promise<void> {
+[F102:758]|   try {
+[F102:759]|     await db.execute(`
+[F102:760]|       CREATE TABLE IF NOT EXISTS store_snapshots (
+[F102:761]|         key TEXT PRIMARY KEY,
+[F102:762]|         value TEXT NOT NULL,
+[F102:763]|         updated_at INTEGER NOT NULL
+[F102:764]|       )
+[F102:765]|     `);
+[F102:766]|   } catch (e) {
+[F102:767]|     console.warn('[DB] Failed to create store_snapshots table:', e);
+[F102:768]|   }
+[F102:769]| }
+[F102:770]| 
+[F102:771]| export async function dbSetItem(key: string, value: string): Promise<void> {
+[F102:772]|   // 1. 捕获发起此请求的会话 ID
+[F102:773]|   const invocationSessionId = CURRENT_SESSION_ID;
+[F102:774]|   const initialPath = localStorage.getItem(PATH_STORAGE_KEY);
+[F102:775]| 
+[F102:776]|   // 记录详细日志
+[F102:777]|   const dbPath = await getDbPath();
+[F102:778]|   const pathFromStorage = localStorage.getItem(PATH_STORAGE_KEY);
+[F102:779]|   // [DEBUG] console.log('[DB] dbSetItem - Session ID:', invocationSessionId, 'Current Session:', CURRENT_SESSION_ID);
+[F102:780]|   // [DEBUG] console.log('[DB] dbSetItem - PATH_STORAGE_KEY:', pathFromStorage);
+[F102:781]|   // [DEBUG] console.log('[DB] dbSetItem - getDbPath():', dbPath);
+[F102:782]| 
+[F102:783]|   // 2. 会话级终极防御：如果执行到这里，发现它不属于当前存活的 JS 会话，必定是 reload 遗留的幽灵任务！直接阻断！
+[F102:784]|   if (invocationSessionId !== CURRENT_SESSION_ID) {
+[F102:785]|     console.warn('[DB] ABORT dbSetItem: Ghost request from previous session detected. Prevented catastrophic corruption!');
+[F102:786]|     persistentLog('DB', 'ABORT dbSetItem - Ghost request from previous session', 'ERROR', { invocationSessionId, currentSessionId: CURRENT_SESSION_ID });
+[F102:787]|     return;
+[F102:788]|   }
+[F102:789]| 
+[F102:790]|   // 3. 核心防御：如果等待 getDbPath 期间路径被 changeDbPath 修改了，直接阻断！
+[F102:791]|   if (initialPath !== pathFromStorage) {
+[F102:792]|     console.warn('[DB] ABORT dbSetItem: Path changed during execution. Prevented cross-directory corruption.');
+[F102:793]|     persistentLog('DB', 'ABORT dbSetItem - Path changed during execution', 'WARN', { initialPath, currentPath: pathFromStorage });
+[F102:794]|     return;
+[F102:795]|   }
+[F102:796]| 
+[F102:797]|   const isLargeData = value.length > 10000; // 大于 10KB 视为大数据
+[F102:798]|   let dataSummary = { size: value.length, tasks: 0, zones: 0 };
+[F102:799]|   try {
+[F102:800]|     const parsed = JSON.parse(value);
+[F102:801]|     dataSummary.tasks = parsed?.state?.tasks?.length || parsed?.tasks?.length || 0;
+[F102:802]|     dataSummary.zones = parsed?.state?.zones?.length || parsed?.zones?.length || 0;
+[F102:803]|   } catch (e) {
+[F102:804]|     // ignore parse error
+[F102:805]|   }
+[F102:806]|   // [DEBUG] console.log(`[DB] dbSetItem - Path: ${dbPath}, Key: ${key}, Size: ${dataSummary.size}, Tasks: ${dataSummary.tasks}, Zones: ${dataSummary.zones}, LargeData: ${isLargeData}`);
+[F102:807]|   persistentLog('DB', 'dbSetItem', 'DEBUG', { path: dbPath, key, ...dataSummary, isLargeData });
+[F102:808]| 
+[F102:809]|   const db = await getDb();
+[F102:810]| 
+[F102:811]|   // 确保表存在（向后兼容）
+[F102:812]|   await ensureStoreSnapshotsTable(db);
+[F102:813]| 
+[F102:814]|   // 再次核对会话状态，防止 getDb 的漫长等待中被页面卸载
+[F102:815]|   if (invocationSessionId !== CURRENT_SESSION_ID) {
+[F102:816]|     console.warn('[DB] ABORT dbSetItem: Session changed during getDb wait.');
+[F102:817]|     persistentLog('DB', 'ABORT dbSetItem - Session changed during getDb', 'ERROR');
+[F102:818]|     return;
+[F102:819]|   }
+[F102:820]| 
+[F102:821]|   // 4. 终极防御：如果 getDb() 返回的实例连接的不是初始路径，阻断！
+[F102:822]|   if (currentDbPath !== dbPath) {
+[F102:823]|     console.warn('[DB] ABORT dbSetItem: Database connection shifted. Prevented cross-directory corruption.');
+[F102:824]|     persistentLog('DB', 'ABORT dbSetItem - Connection shifted', 'WARN', { initialPath, currentDbPath, expectedPath: dbPath });
+[F102:825]|     return;
+[F102:826]|   }
+[F102:827]| 
+[F102:828]|   // 5. 执行写入
+[F102:829]|   const now = Date.now();
+[F102:830]|   // [DEBUG] console.log(`[DB] ⚠️⚠️⚠️ ABOUT TO WRITE - Path: ${dbPath}, Key: ${key}, Tasks: ${dataSummary.tasks}, Zones: ${dataSummary.zones}`);
+[F102:831]|   await db.execute(
+[F102:832]|     `INSERT INTO store_snapshots (key, value, updated_at) VALUES ($1, $2, $3)
+[F102:833]|      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+[F102:834]|     [key, value, now]
+[F102:835]|   );
+[F102:836]|   // [DEBUG] console.log(`[DB] ⚠️⚠️⚠️ WRITE EXECUTED - Path: ${dbPath}`);
+[F102:837]| 
+[F102:838]|   // 大数据写入后等待一下，确保写入完成
+[F102:839]|   if (isLargeData) {
+[F102:840]|     // [DEBUG] console.log('[DB] Large data written, executing WAL checkpoint...');
+[F102:841]|     // 关键修复：显式执行 WAL checkpoint，确保数据从 WAL 合并到主数据库
+[F102:842]|     // 否则验证查询可能读不到 WAL 中的数据
+[F102:843]|     await db.execute('PRAGMA wal_checkpoint(TRUNCATE)');
+[F102:844]|   }
+[F102:845]| 
+[F102:846]|   // ===== 写入后验证数据 =====
+[F102:847]|   // 关键修复：在验证之前，再次检查路径是否一致！
+[F102:848]|   // 因为切换可能在写入后、验证前发生
+[F102:849]|   const pathBeforeVerify = await getDbPath();
+[F102:850]|   if (pathBeforeVerify !== dbPath) {
+[F102:851]|     // [DEBUG] console.warn(`[DB] 🔍 VERIFY - Path changed during write! Was: ${dbPath}, Now: ${pathBeforeVerify}. Skipping verification to avoid false positive.`);
+[F102:852]|     return; // 跳过验证，避免误报
+[F102:853]|   }
+[F102:854]| 
+[F102:855]|   // 这是关键：写入后立刻读取，确认数据真的写入了
+[F102:856]|   const verifyResult = await db.select<{ value: string }[]>(
+[F102:857]|     `SELECT value FROM store_snapshots WHERE key = $1`,
+[F102:858]|     [key]
+[F102:859]|   );
+[F102:860]|   if (verifyResult.length > 0) {
+[F102:861]|     const savedValue = verifyResult[0].value;
+[F102:862]|     let savedTasks = 0, savedZones = 0;
+[F102:863]|     try {
+[F102:864]|       const parsed = JSON.parse(savedValue);
+[F102:865]|       savedTasks = parsed?.state?.tasks?.length || parsed?.tasks?.length || 0;
+[F102:866]|       savedZones = parsed?.state?.zones?.length || parsed?.zones?.length || 0;
+[F102:867]|     } catch (e) {}
+[F102:868]|     // [DEBUG] console.log(`[DB] ⚠️⚠️⚠️ WRITE COMPLETE - Path: ${dbPath}, Verified Tasks: ${savedTasks}, Zones: ${savedZones}`);
+[F102:869]|     if (savedTasks !== dataSummary.tasks || savedZones !== dataSummary.zones) {
+[F102:870]|       console.error(`[DB] 🔥 DATA CORRUPTION DETECTED! Written: ${dataSummary.tasks} tasks, ${dataSummary.zones} zones, But saved: ${savedTasks} tasks, ${savedZones} zones!`);
+[F102:871]|       persistentLog('DB', 'DATA CORRUPTION!', 'ERROR', { written: dataSummary, saved: { tasks: savedTasks, zones: savedZones } });
+[F102:872]|     }
+[F102:873]|   } else {
+[F102:874]|     // [DEBUG] console.warn(`[DB] 🔍 VERIFY - No data found after write!`);
+[F102:875]|   }
+[F102:876]|   // ===== 验证结束 =====
+[F102:877]| }
+[F102:878]| 
+[F102:879]| export async function dbGetItem(key: string): Promise<string | null> {
+[F102:880]|   // 会话级防御：确保读取的是当前会话的数据
+[F102:881]|   const invocationSessionId = CURRENT_SESSION_ID;
+[F102:882]| 
+[F102:883]|   const dbPath = await getDbPath();
+[F102:884]|   const db = await getDb();
+[F102:885]| 
+[F102:886]|   // 会话校验
+[F102:887]|   if (invocationSessionId !== CURRENT_SESSION_ID) {
+[F102:888]|     console.warn('[DB] ABORT dbGetItem: Ghost request from previous session detected.');
+[F102:889]|     persistentLog('DB', 'ABORT dbGetItem - Ghost request', 'ERROR');
+[F102:890]|     return null;
+[F102:891]|   }
+[F102:892]| 
+[F102:893]|   // 确保表存在（向后兼容）
+[F102:894]|   await ensureStoreSnapshotsTable(db);
+[F102:895]| 
+[F102:896]|   const result = await db.select<{ value: string }[]>(
+[F102:897]|     `SELECT value FROM store_snapshots WHERE key = $1`,
+[F102:898]|     [key]
+[F102:899]|   );
+[F102:900]| 
+[F102:901]|   if (result.length > 0) {
+[F102:902]|     const value = result[0].value;
+[F102:903]|     let dataSummary = { size: value.length, tasks: 0, zones: 0 };
+[F102:904]|     try {
+[F102:905]|       const parsed = JSON.parse(value);
+[F102:906]|       dataSummary.tasks = parsed?.state?.tasks?.length || parsed?.tasks?.length || 0;
+[F102:907]|       dataSummary.zones = parsed?.state?.zones?.length || parsed?.zones?.length || 0;
+[F102:908]|     } catch (e) {
+[F102:909]|       // ignore parse error
+[F102:910]|     }
+[F102:911]|     console.log(`[DB] dbGetItem - Path: ${dbPath}, Key: ${key}, Found: true, Size: ${dataSummary.size}, Tasks: ${dataSummary.tasks}, Zones: ${dataSummary.zones}`);
+[F102:912]|     persistentLog('DB', 'dbGetItem found', 'DEBUG', { path: dbPath, key, ...dataSummary });
+[F102:913]|     return value;
+[F102:914]|   }
+[F102:915]| 
+[F102:916]|   console.log(`[DB] dbGetItem - Path: ${dbPath}, Key: ${key}, Found: false`);
+[F102:917]|   persistentLog('DB', 'dbGetItem not found', 'DEBUG', { path: dbPath, key });
+[F102:918]|   return null;
+[F102:919]| }
+[F102:920]| 
+[F102:921]| export async function dbRemoveItem(key: string): Promise<void> {
+[F102:922]|   const db = await getDb();
+[F102:923]|   await db.execute(`DELETE FROM store_snapshots WHERE key = $1`, [key]);
+[F102:924]| }
+[F102:925]| 
+[F102:926]| // ========== 调试工具 ==========
+[F102:927]| // 导出函数用于显示切换日志（在控制台调用）
+[F102:928]| export function printSwitchLogs() {
+[F102:929]|   try {
+[F102:930]|     const logs = JSON.parse(localStorage.getItem('SWITCH_LOGS') || '[]');
+[F102:931]|     if (logs.length > 0) {
+[F102:932]|       console.log('========== 历史切换日志 ==========');
+[F102:933]|       logs.forEach((log: { time: string; action: string; message: string }, index: number) => {
+[F102:934]|         console.log(`[${index + 1}] ${log.time} - ${log.action}: ${log.message}`);
+[F102:935]|       });
+[F102:936]|       console.log('==================================');
+[F102:937]|     } else {
+[F102:938]|       console.log('[DB] 无切换日志');
+[F102:939]|     }
+[F102:940]|   } catch (e) {
+[F102:941]|     console.log('[DB] 无切换日志');
+[F102:942]|   }
+[F102:943]| }
+[F102:944]| 
+[F102:945]| // 挂载到 window 上
+[F102:946]| if (typeof window !== 'undefined') {
+[F102:947]|   (window as unknown as { printSwitchLogs: typeof printSwitchLogs }).printSwitchLogs = printSwitchLogs;
+[F102:948]|   (window as unknown as { getDbPath: typeof getDbPath }).getDbPath = getDbPath;
+[F102:949]| }
+[F102:950]| 
+[F102:951]| // ========== 诊断工具 ==========
+[F102:952]| export async function diagnoseDatabase(): Promise<void> {
+[F102:953]|   console.log('========== 数据库诊断 ==========');
+[F102:954]|   const dbPath = await getDbPath();
+[F102:955]|   console.log('当前数据库路径:', dbPath);
+[F102:956]|   console.log('localStorage PATH_STORAGE_KEY:', localStorage.getItem(PATH_STORAGE_KEY));
+[F102:957]|   console.log('currentDbPath 变量:', currentDbPath);
+[F102:958]|   console.log('CURRENT_SESSION_ID:', CURRENT_SESSION_ID);
+[F102:959]| 
+[F102:960]|   try {
+[F102:961]|     const db = await getDb();
+[F102:962]| 
+[F102:963]|     // 检查表是否存在
+[F102:964]|     const tables = await db.select<{ name: string }[]>(
+[F102:965]|       "SELECT name FROM sqlite_master WHERE type='table'"
+[F102:966]|     );
+[F102:967]|     console.log('数据库中的表:', tables.map(t => t.name).join(', '));
+[F102:968]| 
+[F102:969]|     // 检查 store_snapshots 表
+[F102:970]|     const hasSnapshotsTable = tables.some(t => t.name === 'store_snapshots');
+[F102:971]|     if (hasSnapshotsTable) {
+[F102:972]|       const snapshots = await db.select<{ key: string; value: string; updated_at: number }[]>(
+[F102:973]|         'SELECT * FROM store_snapshots'
+[F102:974]|       );
+[F102:975]|       console.log('store_snapshots 表中的数据:');
+[F102:976]|       snapshots.forEach(s => {
+[F102:977]|         let tasks = 0, zones = 0;
+[F102:978]|         try {
+[F102:979]|           const parsed = JSON.parse(s.value);
+[F102:980]|           tasks = parsed?.state?.tasks?.length || parsed?.tasks?.length || 0;
+[F102:981]|           zones = parsed?.state?.zones?.length || parsed?.zones?.length || 0;
+[F102:982]|         } catch (e) {}
+[F102:983]|         console.log(`  - key: ${s.key}, tasks: ${tasks}, zones: ${zones}, updated_at: ${new Date(s.updated_at).toLocaleString()}`);
+[F102:984]|       });
+[F102:985]|     } else {
+[F102:986]|       console.warn('⚠️ store_snapshots 表不存在!');
+[F102:987]|     }
+[F102:988]|   } catch (e) {
+[F102:989]|     console.error('诊断失败:', e);
+[F102:990]|   }
+[F102:991]|   console.log('==============================');
+[F102:992]| }
+[F102:993]| 
+[F102:994]| // 挂载诊断函数
+[F102:995]| if (typeof window !== 'undefined') {
+[F102:996]|   (window as unknown as { diagnoseDatabase: typeof diagnoseDatabase }).diagnoseDatabase = diagnoseDatabase;
+[F102:997]| }
 
 ================================================================================
-文件路径: src\lib\migration.ts(F103) (约合大小: 4 KB)
+文件路径: src\lib\i18n.ts(F103) (约合大小: 1 KB)
 ================================================================================
-[F103:1]| import { legacyDb, saveWorkspace, saveHistoryWorkspace, saveSettings, setDbVersion, getDbVersion, saveCustomTemplate as dbSaveCustomTemplate } from './db';
-[F103:2]| import type { CurrentWorkspace } from '@/types';
-[F103:3]| import { DEFAULT_SETTINGS } from '@/types';
+[F103:1]| import i18n from 'i18next';
+[F103:2]| import { initReactI18next } from 'react-i18next';
+[F103:3]| import LanguageDetector from 'i18next-browser-languagedetector';
 [F103:4]| 
-[F103:5]| const STORAGE_KEY_V4 = 'focus-flow-storage-v4';
-[F103:6]| 
-[F103:7]| export async function runMigrations(): Promise<void> {
-[F103:8]|   const currentVersion = await getDbVersion();
-[F103:9]| 
-[F103:10]|   if (currentVersion < 1) {
-[F103:11]|     await migrateV0ToV1();
-[F103:12]|   }
-[F103:13]| }
-[F103:14]| 
-[F103:15]| async function migrateV0ToV1(): Promise<void> {
-[F103:16]|   console.log('[Migration] Starting v0 -> v1 migration...');
-[F103:17]| 
-[F103:18]|   try {
-[F103:19]|     // 1. 从旧 store_snapshots 读取数据
-[F103:20]|     const legacyData = await legacyDb.getItem(STORAGE_KEY_V4);
-[F103:21]| 
-[F103:22]|     if (!legacyData) {
-[F103:23]|       console.log('[Migration] No legacy data found, creating default workspace');
-[F103:24]|       await createDefaultWorkspace();
-[F103:25]|       await setDbVersion(1);
-[F103:26]|       return;
-[F103:27]|     }
-[F103:28]| 
-[F103:29]|     const parsed = JSON.parse(legacyData);
-[F103:30]| 
-[F103:31]|     // 2. 迁移当前工作区
-[F103:32]|     if (parsed.currentWorkspace) {
-[F103:33]|       await saveWorkspace(parsed.currentWorkspace);
-[F103:34]|       console.log('[Migration] Migrated current workspace:', parsed.currentWorkspace.name);
-[F103:35]|     }
-[F103:36]| 
-[F103:37]|     // 3. 迁移历史工作区
-[F103:38]|     if (parsed.historyWorkspaces && Array.isArray(parsed.historyWorkspaces)) {
-[F103:39]|       for (const history of parsed.historyWorkspaces) {
-[F103:40]|         await saveHistoryWorkspace(history);
-[F103:41]|       }
-[F103:42]|       console.log('[Migration] Migrated', parsed.historyWorkspaces.length, 'history workspaces');
-[F103:43]|     }
+[F103:5]| import en from '../locales/en.json';
+[F103:6]| import zh from '../locales/zh.json';
+[F103:7]| 
+[F103:8]| i18n
+[F103:9]|   .use(LanguageDetector)
+[F103:10]|   .use(initReactI18next)
+[F103:11]|   .init({
+[F103:12]|     resources: {
+[F103:13]|       en: { translation: en },
+[F103:14]|       zh: { translation: zh }
+[F103:15]|     },
+[F103:16]|     // 禁用缓存，只使用 Zustand 里的设置
+[F103:17]|     detection: {
+[F103:18]|       order: ['navigator'],
+[F103:19]|       caches: []
+[F103:20]|     },
+[F103:21]|     fallbackLng: 'zh',
+[F103:22]|     interpolation: {
+[F103:23]|       escapeValue: false
+[F103:24]|     }
+[F103:25]|   });
+[F103:26]| 
+[F103:27]| // 延迟初始化 store 订阅，等待 React 和 store 完全就绪
+[F103:28]| setTimeout(() => {
+[F103:29]|   try {
+[F103:30]|     // eslint-disable-next-line @typescript-eslint/no-var-requires
+[F103:31]|     const { useAppStore } = require('@/store');
+[F103:32]|     let previousLanguage = useAppStore.getState().settings.language;
+[F103:33]|     useAppStore.subscribe((state: { settings: { language: string } }) => {
+[F103:34]|       const currentLanguage = state.settings.language;
+[F103:35]|       if (currentLanguage !== previousLanguage && currentLanguage) {
+[F103:36]|         previousLanguage = currentLanguage;
+[F103:37]|         i18n.changeLanguage(currentLanguage);
+[F103:38]|       }
+[F103:39]|     });
+[F103:40]|   } catch (e) {
+[F103:41]|     console.warn('Failed to initialize i18n store subscription:', e);
+[F103:42]|   }
+[F103:43]| }, 0);
 [F103:44]| 
-[F103:45]|     // 4. 迁移设置
-[F103:46]|     const settings = parsed.settings || DEFAULT_SETTINGS;
-[F103:47]|     await saveSettings({
-[F103:48]|       work_duration: settings.workDuration,
-[F103:49]|       break_duration: settings.breakDuration,
-[F103:50]|       long_break_duration: settings.longBreakDuration,
-[F103:51]|       auto_start_break: settings.autoStartBreak ? 1 : 0,
-[F103:52]|       sound_enabled: settings.soundEnabled ? 1 : 0,
-[F103:53]|       collapsed: settings.collapsed ? 1 : 0,
-[F103:54]|       collapse_position_x: settings.collapsePosition?.x ?? 100,
-[F103:55]|       collapse_position_y: settings.collapsePosition?.y ?? 100,
-[F103:56]|       sort_mode: settings.globalViewSort?.mode ?? 'zone',
-[F103:57]|       priority_weight: settings.globalViewSort?.priorityWeight ?? 0.4,
-[F103:58]|       urgency_weight: settings.globalViewSort?.deadlineWeight ?? 0.6
-[F103:59]|     });
-[F103:60]|     console.log('[Migration] Migrated settings');
-[F103:61]| 
-[F103:62]|     // 5. 迁移自定义模板
-[F103:63]|     if (parsed.customTemplates && Array.isArray(parsed.customTemplates)) {
-[F103:64]|       for (const template of parsed.customTemplates) {
-[F103:65]|         await dbSaveCustomTemplate(template);
-[F103:66]|       }
-[F103:67]|       console.log('[Migration] Migrated', parsed.customTemplates.length, 'custom templates');
-[F103:68]|     }
-[F103:69]| 
-[F103:70]|     // 6. 更新版本号
-[F103:71]|     await setDbVersion(1);
-[F103:72]|     console.log('[Migration] Migration completed successfully');
-[F103:73]|   } catch (error) {
-[F103:74]|     console.error('[Migration] Migration failed:', error);
-[F103:75]|     throw error;
-[F103:76]|   }
-[F103:77]| }
-[F103:78]| 
-[F103:79]| async function createDefaultWorkspace(): Promise<void> {
-[F103:80]|   const now = Date.now();
-[F103:81]|   const defaultWorkspace: CurrentWorkspace = {
-[F103:82]|     id: `ws-${now}`,
-[F103:83]|     name: '我的工作区',
-[F103:84]|     zones: [
-[F103:85]|       { id: `zone-${now}-1`, name: '工作', color: '#3b82f6', order: 0, createdAt: now },
-[F103:86]|       { id: `zone-${now}-2`, name: '学习', color: '#8b5cf6', order: 1, createdAt: now },
-[F103:87]|       { id: `zone-${now}-3`, name: '生活', color: '#22c55e', order: 2, createdAt: now }
-[F103:88]|     ],
-[F103:89]|     tasks: [],
-[F103:90]|     sessions: [],
-[F103:91]|     createdAt: now,
-[F103:92]|     lastModified: now
-[F103:93]|   };
-[F103:94]| 
-[F103:95]|   await saveWorkspace(defaultWorkspace);
-[F103:96]| }
-[F103:97]| 
-[F103:98]| // 导出设置转换为应用格式
-[F103:99]| export function convertDbSettingsToApp(settings: {
-[F103:100]|   work_duration: number;
-[F103:101]|   break_duration: number;
-[F103:102]|   long_break_duration: number;
-[F103:103]|   auto_start_break: number;
-[F103:104]|   sound_enabled: number;
-[F103:105]|   collapsed: number;
-[F103:106]|   collapse_position_x: number;
-[F103:107]|   collapse_position_y: number;
-[F103:108]|   sort_mode: string;
-[F103:109]|   priority_weight: number;
-[F103:110]|   urgency_weight: number;
-[F103:111]| } | null): {
-[F103:112]|   workDuration: number;
-[F103:113]|   breakDuration: number;
-[F103:114]|   longBreakDuration: number;
-[F103:115]|   autoStartBreak: boolean;
-[F103:116]|   soundEnabled: boolean;
-[F103:117]|   collapsed: boolean;
-[F103:118]|   collapsePosition: { x: number; y: number };
-[F103:119]|   globalViewSort: { mode: string; priorityWeight: number; deadlineWeight: number };
-[F103:120]| } {
-[F103:121]|   if (!settings) {
-[F103:122]|     return DEFAULT_SETTINGS;
-[F103:123]|   }
-[F103:124]| 
-[F103:125]|   return {
-[F103:126]|     workDuration: settings.work_duration,
-[F103:127]|     breakDuration: settings.break_duration,
-[F103:128]|     longBreakDuration: settings.long_break_duration,
-[F103:129]|     autoStartBreak: settings.auto_start_break === 1,
-[F103:130]|     soundEnabled: settings.sound_enabled === 1,
-[F103:131]|     collapsed: settings.collapsed === 1,
-[F103:132]|     collapsePosition: {
-[F103:133]|       x: settings.collapse_position_x,
-[F103:134]|       y: settings.collapse_position_y
-[F103:135]|     },
-[F103:136]|     globalViewSort: {
-[F103:137]|       mode: settings.sort_mode as 'zone' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime' | 'timeDiff' | 'deadline',
-[F103:138]|       priorityWeight: settings.priority_weight,
-[F103:139]|       deadlineWeight: settings.urgency_weight || 0.6
-[F103:140]|     }
-[F103:141]|   };
-[F103:142]| }
+[F103:45]| export default i18n;
 
 ================================================================================
-文件路径: src\lib\storage-adapter.ts(F104) (约合大小: 1 KB)
+文件路径: src\lib\migration.ts(F104) (约合大小: 4 KB)
 ================================================================================
-[F104:1]| import type { StateStorage } from 'zustand/middleware';
-[F104:2]| import { dbGetItem, dbSetItem, dbRemoveItem } from '@/lib/db-legacy';
-[F104:3]| 
-[F104:4]| export const sqliteStorage: StateStorage = {
-[F104:5]|   getItem: async (name: string): Promise<string | null> => {
-[F104:6]|     try {
-[F104:7]|       let sqliteValue = null;
-[F104:8]|       try {
-[F104:9]|         sqliteValue = await dbGetItem(name);
-[F104:10]|       } catch (e) {
-[F104:11]|         console.warn('[Storage] SQLite read failed, falling back to local', e);
-[F104:12]|       }
-[F104:13]| 
-[F104:14]|       const localValue = localStorage.getItem(name);
-[F104:15]| 
-[F104:16]|       // 核心修复：如果 SQLite 空了但本地缓存还在（说明上次异常断电），自动恢复数据
-[F104:17]|       if (!sqliteValue && localValue) {
-[F104:18]|         console.log('[Storage] Recovered data from LocalStorage backup');
-[F104:19]|         try {
-[F104:20]|           await dbSetItem(name, localValue); // 尝试修复回 SQLite
-[F104:21]|         } catch (e) { /* ignore */ }
-[F104:22]|         return localValue;
-[F104:23]|       }
-[F104:24]| 
-[F104:25]|       return sqliteValue || localValue;
-[F104:26]|     } catch (error) {
-[F104:27]|       console.error('[Storage] Fatal error loading state:', error);
-[F104:28]|       return localStorage.getItem(name);
-[F104:29]|     }
-[F104:30]|   },
-[F104:31]| 
-[F104:32]|   setItem: async (name: string, value: string): Promise<void> => {
-[F104:33]|     // 核心修复：同步强制写入 LocalStorage，确保异常断电或关闭时数据绝对保留
-[F104:34]|     localStorage.setItem(name, value);
-[F104:35]|     try {
-[F104:36]|       // 异步写入 SQLite 作为持久化备份
-[F104:37]|       await dbSetItem(name, value);
-[F104:38]|     } catch (error) {
-[F104:39]|       console.error('[Storage] Error saving to SQLite, ensured in local:', error);
-[F104:40]|     }
-[F104:41]|   },
-[F104:42]| 
-[F104:43]|   removeItem: async (name: string): Promise<void> => {
-[F104:44]|     localStorage.removeItem(name);
-[F104:45]|     try {
-[F104:46]|       await dbRemoveItem(name);
-[F104:47]|     } catch (error) {
-[F104:48]|       console.error('[Storage] Error removing state:', error);
-[F104:49]|     }
-[F104:50]|   },
-[F104:51]| };
+[F104:1]| import { legacyDb, saveWorkspace, saveHistoryWorkspace, saveSettings, setDbVersion, getDbVersion, saveCustomTemplate as dbSaveCustomTemplate } from './db';
+[F104:2]| import type { CurrentWorkspace } from '@/types';
+[F104:3]| import { DEFAULT_SETTINGS } from '@/types';
+[F104:4]| 
+[F104:5]| const STORAGE_KEY_V4 = 'focus-flow-storage-v4';
+[F104:6]| 
+[F104:7]| export async function runMigrations(): Promise<void> {
+[F104:8]|   const currentVersion = await getDbVersion();
+[F104:9]| 
+[F104:10]|   if (currentVersion < 1) {
+[F104:11]|     await migrateV0ToV1();
+[F104:12]|   }
+[F104:13]| }
+[F104:14]| 
+[F104:15]| async function migrateV0ToV1(): Promise<void> {
+[F104:16]|   console.log('[Migration] Starting v0 -> v1 migration...');
+[F104:17]| 
+[F104:18]|   try {
+[F104:19]|     // 1. 从旧 store_snapshots 读取数据
+[F104:20]|     const legacyData = await legacyDb.getItem(STORAGE_KEY_V4);
+[F104:21]| 
+[F104:22]|     if (!legacyData) {
+[F104:23]|       console.log('[Migration] No legacy data found, creating default workspace');
+[F104:24]|       await createDefaultWorkspace();
+[F104:25]|       await setDbVersion(1);
+[F104:26]|       return;
+[F104:27]|     }
+[F104:28]| 
+[F104:29]|     const parsed = JSON.parse(legacyData);
+[F104:30]| 
+[F104:31]|     // 2. 迁移当前工作区
+[F104:32]|     if (parsed.currentWorkspace) {
+[F104:33]|       await saveWorkspace(parsed.currentWorkspace);
+[F104:34]|       console.log('[Migration] Migrated current workspace:', parsed.currentWorkspace.name);
+[F104:35]|     }
+[F104:36]| 
+[F104:37]|     // 3. 迁移历史工作区
+[F104:38]|     if (parsed.historyWorkspaces && Array.isArray(parsed.historyWorkspaces)) {
+[F104:39]|       for (const history of parsed.historyWorkspaces) {
+[F104:40]|         await saveHistoryWorkspace(history);
+[F104:41]|       }
+[F104:42]|       console.log('[Migration] Migrated', parsed.historyWorkspaces.length, 'history workspaces');
+[F104:43]|     }
+[F104:44]| 
+[F104:45]|     // 4. 迁移设置
+[F104:46]|     const settings = parsed.settings || DEFAULT_SETTINGS;
+[F104:47]|     await saveSettings({
+[F104:48]|       work_duration: settings.workDuration,
+[F104:49]|       break_duration: settings.breakDuration,
+[F104:50]|       long_break_duration: settings.longBreakDuration,
+[F104:51]|       auto_start_break: settings.autoStartBreak ? 1 : 0,
+[F104:52]|       sound_enabled: settings.soundEnabled ? 1 : 0,
+[F104:53]|       collapsed: settings.collapsed ? 1 : 0,
+[F104:54]|       collapse_position_x: settings.collapsePosition?.x ?? 100,
+[F104:55]|       collapse_position_y: settings.collapsePosition?.y ?? 100,
+[F104:56]|       sort_mode: settings.globalViewSort?.mode ?? 'zone',
+[F104:57]|       priority_weight: settings.globalViewSort?.priorityWeight ?? 0.4,
+[F104:58]|       urgency_weight: settings.globalViewSort?.deadlineWeight ?? 0.6
+[F104:59]|     });
+[F104:60]|     console.log('[Migration] Migrated settings');
+[F104:61]| 
+[F104:62]|     // 5. 迁移自定义模板
+[F104:63]|     if (parsed.customTemplates && Array.isArray(parsed.customTemplates)) {
+[F104:64]|       for (const template of parsed.customTemplates) {
+[F104:65]|         await dbSaveCustomTemplate(template);
+[F104:66]|       }
+[F104:67]|       console.log('[Migration] Migrated', parsed.customTemplates.length, 'custom templates');
+[F104:68]|     }
+[F104:69]| 
+[F104:70]|     // 6. 更新版本号
+[F104:71]|     await setDbVersion(1);
+[F104:72]|     console.log('[Migration] Migration completed successfully');
+[F104:73]|   } catch (error) {
+[F104:74]|     console.error('[Migration] Migration failed:', error);
+[F104:75]|     throw error;
+[F104:76]|   }
+[F104:77]| }
+[F104:78]| 
+[F104:79]| async function createDefaultWorkspace(): Promise<void> {
+[F104:80]|   const now = Date.now();
+[F104:81]|   const defaultWorkspace: CurrentWorkspace = {
+[F104:82]|     id: `ws-${now}`,
+[F104:83]|     name: '我的工作区',
+[F104:84]|     zones: [
+[F104:85]|       { id: `zone-${now}-1`, name: '工作', color: '#3b82f6', order: 0, createdAt: now },
+[F104:86]|       { id: `zone-${now}-2`, name: '学习', color: '#8b5cf6', order: 1, createdAt: now },
+[F104:87]|       { id: `zone-${now}-3`, name: '生活', color: '#22c55e', order: 2, createdAt: now }
+[F104:88]|     ],
+[F104:89]|     tasks: [],
+[F104:90]|     sessions: [],
+[F104:91]|     createdAt: now,
+[F104:92]|     lastModified: now
+[F104:93]|   };
+[F104:94]| 
+[F104:95]|   await saveWorkspace(defaultWorkspace);
+[F104:96]| }
+[F104:97]| 
+[F104:98]| // 导出设置转换为应用格式
+[F104:99]| export function convertDbSettingsToApp(settings: {
+[F104:100]|   work_duration: number;
+[F104:101]|   break_duration: number;
+[F104:102]|   long_break_duration: number;
+[F104:103]|   auto_start_break: number;
+[F104:104]|   sound_enabled: number;
+[F104:105]|   collapsed: number;
+[F104:106]|   collapse_position_x: number;
+[F104:107]|   collapse_position_y: number;
+[F104:108]|   sort_mode: string;
+[F104:109]|   priority_weight: number;
+[F104:110]|   urgency_weight: number;
+[F104:111]| } | null): {
+[F104:112]|   workDuration: number;
+[F104:113]|   breakDuration: number;
+[F104:114]|   longBreakDuration: number;
+[F104:115]|   autoStartBreak: boolean;
+[F104:116]|   soundEnabled: boolean;
+[F104:117]|   collapsed: boolean;
+[F104:118]|   collapsePosition: { x: number; y: number };
+[F104:119]|   globalViewSort: { mode: string; priorityWeight: number; deadlineWeight: number };
+[F104:120]| } {
+[F104:121]|   if (!settings) {
+[F104:122]|     return DEFAULT_SETTINGS;
+[F104:123]|   }
+[F104:124]| 
+[F104:125]|   return {
+[F104:126]|     workDuration: settings.work_duration,
+[F104:127]|     breakDuration: settings.break_duration,
+[F104:128]|     longBreakDuration: settings.long_break_duration,
+[F104:129]|     autoStartBreak: settings.auto_start_break === 1,
+[F104:130]|     soundEnabled: settings.sound_enabled === 1,
+[F104:131]|     collapsed: settings.collapsed === 1,
+[F104:132]|     collapsePosition: {
+[F104:133]|       x: settings.collapse_position_x,
+[F104:134]|       y: settings.collapse_position_y
+[F104:135]|     },
+[F104:136]|     globalViewSort: {
+[F104:137]|       mode: settings.sort_mode as 'zone' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime' | 'timeDiff' | 'deadline',
+[F104:138]|       priorityWeight: settings.priority_weight,
+[F104:139]|       deadlineWeight: settings.urgency_weight || 0.6
+[F104:140]|     }
+[F104:141]|   };
+[F104:142]| }
 
 ================================================================================
-文件路径: src\lib\tree-utils.ts(F105) (约合大小: 4 KB)
+文件路径: src\lib\persistent-log.ts(F105) (约合大小: 2 KB)
 ================================================================================
-[F105:1]| import type { Task } from "@/types";
-[F105:2]| 
-[F105:3]| export interface FlattenedTask extends Task {
-[F105:4]|   depth: number;
-[F105:5]| }
-[F105:6]| 
-[F105:7]| // 将树形结构打平成一维数组
-[F105:8]| // supportFocusedMode: 是否支持聚焦模式，聚焦时强制展开路径上的所有父节点
-[F105:9]| export function getFlattenedTasks(
-[F105:10]|   tasks: Task[],
-[F105:11]|   zoneId: string | null,
-[F105:12]|   focusedTaskId: string | null = null
-[F105:13]| ): FlattenedTask[] {
-[F105:14]|   const zoneTasks = zoneId ? tasks.filter(t => t.zoneId === zoneId) : tasks;
-[F105:15]| 
-[F105:16]|   // 如果有聚焦任务，收集路径上所有祖先ID
-[F105:17]|   const ancestorIds = new Set<string>();
-[F105:18]|   if (focusedTaskId) {
-[F105:19]|     let current = tasks.find(t => t.id === focusedTaskId);
-[F105:20]|     while (current?.parentId) {
-[F105:21]|       ancestorIds.add(current.parentId);
-[F105:22]|       current = tasks.find(t => t.id === current!.parentId);
-[F105:23]|     }
-[F105:24]|   }
-[F105:25]| 
-[F105:26]|   // 确定根节点
-[F105:27]|   let roots: Task[];
-[F105:28]|   if (focusedTaskId) {
-[F105:29]|     // 聚焦模式：以焦点任务的子任务作为根节点
-[F105:30]|     roots = zoneTasks.filter(t => t.parentId === focusedTaskId).sort((a, b) => a.order - b.order);
-[F105:31]|   } else {
-[F105:32]|     roots = zoneTasks.filter(t => !t.parentId).sort((a, b) => a.order - b.order);
-[F105:33]|   }
-[F105:34]| 
-[F105:35]|   const flattened: FlattenedTask[] = [];
-[F105:36]| 
-[F105:37]|   function recurse(items: Task[], depth: number) {
-[F105:38]|     for (const item of items) {
-[F105:39]|       flattened.push({ ...item, depth });
-[F105:40]|       // 如果是聚焦路径上的节点，或者未折叠，则展开子任务
-[F105:41]|       const shouldExpand = ancestorIds.has(item.id) || !item.isCollapsed;
-[F105:42]|       if (shouldExpand) {
-[F105:43]|         const children = zoneTasks.filter(t => t.parentId === item.id).sort((a, b) => a.order - b.order);
-[F105:44]|         recurse(children, depth + 1);
-[F105:45]|       }
-[F105:46]|     }
-[F105:47]|   }
-[F105:48]| 
-[F105:49]|   recurse(roots, 0);
-[F105:50]|   return flattened;
-[F105:51]| }
-[F105:52]| 
-[F105:53]| // 根据拖拽位置和偏移量，计算预期的深度和父节点 ID
-[F105:54]| // 使用锚点定位法 (Anchor ID) 替代索引定位，更加稳定
-[F105:55]| // focusedTaskId: 聚焦模式下的面包屑路径终点，用于限制拖拽的"根目录"
-[F105:56]| export function calculateNewPosition(
-[F105:57]|   flattenedTasks: FlattenedTask[],
-[F105:58]|   activeId: string,
-[F105:59]|   overId: string,
-[F105:60]|   offsetPx: number,
-[F105:61]|   focusedTaskId: string | null = null
-[F105:62]| ): { newDepth: number; newParentId: string | null; anchorId: string | null } | null {
-[F105:63]|   const activeIndex = flattenedTasks.findIndex(t => t.id === activeId);
-[F105:64]|   const overIndex = flattenedTasks.findIndex(t => t.id === overId);
-[F105:65]| 
-[F105:66]|   if (activeIndex === -1 || overIndex === -1) return null;
-[F105:67]| 
-[F105:68]|   const INDENTATION_WIDTH = 24;
-[F105:69]|   const depthOffset = Math.round(offsetPx / INDENTATION_WIDTH);
-[F105:70]| 
-[F105:71]|   const activeItem = flattenedTasks[activeIndex];
-[F105:72]| 
-[F105:73]|   // 确定视觉上的"前一个元素"
-[F105:74]|   const prevItem = flattenedTasks[overIndex - (activeIndex < overIndex ? 0 : 1)];
-[F105:75]|   const nextItem = flattenedTasks[overIndex + (activeIndex < overIndex ? 1 : 0)];
-[F105:76]| 
-[F105:77]|   // 1. 计算受限的深度
-[F105:78]|   // 在聚焦模式下，最小深度为 0（相对根目录，即 focusedTaskId）
-[F105:79]|   const minBaseDepth = 0;
-[F105:80]|   let newDepth = activeItem.depth;
-[F105:81]|   if (prevItem) {
-[F105:82]|     const maxDepth = prevItem.depth + 1;
-[F105:83]|     const minDepth = nextItem ? nextItem.depth : minBaseDepth;
-[F105:84]|     const calculatedDepth = activeItem.depth + depthOffset;
-[F105:85]|     newDepth = Math.max(minDepth, Math.min(maxDepth, calculatedDepth));
-[F105:86]|   } else {
-[F105:87]|     newDepth = minBaseDepth; // 拖到最顶部，聚焦模式下为相对根目录
-[F105:88]|   }
-[F105:89]| 
-[F105:90]|   // 2. 寻找新父节点
-[F105:91]|   // 聚焦模式下，默认父节点为 focusedTaskId，而不是绝对根目录 null
-[F105:92]|   let newParentId: string | null = focusedTaskId;
-[F105:93]|   if (newDepth > 0 && prevItem) {
-[F105:94]|     if (newDepth === prevItem.depth + 1) {
-[F105:95]|       newParentId = prevItem.id;
-[F105:96]|     } else {
-[F105:97]|       const p = flattenedTasks.slice(0, overIndex).reverse().find(t => t.depth === newDepth - 1);
-[F105:98]|       newParentId = p ? p.id : focusedTaskId;
-[F105:99]|     }
-[F105:100]|   }
-[F105:101]| 
-[F105:102]|   // 3. 寻找锚点 (Anchor ID)
-[F105:103]|   // 移除当前任务后，计算应该插入的位置
-[F105:104]|   const visibleWithoutActive = flattenedTasks.filter(t => t.id !== activeId);
-[F105:105]|   const dropIndex = activeIndex < overIndex
-[F105:106]|     ? visibleWithoutActive.findIndex(t => t.id === overId) + 1
-[F105:107]|     : visibleWithoutActive.findIndex(t => t.id === overId);
-[F105:108]| 
-[F105:109]|   const tasksAboveDrop = visibleWithoutActive.slice(0, dropIndex);
-[F105:110]|   const siblingsAbove = tasksAboveDrop.reverse().filter(t => t.parentId === newParentId);
-[F105:111]| 
-[F105:112]|   const anchorId = siblingsAbove.length > 0 ? siblingsAbove[0].id : null;
-[F105:113]| 
-[F105:114]|   return { newDepth, newParentId, anchorId };
-[F105:115]| }
+[F105:1]| /**
+[F105:2]|  * 持久化日志系统 - 用于追踪目录切换时的所有操作
+[F105:3]|  * 日志保存在 localStorage 中，reload 后仍可查看
+[F105:4]|  */
+[F105:5]| 
+[F105:6]| const PERSISTENT_LOG_KEY = 'FOCUS_FLOW_PERSISTENT_LOG';
+[F105:7]| 
+[F105:8]| // 日志级别
+[F105:9]| type LogLevel = 'INFO' | 'WARN' | 'ERROR' | 'DEBUG';
+[F105:10]| 
+[F105:11]| interface LogEntry {
+[F105:12]|   time: string;
+[F105:13]|   level: LogLevel;
+[F105:14]|   source: string;
+[F105:15]|   message: string;
+[F105:16]|   data?: unknown;
+[F105:17]| }
+[F105:18]| 
+[F105:19]| // 添加日志
+[F105:20]| export function persistentLog(source: string, message: string, level: LogLevel = 'INFO', data?: unknown) {
+[F105:21]|   const entry: LogEntry = {
+[F105:22]|     time: new Date().toISOString(),
+[F105:23]|     level,
+[F105:24]|     source,
+[F105:25]|     message,
+[F105:26]|     data
+[F105:27]|   };
+[F105:28]| 
+[F105:29]|   try {
+[F105:30]|     const logs = JSON.parse(localStorage.getItem(PERSISTENT_LOG_KEY) || '[]');
+[F105:31]|     logs.push(entry);
+[F105:32]|     // 只保留最近 200 条日志
+[F105:33]|     const trimmed = logs.slice(-200);
+[F105:34]|     localStorage.setItem(PERSISTENT_LOG_KEY, JSON.stringify(trimmed));
+[F105:35]|   } catch (e) {
+[F105:36]|     // 忽略错误
+[F105:37]|   }
+[F105:38]| 
+[F105:39]|   // 同时输出到控制台方便调试
+[F105:40]|   const prefix = `[${entry.time.slice(11, 19)}] [${level}] [${source}]`;
+[F105:41]|   if (data) {
+[F105:42]|     console.log(prefix, message, data);
+[F105:43]|   } else {
+[F105:44]|     console.log(prefix, message);
+[F105:45]|   }
+[F105:46]| }
+[F105:47]| 
+[F105:48]| // 获取所有日志
+[F105:49]| export function getPersistentLogs(): LogEntry[] {
+[F105:50]|   try {
+[F105:51]|     return JSON.parse(localStorage.getItem(PERSISTENT_LOG_KEY) || '[]');
+[F105:52]|   } catch {
+[F105:53]|     return [];
+[F105:54]|   }
+[F105:55]| }
+[F105:56]| 
+[F105:57]| // 清空日志
+[F105:58]| export function clearPersistentLogs() {
+[F105:59]|   localStorage.removeItem(PERSISTENT_LOG_KEY);
+[F105:60]| }
+[F105:61]| 
+[F105:62]| // 打印日志摘要（供控制台调用）
+[F105:63]| export function printPersistentLogs() {
+[F105:64]|   const logs = getPersistentLogs();
+[F105:65]|   if (logs.length === 0) {
+[F105:66]|     console.log('========== 持久化日志（无日志） ==========');
+[F105:67]|     return;
+[F105:68]|   }
+[F105:69]| 
+[F105:70]|   console.log('========== 持久化日志 ==========');
+[F105:71]|   logs.forEach((log, i) => {
+[F105:72]|     const dataStr = log.data ? ' ' + JSON.stringify(log.data).slice(0, 100) : '';
+[F105:73]|     console.log(`[${i + 1}] ${log.time.slice(11, 19)} [${log.level}] [${log.source}] ${log.message}${dataStr}`);
+[F105:74]|   });
+[F105:75]|   console.log('=========================================');
+[F105:76]|   console.log(`总计 ${logs.length} 条日志`);
+[F105:77]| }
+[F105:78]| 
+[F105:79]| // 导出到 window 供控制台调用
+[F105:80]| if (typeof window !== 'undefined') {
+[F105:81]|   (window as unknown as {
+[F105:82]|     printPersistentLogs: typeof printPersistentLogs;
+[F105:83]|     getPersistentLogs: typeof getPersistentLogs;
+[F105:84]|     clearPersistentLogs: typeof clearPersistentLogs;
+[F105:85]|   }).printPersistentLogs = printPersistentLogs;
+[F105:86]|   (window as unknown as { getPersistentLogs: typeof getPersistentLogs }).getPersistentLogs = getPersistentLogs;
+[F105:87]|   (window as unknown as { clearPersistentLogs: typeof clearPersistentLogs }).clearPersistentLogs = clearPersistentLogs;
+[F105:88]| }
 
 ================================================================================
-文件路径: src\lib\urgency-utils.ts(F106) (约合大小: 10 KB)
+文件路径: src\lib\storage-adapter.ts(F106) (约合大小: 14 KB)
 ================================================================================
-[F106:1]| import type { Task, TaskPriority, TaskUrgency } from '../types';
-[F106:2]| import i18n from 'i18next';
-[F106:3]| 
-[F106:4]| /**
-[F106:5]|  * Deadline type for task
-[F106:6]|  */
-[F106:7]| export type DeadlineType = 'exact' | 'today' | 'tomorrow' | 'week' | 'none';
-[F106:8]| 
-[F106:9]| /**
-[F106:10]|  * 计算未完成任务的排位分数
-[F106:11]|  * 返回一个 Map，Key 为任务 ID，Value 为 0~1 的分数（1代表最紧急）
-[F106:12]|  *
-[F106:13]|  * 规则：
-[F106:14]|  * - 只处理有 deadline 且未完成的任务
-[F106:15]|  * - 按 deadline 从早到晚排序
-[F106:16]|  * - 越早截止，分数越高
-[F106:17]|  */
-[F106:18]| export function calculateRankScores(tasks: Task[]): Record<string, number> {
-[F106:19]|   // 使用继承后的 deadline 进行排序
-[F106:20]|   const withDeadline = tasks
-[F106:21]|     .map(t => ({ ...t, effectiveDeadline: getInheritedDeadline(t, tasks) }))
-[F106:22]|     .filter(t => !t.completed && t.effectiveDeadline && t.effectiveDeadline > 0)
-[F106:23]|     .sort((a, b) => (a.effectiveDeadline || 0) - (b.effectiveDeadline || 0));
-[F106:24]| 
-[F106:25]|   const scores: Record<string, number> = {};
-[F106:26]|   const count = withDeadline.length;
-[F106:27]| 
-[F106:28]|   withDeadline.forEach((task, index) => {
-[F106:29]|     // 排名越靠前分数越高。如果只有1个任务，分数为 1
-[F106:30]|     // 分数公式：(count - 1 - index) / (count - 1)
-[F106:31]|     // 这样最早截止的（index=0）得到最高分 1
-[F106:32]|     scores[task.id] = count > 1 ? (count - 1 - index) / (count - 1) : 1;
-[F106:33]|   });
-[F106:34]| 
-[F106:35]|   return scores;
-[F106:36]| }
-[F106:37]| 
-[F106:38]| /**
-[F106:39]|  * 将排位分数映射为 Urgency 级别
-[F106:40]|  * - 前 25% → urgent
-[F106:41]|  * - 25%-50% → high
-[F106:42]|  * - 50%-75% → medium
-[F106:43]|  * - 75%-100% → low
-[F106:44]|  * - 无 DDL → low (默认)
-[F106:45]|  */
-[F106:46]| export function mapRankToUrgency(score: number, hasDeadline: boolean): TaskUrgency {
-[F106:47]|   if (!hasDeadline || score === 0) return 'low';
-[F106:48]|   if (score >= 0.75) return 'urgent';
-[F106:49]|   if (score >= 0.5) return 'high';
-[F106:50]|   if (score >= 0.25) return 'medium';
-[F106:51]|   return 'low';
-[F106:52]| }
-[F106:53]| 
-[F106:54]| /**
-[F106:55]|  * 根据紧迫程度分数生成 HSL 颜色
-[F106:56]|  * 0.0 (不紧急) -> 绿色 (120), 1.0 (极度紧急) -> 红色 (0)
-[F106:57]|  */
-[F106:58]| export function getUrgencyColor(score: number, isOverdue: boolean = false): string {
-[F106:59]|   if (isOverdue) return 'hsl(0, 85%, 50%)'; // 逾期直接纯红
-[F106:60]| 
-[F106:61]|   // 限制分值范围
-[F106:62]|   const clamped = Math.max(0, Math.min(1, score));
-[F106:63]|   const hue = (1 - clamped) * 120;
-[F106:64]|   return `hsl(${Math.round(hue)}, 80%, 50%)`;
-[F106:65]| }
-[F106:66]| 
-[F106:67]| /**
-[F106:68]|  * 根据绝对 deadline 时间获取紧迫性颜色
-[F106:69]|  * 7 档位：赤橙黄绿青蓝紫 + 灰（未定义）+ 深红（逾期）
-[F106:70]|  * - 赤：5小时以内
-[F106:71]|  * - 橙：12小时以内
-[F106:72]|  * - 黄：24小时以内
-[F106:73]|  * - 绿：2天以内
-[F106:74]|  * - 青：一周以内
-[F106:75]|  * - 蓝：一个月以内
-[F106:76]|  * - 紫：一个月以后
-[F106:77]|  * - 灰：未定义
-[F106:78]|  * - 深红：已逾期
-[F106:79]|  *
-[F106:80]|  * @param deadline 任务的截止时间戳（毫秒）
-[F106:81]|  * @param isOverdue 是否已逾期
-[F106:82]|  * @returns 颜色值
-[F106:83]|  */
-[F106:84]| export function getAbsoluteUrgencyColor(deadline: number | null, isOverdue: boolean = false): string {
-[F106:85]|   // 逾期优先显示深红
-[F106:86]|   if (isOverdue) {
-[F106:87]|     return 'hsl(0, 80%, 35%)'; // 深红 - 逾期
-[F106:88]|   }
-[F106:89]| 
-[F106:90]|   // 未定义 deadline 显示灰色
-[F106:91]|   if (!deadline || deadline <= 0) {
-[F106:92]|     return 'hsl(0, 0%, 50%)'; // 灰色 - 未定义
-[F106:93]|   }
-[F106:94]| 
-[F106:95]|   const now = Date.now();
-[F106:96]|   const diff = deadline - now; // 剩余毫秒数
-[F106:97]|   const hours = diff / (1000 * 60 * 60); // 转换为小时
-[F106:98]| 
-[F106:99]|   if (hours <= 5) {
-[F106:100]|     return 'hsl(0, 85%, 50%)'; // 赤 - 5小时以内（红色）
-[F106:101]|   } else if (hours <= 12) {
-[F106:102]|     return 'hsl(25, 90%, 50%)'; // 橙 - 12小时以内（橙色）
-[F106:103]|   } else if (hours <= 24) {
-[F106:104]|     return 'hsl(50, 90%, 50%)'; // 黄 - 24小时以内（黄色）
-[F106:105]|   } else if (hours <= 48) {
-[F106:106]|     return 'hsl(120, 70%, 45%)'; // 绿 - 2天以内（绿色）
-[F106:107]|   } else if (hours <= 168) { // 7天 = 168小时
-[F106:108]|     return 'hsl(170, 80%, 45%)'; // 青 - 一周以内（青色）
-[F106:109]|   } else if (hours <= 720) { // 30天 = 720小时
-[F106:110]|     return 'hsl(210, 80%, 50%)'; // 蓝 - 一个月以内（蓝色）
-[F106:111]|   } else {
-[F106:112]|     return 'hsl(270, 60%, 50%)'; // 紫 - 一个月以后（紫色）
-[F106:113]|   }
-[F106:114]| }
-[F106:115]| 
-[F106:116]| /**
-[F106:117]|  * 获取继承后的截止日期
-[F106:118]|  * 如果任务本身没有设置截止日期，但父任务有，则返回父任务的截止日期
-[F106:119]|  * @param task 当前任务
-[F106:120]|  * @param allTasks 所有任务列表
-[F106:121]|  * @returns 继承后的截止日期时间戳，如果没有则返回 null
-[F106:122]|  */
-[F106:123]| export function getInheritedDeadline(task: Task, allTasks: Task[], visited: Set<string> = new Set()): number | null {
-[F106:124]|   // 防止循环引用导致无限递归
-[F106:125]|   if (visited.has(task.id)) {
-[F106:126]|     return null;
-[F106:127]|   }
-[F106:128]|   visited.add(task.id);
-[F106:129]| 
-[F106:130]|   // 如果任务本身有截止日期，直接返回
-[F106:131]|   if (task.deadline && task.deadline > 0) {
-[F106:132]|     return task.deadline;
-[F106:133]|   }
-[F106:134]| 
-[F106:135]|   // 如果没有父任务，返回 null
-[F106:136]|   if (!task.parentId) {
-[F106:137]|     return null;
-[F106:138]|   }
-[F106:139]| 
-[F106:140]|   // 查找父任务
-[F106:141]|   const parent = allTasks.find(t => t.id === task.parentId);
-[F106:142]|   if (!parent) {
-[F106:143]|     return null;
-[F106:144]|   }
-[F106:145]| 
-[F106:146]|   // 递归获取父任务的截止日期（可能父任务也是继承的）
-[F106:147]|   return getInheritedDeadline(parent, allTasks, visited);
-[F106:148]| }
-[F106:149]| 
-[F106:150]| /**
-[F106:151]|  * 格式化倒计时文案
-[F106:152]|  * @param deadline 截止时间戳（毫秒）
-[F106:153]|  * @returns 格式化后的文本和是否逾期
-[F106:154]|  */
-[F106:155]| export function getDeadlineStatus(deadline: number | null | undefined): { text: string; isOverdue: boolean } {
-[F106:156]|   if (!deadline || deadline <= 0) return { text: '', isOverdue: false };
-[F106:157]| 
-[F106:158]|   const now = Date.now();
-[F106:159]|   const diff = deadline - now;
-[F106:160]|   const isOverdue = diff < 0;
-[F106:161]|   const absDiff = Math.abs(diff);
-[F106:162]| 
-[F106:163]|   const days = Math.floor(absDiff / (24 * 3600 * 1000));
-[F106:164]|   const hours = Math.floor((absDiff % (24 * 3600 * 1000)) / (3600 * 1000));
-[F106:165]|   const mins = Math.floor((absDiff % (3600 * 1000)) / (60 * 1000));
-[F106:166]| 
-[F106:167]|   let text = isOverdue ? i18n.t('urgency.overduePrefix') : i18n.t('urgency.remainingPrefix');
-[F106:168]|   if (days > 0) text += i18n.t('urgency.daysHours', { days, hours });
-[F106:169]|   else if (hours > 0) text += i18n.t('urgency.hoursMins', { hours, mins });
-[F106:170]|   else text += i18n.t('urgency.mins', { mins });
-[F106:171]| 
-[F106:172]|   return { text, isOverdue };
-[F106:173]| }
-[F106:174]| 
-[F106:175]| /**
-[F106:176]|  * 获取截止日期的友好显示
-[F106:177]|  * @param deadline 截止时间戳
-[F106:178]|  * @param deadlineType 截止日期类型
-[F106:179]|  */
-[F106:180]| export function getDeadlineDisplay(deadline: number | null | undefined, deadlineType: DeadlineType | undefined): string {
-[F106:181]|   if (!deadline || deadline <= 0) return '';
-[F106:182]| 
-[F106:183]|   const now = Date.now();
-[F106:184]|   const isOverdue = deadline < now;
-[F106:185]| 
-[F106:186]|   if (deadlineType === 'today') {
-[F106:187]|     return isOverdue ? i18n.t('urgency.todayOverdue') : i18n.t('task.deadlineToday');
-[F106:188]|   }
-[F106:189]|   if (deadlineType === 'tomorrow') {
-[F106:190]|     return isOverdue ? i18n.t('urgency.tomorrowOverdue') : i18n.t('task.deadlineTomorrow');
-[F106:191]|   }
-[F106:192]|   if (deadlineType === 'week') {
-[F106:193]|     return isOverdue ? i18n.t('urgency.weekOverdue') : i18n.t('task.deadlineWeek');
-[F106:194]|   }
-[F106:195]| 
-[F106:196]|   // exact 类型
-[F106:197]|   const date = new Date(deadline);
-[F106:198]|   const month = date.getMonth() + 1;
-[F106:199]|   const day = date.getDate();
-[F106:200]|   const hour = date.getHours();
-[F106:201]|   const min = date.getMinutes();
-[F106:202]|   const dateStr = `${month}/${day} ${hour}:${min.toString().padStart(2, '0')}`;
+[F106:1]| import type { StateStorage } from 'zustand/middleware';
+[F106:2]| import { dbGetItem, dbSetItem, dbRemoveItem } from '@/lib/db';
+[F106:3]| import { persistentLog } from './persistent-log';
+[F106:4]| 
+[F106:5]| // 记录应用的启动时间
+[F106:6]| const bootTime = Date.now();
+[F106:7]| // 记录是否已完成水合
+[F106:8]| let _isHydrated = false;
+[F106:9]| // 切换锁：目录切换期间阻止所有写入
+[F106:10]| let _isSwitching = false;
+[F106:11]| // 标记是否正在进行目录切换（从 db.ts 设置）
+[F106:12]| let _isReloadingForSwitch = false;
+[F106:13]| // 🚀 关键：切换完成后跳过写入的锁（防止空状态覆盖正确数据）
+[F106:14]| let _skipWriteUntilChange = false;
+[F106:15]| // 重新加载回调函数列表
+[F106:16]| type ReloadCallback = () => void | Promise<void>;
+[F106:17]| const reloadCallbacks: ReloadCallback[] = [];
+[F106:18]| 
+[F106:19]| export function getIsHydrated() {
+[F106:20]|   return _isHydrated;
+[F106:21]| }
+[F106:22]| 
+[F106:23]| export function setIsHydrated(value: boolean, forceRehydrate: boolean = false) {
+[F106:24]|   // 如果是强制重新水合（目录切换后），需要先重置状态
+[F106:25]|   if (forceRehydrate) {
+[F106:26]|     _isHydrated = false;
+[F106:27]|   }
+[F106:28]|   _isHydrated = value;
+[F106:29]|   // hydration 完成后，清除 sessionStorage 中的备份标记
+[F106:30]|   if (value) {
+[F106:31]|     sessionStorage.removeItem('FOCUS_FLOW_BACKUP_USED');
+[F106:32]|     persistentLog('Storage', 'Hydration done, cleared backup marker', 'DEBUG');
+[F106:33]|   }
+[F106:34]| }
+[F106:35]| 
+[F106:36]| export function getIsSwitching() {
+[F106:37]|   return _isSwitching;
+[F106:38]| }
+[F106:39]| 
+[F106:40]| export function setIsSwitching(value: boolean) {
+[F106:41]|   _isSwitching = value;
+[F106:42]| }
+[F106:43]| 
+[F106:44]| /**
+[F106:45]|  * 设置目录切换状态（由 db.ts 调用）
+[F106:46]|  */
+[F106:47]| export function setIsReloadingForSwitch(value: boolean) {
+[F106:48]|   _isReloadingForSwitch = value;
+[F106:49]|   // [DEBUG] console.log('[Storage] _isReloadingForSwitch set to:', value);
+[F106:50]| }
+[F106:51]| 
+[F106:52]| /**
+[F106:53]|  * 获取目录切换状态
+[F106:54]|  */
+[F106:55]| export function getIsReloadingForSwitch() {
+[F106:56]|   return _isReloadingForSwitch;
+[F106:57]| }
+[F106:58]| 
+[F106:59]| /**
+[F106:60]|  * 设置切换完成后的写入跳过锁
+[F106:61]|  * 用于防止切换后 Zustand 将默认空状态写入数据库覆盖正确数据
+[F106:62]|  */
+[F106:63]| export function setSkipWriteUntilChange(value: boolean) {
+[F106:64]|   _skipWriteUntilChange = value;
+[F106:65]|   // [DEBUG] console.log('[Storage] _skipWriteUntilChange set to:', value);
+[F106:66]| }
+[F106:67]| 
+[F106:68]| /**
+[F106:69]|  * 获取切换完成后的写入跳过锁
+[F106:70]|  */
+[F106:71]| export function getSkipWriteUntilChange() {
+[F106:72]|   return _skipWriteUntilChange;
+[F106:73]| }
+[F106:74]| 
+[F106:75]| /**
+[F106:76]|  * 清除跳过写入锁，并标记用户已修改数据
+[F106:77]|  */
+[F106:78]| export function clearSkipWriteLock() {
+[F106:79]|   if (_skipWriteUntilChange) {
+[F106:80]|     // [DEBUG] console.log('[Storage] User data modified, clearing skip write lock');
+[F106:81]|     persistentLog('Storage', 'User modified data, skip lock cleared', 'INFO');
+[F106:82]|   }
+[F106:83]|   _skipWriteUntilChange = false;
+[F106:84]| }
+[F106:85]| 
+[F106:86]| /**
+[F106:87]|  * 注册重新加载回调
+[F106:88]|  */
+[F106:89]| export function onStoreReload(callback: ReloadCallback) {
+[F106:90]|   reloadCallbacks.push(callback);
+[F106:91]|   // 返回取消注册的函数
+[F106:92]|   return () => {
+[F106:93]|     const index = reloadCallbacks.indexOf(callback);
+[F106:94]|     if (index > -1) {
+[F106:95]|       reloadCallbacks.splice(index, 1);
+[F106:96]|     }
+[F106:97]|   };
+[F106:98]| }
+[F106:99]| 
+[F106:100]| /**
+[F106:101]|  * 触发 store 重新加载（目录切换时调用）
+[F106:102]|  */
+[F106:103]| export async function triggerStoreReload(): Promise<void> {
+[F106:104]|   console.log('[Storage] triggerStoreReload START, callbacks:', reloadCallbacks.length);
+[F106:105]|   persistentLog('Storage', 'triggerStoreReload called', 'INFO', { callbacks: reloadCallbacks.length });
+[F106:106]| 
+[F106:107]|   // 1. 重置 hydration 状态
+[F106:108]|   _isHydrated = false;
+[F106:109]|   _isSwitching = false;
+[F106:110]| 
+[F106:111]|   // 🚀 设置跳过写入锁，防止切换后的空状态覆盖正确数据
+[F106:112]|   _skipWriteUntilChange = true;
+[F106:113]| 
+[F106:114]|   // 2. 等待一小段时间确保状态重置完成
+[F106:115]|   await new Promise(resolve => setTimeout(resolve, 50));
+[F106:116]| 
+[F106:117]|   // 3. 通知所有监听器重新加载
+[F106:118]|   for (const callback of reloadCallbacks) {
+[F106:119]|     try {
+[F106:120]|       await callback();
+[F106:121]|     } catch (error) {
+[F106:122]|       console.error('[Storage] Error in reload callback:', error);
+[F106:123]|     }
+[F106:124]|   }
+[F106:125]| 
+[F106:126]|   persistentLog('Storage', 'triggerStoreReload completed', 'INFO');
+[F106:127]| 
+[F106:128]|   // 注意：不要在这里清除 _previousDataSnapshot
+[F106:129]|   // 它将由 getItem 在读取新数据后更新
+[F106:130]|   // _previousDataSnapshot = null;
+[F106:131]| }
+[F106:132]| 
+[F106:133]| /**
+[F106:134]|  * 重置存储适配器状态（切换目录时调用）
+[F106:135]|  */
+[F106:136]| export function resetStorageState() {
+[F106:137]|   _isHydrated = false;
+[F106:138]|   _isSwitching = false;
+[F106:139]|   persistentLog('Storage', 'Storage state reset', 'DEBUG');
+[F106:140]| }
+[F106:141]| 
+[F106:142]| // 页面卸载时重置 hydration 状态
+[F106:143]| if (typeof window !== 'undefined') {
+[F106:144]|   window.addEventListener('beforeunload', () => {
+[F106:145]|     _isHydrated = false;
+[F106:146]|   });
+[F106:147]| }
+[F106:148]| 
+[F106:149]| function logTrace(action: string, data: string | null, source: string) {
+[F106:150]|   // [DEBUG] 详细追踪功能，生产环境可关闭
+[F106:151]|   // if (process.env.NODE_ENV !== 'development') return;
+[F106:152]|   // const timeSinceBoot = Date.now() - bootTime;
+[F106:153]|   // const dataSize = data ? (new Blob([data]).size / 1024).toFixed(2) + 'kb' : 'EMPTY/NULL';
+[F106:154]|   // console.log(`[STORAGE_TRACE] [${timeSinceBoot}ms] [${action}] Size: ${dataSize} | Source: ${source}`);
+[F106:155]| }
+[F106:156]| 
+[F106:157]| // 记录 getItem 是否曾经返回过非空数据
+[F106:158]| let _hasReadValidData = false;
+[F106:159]| // 🚀 存储从 SQLite 加载的有效数据（用于对比空状态写入）
+[F106:160]| // eslint-disable-next-line @typescript-eslint/no-unused-vars
+[F106:161]| let _loadedValidData: string | null = null;
+[F106:162]| // 🚀 存储加载时的有效任务/区域数量
+[F106:163]| let _loadedTasksCount = 0;
+[F106:164]| let _loadedZonesCount = 0;
+[F106:165]| // 🚀 记录切换前的数据快照（用于判断数据是否"变少"）
+[F106:166]| let _previousDataSnapshot: { tasks: number; zones: number } | null = null;
+[F106:167]| 
+[F106:168]| // 🚀 导出函数：在切换目录前记录当前数据状态
+[F106:169]| export function recordDataSnapshotForSwitch(): void {
+[F106:170]|   _previousDataSnapshot = { tasks: _loadedTasksCount, zones: _loadedZonesCount };
+[F106:171]|   // [DEBUG] console.log('[Storage] 📸 Recorded previous data snapshot:', _previousDataSnapshot);
+[F106:172]| }
+[F106:173]| 
+[F106:174]| export const sqliteStorage: StateStorage = {
+[F106:175]|   getItem: async (name: string): Promise<string | null> => {
+[F106:176]|     const pathFromStorage = localStorage.getItem('FOCUS_FLOW_DB_PATH');
+[F106:177]|     logTrace('GET_START', null, 'SQLite');
+[F106:178]|     const isHydrated = getIsHydrated();
+[F106:179]|     // [DEBUG] console.log(`[Storage] getItem - Key: ${name}, Hydrated: ${isHydrated}, Path: ${pathFromStorage}, HasReadValidData: ${_hasReadValidData}`);
+[F106:180]| 
+[F106:181]|     // 调试：打印调用栈
+[F106:182]|     // const stack = new Error().stack;
+[F106:183]|     // [DEBUG] console.log(`[Storage] getItem call stack:`, stack);
+[F106:184]| 
+[F106:185]|     persistentLog('Storage', 'getItem START', 'DEBUG', { key: name, hydrated: isHydrated, path: pathFromStorage });
+[F106:186]| 
+[F106:187]|     // === 简化：只使用 SQLite，不依赖 localStorage 备份 ===
+[F106:188]|     // 每次 getItem 都从 SQLite 读取，确保读取的是当前目录的数据库
+[F106:189]| 
+[F106:190]|     try {
+[F106:191]|       const sqliteValue = await dbGetItem(name);
+[F106:192]|       persistentLog('Storage', 'getItem from SQLite', 'DEBUG', { size: sqliteValue?.length });
+[F106:193]| 
+[F106:194]|       if (sqliteValue) {
+[F106:195]|         // 验证数据
+[F106:196]|         let tasks = 0, zones = 0;
+[F106:197]|         try {
+[F106:198]|           const parsed = JSON.parse(sqliteValue);
+[F106:199]|           tasks = parsed?.state?.tasks?.length || parsed?.tasks?.length || 0;
+[F106:200]|           zones = parsed?.state?.zones?.length || parsed?.zones?.length || 0;
+[F106:201]|           persistentLog('Storage', 'SQLite data valid', 'DEBUG', { tasks, zones });
+[F106:202]|         } catch (e) {}
 [F106:203]| 
-[F106:204]|   return isOverdue
-[F106:205]|     ? i18n.t('urgency.exactOverdue', { date: dateStr })
-[F106:206]|     : dateStr;
-[F106:207]| }
-[F106:208]| 
-[F106:209]| // 优先级分数映射
-[F106:210]| const PRIORITY_MAP: Record<TaskPriority, number> = {
-[F106:211]|   high: 1.0,
-[F106:212]|   medium: 0.5,
-[F106:213]|   low: 0,
-[F106:214]| };
-[F106:215]| 
-[F106:216]| /**
-[F106:217]|  * 加权排序算法
-[F106:218]|  * @param tasks 待排序任务列表（应传入未完成的任务）
-[F106:219]|  * @param pWeight 优先级权重
-[F106:220]|  * @param dWeight 截止日期权重（由排名分数计算得出）
-[F106:221]|  * @param rankScores 预计算的排名分数
-[F106:222]|  */
-[F106:223]| export function sortTasks(
-[F106:224]|   tasks: Task[],
-[F106:225]|   pWeight: number,
-[F106:226]|   dWeight: number,
-[F106:227]|   rankScores: Record<string, number>
-[F106:228]| ): Task[] {
-[F106:229]|   // 先将任务分为有 DDL 和无 DDL 两组
-[F106:230]|   const withDeadline = tasks.filter(t => t.deadline && t.deadline > 0 && !t.completed);
-[F106:231]|   const withoutDeadline = tasks.filter(t => !t.deadline || t.deadline <= 0 || t.completed);
-[F106:232]| 
-[F106:233]|   // 对有 DDL 的任务进行加权排序
-[F106:234]|   const sortedWithDeadline = [...withDeadline].sort((a, b) => {
-[F106:235]|     const rankA = rankScores[a.id] || 0;
-[F106:236]|     const rankB = rankScores[b.id] || 0;
-[F106:237]| 
-[F106:238]|     const priorityA = PRIORITY_MAP[a.priority];
-[F106:239]|     const priorityB = PRIORITY_MAP[b.priority];
-[F106:240]| 
-[F106:241]|     const scoreA = (priorityA * pWeight) + (rankA * dWeight);
-[F106:242]|     const scoreB = (priorityB * pWeight) + (rankB * dWeight);
-[F106:243]| 
-[F106:244]|     if (scoreA !== scoreB) return scoreB - scoreA; // 分数高的排前面
-[F106:245]|     return (a.deadline || Infinity) - (b.deadline || Infinity); // 同分按 DDL 先后排
-[F106:246]|   });
-[F106:247]| 
-[F106:248]|   // 无 DDL 的任务排在后面，保持原有顺序
-[F106:249]|   return [...sortedWithDeadline, ...withoutDeadline];
-[F106:250]| }
-[F106:251]| 
-[F106:252]| /**
-[F106:253]|  * 转换快捷设置为实际截止时间戳
-[F106:254]|  * @param type 'today' | 'tomorrow' | 'week' | 'exact' | 'none'
-[F106:255]|  * @param customDate 自定义日期（当 type 为 'exact' 时使用）
-[F106:256]|  */
-[F106:257]| export function convertDeadlineType(
-[F106:258]|   type: DeadlineType,
-[F106:259]|   customDate?: Date
-[F106:260]| ): { deadline: number | null; deadlineType: DeadlineType } {
-[F106:261]|   const now = new Date();
-[F106:262]| 
-[F106:263]|   switch (type) {
-[F106:264]|     case 'today': {
-[F106:265]|       const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-[F106:266]|       return { deadline: endOfToday.getTime(), deadlineType: 'today' };
-[F106:267]|     }
-[F106:268]|     case 'tomorrow': {
-[F106:269]|       const tomorrow = new Date(now);
-[F106:270]|       tomorrow.setDate(tomorrow.getDate() + 1);
-[F106:271]|       const endOfTomorrow = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 23, 59, 59, 999);
-[F106:272]|       return { deadline: endOfTomorrow.getTime(), deadlineType: 'tomorrow' };
-[F106:273]|     }
-[F106:274]|     case 'week': {
-[F106:275]|       const endOfWeek = new Date(now);
-[F106:276]|       // 星期天为 0，星期六为 6
-[F106:277]|       const dayOfWeek = endOfWeek.getDay();
-[F106:278]|       const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-[F106:279]|       endOfWeek.setDate(endOfWeek.getDate() + daysUntilSunday);
-[F106:280]|       const endOfWeekDay = new Date(endOfWeek.getFullYear(), endOfWeek.getMonth(), endOfWeek.getDate(), 23, 59, 59, 999);
-[F106:281]|       return { deadline: endOfWeekDay.getTime(), deadlineType: 'week' };
-[F106:282]|     }
-[F106:283]|     case 'exact': {
-[F106:284]|       if (customDate) {
-[F106:285]|         return { deadline: customDate.getTime(), deadlineType: 'exact' };
-[F106:286]|       }
-[F106:287]|       return { deadline: null, deadlineType: 'none' };
-[F106:288]|     }
-[F106:289]|     case 'none':
-[F106:290]|     default:
-[F106:291]|       return { deadline: null, deadlineType: 'none' };
-[F106:292]|   }
-[F106:293]| }
-[F106:294]| 
-[F106:295]| /**
-[F106:296]|  * 获取当前任务的 urgency 值（用于显示）
-[F106:297]|  * 根据 deadline 排名自动计算
-[F106:298]|  */
-[F106:299]| export function calculateUrgencyForTask(
-[F106:300]|   task: Task,
-[F106:301]|   _allTasks: Task[],
-[F106:302]|   rankScores: Record<string, number>
-[F106:303]| ): TaskUrgency {
-[F106:304]|   if (task.completed) return 'low';
-[F106:305]|   if (!task.deadline || task.deadline <= 0) return 'low';
-[F106:306]| 
-[F106:307]|   const score = rankScores[task.id] || 0;
-[F106:308]|   return mapRankToUrgency(score, true);
-[F106:309]| }
+[F106:204]|         // 🚀 保存加载的有效数据，用于后续对比
+[F106:205]|         _loadedValidData = sqliteValue;
+[F106:206]|         _loadedTasksCount = tasks;
+[F106:207]|         _loadedZonesCount = zones;
+[F106:208]|         _hasReadValidData = true;
+[F106:209]| 
+[F106:210]|         // 🚀 设置新目录的数据基准，这样后续写入时才能正确比较
+[F106:211]|         // 每次 getItem 都要更新快照为当前目录的数据
+[F106:212]|         console.log('[Storage] Updating data snapshot in getItem to current directory data: tasks=', tasks, 'zones=', zones);
+[F106:213]|         _previousDataSnapshot = { tasks, zones };
+[F106:214]| 
+[F106:215]|         // 🚀 打印日志，但不清除 skipWrite
+[F106:216]|         // skipWrite 将由 setItem 在写入有效数据后清除
+[F106:217]|         if (tasks > 0) {
+[F106:218]|           // [DEBUG] console.log(`[Storage] Valid data loaded in getItem, keeping skipWrite until setItem (tasks: ${tasks}, zones: ${zones})`);
+[F106:219]|           persistentLog('Storage', 'Valid data in getItem, skipWrite preserved', 'DEBUG', { tasks, zones });
+[F106:220]|         } else {
+[F106:221]|           // 数据为空，保持 skipWrite 锁为 true，防止空状态覆盖
+[F106:222]|           // [DEBUG] console.log(`[Storage] getItem - Empty data, keeping skipWrite lock active`);
+[F106:223]|           persistentLog('Storage', 'Empty data in SQLite, skipWrite remains', 'DEBUG');
+[F106:224]|         }
+[F106:225]| 
+[F106:226]|         // [DEBUG] console.log(`[Storage] getItem - Key: ${name}, Found: true, Tasks: ${tasks}, Zones: ${zones}`);
+[F106:227]|         return sqliteValue;
+[F106:228]|       }
+[F106:229]| 
+[F106:230]|       // [DEBUG] console.log(`[Storage] getItem - Key: ${name}, Found: false`);
+[F106:231]|       persistentLog('Storage', 'SQLite returned null', 'DEBUG');
+[F106:232]|       return null;
+[F106:233]|     } catch (error) {
+[F106:234]|       // [DEBUG] console.log(`[Storage] getItem - Key: ${name}, ERROR: ${error}`);
+[F106:235]|       persistentLog('Storage', 'SQLite ERROR', 'ERROR', String(error));
+[F106:236]|       return null;
+[F106:237]|     }
+[F106:238]|   },
+[F106:239]| 
+[F106:240]|   setItem: async (name: string, value: string): Promise<void> => {
+[F106:241]|     // 🚨 打印完整调用栈来确认触发来源
+[F106:242]|     // const stack = new Error().stack;
+[F106:243]|     // [DEBUG] console.log(`[Storage] ⚠️⚠️⚠️ setItem TRIGGERED! Key: ${name}`);
+[F106:244]|     // [DEBUG] console.log(`[Storage] ⚠️⚠️⚠️ Call stack:`, stack);
+[F106:245]| 
+[F106:246]|     const isSwitching = getIsSwitching();
+[F106:247]|     const isHydrated = getIsHydrated();
+[F106:248]|     const isReloading = getIsReloadingForSwitch();
+[F106:249]|     const skipWrite = getSkipWriteUntilChange();
+[F106:250]| 
+[F106:251]|     // 解析 value 来检查数据
+[F106:252]|     let valueTasks = 0, valueZones = 0;
+[F106:253]|     try {
+[F106:254]|       const parsed = JSON.parse(value);
+[F106:255]|       valueTasks = parsed?.state?.tasks?.length || parsed?.tasks?.length || 0;
+[F106:256]|       valueZones = parsed?.state?.zones?.length || parsed?.zones?.length || 0;
+[F106:257]|     } catch (e) {}
+[F106:258]| 
+[F106:259]|     logTrace('SET_TRIGGERED', value, 'Zustand');
+[F106:260]|     // [DEBUG] console.log(`[Storage] setItem - Key: ${name}, Size: ${value.length}, Tasks: ${valueTasks}, Zones: ${valueZones}, Hydrated: ${isHydrated}, Switching: ${isSwitching}, Reloading: ${isReloading}, SkipWrite: ${skipWrite}, HasReadValidData: ${_hasReadValidData}`);
+[F106:261]|     // [DEBUG] console.log(`[Storage] setItem - Value preview:`, value.substring(0, 200));
+[F106:262]|     persistentLog('Storage', 'setItem triggered', 'DEBUG', { size: value.length, tasks: valueTasks, zones: valueZones, hydrated: isHydrated, switching: isSwitching, reloading: isReloading, skipWrite, hasReadValidData: _hasReadValidData });
+[F106:263]| 
+[F106:264]|     // 🚨 目录切换期间拒绝所有写入（包括单页切换期间）
+[F106:265]|     if (isSwitching || isReloading) {
+[F106:266]|       // [DEBUG] console.log(`[Storage] BLOCKED - Switch/Reload lock active for key: ${name}, isSwitching: ${isSwitching}, isReloading: ${isReloading}`);
+[F106:267]|       persistentLog('Storage', 'BLOCKED - Switch/Reload lock active', 'WARN', { isSwitching, isReloading });
+[F106:268]|       return;
+[F106:269]|     }
+[F106:270]| 
+[F106:271]|     // 🚨 如果还没有 Hydrate 完成，阻止所有写入！
+[F106:272]|     if (!isHydrated) {
+[F106:273]|       // [DEBUG] console.log(`[Storage] BLOCKED - Not hydrated yet for key: ${name}`);
+[F106:274]|       persistentLog('Storage', 'BLOCKED - Not hydrated yet', 'WARN', { size: value.length });
+[F106:275]|       return;
+[F106:276]|     }
+[F106:277]| 
+[F106:278]|     // 🚀 同步点 2：检查数据是否"变少"
+[F106:279]|     // 只有当数据变少时才阻止写入，防止切换导致的数据丢失
+[F106:280]|     if (skipWrite && _previousDataSnapshot) {
+[F106:281]|       const wasTasksMore = _previousDataSnapshot.tasks > valueTasks;
+[F106:282]|       const wasZonesMore = _previousDataSnapshot.zones > valueZones;
+[F106:283]| 
+[F106:284]|       if (wasTasksMore || wasZonesMore) {
+[F106:285]|         // 数据变少，可能是切换导致的数据丢失，阻止写入
+[F106:286]|         console.warn(`[Storage] BLOCKED - Data would decrease! Was: ${_previousDataSnapshot.tasks} tasks, ${_previousDataSnapshot.zones} zones, Now: ${valueTasks} tasks, ${valueZones} zones`);
+[F106:287]|         return;
+[F106:288]|       } else if (valueTasks > _previousDataSnapshot.tasks || valueZones > _previousDataSnapshot.zones) {
+[F106:289]|         // 数据确实增加了，清除锁并允许写入
+[F106:290]|         console.log('[Storage] Data increased, clearing skipWrite lock');
+[F106:291]|         _skipWriteUntilChange = false;
+[F106:292]|         _previousDataSnapshot = null;
+[F106:293]|       } else {
+[F106:294]|         // 数据相等或没有变化，保持 skipWrite 锁
+[F106:295]|         console.log('[Storage] Data unchanged, keeping skipWrite lock');
+[F106:296]|       }
+[F106:297]|     } else if (skipWrite && !_previousDataSnapshot) {
+[F106:298]|       // 🚀 没有快照但 skipWrite 为 true
+[F106:299]|       // 这种情况发生在刚切换完目录、还没有读取到数据时
+[F106:300]|       // 必须阻止写入，直到读取到有效数据（由 getItem 清除锁）
+[F106:301]|       console.warn('[Storage] BLOCKED - No data snapshot yet, waiting for hydration');
+[F106:302]|       return;
+[F106:303]|     }
+[F106:304]| 
+[F106:305]|     // 🚨 关键检查：如果曾经读取到有效数据，但现在写入的是空数据，这可能是状态被错误覆盖
+[F106:306]|     // 只有当数据确实为空时才允许写入
+[F106:307]|     if (_hasReadValidData && valueTasks === 0 && valueZones === 0) {
+[F106:308]|       console.warn(`[Storage] ⚠️ WARNING - Was about to write empty data after valid read! Tasks: ${valueTasks}, Zones: ${valueZones}`);
+[F106:309]|       console.warn(`[Storage] ⚠️ This may indicate state corruption!`);
+[F106:310]|       // 不阻止写入，但记录警告 - 这样可以观察实际情况
+[F106:311]|     }
+[F106:312]| 
+[F106:313]|     // 记录保存的数据内容
+[F106:314]|     try {
+[F106:315]|       const parsed = JSON.parse(value);
+[F106:316]|       const tasks = parsed?.state?.tasks || parsed?.tasks;
+[F106:317]|       const zones = parsed?.state?.zones || parsed?.zones;
+[F106:318]|       persistentLog('Storage', 'setItem - saving data', 'INFO', { tasks: tasks?.length, zones: zones?.length });
+[F106:319]|     } catch (e) {
+[F106:320]|       // ignore
+[F106:321]|     }
+[F106:322]| 
+[F106:323]|     // 写入 localStorage（确保 changeDbPath 备份可以读取到正确数据）
+[F106:324]|     localStorage.setItem(name, value);
+[F106:325]|     persistentLog('Storage', 'setItem to localStorage', 'DEBUG');
+[F106:326]| 
+[F106:327]|     // 同时写入 SQLite
+[F106:328]|     try {
+[F106:329]|       // 写入前再次检查路径是否匹配
+[F106:330]|       const currentPath = localStorage.getItem('FOCUS_FLOW_DB_PATH');
+[F106:331]|       const dbPath = await import('@/lib/db').then(m => m.getDbPath());
+[F106:332]|       if (currentPath !== dbPath) {
+[F106:333]|         console.error(`[Storage] ⚠️ PATH MISMATCH! localStorage: ${currentPath}, getDbPath: ${dbPath}`);
+[F106:334]|         persistentLog('Storage', 'PATH MISMATCH!', 'ERROR', { localStoragePath: currentPath, dbPath });
+[F106:335]|       }
+[F106:336]| 
+[F106:337]|       await dbSetItem(name, value);
+[F106:338]|       persistentLog('Storage', 'setItem SUCCESS', 'DEBUG');
+[F106:339]|     } catch (error) {
+[F106:340]|       persistentLog('Storage', 'setItem SQLite ERROR', 'ERROR', String(error));
+[F106:341]|     }
+[F106:342]|   },
+[F106:343]| 
+[F106:344]|   removeItem: async (name: string): Promise<void> => {
+[F106:345]|     try {
+[F106:346]|       await dbRemoveItem(name);
+[F106:347]|     } catch (error) {
+[F106:348]|       console.error('[Storage] Error removing state:', error);
+[F106:349]|     }
+[F106:350]|   },
+[F106:351]| };
 
 ================================================================================
-文件路径: src\lib\utils.ts(F107) (约合大小: 0 KB)
+文件路径: src\lib\tree-utils.ts(F107) (约合大小: 4 KB)
 ================================================================================
-[F107:1]| import { clsx, type ClassValue } from "clsx"
-[F107:2]| import { twMerge } from "tailwind-merge"
-[F107:3]| 
-[F107:4]| export function cn(...inputs: ClassValue[]) {
-[F107:5]|   return twMerge(clsx(inputs))
-[F107:6]| }
+[F107:1]| import type { Task } from "@/types";
+[F107:2]| 
+[F107:3]| export interface FlattenedTask extends Task {
+[F107:4]|   depth: number;
+[F107:5]| }
+[F107:6]| 
+[F107:7]| // 将树形结构打平成一维数组
+[F107:8]| // supportFocusedMode: 是否支持聚焦模式，聚焦时强制展开路径上的所有父节点
+[F107:9]| export function getFlattenedTasks(
+[F107:10]|   tasks: Task[],
+[F107:11]|   zoneId: string | null,
+[F107:12]|   focusedTaskId: string | null = null
+[F107:13]| ): FlattenedTask[] {
+[F107:14]|   const zoneTasks = zoneId ? tasks.filter(t => t.zoneId === zoneId) : tasks;
+[F107:15]| 
+[F107:16]|   // 如果有聚焦任务，收集路径上所有祖先ID
+[F107:17]|   const ancestorIds = new Set<string>();
+[F107:18]|   if (focusedTaskId) {
+[F107:19]|     let current = tasks.find(t => t.id === focusedTaskId);
+[F107:20]|     while (current?.parentId) {
+[F107:21]|       ancestorIds.add(current.parentId);
+[F107:22]|       current = tasks.find(t => t.id === current!.parentId);
+[F107:23]|     }
+[F107:24]|   }
+[F107:25]| 
+[F107:26]|   // 确定根节点
+[F107:27]|   let roots: Task[];
+[F107:28]|   if (focusedTaskId) {
+[F107:29]|     // 聚焦模式：以焦点任务的子任务作为根节点
+[F107:30]|     roots = zoneTasks.filter(t => t.parentId === focusedTaskId).sort((a, b) => a.order - b.order);
+[F107:31]|   } else {
+[F107:32]|     roots = zoneTasks.filter(t => !t.parentId).sort((a, b) => a.order - b.order);
+[F107:33]|   }
+[F107:34]| 
+[F107:35]|   const flattened: FlattenedTask[] = [];
+[F107:36]| 
+[F107:37]|   function recurse(items: Task[], depth: number) {
+[F107:38]|     for (const item of items) {
+[F107:39]|       flattened.push({ ...item, depth });
+[F107:40]|       // 如果是聚焦路径上的节点，或者未折叠，则展开子任务
+[F107:41]|       const shouldExpand = ancestorIds.has(item.id) || !item.isCollapsed;
+[F107:42]|       if (shouldExpand) {
+[F107:43]|         const children = zoneTasks.filter(t => t.parentId === item.id).sort((a, b) => a.order - b.order);
+[F107:44]|         recurse(children, depth + 1);
+[F107:45]|       }
+[F107:46]|     }
+[F107:47]|   }
+[F107:48]| 
+[F107:49]|   recurse(roots, 0);
+[F107:50]|   return flattened;
+[F107:51]| }
+[F107:52]| 
+[F107:53]| // 根据拖拽位置和偏移量，计算预期的深度和父节点 ID
+[F107:54]| // 使用锚点定位法 (Anchor ID) 替代索引定位，更加稳定
+[F107:55]| // focusedTaskId: 聚焦模式下的面包屑路径终点，用于限制拖拽的"根目录"
+[F107:56]| export function calculateNewPosition(
+[F107:57]|   flattenedTasks: FlattenedTask[],
+[F107:58]|   activeId: string,
+[F107:59]|   overId: string,
+[F107:60]|   offsetPx: number,
+[F107:61]|   focusedTaskId: string | null = null
+[F107:62]| ): { newDepth: number; newParentId: string | null; anchorId: string | null } | null {
+[F107:63]|   const activeIndex = flattenedTasks.findIndex(t => t.id === activeId);
+[F107:64]|   const overIndex = flattenedTasks.findIndex(t => t.id === overId);
+[F107:65]| 
+[F107:66]|   if (activeIndex === -1 || overIndex === -1) return null;
+[F107:67]| 
+[F107:68]|   const INDENTATION_WIDTH = 24;
+[F107:69]|   const depthOffset = Math.round(offsetPx / INDENTATION_WIDTH);
+[F107:70]| 
+[F107:71]|   const activeItem = flattenedTasks[activeIndex];
+[F107:72]| 
+[F107:73]|   // 确定视觉上的"前一个元素"
+[F107:74]|   const prevItem = flattenedTasks[overIndex - (activeIndex < overIndex ? 0 : 1)];
+[F107:75]|   const nextItem = flattenedTasks[overIndex + (activeIndex < overIndex ? 1 : 0)];
+[F107:76]| 
+[F107:77]|   // 1. 计算受限的深度
+[F107:78]|   // 在聚焦模式下，最小深度为 0（相对根目录，即 focusedTaskId）
+[F107:79]|   const minBaseDepth = 0;
+[F107:80]|   let newDepth = activeItem.depth;
+[F107:81]|   if (prevItem) {
+[F107:82]|     const maxDepth = prevItem.depth + 1;
+[F107:83]|     const minDepth = nextItem ? nextItem.depth : minBaseDepth;
+[F107:84]|     const calculatedDepth = activeItem.depth + depthOffset;
+[F107:85]|     newDepth = Math.max(minDepth, Math.min(maxDepth, calculatedDepth));
+[F107:86]|   } else {
+[F107:87]|     newDepth = minBaseDepth; // 拖到最顶部，聚焦模式下为相对根目录
+[F107:88]|   }
+[F107:89]| 
+[F107:90]|   // 2. 寻找新父节点
+[F107:91]|   // 聚焦模式下，默认父节点为 focusedTaskId，而不是绝对根目录 null
+[F107:92]|   let newParentId: string | null = focusedTaskId;
+[F107:93]|   if (newDepth > 0 && prevItem) {
+[F107:94]|     if (newDepth === prevItem.depth + 1) {
+[F107:95]|       newParentId = prevItem.id;
+[F107:96]|     } else {
+[F107:97]|       const p = flattenedTasks.slice(0, overIndex).reverse().find(t => t.depth === newDepth - 1);
+[F107:98]|       newParentId = p ? p.id : focusedTaskId;
+[F107:99]|     }
+[F107:100]|   }
+[F107:101]| 
+[F107:102]|   // 3. 寻找锚点 (Anchor ID)
+[F107:103]|   // 移除当前任务后，计算应该插入的位置
+[F107:104]|   const visibleWithoutActive = flattenedTasks.filter(t => t.id !== activeId);
+[F107:105]|   const dropIndex = activeIndex < overIndex
+[F107:106]|     ? visibleWithoutActive.findIndex(t => t.id === overId) + 1
+[F107:107]|     : visibleWithoutActive.findIndex(t => t.id === overId);
+[F107:108]| 
+[F107:109]|   const tasksAboveDrop = visibleWithoutActive.slice(0, dropIndex);
+[F107:110]|   const siblingsAbove = tasksAboveDrop.reverse().filter(t => t.parentId === newParentId);
+[F107:111]| 
+[F107:112]|   const anchorId = siblingsAbove.length > 0 ? siblingsAbove[0].id : null;
+[F107:113]| 
+[F107:114]|   return { newDepth, newParentId, anchorId };
+[F107:115]| }
 
 ================================================================================
-文件路径: src\locales\en.json(F108) (约合大小: 13 KB)
+文件路径: src\lib\urgency-utils.ts(F108) (约合大小: 10 KB)
 ================================================================================
-[F108:1]| {
-[F108:2]|   "app": {
-[F108:3]|     "name": "Focus Flow"
-[F108:4]|   },
-[F108:5]|   "common": {
-[F108:6]|     "save": "Save",
-[F108:7]|     "cancel": "Cancel",
-[F108:8]|     "delete": "Delete",
-[F108:9]|     "edit": "Edit",
-[F108:10]|     "add": "Add",
-[F108:11]|     "confirm": "Confirm",
-[F108:12]|     "close": "Close",
-[F108:13]|     "apply": "Apply",
-[F108:14]|     "reset": "Reset",
-[F108:15]|     "export": "Export",
-[F108:16]|     "import": "Import",
-[F108:17]|     "back": "Back",
-[F108:18]|     "yes": "Yes",
-[F108:19]|     "no": "No",
-[F108:20]|     "all": "All",
-[F108:21]|     "continue": "Continue",
-[F108:22]|     "loading": "Loading...",
-[F108:23]|     "copyData": "Copy Data",
-[F108:24]|     "exportAsFile": "Export as File",
-[F108:25]|     "unnamed": "Untitled",
-[F108:26]|     "copySuffix": "(Copy)"
-[F108:27]|   },
-[F108:28]|   "settings": {
-[F108:29]|     "title": "Settings",
-[F108:30]|     "language": "Language (语言)",
-[F108:31]|     "timerSettings": "Timer Settings",
-[F108:32]|     "workDuration": "Focus Duration",
-[F108:33]|     "breakDuration": "Short Break",
-[F108:34]|     "longBreakDuration": "Long Break",
-[F108:35]|     "workDurationMinutes": "(min)",
-[F108:36]|     "autoStartBreak": "Auto Start Break",
-[F108:37]|     "autoStartBreakDesc": "Automatically start break timer after focus ends",
-[F108:38]|     "soundSettings": "Sound Settings",
-[F108:39]|     "soundEnabled": "Enable Sound",
-[F108:40]|     "soundEnabledDesc": "Play sound when timer ends",
-[F108:41]|     "autoSaveSettings": "Auto Save Settings",
-[F108:42]|     "autoSaveEnabled": "Auto Save History",
-[F108:43]|     "autoSaveEnabledDesc": "Automatically save current workspace to history",
-[F108:44]|     "autoSaveInterval": "Save Interval",
-[F108:45]|     "autoSaveIntervalSeconds": "(sec)",
-[F108:46]|     "globalViewSettings": "Global View Settings",
-[F108:47]|     "leafMode": "Leaf Node Mode",
-[F108:48]|     "leafModeDesc": "Only show actionable bottom-level tasks",
-[F108:49]|     "sortMode": "Sort Mode",
-[F108:50]|     "weightedSort": "Weighted Sort",
-[F108:51]|     "weightedSortDesc": "Priority and urgency weight ratio for global view sorting",
-[F108:52]|     "priorityWeight": "Priority Weight",
-[F108:53]|     "deadlineWeight": "Deadline Weight",
-[F108:54]|     "otherSettings": "Other Settings",
-[F108:55]|     "resetSettings": "Reset to Default",
-[F108:56]|     "recurringTasks": "Automation Rules",
-[F108:57]|     "recurringTasksDesc": "Set periodic tasks, system will auto-generate todos in background",
-[F108:58]|     "newRule": "New Rule",
-[F108:59]|     "environmentProfiles": "Environment Profiles",
-[F108:60]|     "environmentProfilesDesc": "Save current settings, templates, and global automation rules as a snapshot.",
-[F108:61]|     "saveAsSnapshot": "Save Current as Snapshot",
-[F108:62]|     "editRule": "Edit Rule",
-[F108:63]|     "selectZone": "Select Zone",
-[F108:64]|     "editZone": "Edit Zone",
-[F108:65]|     "dataStorage": "Data Storage Location",
-[F108:66]|     "dataStorageDesc": "Change where your data is saved. Select a cloud drive folder (like OneDrive, iCloud, or Dropbox) to sync across devices.",
-[F108:67]|     "changeLocation": "Change Location",
-[F108:68]|     "selectDbFolder": "Select New Storage Folder",
-[F108:69]|     "migratingData": "Moving data and restarting, please wait...",
-[F108:70]|     "migrationFailed": "Failed to change data location"
-[F108:71]|   },
-[F108:72]|   "timer": {
-[F108:73]|     "work": "Focusing",
-[F108:74]|     "break": "Short Break",
-[F108:75]|     "longBreak": "Long Break",
-[F108:76]|     "idle": "Ready to Start",
-[F108:77]|     "startFocus": "Start Focus",
-[F108:78]|     "startBreak": "Start Break",
-[F108:79]|     "pause": "Pause",
-[F108:80]|     "resume": "Resume",
-[F108:81]|     "skip": "Skip",
-[F108:82]|     "pomodorosCompleted": "Pomodoros Completed",
-[F108:83]|     "runningNoEdit": "Cannot edit while running",
-[F108:84]|     "clickToEdit": "Click to edit",
-[F108:85]|     "noTaskSelected": "No task selected"
-[F108:86]|   },
-[F108:87]|   "task": {
-[F108:88]|     "addTask": "Add Task",
-[F108:89]|     "editTask": "Edit Task",
-[F108:90]|     "deleteTask": "Delete Task",
-[F108:91]|     "taskTitle": "Task Title",
-[F108:92]|     "taskDescription": "Task Description",
-[F108:93]|     "priority": "Priority",
-[F108:94]|     "priorityHigh": "High",
-[F108:95]|     "priorityMedium": "Medium",
-[F108:96]|     "priorityLow": "Low",
-[F108:97]|     "deadline": "Deadline",
-[F108:98]|     "deadlineNone": "None",
-[F108:99]|     "deadlineToday": "Today",
-[F108:100]|     "deadlineTomorrow": "Tomorrow",
-[F108:101]|     "deadlineWeek": "This Week",
-[F108:102]|     "deadlineExact": "Exact Time",
-[F108:103]|     "estimatedTime": "Estimated Time",
-[F108:104]|     "totalWorkTime": "Time Worked",
-[F108:105]|     "preventAutoComplete": "Don't auto-complete when all subtasks done",
-[F108:106]|     "preventAutoCompleteEnabled": "Enabled: Won't auto-complete even when all subtasks done",
-[F108:107]|     "preventAutoCompleteDisabled": "Enable: Won't auto-complete when all subtasks done",
-[F108:108]|     "subtasks": "Subtasks",
-[F108:109]|     "noSubtasks": "No subtasks under this task",
-[F108:110]|     "completed": "Completed",
-[F108:111]|     "pending": "Pending",
-[F108:112]|     "addSubtask": "Add Subtask",
-[F108:113]|     "subtaskTitle": "Subtask title...",
-[F108:114]|     "descriptionOptional": "Description (optional, Shift+Enter for newline)...",
-[F108:115]|     "estimatedTimeOptional": "Estimated time (min, optional)",
-[F108:116]|     "clearCompleted": "Clear Completed",
-[F108:117]|     "noTasks": "No tasks yet, add one to start focusing!",
-[F108:118]|     "doubleClickHint": "Double-click task to expand/collapse description",
-[F108:119]|     "completionRate": "Completion Rate",
-[F108:120]|     "timeLabel": "Time",
-[F108:121]|     "time": "Time",
-[F108:122]|     "remaining": "Remaining",
-[F108:123]|     "clickToEditDeadline": "Click to edit deadline",
-[F108:124]|     "inherited": "(Inherited)",
-[F108:125]|     "setDeadline": "Set deadline",
-[F108:126]|     "ownTimeDisplay": "(Own: {{time}})",
-[F108:127]|     "ownTimeTitle": "Time spent independently on this task (excluding subtasks)",
-[F108:128]|     "resetWorkTimeTitle": "Reset accumulated time",
-[F108:129]|     "manualEst": "Manually set estimated time",
-[F108:130]|     "inheritedEst": "Estimated time inherited from subtasks",
-[F108:131]|     "expandSubtasks": "Expand subtasks",
-[F108:132]|     "collapseSubtasks": "Collapse subtasks",
-[F108:133]|     "tasks": "Tasks"
-[F108:134]|   },
-[F108:135]|   "zone": {
-[F108:136]|     "addZone": "Add Zone",
-[F108:137]|     "editZone": "Edit Zone",
-[F108:138]|     "deleteZone": "Delete Zone",
-[F108:139]|     "zoneName": "Zone Name",
-[F108:140]|     "zoneColor": "Zone Color",
-[F108:141]|     "zones": "Zones",
-[F108:142]|     "allZones": "All Zones",
-[F108:143]|     "noZones": "Please select a zone",
-[F108:144]|     "unknownZone": "Unknown zone",
-[F108:145]|     "workZone": "Work",
-[F108:146]|     "studyZone": "Study",
-[F108:147]|     "lifeZone": "Life",
-[F108:148]|     "projectA": "Project A",
-[F108:149]|     "projectB": "Project B",
-[F108:150]|     "projectC": "Project C",
-[F108:151]|     "other": "Other",
-[F108:152]|     "devZone": "Development",
-[F108:153]|     "testZone": "Testing",
-[F108:154]|     "docZone": "Documentation",
-[F108:155]|     "bugFix": "Bug Fix"
-[F108:156]|   },
-[F108:157]|   "workspace": {
-[F108:158]|     "currentWorkspace": "Current Workspace",
-[F108:159]|     "history": "History Workspaces",
-[F108:160]|     "newWorkspace": "Create New Workspace",
-[F108:161]|     "workspaceName": "Workspace Name",
-[F108:162]|     "workspaceNamePlaceholder": "Workspace name (e.g. Project Phase 1)",
-[F108:163]|     "workspaceSummary": "Workspace Summary",
-[F108:164]|     "workspaceSummaryPlaceholder": "Summary description (optional)",
-[F108:165]|     "restore": "Restore to current workspace",
-[F108:166]|     "archive": "Archive",
-[F108:167]|     "archiveCurrent": "Archive current workspace",
-[F108:168]|     "quickArchive": "Quick Archive",
-[F108:169]|     "noHistory": "No history workspaces",
-[F108:170]|     "noHistoryHint": "Click \"Archive\" to save current work, or create new workspace to auto-archive",
-[F108:171]|     "exportAll": "Export All",
-[F108:172]|     "createFromHistory": "Create from History",
-[F108:173]|     "unsavedTitle": "Current workspace unsaved",
-[F108:174]|     "confirmRestore": "The current workspace has unsaved content. Continuing will lose all current workspace content. Are you sure you want to continue?",
-[F108:175]|     "addSummary": "Add summary description...",
-[F108:176]|     "clickToEditName": "Click to edit name",
-[F108:177]|     "clickToEditSummary": "Click to edit summary",
-[F108:178]|     "defaultSummary": "Contains {{zones}} zones, {{tasks}} tasks",
-[F108:179]|     "defaultName": "Current Work",
-[F108:180]|     "autoSaveName": "Auto-save (Latest)",
-[F108:181]|     "importSuccess": "Import successful! {{count}} records imported.",
-[F108:182]|     "importFailed": "Import failed, file format cannot be parsed.",
-[F108:183]|     "noJsonFound": "No JSON file found in the archive.",
-[F108:184]|     "zipParseError": "Cannot parse zip file, please check file format.",
-[F108:185]|     "exportSuccess": "Export successful! {{count}} records exported.",
-[F108:186]|     "archiveDefaultName": "Archive {{date}}",
-[F108:187]|     "modified": "Modified",
-[F108:188]|     "moreTasks": "... and {{count}} more tasks"
-[F108:189]|   },
-[F108:190]|   "template": {
-[F108:191]|     "templates": "Templates",
-[F108:192]|     "applyTemplate": "Apply Template",
-[F108:193]|     "saveAsTemplate": "Save current zones as template",
-[F108:194]|     "saveAsTemplateDesc": "Save current zones as template",
-[F108:195]|     "deleteTemplate": "Delete Template",
-[F108:196]|     "templateName": "Enter template name",
-[F108:197]|     "predefinedTemplates": "Predefined Templates",
-[F108:198]|     "customTemplates": "Custom Templates",
-[F108:199]|     "templateGeneral": "General",
-[F108:200]|     "templateProject": "Project Management",
-[F108:201]|     "templateDev": "Development",
-[F108:202]|     "templateBlank": "Blank",
-[F108:203]|     "templateGeneralDesc": "Basic work, life, and study zones",
-[F108:204]|     "templateProjectDesc": "Suitable for multi-project management",
-[F108:205]|     "templateDevDesc": "Suitable for software development workflow",
-[F108:206]|     "templateBlankDesc": "Start from scratch",
-[F108:207]|     "customTemplateDesc": "Custom Template - {{count}} zones"
-[F108:208]|   },
-[F108:209]|   "view": {
-[F108:210]|     "zoneView": "Zone View",
-[F108:211]|     "globalView": "Global View",
-[F108:212]|     "historyView": "History",
-[F108:213]|     "settingsView": "Settings",
-[F108:214]|     "leafMode": "Leaf Node Mode",
-[F108:215]|     "treeView": "Tree View",
-[F108:216]|     "sortMode": "Sort Mode",
-[F108:217]|     "breadcrumb": "Path",
-[F108:218]|     "expand": "Expand",
-[F108:219]|     "collapse": "Collapse",
-[F108:220]|     "collapseAll": "Collapse All",
-[F108:221]|     "topLevelOnly": "Top Level Only",
-[F108:222]|     "collapseOneLevel": "Collapse One Level",
-[F108:223]|     "expandOneLevel": "Expand One Level",
-[F108:224]|     "expandAll": "Expand All",
-[F108:225]|     "noSubtasksHere": "No subtasks under this task",
-[F108:226]|     "noTasksGlobal": "No tasks",
-[F108:227]|     "emptyGlobalView": "Add tasks in zones, all tasks will be shown here",
-[F108:228]|     "clickTitleHint": "Click title to enter subtask view",
-[F108:229]|     "sortByZone": "By Zone",
-[F108:230]|     "sortByPriority": "By Priority",
-[F108:231]|     "sortByUrgency": "By Urgency",
-[F108:232]|     "expandDepth": "Expand Depth",
-[F108:233]|     "sortByWorkTime": "By Time Worked",
-[F108:234]|     "sortByEstimatedTime": "By Estimated Time",
-[F108:235]|     "sortByTimeDiff": "By Time Difference",
-[F108:236]|     "zoomIn": "Click to enter task view",
-[F108:237]|     "normal": "Normal",
-[F108:238]|     "sortManual": "Manual Sort"
-[F108:239]|   },
-[F108:240]|   "profile": {
-[F108:241]|     "saveProfile": "Save Profile",
-[F108:242]|     "profileName": "Profile Name",
-[F108:243]|     "noProfiles": "No profiles",
-[F108:244]|     "profileSaved": "Profile saved",
-[F108:245]|     "profileApplied": "Profile applied",
-[F108:246]|     "profileDeleted": "Profile deleted",
-[F108:247]|     "profileImported": "Config imported to profile list, please click apply",
-[F108:248]|     "exportSuccess": "Config exported successfully",
-[F108:249]|     "importFailed": "Invalid file format or import failed",
-[F108:250]|     "applied": "Applied",
-[F108:251]|     "createdAt": "Created at",
-[F108:252]|     "containsRules": "Contains {{count}} global rules",
-[F108:253]|     "snapshotName": "Snapshot name",
-[F108:254]|     "exampleMode": "e.g. Minimal Work Mode",
-[F108:255]|     "editProfile": "Edit Profile",
-[F108:256]|     "exportName": "Environment Backup",
-[F108:257]|     "defaultImportName": "Imported Profile {{date}}"
-[F108:258]|   },
-[F108:259]|   "recurring": {
-[F108:260]|     "addRule": "Add Rule",
-[F108:261]|     "editRule": "Edit Rule",
-[F108:262]|     "ruleTitle": "Rule Name",
-[F108:263]|     "ruleTitlePlaceholder": "e.g. Weekly Report",
-[F108:264]|     "ruleDescription": "Description",
-[F108:265]|     "ruleDescriptionPlaceholder": "Task description...",
-[F108:266]|     "targetZone": "Target Zone",
-[F108:267]|     "selectZone": "Select zone",
-[F108:268]|     "triggerInterval": "Trigger Interval",
-[F108:269]|     "minInterval": "(min 5 min)",
-[F108:270]|     "autoDeadline": "Auto Deadline",
-[F108:271]|     "afterGeneration": "(after generation)",
-[F108:272]|     "priority": "Priority",
-[F108:273]|     "active": "Active",
-[F108:274]|     "noRules": "No automation rules",
-[F108:275]|     "every": "Every",
-[F108:276]|     "minutes": "minutes",
-[F108:277]|     "hours": "hours",
-[F108:278]|     "days": "days",
-[F108:279]|     "globalRules": "Global Rules",
-[F108:280]|     "workspaceRules": "Workspace Rules",
-[F108:281]|     "saveRule": "Save Rule",
-[F108:282]|     "unknownZone": "Unknown zone",
-[F108:283]|     "ddl": "DDL",
-[F108:284]|     "autoGenerated": "{{desc}}\n(Auto-generated)",
-[F108:285]|     "autoGeneratedSuffix": "Auto-generated"
-[F108:286]|   },
-[F108:287]|   "urgency": {
-[F108:288]|     "overdue": "Overdue",
-[F108:289]|     "overduePrefix": "Overdue ",
-[F108:290]|     "remainingPrefix": "Remaining ",
-[F108:291]|     "veryUrgent": "Very Urgent",
-[F108:292]|     "urgent": "Urgent",
-[F108:293]|     "soon": "Normal",
-[F108:294]|     "upcoming": "Low Priority",
-[F108:295]|     "later": "Low Priority",
-[F108:296]|     "farFuture": "Low Priority",
-[F108:297]|     "noDeadline": "No Deadline",
-[F108:298]|     "todayOverdue": "Today (Overdue)",
-[F108:299]|     "tomorrowOverdue": "Tomorrow (Overdue)",
-[F108:300]|     "weekOverdue": "This Week (Overdue)",
-[F108:301]|     "exactOverdue": "{{date}} (Overdue)",
-[F108:302]|     "daysHours": "{{days}}d {{hours}}h",
-[F108:303]|     "hoursMins": "{{hours}}h {{mins}}m",
-[F108:304]|     "mins": "{{mins}}m"
-[F108:305]|   },
-[F108:306]|   "time": {
-[F108:307]|     "hoursMinsSecs": "{{hours}}h {{mins}}m {{secs}}s",
-[F108:308]|     "minsSecs": "{{mins}}m {{secs}}s",
-[F108:309]|     "secs": "{{secs}}s",
-[F108:310]|     "hM": "{{hours}}h {{mins}}m",
-[F108:311]|     "m": "{{mins}}m"
-[F108:312]|   },
-[F108:313]|   "messages": {
-[F108:314]|     "confirmDelete": "Are you sure you want to delete this template? This cannot be undone.",
-[F108:315]|     "deleteZoneWarning": "Deleting zone will also delete all tasks in it",
-[F108:316]|     "deleteTaskWarning": "Are you sure you want to delete this task?",
-[F108:317]|     "timerComplete": "Time's up!",
-[F108:318]|     "breakComplete": "Break is over!",
-[F108:319]|     "taskCompleted": "Task completed",
-[F108:320]|     "workspaceSaved": "Workspace saved",
-[F108:321]|     "workspaceRestored": "Workspace restored",
-[F108:322]|     "settingsReset": "Settings reset",
-[F108:323]|     "confirmOverwrite": "Confirm Overwrite",
-[F108:324]|     "overwriteConfirm": "This record already exists. Overwrite the previous archive?"
-[F108:325]|   },
-[F108:326]|   "toast": {
-[F108:327]|     "focusComplete": "Focus Complete!",
-[F108:328]|     "taskAccumulated": "Task \"{{title}}\" accumulated {{minutes}} minutes",
-[F108:329]|     "breakEnd": "Break Ended",
-[F108:330]|     "readyForNext": "Ready for the next focus session?",
-[F108:331]|     "taskSelected": "Task Selected",
-[F108:332]|     "clickToStartTimer": "Click 'Start Focus' to track \"{{title}}\"",
-[F108:333]|     "clickToStart": "Click 'Start Focus' to start",
-[F108:334]|     "undo": "Undone",
-[F108:335]|     "redo": "Redone",
-[F108:336]|     "taskCopied": "Task copied",
-[F108:337]|     "zoneCopied": "Zone \"{{name}}\" copied",
-[F108:338]|     "zonePasted": "Zone \"{{name}}\" pasted",
-[F108:339]|     "taskPasted": "Task pasted",
-[F108:340]|     "subtaskPasted": "Subtask pasted",
-[F108:341]|     "taskDeleted": "Task deleted",
-[F108:342]|     "archived": "Archived to history",
-[F108:343]|     "archiveSuccessDesc": "Workspace \"{{name}}\" saved to history",
-[F108:344]|     "workspaceCreated": "New workspace created",
-[F108:345]|     "workspaceCreatedTemplate": "New workspace created from template",
-[F108:346]|     "workspaceCreatedBlank": "Blank workspace created",
-[F108:347]|     "autoSaved": "Auto-saved"
-[F108:348]|   },
-[F108:349]|   "window": {
-[F108:350]|     "pin": "Pin Window",
-[F108:351]|     "unpin": "Unpin Window",
-[F108:352]|     "collapseToBall": "Collapse to Ball",
-[F108:353]|     "minimize": "Minimize",
-[F108:354]|     "close": "Close"
-[F108:355]|   }
-[F108:356]| }
+[F108:1]| import type { Task, TaskPriority, TaskUrgency } from '../types';
+[F108:2]| import i18n from 'i18next';
+[F108:3]| 
+[F108:4]| /**
+[F108:5]|  * Deadline type for task
+[F108:6]|  */
+[F108:7]| export type DeadlineType = 'exact' | 'today' | 'tomorrow' | 'week' | 'none';
+[F108:8]| 
+[F108:9]| /**
+[F108:10]|  * 计算未完成任务的排位分数
+[F108:11]|  * 返回一个 Map，Key 为任务 ID，Value 为 0~1 的分数（1代表最紧急）
+[F108:12]|  *
+[F108:13]|  * 规则：
+[F108:14]|  * - 只处理有 deadline 且未完成的任务
+[F108:15]|  * - 按 deadline 从早到晚排序
+[F108:16]|  * - 越早截止，分数越高
+[F108:17]|  */
+[F108:18]| export function calculateRankScores(tasks: Task[]): Record<string, number> {
+[F108:19]|   // 使用继承后的 deadline 进行排序
+[F108:20]|   const withDeadline = tasks
+[F108:21]|     .map(t => ({ ...t, effectiveDeadline: getInheritedDeadline(t, tasks) }))
+[F108:22]|     .filter(t => !t.completed && t.effectiveDeadline && t.effectiveDeadline > 0)
+[F108:23]|     .sort((a, b) => (a.effectiveDeadline || 0) - (b.effectiveDeadline || 0));
+[F108:24]| 
+[F108:25]|   const scores: Record<string, number> = {};
+[F108:26]|   const count = withDeadline.length;
+[F108:27]| 
+[F108:28]|   withDeadline.forEach((task, index) => {
+[F108:29]|     // 排名越靠前分数越高。如果只有1个任务，分数为 1
+[F108:30]|     // 分数公式：(count - 1 - index) / (count - 1)
+[F108:31]|     // 这样最早截止的（index=0）得到最高分 1
+[F108:32]|     scores[task.id] = count > 1 ? (count - 1 - index) / (count - 1) : 1;
+[F108:33]|   });
+[F108:34]| 
+[F108:35]|   return scores;
+[F108:36]| }
+[F108:37]| 
+[F108:38]| /**
+[F108:39]|  * 将排位分数映射为 Urgency 级别
+[F108:40]|  * - 前 25% → urgent
+[F108:41]|  * - 25%-50% → high
+[F108:42]|  * - 50%-75% → medium
+[F108:43]|  * - 75%-100% → low
+[F108:44]|  * - 无 DDL → low (默认)
+[F108:45]|  */
+[F108:46]| export function mapRankToUrgency(score: number, hasDeadline: boolean): TaskUrgency {
+[F108:47]|   if (!hasDeadline || score === 0) return 'low';
+[F108:48]|   if (score >= 0.75) return 'urgent';
+[F108:49]|   if (score >= 0.5) return 'high';
+[F108:50]|   if (score >= 0.25) return 'medium';
+[F108:51]|   return 'low';
+[F108:52]| }
+[F108:53]| 
+[F108:54]| /**
+[F108:55]|  * 根据紧迫程度分数生成 HSL 颜色
+[F108:56]|  * 0.0 (不紧急) -> 绿色 (120), 1.0 (极度紧急) -> 红色 (0)
+[F108:57]|  */
+[F108:58]| export function getUrgencyColor(score: number, isOverdue: boolean = false): string {
+[F108:59]|   if (isOverdue) return 'hsl(0, 85%, 50%)'; // 逾期直接纯红
+[F108:60]| 
+[F108:61]|   // 限制分值范围
+[F108:62]|   const clamped = Math.max(0, Math.min(1, score));
+[F108:63]|   const hue = (1 - clamped) * 120;
+[F108:64]|   return `hsl(${Math.round(hue)}, 80%, 50%)`;
+[F108:65]| }
+[F108:66]| 
+[F108:67]| /**
+[F108:68]|  * 根据绝对 deadline 时间获取紧迫性颜色
+[F108:69]|  * 7 档位：赤橙黄绿青蓝紫 + 灰（未定义）+ 深红（逾期）
+[F108:70]|  * - 赤：5小时以内
+[F108:71]|  * - 橙：12小时以内
+[F108:72]|  * - 黄：24小时以内
+[F108:73]|  * - 绿：2天以内
+[F108:74]|  * - 青：一周以内
+[F108:75]|  * - 蓝：一个月以内
+[F108:76]|  * - 紫：一个月以后
+[F108:77]|  * - 灰：未定义
+[F108:78]|  * - 深红：已逾期
+[F108:79]|  *
+[F108:80]|  * @param deadline 任务的截止时间戳（毫秒）
+[F108:81]|  * @param isOverdue 是否已逾期
+[F108:82]|  * @returns 颜色值
+[F108:83]|  */
+[F108:84]| export function getAbsoluteUrgencyColor(deadline: number | null, isOverdue: boolean = false): string {
+[F108:85]|   // 逾期优先显示深红
+[F108:86]|   if (isOverdue) {
+[F108:87]|     return 'hsl(0, 80%, 35%)'; // 深红 - 逾期
+[F108:88]|   }
+[F108:89]| 
+[F108:90]|   // 未定义 deadline 显示灰色
+[F108:91]|   if (!deadline || deadline <= 0) {
+[F108:92]|     return 'hsl(0, 0%, 50%)'; // 灰色 - 未定义
+[F108:93]|   }
+[F108:94]| 
+[F108:95]|   const now = Date.now();
+[F108:96]|   const diff = deadline - now; // 剩余毫秒数
+[F108:97]|   const hours = diff / (1000 * 60 * 60); // 转换为小时
+[F108:98]| 
+[F108:99]|   if (hours <= 5) {
+[F108:100]|     return 'hsl(0, 85%, 50%)'; // 赤 - 5小时以内（红色）
+[F108:101]|   } else if (hours <= 12) {
+[F108:102]|     return 'hsl(25, 90%, 50%)'; // 橙 - 12小时以内（橙色）
+[F108:103]|   } else if (hours <= 24) {
+[F108:104]|     return 'hsl(50, 90%, 50%)'; // 黄 - 24小时以内（黄色）
+[F108:105]|   } else if (hours <= 48) {
+[F108:106]|     return 'hsl(120, 70%, 45%)'; // 绿 - 2天以内（绿色）
+[F108:107]|   } else if (hours <= 168) { // 7天 = 168小时
+[F108:108]|     return 'hsl(170, 80%, 45%)'; // 青 - 一周以内（青色）
+[F108:109]|   } else if (hours <= 720) { // 30天 = 720小时
+[F108:110]|     return 'hsl(210, 80%, 50%)'; // 蓝 - 一个月以内（蓝色）
+[F108:111]|   } else {
+[F108:112]|     return 'hsl(270, 60%, 50%)'; // 紫 - 一个月以后（紫色）
+[F108:113]|   }
+[F108:114]| }
+[F108:115]| 
+[F108:116]| /**
+[F108:117]|  * 获取继承后的截止日期
+[F108:118]|  * 如果任务本身没有设置截止日期，但父任务有，则返回父任务的截止日期
+[F108:119]|  * @param task 当前任务
+[F108:120]|  * @param allTasks 所有任务列表
+[F108:121]|  * @returns 继承后的截止日期时间戳，如果没有则返回 null
+[F108:122]|  */
+[F108:123]| export function getInheritedDeadline(task: Task, allTasks: Task[], visited: Set<string> = new Set()): number | null {
+[F108:124]|   // 防止循环引用导致无限递归
+[F108:125]|   if (visited.has(task.id)) {
+[F108:126]|     return null;
+[F108:127]|   }
+[F108:128]|   visited.add(task.id);
+[F108:129]| 
+[F108:130]|   // 如果任务本身有截止日期，直接返回
+[F108:131]|   if (task.deadline && task.deadline > 0) {
+[F108:132]|     return task.deadline;
+[F108:133]|   }
+[F108:134]| 
+[F108:135]|   // 如果没有父任务，返回 null
+[F108:136]|   if (!task.parentId) {
+[F108:137]|     return null;
+[F108:138]|   }
+[F108:139]| 
+[F108:140]|   // 查找父任务
+[F108:141]|   const parent = allTasks.find(t => t.id === task.parentId);
+[F108:142]|   if (!parent) {
+[F108:143]|     return null;
+[F108:144]|   }
+[F108:145]| 
+[F108:146]|   // 递归获取父任务的截止日期（可能父任务也是继承的）
+[F108:147]|   return getInheritedDeadline(parent, allTasks, visited);
+[F108:148]| }
+[F108:149]| 
+[F108:150]| /**
+[F108:151]|  * 格式化倒计时文案
+[F108:152]|  * @param deadline 截止时间戳（毫秒）
+[F108:153]|  * @returns 格式化后的文本和是否逾期
+[F108:154]|  */
+[F108:155]| export function getDeadlineStatus(deadline: number | null | undefined): { text: string; isOverdue: boolean } {
+[F108:156]|   if (!deadline || deadline <= 0) return { text: '', isOverdue: false };
+[F108:157]| 
+[F108:158]|   const now = Date.now();
+[F108:159]|   const diff = deadline - now;
+[F108:160]|   const isOverdue = diff < 0;
+[F108:161]|   const absDiff = Math.abs(diff);
+[F108:162]| 
+[F108:163]|   const days = Math.floor(absDiff / (24 * 3600 * 1000));
+[F108:164]|   const hours = Math.floor((absDiff % (24 * 3600 * 1000)) / (3600 * 1000));
+[F108:165]|   const mins = Math.floor((absDiff % (3600 * 1000)) / (60 * 1000));
+[F108:166]| 
+[F108:167]|   let text = isOverdue ? i18n.t('urgency.overduePrefix') : i18n.t('urgency.remainingPrefix');
+[F108:168]|   if (days > 0) text += i18n.t('urgency.daysHours', { days, hours });
+[F108:169]|   else if (hours > 0) text += i18n.t('urgency.hoursMins', { hours, mins });
+[F108:170]|   else text += i18n.t('urgency.mins', { mins });
+[F108:171]| 
+[F108:172]|   return { text, isOverdue };
+[F108:173]| }
+[F108:174]| 
+[F108:175]| /**
+[F108:176]|  * 获取截止日期的友好显示
+[F108:177]|  * @param deadline 截止时间戳
+[F108:178]|  * @param deadlineType 截止日期类型
+[F108:179]|  */
+[F108:180]| export function getDeadlineDisplay(deadline: number | null | undefined, deadlineType: DeadlineType | undefined): string {
+[F108:181]|   if (!deadline || deadline <= 0) return '';
+[F108:182]| 
+[F108:183]|   const now = Date.now();
+[F108:184]|   const isOverdue = deadline < now;
+[F108:185]| 
+[F108:186]|   if (deadlineType === 'today') {
+[F108:187]|     return isOverdue ? i18n.t('urgency.todayOverdue') : i18n.t('task.deadlineToday');
+[F108:188]|   }
+[F108:189]|   if (deadlineType === 'tomorrow') {
+[F108:190]|     return isOverdue ? i18n.t('urgency.tomorrowOverdue') : i18n.t('task.deadlineTomorrow');
+[F108:191]|   }
+[F108:192]|   if (deadlineType === 'week') {
+[F108:193]|     return isOverdue ? i18n.t('urgency.weekOverdue') : i18n.t('task.deadlineWeek');
+[F108:194]|   }
+[F108:195]| 
+[F108:196]|   // exact 类型
+[F108:197]|   const date = new Date(deadline);
+[F108:198]|   const month = date.getMonth() + 1;
+[F108:199]|   const day = date.getDate();
+[F108:200]|   const hour = date.getHours();
+[F108:201]|   const min = date.getMinutes();
+[F108:202]|   const dateStr = `${month}/${day} ${hour}:${min.toString().padStart(2, '0')}`;
+[F108:203]| 
+[F108:204]|   return isOverdue
+[F108:205]|     ? i18n.t('urgency.exactOverdue', { date: dateStr })
+[F108:206]|     : dateStr;
+[F108:207]| }
+[F108:208]| 
+[F108:209]| // 优先级分数映射
+[F108:210]| const PRIORITY_MAP: Record<TaskPriority, number> = {
+[F108:211]|   high: 1.0,
+[F108:212]|   medium: 0.5,
+[F108:213]|   low: 0,
+[F108:214]| };
+[F108:215]| 
+[F108:216]| /**
+[F108:217]|  * 加权排序算法
+[F108:218]|  * @param tasks 待排序任务列表（应传入未完成的任务）
+[F108:219]|  * @param pWeight 优先级权重
+[F108:220]|  * @param dWeight 截止日期权重（由排名分数计算得出）
+[F108:221]|  * @param rankScores 预计算的排名分数
+[F108:222]|  */
+[F108:223]| export function sortTasks(
+[F108:224]|   tasks: Task[],
+[F108:225]|   pWeight: number,
+[F108:226]|   dWeight: number,
+[F108:227]|   rankScores: Record<string, number>
+[F108:228]| ): Task[] {
+[F108:229]|   // 先将任务分为有 DDL 和无 DDL 两组
+[F108:230]|   const withDeadline = tasks.filter(t => t.deadline && t.deadline > 0 && !t.completed);
+[F108:231]|   const withoutDeadline = tasks.filter(t => !t.deadline || t.deadline <= 0 || t.completed);
+[F108:232]| 
+[F108:233]|   // 对有 DDL 的任务进行加权排序
+[F108:234]|   const sortedWithDeadline = [...withDeadline].sort((a, b) => {
+[F108:235]|     const rankA = rankScores[a.id] || 0;
+[F108:236]|     const rankB = rankScores[b.id] || 0;
+[F108:237]| 
+[F108:238]|     const priorityA = PRIORITY_MAP[a.priority];
+[F108:239]|     const priorityB = PRIORITY_MAP[b.priority];
+[F108:240]| 
+[F108:241]|     const scoreA = (priorityA * pWeight) + (rankA * dWeight);
+[F108:242]|     const scoreB = (priorityB * pWeight) + (rankB * dWeight);
+[F108:243]| 
+[F108:244]|     if (scoreA !== scoreB) return scoreB - scoreA; // 分数高的排前面
+[F108:245]|     return (a.deadline || Infinity) - (b.deadline || Infinity); // 同分按 DDL 先后排
+[F108:246]|   });
+[F108:247]| 
+[F108:248]|   // 无 DDL 的任务排在后面，保持原有顺序
+[F108:249]|   return [...sortedWithDeadline, ...withoutDeadline];
+[F108:250]| }
+[F108:251]| 
+[F108:252]| /**
+[F108:253]|  * 转换快捷设置为实际截止时间戳
+[F108:254]|  * @param type 'today' | 'tomorrow' | 'week' | 'exact' | 'none'
+[F108:255]|  * @param customDate 自定义日期（当 type 为 'exact' 时使用）
+[F108:256]|  */
+[F108:257]| export function convertDeadlineType(
+[F108:258]|   type: DeadlineType,
+[F108:259]|   customDate?: Date
+[F108:260]| ): { deadline: number | null; deadlineType: DeadlineType } {
+[F108:261]|   const now = new Date();
+[F108:262]| 
+[F108:263]|   switch (type) {
+[F108:264]|     case 'today': {
+[F108:265]|       const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+[F108:266]|       return { deadline: endOfToday.getTime(), deadlineType: 'today' };
+[F108:267]|     }
+[F108:268]|     case 'tomorrow': {
+[F108:269]|       const tomorrow = new Date(now);
+[F108:270]|       tomorrow.setDate(tomorrow.getDate() + 1);
+[F108:271]|       const endOfTomorrow = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 23, 59, 59, 999);
+[F108:272]|       return { deadline: endOfTomorrow.getTime(), deadlineType: 'tomorrow' };
+[F108:273]|     }
+[F108:274]|     case 'week': {
+[F108:275]|       const endOfWeek = new Date(now);
+[F108:276]|       // 星期天为 0，星期六为 6
+[F108:277]|       const dayOfWeek = endOfWeek.getDay();
+[F108:278]|       const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+[F108:279]|       endOfWeek.setDate(endOfWeek.getDate() + daysUntilSunday);
+[F108:280]|       const endOfWeekDay = new Date(endOfWeek.getFullYear(), endOfWeek.getMonth(), endOfWeek.getDate(), 23, 59, 59, 999);
+[F108:281]|       return { deadline: endOfWeekDay.getTime(), deadlineType: 'week' };
+[F108:282]|     }
+[F108:283]|     case 'exact': {
+[F108:284]|       if (customDate) {
+[F108:285]|         return { deadline: customDate.getTime(), deadlineType: 'exact' };
+[F108:286]|       }
+[F108:287]|       return { deadline: null, deadlineType: 'none' };
+[F108:288]|     }
+[F108:289]|     case 'none':
+[F108:290]|     default:
+[F108:291]|       return { deadline: null, deadlineType: 'none' };
+[F108:292]|   }
+[F108:293]| }
+[F108:294]| 
+[F108:295]| /**
+[F108:296]|  * 获取当前任务的 urgency 值（用于显示）
+[F108:297]|  * 根据 deadline 排名自动计算
+[F108:298]|  */
+[F108:299]| export function calculateUrgencyForTask(
+[F108:300]|   task: Task,
+[F108:301]|   _allTasks: Task[],
+[F108:302]|   rankScores: Record<string, number>
+[F108:303]| ): TaskUrgency {
+[F108:304]|   if (task.completed) return 'low';
+[F108:305]|   if (!task.deadline || task.deadline <= 0) return 'low';
+[F108:306]| 
+[F108:307]|   const score = rankScores[task.id] || 0;
+[F108:308]|   return mapRankToUrgency(score, true);
+[F108:309]| }
 
 ================================================================================
-文件路径: src\locales\zh.json(F109) (约合大小: 13 KB)
+文件路径: src\lib\utils.ts(F109) (约合大小: 0 KB)
 ================================================================================
-[F109:1]| {
-[F109:2]|   "app": {
-[F109:3]|     "name": "Focus Flow"
-[F109:4]|   },
-[F109:5]|   "common": {
-[F109:6]|     "save": "保存",
-[F109:7]|     "cancel": "取消",
-[F109:8]|     "delete": "删除",
-[F109:9]|     "edit": "编辑",
-[F109:10]|     "add": "添加",
-[F109:11]|     "confirm": "确认",
-[F109:12]|     "close": "关闭",
-[F109:13]|     "apply": "应用",
-[F109:14]|     "reset": "重置",
-[F109:15]|     "export": "导出",
-[F109:16]|     "import": "导入",
-[F109:17]|     "back": "返回",
-[F109:18]|     "yes": "是",
-[F109:19]|     "no": "否",
-[F109:20]|     "all": "全部",
-[F109:21]|     "continue": "继续",
-[F109:22]|     "loading": "加载中...",
-[F109:23]|     "copyData": "复制数据",
-[F109:24]|     "exportAsFile": "导出为文件",
-[F109:25]|     "unnamed": "未命名",
-[F109:26]|     "copySuffix": "(副本)"
-[F109:27]|   },
-[F109:28]|   "settings": {
-[F109:29]|     "title": "设置",
-[F109:30]|     "language": "语言 (Language)",
-[F109:31]|     "timerSettings": "番茄钟设置",
-[F109:32]|     "workDuration": "专注时长",
-[F109:33]|     "breakDuration": "短休息时长",
-[F109:34]|     "longBreakDuration": "长休息时长",
-[F109:35]|     "workDurationMinutes": "(分钟)",
-[F109:36]|     "autoStartBreak": "自动开始休息",
-[F109:37]|     "autoStartBreakDesc": "专注结束后自动开始休息计时",
-[F109:38]|     "soundSettings": "声音设置",
-[F109:39]|     "soundEnabled": "开启提示音",
-[F109:40]|     "soundEnabledDesc": "计时结束时播放提示音",
-[F109:41]|     "autoSaveSettings": "自动保存设置",
-[F109:42]|     "autoSaveEnabled": "自动保存历史",
-[F109:43]|     "autoSaveEnabledDesc": "自动将当前工作区保存到历史记录",
-[F109:44]|     "autoSaveInterval": "保存间隔",
-[F109:45]|     "autoSaveIntervalSeconds": "(秒)",
-[F109:46]|     "globalViewSettings": "全局视图设置",
-[F109:47]|     "leafMode": "叶子节点模式",
-[F109:48]|     "leafModeDesc": "仅显示可执行的最底层任务",
-[F109:49]|     "sortMode": "排序方式",
-[F109:50]|     "weightedSort": "加权排序",
-[F109:51]|     "weightedSortDesc": "在全局视图使用加权排序时，优先级和紧急度的权重比例",
-[F109:52]|     "priorityWeight": "优先级权重",
-[F109:53]|     "deadlineWeight": "紧急度权重",
-[F109:54]|     "otherSettings": "其他设置",
-[F109:55]|     "resetSettings": "恢复默认设置",
-[F109:56]|     "recurringTasks": "自动化规则",
-[F109:57]|     "recurringTasksDesc": "设置周期性任务，系统会在后台自动为您生成待办事项",
-[F109:58]|     "newRule": "新建规则",
-[F109:59]|     "environmentProfiles": "环境配置快照",
-[F109:60]|     "environmentProfilesDesc": "将当前的设置、模板和全局自动化规则打包保存。方便在不同工作模式间一键切换。",
-[F109:61]|     "saveAsSnapshot": "保存当前环境为快照",
-[F109:62]|     "editRule": "编辑规则",
-[F109:63]|     "selectZone": "选择分区",
-[F109:64]|     "editZone": "编辑分区",
-[F109:65]|     "dataStorage": "数据存储位置",
-[F109:66]|     "dataStorageDesc": "更改您的数据保存位置。您可以选择将数据保存在 OneDrive、iCloud 或坚果云等同步目录中，实现多端同步。",
-[F109:67]|     "changeLocation": "修改存储位置",
-[F109:68]|     "selectDbFolder": "请选择新的存储文件夹",
-[F109:69]|     "migratingData": "正在迁移数据并重启，请稍候...",
-[F109:70]|     "migrationFailed": "修改数据存储位置失败"
-[F109:71]|   },
-[F109:72]|   "timer": {
-[F109:73]|     "work": "专注中",
-[F109:74]|     "break": "短休息",
-[F109:75]|     "longBreak": "长休息",
-[F109:76]|     "idle": "准备开始",
-[F109:77]|     "startFocus": "开始专注",
-[F109:78]|     "startBreak": "开始休息",
-[F109:79]|     "pause": "暂停",
-[F109:80]|     "resume": "继续",
-[F109:81]|     "skip": "跳过",
-[F109:82]|     "pomodorosCompleted": "已完成的番茄钟",
-[F109:83]|     "runningNoEdit": "计时中无法修改",
-[F109:84]|     "clickToEdit": "点击修改时间",
-[F109:85]|     "noTaskSelected": "未选择任务"
-[F109:86]|   },
-[F109:87]|   "task": {
-[F109:88]|     "addTask": "添加任务",
-[F109:89]|     "editTask": "编辑任务",
-[F109:90]|     "deleteTask": "删除任务",
-[F109:91]|     "taskTitle": "任务标题",
-[F109:92]|     "taskDescription": "任务描述",
-[F109:93]|     "priority": "优先级",
-[F109:94]|     "priorityHigh": "高",
-[F109:95]|     "priorityMedium": "中",
-[F109:96]|     "priorityLow": "低",
-[F109:97]|     "deadline": "截止时间",
-[F109:98]|     "deadlineNone": "无",
-[F109:99]|     "deadlineToday": "今天",
-[F109:100]|     "deadlineTomorrow": "明天",
-[F109:101]|     "deadlineWeek": "本周",
-[F109:102]|     "deadlineExact": "具体时间",
-[F109:103]|     "estimatedTime": "预期时间",
-[F109:104]|     "totalWorkTime": "累计工作时间",
-[F109:105]|     "preventAutoComplete": "子任务全部完成时不自动结束",
-[F109:106]|     "preventAutoCompleteEnabled": "已开启：子任务全部完成也不会自动结束",
-[F109:107]|     "preventAutoCompleteDisabled": "开启：子任务全部完成也不会自动结束",
-[F109:108]|     "subtasks": "子任务",
-[F109:109]|     "noSubtasks": "该任务下暂无子任务",
-[F109:110]|     "completed": "已完成",
-[F109:111]|     "pending": "待办",
-[F109:112]|     "addSubtask": "添加子任务",
-[F109:113]|     "subtaskTitle": "子任务标题...",
-[F109:114]|     "descriptionOptional": "任务描述（可选，Shift+Enter 换行）...",
-[F109:115]|     "estimatedTimeOptional": "预期时间（分钟，可选）",
-[F109:116]|     "clearCompleted": "清除已完成",
-[F109:117]|     "noTasks": "暂无任务，添加一个开始专注吧！",
-[F109:118]|     "doubleClickHint": "双击任务可展开/收缩描述",
-[F109:119]|     "completionRate": "完成率",
-[F109:120]|     "timeLabel": "时间",
-[F109:121]|     "time": "时间",
-[F109:122]|     "remaining": "剩余",
-[F109:123]|     "clickToEditDeadline": "点击修改截止日期",
-[F109:124]|     "inherited": "(继承)",
-[F109:125]|     "setDeadline": "设置截止日期",
-[F109:126]|     "ownTimeDisplay": "(独立: {{time}})",
-[F109:127]|     "ownTimeTitle": "在该任务上独立花费的时间（不含子任务）",
-[F109:128]|     "resetWorkTimeTitle": "清零累计时间",
-[F109:129]|     "manualEst": "手动设置的预期时间",
-[F109:130]|     "inheritedEst": "从子任务继承的预期时间",
-[F109:131]|     "expandSubtasks": "展开子任务",
-[F109:132]|     "collapseSubtasks": "收起子任务",
-[F109:133]|     "tasks": "任务"
-[F109:134]|   },
-[F109:135]|   "zone": {
-[F109:136]|     "addZone": "添加分区",
-[F109:137]|     "editZone": "编辑分区",
-[F109:138]|     "deleteZone": "删除分区",
-[F109:139]|     "zoneName": "分区名称",
-[F109:140]|     "zoneColor": "选择颜色",
-[F109:141]|     "zones": "工作分区",
-[F109:142]|     "allZones": "所有分区",
-[F109:143]|     "noZones": "请选择一个工作分区",
-[F109:144]|     "unknownZone": "未知工作区",
-[F109:145]|     "workZone": "工作",
-[F109:146]|     "studyZone": "学习",
-[F109:147]|     "lifeZone": "生活",
-[F109:148]|     "projectA": "项目 A",
-[F109:149]|     "projectB": "项目 B",
-[F109:150]|     "projectC": "项目 C",
-[F109:151]|     "other": "其他",
-[F109:152]|     "devZone": "开发",
-[F109:153]|     "testZone": "测试",
-[F109:154]|     "docZone": "文档",
-[F109:155]|     "bugFix": "Bug 修复"
-[F109:156]|   },
-[F109:157]|   "workspace": {
-[F109:158]|     "currentWorkspace": "当前工作区",
-[F109:159]|     "history": "历史工作区",
-[F109:160]|     "newWorkspace": "创建新工作区",
-[F109:161]|     "workspaceName": "工作区名称",
-[F109:162]|     "workspaceNamePlaceholder": "工作区名称（如：项目第一阶段）",
-[F109:163]|     "workspaceSummary": "工作区摘要",
-[F109:164]|     "workspaceSummaryPlaceholder": "摘要描述（可选）",
-[F109:165]|     "restore": "恢复到当前工作区",
-[F109:166]|     "archive": "存入历史",
-[F109:167]|     "archiveCurrent": "将当前工作存入历史",
-[F109:168]|     "quickArchive": "快速存入",
-[F109:169]|     "noHistory": "暂无历史工作区",
-[F109:170]|     "noHistoryHint": "点击\"存入历史\"保存当前工作，或创建新工作区自动存档",
-[F109:171]|     "exportAll": "全部导出",
-[F109:172]|     "createFromHistory": "从历史记录创建",
-[F109:173]|     "unsavedTitle": "当前工作区未保存",
-[F109:174]|     "confirmRestore": "当前工作区还有未保存的内容。继续操作将丢失当前工作区的所有内容。确定要继续吗？",
-[F109:175]|     "addSummary": "添加摘要描述...",
-[F109:176]|     "clickToEditName": "点击编辑名称",
-[F109:177]|     "clickToEditSummary": "点击编辑摘要",
-[F109:178]|     "defaultSummary": "包含 {{zones}} 个分区，{{tasks}} 个任务",
-[F109:179]|     "defaultName": "当前工作",
-[F109:180]|     "autoSaveName": "自动保存 (最新)",
-[F109:181]|     "importSuccess": "导入成功！共导入 {{count}} 条历史记录。",
-[F109:182]|     "importFailed": "导入失败，文件格式无法解析。",
-[F109:183]|     "noJsonFound": "压缩文件中没有找到 JSON 文件。",
-[F109:184]|     "zipParseError": "无法解析压缩文件，请检查文件格式是否正确。",
-[F109:185]|     "exportSuccess": "导出成功！共导出 {{count}} 条历史记录。",
-[F109:186]|     "archiveDefaultName": "存档 {{date}}",
-[F109:187]|     "modified": "修改",
-[F109:188]|     "moreTasks": "... 还有 {{count}} 个任务"
-[F109:189]|   },
-[F109:190]|   "template": {
-[F109:191]|     "templates": "工作模板",
-[F109:192]|     "applyTemplate": "选择工作模板",
-[F109:193]|     "saveAsTemplate": "将当前分区保存为模板",
-[F109:194]|     "saveAsTemplateDesc": "将当前分区保存为模板",
-[F109:195]|     "deleteTemplate": "删除模板",
-[F109:196]|     "templateName": "输入模板名称",
-[F109:197]|     "predefinedTemplates": "预设模板",
-[F109:198]|     "customTemplates": "自定义模板",
-[F109:199]|     "templateGeneral": "通用",
-[F109:200]|     "templateProject": "项目管理",
-[F109:201]|     "templateDev": "开发工作",
-[F109:202]|     "templateBlank": "空白工作区",
-[F109:203]|     "templateGeneralDesc": "基础的工作、生活、学习分区",
-[F109:204]|     "templateProjectDesc": "适合多项目并行管理",
-[F109:205]|     "templateDevDesc": "适合软件开发工作流",
-[F109:206]|     "templateBlankDesc": "从零开始创建",
-[F109:207]|     "customTemplateDesc": "自定义模板 - {{count}} 个分区"
-[F109:208]|   },
-[F109:209]|   "view": {
-[F109:210]|     "zoneView": "分区视图",
-[F109:211]|     "globalView": "全局视图",
-[F109:212]|     "historyView": "历史视图",
-[F109:213]|     "settingsView": "设置",
-[F109:214]|     "leafMode": "叶子节点",
-[F109:215]|     "treeView": "树状视图",
-[F109:216]|     "sortMode": "排序方式",
-[F109:217]|     "breadcrumb": "路径",
-[F109:218]|     "expand": "展开",
-[F109:219]|     "collapse": "收起",
-[F109:220]|     "collapseAll": "全部收起",
-[F109:221]|     "topLevelOnly": "仅显示顶层",
-[F109:222]|     "collapseOneLevel": "收起一级",
-[F109:223]|     "expandOneLevel": "展开一级",
-[F109:224]|     "expandAll": "展开所有",
-[F109:225]|     "noSubtasksHere": "该任务下暂无子任务",
-[F109:226]|     "noTasksGlobal": "暂无任务",
-[F109:227]|     "emptyGlobalView": "在分区中添加任务，这里会显示所有任务",
-[F109:228]|     "clickTitleHint": "点击标题可进入子任务视图",
-[F109:229]|     "sortByZone": "按工作区",
-[F109:230]|     "sortByPriority": "按优先级",
-[F109:231]|     "sortByUrgency": "按紧急度",
-[F109:232]|     "expandDepth": "展开层级",
-[F109:233]|     "sortByWorkTime": "按执行时间",
-[F109:234]|     "sortByEstimatedTime": "按预期时间",
-[F109:235]|     "sortByTimeDiff": "按时间差",
-[F109:236]|     "zoomIn": "点击进入该任务视图",
-[F109:237]|     "normal": "一般",
-[F109:238]|     "sortManual": "手动排序"
-[F109:239]|   },
-[F109:240]|   "profile": {
-[F109:241]|     "saveProfile": "保存配置快照",
-[F109:242]|     "profileName": "快照名称",
-[F109:243]|     "noProfiles": "暂无配置快照",
-[F109:244]|     "profileSaved": "快照保存成功",
-[F109:245]|     "profileApplied": "已应用环境",
-[F109:246]|     "profileDeleted": "快照已删除",
-[F109:247]|     "profileImported": "配置已导入到快照列表，请点击应用",
-[F109:248]|     "exportSuccess": "环境配置已成功导出！",
-[F109:249]|     "importFailed": "文件格式错误或导入失败",
-[F109:250]|     "applied": "应用",
-[F109:251]|     "createdAt": "创建于",
-[F109:252]|     "containsRules": "包含 {{count}} 个全局规则",
-[F109:253]|     "snapshotName": "快照名称",
-[F109:254]|     "exampleMode": "例如：极简办公模式",
-[F109:255]|     "editProfile": "编辑配置快照",
-[F109:256]|     "exportName": "环境备份",
-[F109:257]|     "defaultImportName": "导入配置 {{date}}"
-[F109:258]|   },
-[F109:259]|   "recurring": {
-[F109:260]|     "addRule": "新建规则",
-[F109:261]|     "editRule": "编辑规则",
-[F109:262]|     "ruleTitle": "规则名称",
-[F109:263]|     "ruleTitlePlaceholder": "例如：每周周报总结",
-[F109:264]|     "ruleDescription": "描述",
-[F109:265]|     "ruleDescriptionPlaceholder": "任务描述...",
-[F109:266]|     "targetZone": "目标分区",
-[F109:267]|     "selectZone": "选择分区",
-[F109:268]|     "triggerInterval": "触发间隔",
-[F109:269]|     "minInterval": "(最小5分钟)",
-[F109:270]|     "autoDeadline": "自动设定 DDL",
-[F109:271]|     "afterGeneration": "(生成后)",
-[F109:272]|     "priority": "优先级",
-[F109:273]|     "active": "启用",
-[F109:274]|     "noRules": "暂无自动化规则",
-[F109:275]|     "every": "每",
-[F109:276]|     "minutes": "分钟",
-[F109:277]|     "hours": "小时",
-[F109:278]|     "days": "天",
-[F109:279]|     "globalRules": "全局规则",
-[F109:280]|     "workspaceRules": "工作区规则",
-[F109:281]|     "saveRule": "保存规则",
-[F109:282]|     "unknownZone": "未知分区",
-[F109:283]|     "ddl": "DDL",
-[F109:284]|     "autoGenerated": "{{desc}}\n(自动生成)",
-[F109:285]|     "autoGeneratedSuffix": "自动生成"
-[F109:286]|   },
-[F109:287]|   "urgency": {
-[F109:288]|     "overdue": "已逾期",
-[F109:289]|     "overduePrefix": "已逾期 ",
-[F109:290]|     "remainingPrefix": "剩余 ",
-[F109:291]|     "veryUrgent": "重要且紧急",
-[F109:292]|     "urgent": "重要或紧急",
-[F109:293]|     "soon": "一般",
-[F109:294]|     "upcoming": "低优先级",
-[F109:295]|     "later": "低优先级",
-[F109:296]|     "farFuture": "低优先级",
-[F109:297]|     "noDeadline": "未设截止日期",
-[F109:298]|     "todayOverdue": "今天 (已逾期)",
-[F109:299]|     "tomorrowOverdue": "明天 (已逾期)",
-[F109:300]|     "weekOverdue": "本周 (已逾期)",
-[F109:301]|     "exactOverdue": "{{date}} (已逾期)",
-[F109:302]|     "daysHours": "{{days}}天{{hours}}时",
-[F109:303]|     "hoursMins": "{{hours}}时{{mins}}分",
-[F109:304]|     "mins": "{{mins}}分"
-[F109:305]|   },
-[F109:306]|   "time": {
-[F109:307]|     "hoursMinsSecs": "{{hours}}小时{{mins}}分{{secs}}秒",
-[F109:308]|     "minsSecs": "{{mins}}分{{secs}}秒",
-[F109:309]|     "secs": "{{secs}}秒",
-[F109:310]|     "hM": "{{hours}}h {{mins}}m",
-[F109:311]|     "m": "{{mins}}m"
-[F109:312]|   },
-[F109:313]|   "messages": {
-[F109:314]|     "confirmDelete": "确定要删除这个模板吗？此操作无法撤销。",
-[F109:315]|     "deleteZoneWarning": "删除分区将同时删除其下所有任务",
-[F109:316]|     "deleteTaskWarning": "确定要删除这个任务吗？",
-[F109:317]|     "timerComplete": "时间到！",
-[F109:318]|     "breakComplete": "休息结束！",
-[F109:319]|     "taskCompleted": "任务已完成",
-[F109:320]|     "workspaceSaved": "工作区已保存",
-[F109:321]|     "workspaceRestored": "已恢复历史工作区",
-[F109:322]|     "settingsReset": "设置已重置",
-[F109:323]|     "confirmOverwrite": "确认覆盖",
-[F109:324]|     "overwriteConfirm": "该记录已存在，是否覆盖之前的存档？"
-[F109:325]|   },
-[F109:326]|   "toast": {
-[F109:327]|     "focusComplete": "专注完成！",
-[F109:328]|     "taskAccumulated": "任务 \"{{title}}\" 累计工作 {{minutes}} 分钟",
-[F109:329]|     "breakEnd": "休息结束",
-[F109:330]|     "readyForNext": "准备好开始新的专注了吗？",
-[F109:331]|     "taskSelected": "已选择任务",
-[F109:332]|     "clickToStartTimer": "点击\"开始专注\"为 \"{{title}}\" 计时",
-[F109:333]|     "clickToStart": "点击\"开始专注\"开始计时",
-[F109:334]|     "undo": "已撤销",
-[F109:335]|     "redo": "已重做",
-[F109:336]|     "taskCopied": "任务已复制",
-[F109:337]|     "zoneCopied": "工作区 \"{{name}}\" 已复制",
-[F109:338]|     "zonePasted": "已粘贴工作区 \"{{name}}\"",
-[F109:339]|     "taskPasted": "任务已粘贴",
-[F109:340]|     "subtaskPasted": "子任务已粘贴",
-[F109:341]|     "taskDeleted": "任务已删除",
-[F109:342]|     "archived": "已存入历史",
-[F109:343]|     "archiveSuccessDesc": "工作区 \"{{name}}\" 已保存到历史记录",
-[F109:344]|     "workspaceCreated": "新工作区已创建",
-[F109:345]|     "workspaceCreatedTemplate": "使用模板创建了新工作区",
-[F109:346]|     "workspaceCreatedBlank": "创建了空白工作区",
-[F109:347]|     "autoSaved": "已自动保存"
-[F109:348]|   },
-[F109:349]|   "window": {
-[F109:350]|     "pin": "置顶窗口",
-[F109:351]|     "unpin": "取消置顶",
-[F109:352]|     "collapseToBall": "收起为悬浮球",
-[F109:353]|     "minimize": "最小化",
-[F109:354]|     "close": "关闭"
-[F109:355]|   },
-[F109:356]|   "weightedSort": "加权排序"
-[F109:357]| }
+[F109:1]| import { clsx, type ClassValue } from "clsx"
+[F109:2]| import { twMerge } from "tailwind-merge"
+[F109:3]| 
+[F109:4]| export function cn(...inputs: ClassValue[]) {
+[F109:5]|   return twMerge(clsx(inputs))
+[F109:6]| }
 
 ================================================================================
-文件路径: src\store\index.ts(F110) (约合大小: 2 KB)
+文件路径: src\locales\en.json(F110) (约合大小: 13 KB)
 ================================================================================
-[F110:1]| import { create } from 'zustand';
-[F110:2]| import { persist, createJSONStorage } from 'zustand/middleware';
-[F110:3]| import { sqliteStorage } from '@/lib/storage-adapter';
-[F110:4]| import { createUISlice, type UISlice } from './slices/uiSlice';
-[F110:5]| import { createZoneSlice, type ZoneSlice } from './slices/zoneSlice';
-[F110:6]| import { createTaskSlice, type TaskSlice } from './slices/taskSlice';
-[F110:7]| import { createHistorySlice, type HistorySlice } from './slices/historySlice';
-[F110:8]| import { createSettingsSlice, type SettingsSlice } from './slices/settingsSlice';
-[F110:9]| import { createUndoSlice, type UndoSlice } from './slices/undoSlice';
-[F110:10]| import { DEFAULT_SETTINGS } from '@/types';
-[F110:11]| 
-[F110:12]| export type AppStore = UISlice & ZoneSlice & TaskSlice & HistorySlice & SettingsSlice & UndoSlice;
-[F110:13]| 
-[F110:14]| // 合并函数：确保新添加的设置字段使用默认值
-[F110:15]| const mergeSettings = <T, S>(persistedState: T | undefined, currentState: S): T & S => {
-[F110:16]|   const persisted = persistedState as Record<string, unknown> || {};
-[F110:17]| 
-[F110:18]|   const persistedSettings = persisted.settings as Record<string, unknown> || {};
-[F110:19]| 
-[F110:20]|   // 对每个设置字段应用默认值
-[F110:21]|   const mergedSettings = { ...DEFAULT_SETTINGS };
-[F110:22]|   Object.keys(mergedSettings).forEach((key) => {
-[F110:23]|     // 如果持久化状态中有该值，使用持久化值
-[F110:24]|     if (persistedSettings[key] !== undefined) {
-[F110:25]|       (mergedSettings as Record<string, unknown>)[key] = persistedSettings[key];
-[F110:26]|     }
-[F110:27]|   });
-[F110:28]| 
-[F110:29]|   return {
-[F110:30]|     ...(currentState as Record<string, unknown>),
-[F110:31]|     ...persisted,
-[F110:32]|     settings: mergedSettings,
-[F110:33]|   } as T & S;
-[F110:34]| };
-[F110:35]| 
-[F110:36]| // 组合所有 slices
-[F110:37]| export const useAppStore = create<AppStore>()(
-[F110:38]|   persist(
-[F110:39]|     (...a) => ({
-[F110:40]|       ...createUISlice(...a),
-[F110:41]|       ...createZoneSlice(...a),
-[F110:42]|       ...createTaskSlice(...a),
-[F110:43]|       ...createHistorySlice(...a),
-[F110:44]|       ...createSettingsSlice(...a),
-[F110:45]|       ...createUndoSlice(...a),
-[F110:46]|     }),
-[F110:47]|     {
-[F110:48]|       name: 'focus-flow-storage-v4',
-[F110:49]|       storage: createJSONStorage(() => sqliteStorage),
-[F110:50]|       merge: mergeSettings,
-[F110:51]|       partialize: (state) => ({
-[F110:52]|         currentView: state.currentView,
-[F110:53]|         activeZoneId: state.activeZoneId,
-[F110:54]|         focusedTaskId: state.focusedTaskId,
-[F110:55]|         activeHistoryId: state.activeHistoryId,
-[F110:56]|         zones: state.zones,
-[F110:57]|         tasks: state.tasks,
-[F110:58]|         currentWorkspace: state.currentWorkspace,
-[F110:59]|         historyWorkspaces: state.historyWorkspaces,
-[F110:60]|         customTemplates: state.customTemplates,
-[F110:61]|         configProfiles: state.configProfiles || [],
-[F110:62]|         settings: state.settings,
-[F110:63]|         recurringTemplates: state.recurringTemplates || [],
-[F110:64]|       }),
-[F110:65]|     }
-[F110:66]|   )
-[F110:67]| );
+[F110:1]| {
+[F110:2]|   "app": {
+[F110:3]|     "name": "Focus Flow"
+[F110:4]|   },
+[F110:5]|   "common": {
+[F110:6]|     "save": "Save",
+[F110:7]|     "cancel": "Cancel",
+[F110:8]|     "delete": "Delete",
+[F110:9]|     "edit": "Edit",
+[F110:10]|     "add": "Add",
+[F110:11]|     "confirm": "Confirm",
+[F110:12]|     "close": "Close",
+[F110:13]|     "apply": "Apply",
+[F110:14]|     "reset": "Reset",
+[F110:15]|     "export": "Export",
+[F110:16]|     "import": "Import",
+[F110:17]|     "back": "Back",
+[F110:18]|     "yes": "Yes",
+[F110:19]|     "no": "No",
+[F110:20]|     "all": "All",
+[F110:21]|     "continue": "Continue",
+[F110:22]|     "loading": "Loading...",
+[F110:23]|     "copyData": "Copy Data",
+[F110:24]|     "exportAsFile": "Export as File",
+[F110:25]|     "unnamed": "Untitled",
+[F110:26]|     "copySuffix": "(Copy)"
+[F110:27]|   },
+[F110:28]|   "settings": {
+[F110:29]|     "title": "Settings",
+[F110:30]|     "language": "Language (语言)",
+[F110:31]|     "timerSettings": "Timer Settings",
+[F110:32]|     "workDuration": "Focus Duration",
+[F110:33]|     "breakDuration": "Short Break",
+[F110:34]|     "longBreakDuration": "Long Break",
+[F110:35]|     "workDurationMinutes": "(min)",
+[F110:36]|     "autoStartBreak": "Auto Start Break",
+[F110:37]|     "autoStartBreakDesc": "Automatically start break timer after focus ends",
+[F110:38]|     "soundSettings": "Sound Settings",
+[F110:39]|     "soundEnabled": "Enable Sound",
+[F110:40]|     "soundEnabledDesc": "Play sound when timer ends",
+[F110:41]|     "autoSaveSettings": "Auto Save Settings",
+[F110:42]|     "autoSaveEnabled": "Auto Save History",
+[F110:43]|     "autoSaveEnabledDesc": "Automatically save current workspace to history",
+[F110:44]|     "autoSaveInterval": "Save Interval",
+[F110:45]|     "autoSaveIntervalSeconds": "(sec)",
+[F110:46]|     "globalViewSettings": "Global View Settings",
+[F110:47]|     "leafMode": "Leaf Node Mode",
+[F110:48]|     "leafModeDesc": "Only show actionable bottom-level tasks",
+[F110:49]|     "sortMode": "Sort Mode",
+[F110:50]|     "weightedSort": "Weighted Sort",
+[F110:51]|     "weightedSortDesc": "Priority and urgency weight ratio for global view sorting",
+[F110:52]|     "priorityWeight": "Priority Weight",
+[F110:53]|     "deadlineWeight": "Deadline Weight",
+[F110:54]|     "otherSettings": "Other Settings",
+[F110:55]|     "resetSettings": "Reset to Default",
+[F110:56]|     "recurringTasks": "Automation Rules",
+[F110:57]|     "recurringTasksDesc": "Set periodic tasks, system will auto-generate todos in background",
+[F110:58]|     "newRule": "New Rule",
+[F110:59]|     "environmentProfiles": "Environment Profiles",
+[F110:60]|     "environmentProfilesDesc": "Save current settings, templates, and global automation rules as a snapshot.",
+[F110:61]|     "saveAsSnapshot": "Save Current as Snapshot",
+[F110:62]|     "editRule": "Edit Rule",
+[F110:63]|     "selectZone": "Select Zone",
+[F110:64]|     "editZone": "Edit Zone",
+[F110:65]|     "dataStorage": "Data Storage Location",
+[F110:66]|     "dataStorageDesc": "Change where your data is saved. Select a cloud drive folder (like OneDrive, iCloud, or Dropbox) to sync across devices.",
+[F110:67]|     "changeLocation": "Change Location",
+[F110:68]|     "selectDbFolder": "Select New Storage Folder",
+[F110:69]|     "migratingData": "Moving data and restarting, please wait...",
+[F110:70]|     "migrationFailed": "Failed to change data location"
+[F110:71]|   },
+[F110:72]|   "timer": {
+[F110:73]|     "work": "Focusing",
+[F110:74]|     "break": "Short Break",
+[F110:75]|     "longBreak": "Long Break",
+[F110:76]|     "idle": "Ready to Start",
+[F110:77]|     "startFocus": "Start Focus",
+[F110:78]|     "startBreak": "Start Break",
+[F110:79]|     "pause": "Pause",
+[F110:80]|     "resume": "Resume",
+[F110:81]|     "skip": "Skip",
+[F110:82]|     "pomodorosCompleted": "Pomodoros Completed",
+[F110:83]|     "runningNoEdit": "Cannot edit while running",
+[F110:84]|     "clickToEdit": "Click to edit",
+[F110:85]|     "noTaskSelected": "No task selected"
+[F110:86]|   },
+[F110:87]|   "task": {
+[F110:88]|     "addTask": "Add Task",
+[F110:89]|     "editTask": "Edit Task",
+[F110:90]|     "deleteTask": "Delete Task",
+[F110:91]|     "taskTitle": "Task Title",
+[F110:92]|     "taskDescription": "Task Description",
+[F110:93]|     "priority": "Priority",
+[F110:94]|     "priorityHigh": "High",
+[F110:95]|     "priorityMedium": "Medium",
+[F110:96]|     "priorityLow": "Low",
+[F110:97]|     "deadline": "Deadline",
+[F110:98]|     "deadlineNone": "None",
+[F110:99]|     "deadlineToday": "Today",
+[F110:100]|     "deadlineTomorrow": "Tomorrow",
+[F110:101]|     "deadlineWeek": "This Week",
+[F110:102]|     "deadlineExact": "Exact Time",
+[F110:103]|     "estimatedTime": "Estimated Time",
+[F110:104]|     "totalWorkTime": "Time Worked",
+[F110:105]|     "preventAutoComplete": "Don't auto-complete when all subtasks done",
+[F110:106]|     "preventAutoCompleteEnabled": "Enabled: Won't auto-complete even when all subtasks done",
+[F110:107]|     "preventAutoCompleteDisabled": "Enable: Won't auto-complete when all subtasks done",
+[F110:108]|     "subtasks": "Subtasks",
+[F110:109]|     "noSubtasks": "No subtasks under this task",
+[F110:110]|     "completed": "Completed",
+[F110:111]|     "pending": "Pending",
+[F110:112]|     "addSubtask": "Add Subtask",
+[F110:113]|     "subtaskTitle": "Subtask title...",
+[F110:114]|     "descriptionOptional": "Description (optional, Shift+Enter for newline)...",
+[F110:115]|     "estimatedTimeOptional": "Estimated time (min, optional)",
+[F110:116]|     "clearCompleted": "Clear Completed",
+[F110:117]|     "noTasks": "No tasks yet, add one to start focusing!",
+[F110:118]|     "doubleClickHint": "Double-click task to expand/collapse description",
+[F110:119]|     "completionRate": "Completion Rate",
+[F110:120]|     "timeLabel": "Time",
+[F110:121]|     "time": "Time",
+[F110:122]|     "remaining": "Remaining",
+[F110:123]|     "clickToEditDeadline": "Click to edit deadline",
+[F110:124]|     "inherited": "(Inherited)",
+[F110:125]|     "setDeadline": "Set deadline",
+[F110:126]|     "ownTimeDisplay": "(Own: {{time}})",
+[F110:127]|     "ownTimeTitle": "Time spent independently on this task (excluding subtasks)",
+[F110:128]|     "resetWorkTimeTitle": "Reset accumulated time",
+[F110:129]|     "manualEst": "Manually set estimated time",
+[F110:130]|     "inheritedEst": "Estimated time inherited from subtasks",
+[F110:131]|     "expandSubtasks": "Expand subtasks",
+[F110:132]|     "collapseSubtasks": "Collapse subtasks",
+[F110:133]|     "tasks": "Tasks"
+[F110:134]|   },
+[F110:135]|   "zone": {
+[F110:136]|     "addZone": "Add Zone",
+[F110:137]|     "editZone": "Edit Zone",
+[F110:138]|     "deleteZone": "Delete Zone",
+[F110:139]|     "zoneName": "Zone Name",
+[F110:140]|     "zoneColor": "Zone Color",
+[F110:141]|     "zones": "Zones",
+[F110:142]|     "allZones": "All Zones",
+[F110:143]|     "noZones": "Please select a zone",
+[F110:144]|     "unknownZone": "Unknown zone",
+[F110:145]|     "workZone": "Work",
+[F110:146]|     "studyZone": "Study",
+[F110:147]|     "lifeZone": "Life",
+[F110:148]|     "projectA": "Project A",
+[F110:149]|     "projectB": "Project B",
+[F110:150]|     "projectC": "Project C",
+[F110:151]|     "other": "Other",
+[F110:152]|     "devZone": "Development",
+[F110:153]|     "testZone": "Testing",
+[F110:154]|     "docZone": "Documentation",
+[F110:155]|     "bugFix": "Bug Fix"
+[F110:156]|   },
+[F110:157]|   "workspace": {
+[F110:158]|     "currentWorkspace": "Current Workspace",
+[F110:159]|     "history": "History Workspaces",
+[F110:160]|     "newWorkspace": "Create New Workspace",
+[F110:161]|     "workspaceName": "Workspace Name",
+[F110:162]|     "workspaceNamePlaceholder": "Workspace name (e.g. Project Phase 1)",
+[F110:163]|     "workspaceSummary": "Workspace Summary",
+[F110:164]|     "workspaceSummaryPlaceholder": "Summary description (optional)",
+[F110:165]|     "restore": "Restore to current workspace",
+[F110:166]|     "archive": "Archive",
+[F110:167]|     "archiveCurrent": "Archive current workspace",
+[F110:168]|     "quickArchive": "Quick Archive",
+[F110:169]|     "noHistory": "No history workspaces",
+[F110:170]|     "noHistoryHint": "Click \"Archive\" to save current work, or create new workspace to auto-archive",
+[F110:171]|     "exportAll": "Export All",
+[F110:172]|     "createFromHistory": "Create from History",
+[F110:173]|     "unsavedTitle": "Current workspace unsaved",
+[F110:174]|     "confirmRestore": "The current workspace has unsaved content. Continuing will lose all current workspace content. Are you sure you want to continue?",
+[F110:175]|     "addSummary": "Add summary description...",
+[F110:176]|     "clickToEditName": "Click to edit name",
+[F110:177]|     "clickToEditSummary": "Click to edit summary",
+[F110:178]|     "defaultSummary": "Contains {{zones}} zones, {{tasks}} tasks",
+[F110:179]|     "defaultName": "Current Work",
+[F110:180]|     "autoSaveName": "Auto-save (Latest)",
+[F110:181]|     "importSuccess": "Import successful! {{count}} records imported.",
+[F110:182]|     "importFailed": "Import failed, file format cannot be parsed.",
+[F110:183]|     "noJsonFound": "No JSON file found in the archive.",
+[F110:184]|     "zipParseError": "Cannot parse zip file, please check file format.",
+[F110:185]|     "exportSuccess": "Export successful! {{count}} records exported.",
+[F110:186]|     "archiveDefaultName": "Archive {{date}}",
+[F110:187]|     "modified": "Modified",
+[F110:188]|     "moreTasks": "... and {{count}} more tasks"
+[F110:189]|   },
+[F110:190]|   "template": {
+[F110:191]|     "templates": "Templates",
+[F110:192]|     "applyTemplate": "Apply Template",
+[F110:193]|     "saveAsTemplate": "Save current zones as template",
+[F110:194]|     "saveAsTemplateDesc": "Save current zones as template",
+[F110:195]|     "deleteTemplate": "Delete Template",
+[F110:196]|     "templateName": "Enter template name",
+[F110:197]|     "predefinedTemplates": "Predefined Templates",
+[F110:198]|     "customTemplates": "Custom Templates",
+[F110:199]|     "templateGeneral": "General",
+[F110:200]|     "templateProject": "Project Management",
+[F110:201]|     "templateDev": "Development",
+[F110:202]|     "templateBlank": "Blank",
+[F110:203]|     "templateGeneralDesc": "Basic work, life, and study zones",
+[F110:204]|     "templateProjectDesc": "Suitable for multi-project management",
+[F110:205]|     "templateDevDesc": "Suitable for software development workflow",
+[F110:206]|     "templateBlankDesc": "Start from scratch",
+[F110:207]|     "customTemplateDesc": "Custom Template - {{count}} zones"
+[F110:208]|   },
+[F110:209]|   "view": {
+[F110:210]|     "zoneView": "Zone View",
+[F110:211]|     "globalView": "Global View",
+[F110:212]|     "historyView": "History",
+[F110:213]|     "settingsView": "Settings",
+[F110:214]|     "leafMode": "Leaf Node Mode",
+[F110:215]|     "treeView": "Tree View",
+[F110:216]|     "sortMode": "Sort Mode",
+[F110:217]|     "breadcrumb": "Path",
+[F110:218]|     "expand": "Expand",
+[F110:219]|     "collapse": "Collapse",
+[F110:220]|     "collapseAll": "Collapse All",
+[F110:221]|     "topLevelOnly": "Top Level Only",
+[F110:222]|     "collapseOneLevel": "Collapse One Level",
+[F110:223]|     "expandOneLevel": "Expand One Level",
+[F110:224]|     "expandAll": "Expand All",
+[F110:225]|     "noSubtasksHere": "No subtasks under this task",
+[F110:226]|     "noTasksGlobal": "No tasks",
+[F110:227]|     "emptyGlobalView": "Add tasks in zones, all tasks will be shown here",
+[F110:228]|     "clickTitleHint": "Click title to enter subtask view",
+[F110:229]|     "sortByZone": "By Zone",
+[F110:230]|     "sortByPriority": "By Priority",
+[F110:231]|     "sortByUrgency": "By Urgency",
+[F110:232]|     "expandDepth": "Expand Depth",
+[F110:233]|     "sortByWorkTime": "By Time Worked",
+[F110:234]|     "sortByEstimatedTime": "By Estimated Time",
+[F110:235]|     "sortByTimeDiff": "By Time Difference",
+[F110:236]|     "zoomIn": "Click to enter task view",
+[F110:237]|     "normal": "Normal",
+[F110:238]|     "sortManual": "Manual Sort"
+[F110:239]|   },
+[F110:240]|   "profile": {
+[F110:241]|     "saveProfile": "Save Profile",
+[F110:242]|     "profileName": "Profile Name",
+[F110:243]|     "noProfiles": "No profiles",
+[F110:244]|     "profileSaved": "Profile saved",
+[F110:245]|     "profileApplied": "Profile applied",
+[F110:246]|     "profileDeleted": "Profile deleted",
+[F110:247]|     "profileImported": "Config imported to profile list, please click apply",
+[F110:248]|     "exportSuccess": "Config exported successfully",
+[F110:249]|     "importFailed": "Invalid file format or import failed",
+[F110:250]|     "applied": "Applied",
+[F110:251]|     "createdAt": "Created at",
+[F110:252]|     "containsRules": "Contains {{count}} global rules",
+[F110:253]|     "snapshotName": "Snapshot name",
+[F110:254]|     "exampleMode": "e.g. Minimal Work Mode",
+[F110:255]|     "editProfile": "Edit Profile",
+[F110:256]|     "exportName": "Environment Backup",
+[F110:257]|     "defaultImportName": "Imported Profile {{date}}"
+[F110:258]|   },
+[F110:259]|   "recurring": {
+[F110:260]|     "addRule": "Add Rule",
+[F110:261]|     "editRule": "Edit Rule",
+[F110:262]|     "ruleTitle": "Rule Name",
+[F110:263]|     "ruleTitlePlaceholder": "e.g. Weekly Report",
+[F110:264]|     "ruleDescription": "Description",
+[F110:265]|     "ruleDescriptionPlaceholder": "Task description...",
+[F110:266]|     "targetZone": "Target Zone",
+[F110:267]|     "selectZone": "Select zone",
+[F110:268]|     "triggerInterval": "Trigger Interval",
+[F110:269]|     "minInterval": "(min 5 min)",
+[F110:270]|     "autoDeadline": "Auto Deadline",
+[F110:271]|     "afterGeneration": "(after generation)",
+[F110:272]|     "priority": "Priority",
+[F110:273]|     "active": "Active",
+[F110:274]|     "noRules": "No automation rules",
+[F110:275]|     "every": "Every",
+[F110:276]|     "minutes": "minutes",
+[F110:277]|     "hours": "hours",
+[F110:278]|     "days": "days",
+[F110:279]|     "globalRules": "Global Rules",
+[F110:280]|     "workspaceRules": "Workspace Rules",
+[F110:281]|     "saveRule": "Save Rule",
+[F110:282]|     "unknownZone": "Unknown zone",
+[F110:283]|     "ddl": "DDL",
+[F110:284]|     "autoGenerated": "{{desc}}\n(Auto-generated)",
+[F110:285]|     "autoGeneratedSuffix": "Auto-generated"
+[F110:286]|   },
+[F110:287]|   "urgency": {
+[F110:288]|     "overdue": "Overdue",
+[F110:289]|     "overduePrefix": "Overdue ",
+[F110:290]|     "remainingPrefix": "Remaining ",
+[F110:291]|     "veryUrgent": "Very Urgent",
+[F110:292]|     "urgent": "Urgent",
+[F110:293]|     "soon": "Normal",
+[F110:294]|     "upcoming": "Low Priority",
+[F110:295]|     "later": "Low Priority",
+[F110:296]|     "farFuture": "Low Priority",
+[F110:297]|     "noDeadline": "No Deadline",
+[F110:298]|     "todayOverdue": "Today (Overdue)",
+[F110:299]|     "tomorrowOverdue": "Tomorrow (Overdue)",
+[F110:300]|     "weekOverdue": "This Week (Overdue)",
+[F110:301]|     "exactOverdue": "{{date}} (Overdue)",
+[F110:302]|     "daysHours": "{{days}}d {{hours}}h",
+[F110:303]|     "hoursMins": "{{hours}}h {{mins}}m",
+[F110:304]|     "mins": "{{mins}}m"
+[F110:305]|   },
+[F110:306]|   "time": {
+[F110:307]|     "hoursMinsSecs": "{{hours}}h {{mins}}m {{secs}}s",
+[F110:308]|     "minsSecs": "{{mins}}m {{secs}}s",
+[F110:309]|     "secs": "{{secs}}s",
+[F110:310]|     "hM": "{{hours}}h {{mins}}m",
+[F110:311]|     "m": "{{mins}}m"
+[F110:312]|   },
+[F110:313]|   "messages": {
+[F110:314]|     "confirmDelete": "Are you sure you want to delete this template? This cannot be undone.",
+[F110:315]|     "deleteZoneWarning": "Deleting zone will also delete all tasks in it",
+[F110:316]|     "deleteTaskWarning": "Are you sure you want to delete this task?",
+[F110:317]|     "timerComplete": "Time's up!",
+[F110:318]|     "breakComplete": "Break is over!",
+[F110:319]|     "taskCompleted": "Task completed",
+[F110:320]|     "workspaceSaved": "Workspace saved",
+[F110:321]|     "workspaceRestored": "Workspace restored",
+[F110:322]|     "settingsReset": "Settings reset",
+[F110:323]|     "confirmOverwrite": "Confirm Overwrite",
+[F110:324]|     "overwriteConfirm": "This record already exists. Overwrite the previous archive?"
+[F110:325]|   },
+[F110:326]|   "toast": {
+[F110:327]|     "focusComplete": "Focus Complete!",
+[F110:328]|     "taskAccumulated": "Task \"{{title}}\" accumulated {{minutes}} minutes",
+[F110:329]|     "breakEnd": "Break Ended",
+[F110:330]|     "readyForNext": "Ready for the next focus session?",
+[F110:331]|     "taskSelected": "Task Selected",
+[F110:332]|     "clickToStartTimer": "Click 'Start Focus' to track \"{{title}}\"",
+[F110:333]|     "clickToStart": "Click 'Start Focus' to start",
+[F110:334]|     "undo": "Undone",
+[F110:335]|     "redo": "Redone",
+[F110:336]|     "taskCopied": "Task copied",
+[F110:337]|     "zoneCopied": "Zone \"{{name}}\" copied",
+[F110:338]|     "zonePasted": "Zone \"{{name}}\" pasted",
+[F110:339]|     "taskPasted": "Task pasted",
+[F110:340]|     "subtaskPasted": "Subtask pasted",
+[F110:341]|     "taskDeleted": "Task deleted",
+[F110:342]|     "archived": "Archived to history",
+[F110:343]|     "archiveSuccessDesc": "Workspace \"{{name}}\" saved to history",
+[F110:344]|     "workspaceCreated": "New workspace created",
+[F110:345]|     "workspaceCreatedTemplate": "New workspace created from template",
+[F110:346]|     "workspaceCreatedBlank": "Blank workspace created",
+[F110:347]|     "autoSaved": "Auto-saved"
+[F110:348]|   },
+[F110:349]|   "window": {
+[F110:350]|     "pin": "Pin Window",
+[F110:351]|     "unpin": "Unpin Window",
+[F110:352]|     "collapseToBall": "Collapse to Ball",
+[F110:353]|     "minimize": "Minimize",
+[F110:354]|     "close": "Close"
+[F110:355]|   }
+[F110:356]| }
 
 ================================================================================
-文件路径: src\store\slices\historySlice.ts(F111) (约合大小: 9 KB)
+文件路径: src\locales\zh.json(F111) (约合大小: 13 KB)
 ================================================================================
-[F111:1]| import type { StateCreator } from 'zustand';
-[F111:2]| import type { HistoryWorkspace, CurrentWorkspace, Zone, Task } from '@/types';
-[F111:3]| import type { TaskSlice } from './taskSlice';
-[F111:4]| import type { ZoneSlice } from './zoneSlice';
-[F111:5]| import i18n from '@/lib/i18n';
-[F111:6]| 
-[F111:7]| export interface HistoryState {
-[F111:8]|   historyWorkspaces: HistoryWorkspace[];
-[F111:9]|   currentWorkspace: CurrentWorkspace;
-[F111:10]| }
-[F111:11]| 
-[F111:12]| export interface HistoryActions {
-[F111:13]|   archiveCurrentWorkspace: (name?: string, summary?: string) => string;
-[F111:14]|   quickArchiveCurrentWorkspace: () => string | null;
-[F111:15]|   autoSaveSnapshot: () => string | null;
-[F111:16]|   overwriteHistoryWorkspace: (historyId: string) => void;
-[F111:17]|   restoreFromHistory: (historyId: string) => void;
-[F111:18]|   createNewWorkspace: (name?: string, templateId?: string) => void;
-[F111:19]|   deleteHistoryWorkspace: (id: string) => void;
-[F111:20]|   renameHistoryWorkspace: (id: string, newName: string) => void;
-[F111:21]|   updateHistorySummary: (id: string, summary: string) => void;
-[F111:22]|   exportHistoryToJson: (historyId: string) => string | null;
-[F111:23]|   exportAllHistoryToJson: () => string;
-[F111:24]|   importHistoryFromJson: (jsonString: string) => boolean;
-[F111:25]|   importAllHistoryFromJson: (jsonString: string) => number;
-[F111:26]|   hasUnsavedChanges: () => boolean;
-[F111:27]| }
-[F111:28]| 
-[F111:29]| export type HistorySlice = HistoryState & HistoryActions;
-[F111:30]| 
-[F111:31]| // 创建新工作区结构
-[F111:32]| const createWorkspaceData = (name = i18n.t('workspace.defaultName')): CurrentWorkspace => ({
-[F111:33]|   id: `workspace-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-[F111:34]|   name,
-[F111:35]|   zones: [],
-[F111:36]|   tasks: [],
-[F111:37]|   sessions: [],
-[F111:38]|   createdAt: Date.now(),
-[F111:39]|   lastModified: Date.now(),
-[F111:40]| });
-[F111:41]| 
-[F111:42]| export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSlice, [], [], HistorySlice> = (set, get) => ({
-[F111:43]|   historyWorkspaces: [],
-[F111:44]|   currentWorkspace: createWorkspaceData(),
-[F111:45]| 
-[F111:46]|   archiveCurrentWorkspace: (name, summary) => {
-[F111:47]|     const historyId = `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-[F111:48]|     const state = get() as unknown as { zones: Zone[]; tasks: Task[]; currentWorkspace: CurrentWorkspace; historyWorkspaces: HistoryWorkspace[] };
-[F111:49]|     const zones = state.zones;
-[F111:50]|     const tasks = state.tasks;
-[F111:51]| 
-[F111:52]|     const history: HistoryWorkspace = {
-[F111:53]|       ...state.currentWorkspace,
-[F111:54]|       id: historyId,
-[F111:55]|       name: name || state.currentWorkspace.name,
-[F111:56]|       zones,
-[F111:57]|       tasks,
-[F111:58]|       sessions: [],
-[F111:59]|       summary: summary || i18n.t('workspace.defaultSummary', { zones: zones.length, tasks: tasks.length }),
-[F111:60]|       lastModified: Date.now(),
-[F111:61]|     };
-[F111:62]| 
-[F111:63]|     set({
-[F111:64]|       historyWorkspaces: [history, ...state.historyWorkspaces],
-[F111:65]|       currentWorkspace: createWorkspaceData(state.currentWorkspace.name),
-[F111:66]|       zones: [],
-[F111:67]|       tasks: [],
-[F111:68]|     });
-[F111:69]| 
-[F111:70]|     return historyId;
+[F111:1]| {
+[F111:2]|   "app": {
+[F111:3]|     "name": "Focus Flow"
+[F111:4]|   },
+[F111:5]|   "common": {
+[F111:6]|     "save": "保存",
+[F111:7]|     "cancel": "取消",
+[F111:8]|     "delete": "删除",
+[F111:9]|     "edit": "编辑",
+[F111:10]|     "add": "添加",
+[F111:11]|     "confirm": "确认",
+[F111:12]|     "close": "关闭",
+[F111:13]|     "apply": "应用",
+[F111:14]|     "reset": "重置",
+[F111:15]|     "export": "导出",
+[F111:16]|     "import": "导入",
+[F111:17]|     "back": "返回",
+[F111:18]|     "yes": "是",
+[F111:19]|     "no": "否",
+[F111:20]|     "all": "全部",
+[F111:21]|     "continue": "继续",
+[F111:22]|     "loading": "加载中...",
+[F111:23]|     "copyData": "复制数据",
+[F111:24]|     "exportAsFile": "导出为文件",
+[F111:25]|     "unnamed": "未命名",
+[F111:26]|     "copySuffix": "(副本)"
+[F111:27]|   },
+[F111:28]|   "settings": {
+[F111:29]|     "title": "设置",
+[F111:30]|     "language": "语言 (Language)",
+[F111:31]|     "timerSettings": "番茄钟设置",
+[F111:32]|     "workDuration": "专注时长",
+[F111:33]|     "breakDuration": "短休息时长",
+[F111:34]|     "longBreakDuration": "长休息时长",
+[F111:35]|     "workDurationMinutes": "(分钟)",
+[F111:36]|     "autoStartBreak": "自动开始休息",
+[F111:37]|     "autoStartBreakDesc": "专注结束后自动开始休息计时",
+[F111:38]|     "soundSettings": "声音设置",
+[F111:39]|     "soundEnabled": "开启提示音",
+[F111:40]|     "soundEnabledDesc": "计时结束时播放提示音",
+[F111:41]|     "autoSaveSettings": "自动保存设置",
+[F111:42]|     "autoSaveEnabled": "自动保存历史",
+[F111:43]|     "autoSaveEnabledDesc": "自动将当前工作区保存到历史记录",
+[F111:44]|     "autoSaveInterval": "保存间隔",
+[F111:45]|     "autoSaveIntervalSeconds": "(秒)",
+[F111:46]|     "globalViewSettings": "全局视图设置",
+[F111:47]|     "leafMode": "叶子节点模式",
+[F111:48]|     "leafModeDesc": "仅显示可执行的最底层任务",
+[F111:49]|     "sortMode": "排序方式",
+[F111:50]|     "weightedSort": "加权排序",
+[F111:51]|     "weightedSortDesc": "在全局视图使用加权排序时，优先级和紧急度的权重比例",
+[F111:52]|     "priorityWeight": "优先级权重",
+[F111:53]|     "deadlineWeight": "紧急度权重",
+[F111:54]|     "otherSettings": "其他设置",
+[F111:55]|     "resetSettings": "恢复默认设置",
+[F111:56]|     "recurringTasks": "自动化规则",
+[F111:57]|     "recurringTasksDesc": "设置周期性任务，系统会在后台自动为您生成待办事项",
+[F111:58]|     "newRule": "新建规则",
+[F111:59]|     "environmentProfiles": "环境配置快照",
+[F111:60]|     "environmentProfilesDesc": "将当前的设置、模板和全局自动化规则打包保存。方便在不同工作模式间一键切换。",
+[F111:61]|     "saveAsSnapshot": "保存当前环境为快照",
+[F111:62]|     "editRule": "编辑规则",
+[F111:63]|     "selectZone": "选择分区",
+[F111:64]|     "editZone": "编辑分区",
+[F111:65]|     "dataStorage": "数据存储位置",
+[F111:66]|     "dataStorageDesc": "更改您的数据保存位置。您可以选择将数据保存在 OneDrive、iCloud 或坚果云等同步目录中，实现多端同步。",
+[F111:67]|     "changeLocation": "修改存储位置",
+[F111:68]|     "selectDbFolder": "请选择新的存储文件夹",
+[F111:69]|     "migratingData": "正在迁移数据并重启，请稍候...",
+[F111:70]|     "migrationFailed": "修改数据存储位置失败"
 [F111:71]|   },
-[F111:72]| 
-[F111:73]|   quickArchiveCurrentWorkspace: () => {
-[F111:74]|     const state = get() as unknown as { zones: Zone[]; tasks: Task[]; currentWorkspace: CurrentWorkspace; historyWorkspaces: HistoryWorkspace[] };
-[F111:75]|     const zones = state.zones;
-[F111:76]|     const tasks = state.tasks;
-[F111:77]| 
-[F111:78]|     if (zones.length === 0 && tasks.length === 0) {
-[F111:79]|       return null;
-[F111:80]|     }
-[F111:81]| 
-[F111:82]|     const historyId = `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-[F111:83]|     const history: HistoryWorkspace = {
-[F111:84]|       ...state.currentWorkspace,
-[F111:85]|       id: historyId,
-[F111:86]|       zones,
-[F111:87]|       tasks,
-[F111:88]|       sessions: [],
-[F111:89]|       summary: i18n.t('workspace.defaultSummary', { zones: zones.length, tasks: tasks.length }),
-[F111:90]|       lastModified: Date.now(),
-[F111:91]|     };
-[F111:92]| 
-[F111:93]|     set({
-[F111:94]|       historyWorkspaces: [history, ...state.historyWorkspaces],
-[F111:95]|       currentWorkspace: createWorkspaceData(state.currentWorkspace.name),
-[F111:96]|       zones: [],
-[F111:97]|       tasks: [],
-[F111:98]|     });
-[F111:99]| 
-[F111:100]|     return historyId;
-[F111:101]|   },
-[F111:102]| 
-[F111:103]|   // 自动保存快照 - 覆盖式更新策略
-[F111:104]|   autoSaveSnapshot: () => {
-[F111:105]|     const state = get() as unknown as { zones: Zone[]; tasks: Task[]; currentWorkspace: CurrentWorkspace; historyWorkspaces: HistoryWorkspace[] };
-[F111:106]|     const zones = state.zones;
-[F111:107]|     const tasks = state.tasks;
-[F111:108]| 
-[F111:109]|     if (zones.length === 0 && tasks.length === 0) {
-[F111:110]|       return null;
-[F111:111]|     }
-[F111:112]| 
-[F111:113]|     // 固定的自动保存ID
-[F111:114]|     const AUTO_SAVE_ID = 'auto-save-fixed-slot';
-[F111:115]| 
-[F111:116]|     const snapshot: HistoryWorkspace = {
-[F111:117]|       ...state.currentWorkspace,
-[F111:118]|       id: AUTO_SAVE_ID,
-[F111:119]|       name: i18n.t('workspace.autoSaveName'),
-[F111:120]|       zones: JSON.parse(JSON.stringify(zones)),
-[F111:121]|       tasks: JSON.parse(JSON.stringify(tasks)),
-[F111:122]|       sessions: [],
-[F111:123]|       summary: i18n.t('workspace.defaultSummary', { zones: zones.length, tasks: tasks.length }),
-[F111:124]|       lastModified: Date.now(),
-[F111:125]|     };
-[F111:126]| 
-[F111:127]|     const newHistories = [...state.historyWorkspaces];
-[F111:128]|     const existingIndex = newHistories.findIndex(h => h.id === AUTO_SAVE_ID);
-[F111:129]| 
-[F111:130]|     if (existingIndex !== -1) {
-[F111:131]|       // 已存在则覆盖并移到最前面
-[F111:132]|       newHistories.splice(existingIndex, 1);
-[F111:133]|       newHistories.unshift(snapshot);
-[F111:134]|     } else {
-[F111:135]|       // 不存在则插入头部
-[F111:136]|       newHistories.unshift(snapshot);
-[F111:137]|     }
-[F111:138]| 
-[F111:139]|     set({
-[F111:140]|       historyWorkspaces: newHistories.slice(0, 100),
-[F111:141]|     });
-[F111:142]| 
-[F111:143]|     return AUTO_SAVE_ID;
-[F111:144]|   },
-[F111:145]| 
-[F111:146]|   overwriteHistoryWorkspace: (historyId) => {
-[F111:147]|     set((state) => {
-[F111:148]|       const historyIndex = state.historyWorkspaces.findIndex(h => h.id === historyId);
-[F111:149]|       if (historyIndex === -1) return state;
-[F111:150]| 
-[F111:151]|       const stateWithData = state as unknown as { zones: Zone[]; tasks: Task[]; currentWorkspace: CurrentWorkspace };
-[F111:152]|       const currentZones = stateWithData.zones;
-[F111:153]|       const currentTasks = stateWithData.tasks;
-[F111:154]| 
-[F111:155]|       const history = state.historyWorkspaces[historyIndex];
-[F111:156]|       const overwritten: HistoryWorkspace = {
-[F111:157]|         ...history,
-[F111:158]|         zones: currentZones,
-[F111:159]|         tasks: currentTasks,
-[F111:160]|         sessions: [],
-[F111:161]|         summary: i18n.t('workspace.defaultSummary', { zones: currentZones.length, tasks: currentTasks.length }),
-[F111:162]|         lastModified: Date.now(),
-[F111:163]|       };
-[F111:164]| 
-[F111:165]|       const newHistory = [...state.historyWorkspaces];
-[F111:166]|       newHistory[historyIndex] = overwritten;
-[F111:167]| 
-[F111:168]|       return {
-[F111:169]|         historyWorkspaces: newHistory,
-[F111:170]|         currentWorkspace: { ...history, sourceHistoryId: historyId, zones: currentZones, tasks: currentTasks },
-[F111:171]|         zones: currentZones,
-[F111:172]|         tasks: currentTasks,
-[F111:173]|       };
-[F111:174]|     });
-[F111:175]|   },
-[F111:176]| 
-[F111:177]|   restoreFromHistory: (historyId) => {
-[F111:178]|     set((state) => {
-[F111:179]|       const history = state.historyWorkspaces.find(h => h.id === historyId);
-[F111:180]|       if (!history) return state;
-[F111:181]| 
-[F111:182]|       return {
-[F111:183]|         currentWorkspace: { ...history, sourceHistoryId: historyId },
-[F111:184]|         zones: history.zones,
-[F111:185]|         tasks: history.tasks,
-[F111:186]|       };
-[F111:187]|     });
-[F111:188]|   },
-[F111:189]| 
-[F111:190]|   createNewWorkspace: (name, _templateId) => {
-[F111:191]|     const state = get();
-[F111:192]|     const workspaceName = name || state.currentWorkspace.name;
-[F111:193]| 
-[F111:194]|     set({
-[F111:195]|       currentWorkspace: createWorkspaceData(workspaceName),
-[F111:196]|       zones: [],
-[F111:197]|       tasks: [],
-[F111:198]|     });
-[F111:199]|   },
-[F111:200]| 
-[F111:201]|   deleteHistoryWorkspace: (id) => set((state) => ({
-[F111:202]|     historyWorkspaces: state.historyWorkspaces.filter(h => h.id !== id)
-[F111:203]|   })),
-[F111:204]| 
-[F111:205]|   renameHistoryWorkspace: (id, newName) => set((state) => ({
-[F111:206]|     historyWorkspaces: state.historyWorkspaces.map(h =>
-[F111:207]|       h.id === id ? { ...h, name: newName, lastModified: Date.now() } : h
-[F111:208]|     )
-[F111:209]|   })),
-[F111:210]| 
-[F111:211]|   updateHistorySummary: (id, summary) => set((state) => ({
-[F111:212]|     historyWorkspaces: state.historyWorkspaces.map(h =>
-[F111:213]|       h.id === id ? { ...h, summary, lastModified: Date.now() } : h
-[F111:214]|     )
-[F111:215]|   })),
-[F111:216]| 
-[F111:217]|   exportHistoryToJson: (historyId) => {
-[F111:218]|     const history = get().historyWorkspaces.find(h => h.id === historyId);
-[F111:219]|     if (!history) return null;
-[F111:220]|     return JSON.stringify(history, null, 2);
-[F111:221]|   },
-[F111:222]| 
-[F111:223]|   exportAllHistoryToJson: () => {
-[F111:224]|     return JSON.stringify(get().historyWorkspaces, null, 2);
-[F111:225]|   },
-[F111:226]| 
-[F111:227]|   importHistoryFromJson: (jsonString) => {
-[F111:228]|     try {
-[F111:229]|       const parsed = JSON.parse(jsonString);
-[F111:230]|       // 兼容旧格式：允许 zones/tasks 为空或不存在
-[F111:231]|       if (!parsed.id || !parsed.name) {
-[F111:232]|         return false;
-[F111:233]|       }
-[F111:234]| 
-[F111:235]|       // 生成新的 ID 避免冲突
-[F111:236]|       const newHistory: HistoryWorkspace = {
-[F111:237]|         id: `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-[F111:238]|         name: parsed.name || i18n.t('common.unnamed'),
-[F111:239]|         summary: parsed.summary || '',
-[F111:240]|         createdAt: parsed.createdAt || Date.now(),
-[F111:241]|         lastModified: Date.now(),
-[F111:242]|         zones: parsed.zones || [],
-[F111:243]|         tasks: parsed.tasks || [],
-[F111:244]|         sessions: parsed.sessions || [],
-[F111:245]|       };
-[F111:246]| 
-[F111:247]|       set((state) => ({
-[F111:248]|         historyWorkspaces: [newHistory, ...state.historyWorkspaces]
-[F111:249]|       }));
-[F111:250]| 
-[F111:251]|       return true;
-[F111:252]|     } catch {
-[F111:253]|       return false;
-[F111:254]|     }
-[F111:255]|   },
-[F111:256]| 
-[F111:257]|   importAllHistoryFromJson: (jsonString) => {
-[F111:258]|     try {
-[F111:259]|       const parsed = JSON.parse(jsonString);
-[F111:260]|       // 兼容：可能是单个对象或数组
-[F111:261]|       const histories = Array.isArray(parsed) ? parsed : [parsed];
-[F111:262]|       if (!Array.isArray(histories)) return 0;
-[F111:263]| 
-[F111:264]|       let imported = 0;
-[F111:265]|       const newHistories = histories.map(h => {
-[F111:266]|         if (!h.id || !h.name) return null;
-[F111:267]|         imported++;
-[F111:268]|         return {
-[F111:269]|           id: `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-[F111:270]|           name: h.name || i18n.t('common.unnamed'),
-[F111:271]|           summary: h.summary || '',
-[F111:272]|           createdAt: h.createdAt || Date.now(),
-[F111:273]|           lastModified: Date.now(),
-[F111:274]|           zones: h.zones || [],
-[F111:275]|           tasks: h.tasks || [],
-[F111:276]|           sessions: h.sessions || [],
-[F111:277]|         };
-[F111:278]|       }).filter(Boolean) as HistoryWorkspace[];
-[F111:279]| 
-[F111:280]|       set((state) => ({
-[F111:281]|         historyWorkspaces: [...newHistories, ...state.historyWorkspaces]
-[F111:282]|       }));
-[F111:283]| 
-[F111:284]|       return imported;
-[F111:285]|     } catch {
-[F111:286]|       return 0;
-[F111:287]|     }
-[F111:288]|   },
-[F111:289]| 
-[F111:290]|   hasUnsavedChanges: () => {
-[F111:291]|     const state = get();
-[F111:292]|     // 检查当前工作区是否有内容（zones 或 tasks 存储在 store 顶层）
-[F111:293]|     return (state as unknown as { zones: unknown[]; tasks: unknown[] }).zones.length > 0 ||
-[F111:294]|            (state as unknown as { zones: unknown[]; tasks: unknown[] }).tasks.length > 0;
-[F111:295]|   },
-[F111:296]| });
+[F111:72]|   "timer": {
+[F111:73]|     "work": "专注中",
+[F111:74]|     "break": "短休息",
+[F111:75]|     "longBreak": "长休息",
+[F111:76]|     "idle": "准备开始",
+[F111:77]|     "startFocus": "开始专注",
+[F111:78]|     "startBreak": "开始休息",
+[F111:79]|     "pause": "暂停",
+[F111:80]|     "resume": "继续",
+[F111:81]|     "skip": "跳过",
+[F111:82]|     "pomodorosCompleted": "已完成的番茄钟",
+[F111:83]|     "runningNoEdit": "计时中无法修改",
+[F111:84]|     "clickToEdit": "点击修改时间",
+[F111:85]|     "noTaskSelected": "未选择任务"
+[F111:86]|   },
+[F111:87]|   "task": {
+[F111:88]|     "addTask": "添加任务",
+[F111:89]|     "editTask": "编辑任务",
+[F111:90]|     "deleteTask": "删除任务",
+[F111:91]|     "taskTitle": "任务标题",
+[F111:92]|     "taskDescription": "任务描述",
+[F111:93]|     "priority": "优先级",
+[F111:94]|     "priorityHigh": "高",
+[F111:95]|     "priorityMedium": "中",
+[F111:96]|     "priorityLow": "低",
+[F111:97]|     "deadline": "截止时间",
+[F111:98]|     "deadlineNone": "无",
+[F111:99]|     "deadlineToday": "今天",
+[F111:100]|     "deadlineTomorrow": "明天",
+[F111:101]|     "deadlineWeek": "本周",
+[F111:102]|     "deadlineExact": "具体时间",
+[F111:103]|     "estimatedTime": "预期时间",
+[F111:104]|     "totalWorkTime": "累计工作时间",
+[F111:105]|     "preventAutoComplete": "子任务全部完成时不自动结束",
+[F111:106]|     "preventAutoCompleteEnabled": "已开启：子任务全部完成也不会自动结束",
+[F111:107]|     "preventAutoCompleteDisabled": "开启：子任务全部完成也不会自动结束",
+[F111:108]|     "subtasks": "子任务",
+[F111:109]|     "noSubtasks": "该任务下暂无子任务",
+[F111:110]|     "completed": "已完成",
+[F111:111]|     "pending": "待办",
+[F111:112]|     "addSubtask": "添加子任务",
+[F111:113]|     "subtaskTitle": "子任务标题...",
+[F111:114]|     "descriptionOptional": "任务描述（可选，Shift+Enter 换行）...",
+[F111:115]|     "estimatedTimeOptional": "预期时间（分钟，可选）",
+[F111:116]|     "clearCompleted": "清除已完成",
+[F111:117]|     "noTasks": "暂无任务，添加一个开始专注吧！",
+[F111:118]|     "doubleClickHint": "双击任务可展开/收缩描述",
+[F111:119]|     "completionRate": "完成率",
+[F111:120]|     "timeLabel": "时间",
+[F111:121]|     "time": "时间",
+[F111:122]|     "remaining": "剩余",
+[F111:123]|     "clickToEditDeadline": "点击修改截止日期",
+[F111:124]|     "inherited": "(继承)",
+[F111:125]|     "setDeadline": "设置截止日期",
+[F111:126]|     "ownTimeDisplay": "(独立: {{time}})",
+[F111:127]|     "ownTimeTitle": "在该任务上独立花费的时间（不含子任务）",
+[F111:128]|     "resetWorkTimeTitle": "清零累计时间",
+[F111:129]|     "manualEst": "手动设置的预期时间",
+[F111:130]|     "inheritedEst": "从子任务继承的预期时间",
+[F111:131]|     "expandSubtasks": "展开子任务",
+[F111:132]|     "collapseSubtasks": "收起子任务",
+[F111:133]|     "tasks": "任务"
+[F111:134]|   },
+[F111:135]|   "zone": {
+[F111:136]|     "addZone": "添加分区",
+[F111:137]|     "editZone": "编辑分区",
+[F111:138]|     "deleteZone": "删除分区",
+[F111:139]|     "zoneName": "分区名称",
+[F111:140]|     "zoneColor": "选择颜色",
+[F111:141]|     "zones": "工作分区",
+[F111:142]|     "allZones": "所有分区",
+[F111:143]|     "noZones": "请选择一个工作分区",
+[F111:144]|     "unknownZone": "未知工作区",
+[F111:145]|     "workZone": "工作",
+[F111:146]|     "studyZone": "学习",
+[F111:147]|     "lifeZone": "生活",
+[F111:148]|     "projectA": "项目 A",
+[F111:149]|     "projectB": "项目 B",
+[F111:150]|     "projectC": "项目 C",
+[F111:151]|     "other": "其他",
+[F111:152]|     "devZone": "开发",
+[F111:153]|     "testZone": "测试",
+[F111:154]|     "docZone": "文档",
+[F111:155]|     "bugFix": "Bug 修复"
+[F111:156]|   },
+[F111:157]|   "workspace": {
+[F111:158]|     "currentWorkspace": "当前工作区",
+[F111:159]|     "history": "历史工作区",
+[F111:160]|     "newWorkspace": "创建新工作区",
+[F111:161]|     "workspaceName": "工作区名称",
+[F111:162]|     "workspaceNamePlaceholder": "工作区名称（如：项目第一阶段）",
+[F111:163]|     "workspaceSummary": "工作区摘要",
+[F111:164]|     "workspaceSummaryPlaceholder": "摘要描述（可选）",
+[F111:165]|     "restore": "恢复到当前工作区",
+[F111:166]|     "archive": "存入历史",
+[F111:167]|     "archiveCurrent": "将当前工作存入历史",
+[F111:168]|     "quickArchive": "快速存入",
+[F111:169]|     "noHistory": "暂无历史工作区",
+[F111:170]|     "noHistoryHint": "点击\"存入历史\"保存当前工作，或创建新工作区自动存档",
+[F111:171]|     "exportAll": "全部导出",
+[F111:172]|     "createFromHistory": "从历史记录创建",
+[F111:173]|     "unsavedTitle": "当前工作区未保存",
+[F111:174]|     "confirmRestore": "当前工作区还有未保存的内容。继续操作将丢失当前工作区的所有内容。确定要继续吗？",
+[F111:175]|     "addSummary": "添加摘要描述...",
+[F111:176]|     "clickToEditName": "点击编辑名称",
+[F111:177]|     "clickToEditSummary": "点击编辑摘要",
+[F111:178]|     "defaultSummary": "包含 {{zones}} 个分区，{{tasks}} 个任务",
+[F111:179]|     "defaultName": "当前工作",
+[F111:180]|     "autoSaveName": "自动保存 (最新)",
+[F111:181]|     "importSuccess": "导入成功！共导入 {{count}} 条历史记录。",
+[F111:182]|     "importFailed": "导入失败，文件格式无法解析。",
+[F111:183]|     "noJsonFound": "压缩文件中没有找到 JSON 文件。",
+[F111:184]|     "zipParseError": "无法解析压缩文件，请检查文件格式是否正确。",
+[F111:185]|     "exportSuccess": "导出成功！共导出 {{count}} 条历史记录。",
+[F111:186]|     "archiveDefaultName": "存档 {{date}}",
+[F111:187]|     "modified": "修改",
+[F111:188]|     "moreTasks": "... 还有 {{count}} 个任务"
+[F111:189]|   },
+[F111:190]|   "template": {
+[F111:191]|     "templates": "工作模板",
+[F111:192]|     "applyTemplate": "选择工作模板",
+[F111:193]|     "saveAsTemplate": "将当前分区保存为模板",
+[F111:194]|     "saveAsTemplateDesc": "将当前分区保存为模板",
+[F111:195]|     "deleteTemplate": "删除模板",
+[F111:196]|     "templateName": "输入模板名称",
+[F111:197]|     "predefinedTemplates": "预设模板",
+[F111:198]|     "customTemplates": "自定义模板",
+[F111:199]|     "templateGeneral": "通用",
+[F111:200]|     "templateProject": "项目管理",
+[F111:201]|     "templateDev": "开发工作",
+[F111:202]|     "templateBlank": "空白工作区",
+[F111:203]|     "templateGeneralDesc": "基础的工作、生活、学习分区",
+[F111:204]|     "templateProjectDesc": "适合多项目并行管理",
+[F111:205]|     "templateDevDesc": "适合软件开发工作流",
+[F111:206]|     "templateBlankDesc": "从零开始创建",
+[F111:207]|     "customTemplateDesc": "自定义模板 - {{count}} 个分区"
+[F111:208]|   },
+[F111:209]|   "view": {
+[F111:210]|     "zoneView": "分区视图",
+[F111:211]|     "globalView": "全局视图",
+[F111:212]|     "historyView": "历史视图",
+[F111:213]|     "settingsView": "设置",
+[F111:214]|     "leafMode": "叶子节点",
+[F111:215]|     "treeView": "树状视图",
+[F111:216]|     "sortMode": "排序方式",
+[F111:217]|     "breadcrumb": "路径",
+[F111:218]|     "expand": "展开",
+[F111:219]|     "collapse": "收起",
+[F111:220]|     "collapseAll": "全部收起",
+[F111:221]|     "topLevelOnly": "仅显示顶层",
+[F111:222]|     "collapseOneLevel": "收起一级",
+[F111:223]|     "expandOneLevel": "展开一级",
+[F111:224]|     "expandAll": "展开所有",
+[F111:225]|     "noSubtasksHere": "该任务下暂无子任务",
+[F111:226]|     "noTasksGlobal": "暂无任务",
+[F111:227]|     "emptyGlobalView": "在分区中添加任务，这里会显示所有任务",
+[F111:228]|     "clickTitleHint": "点击标题可进入子任务视图",
+[F111:229]|     "sortByZone": "按工作区",
+[F111:230]|     "sortByPriority": "按优先级",
+[F111:231]|     "sortByUrgency": "按紧急度",
+[F111:232]|     "expandDepth": "展开层级",
+[F111:233]|     "sortByWorkTime": "按执行时间",
+[F111:234]|     "sortByEstimatedTime": "按预期时间",
+[F111:235]|     "sortByTimeDiff": "按时间差",
+[F111:236]|     "zoomIn": "点击进入该任务视图",
+[F111:237]|     "normal": "一般",
+[F111:238]|     "sortManual": "手动排序"
+[F111:239]|   },
+[F111:240]|   "profile": {
+[F111:241]|     "saveProfile": "保存配置快照",
+[F111:242]|     "profileName": "快照名称",
+[F111:243]|     "noProfiles": "暂无配置快照",
+[F111:244]|     "profileSaved": "快照保存成功",
+[F111:245]|     "profileApplied": "已应用环境",
+[F111:246]|     "profileDeleted": "快照已删除",
+[F111:247]|     "profileImported": "配置已导入到快照列表，请点击应用",
+[F111:248]|     "exportSuccess": "环境配置已成功导出！",
+[F111:249]|     "importFailed": "文件格式错误或导入失败",
+[F111:250]|     "applied": "应用",
+[F111:251]|     "createdAt": "创建于",
+[F111:252]|     "containsRules": "包含 {{count}} 个全局规则",
+[F111:253]|     "snapshotName": "快照名称",
+[F111:254]|     "exampleMode": "例如：极简办公模式",
+[F111:255]|     "editProfile": "编辑配置快照",
+[F111:256]|     "exportName": "环境备份",
+[F111:257]|     "defaultImportName": "导入配置 {{date}}"
+[F111:258]|   },
+[F111:259]|   "recurring": {
+[F111:260]|     "addRule": "新建规则",
+[F111:261]|     "editRule": "编辑规则",
+[F111:262]|     "ruleTitle": "规则名称",
+[F111:263]|     "ruleTitlePlaceholder": "例如：每周周报总结",
+[F111:264]|     "ruleDescription": "描述",
+[F111:265]|     "ruleDescriptionPlaceholder": "任务描述...",
+[F111:266]|     "targetZone": "目标分区",
+[F111:267]|     "selectZone": "选择分区",
+[F111:268]|     "triggerInterval": "触发间隔",
+[F111:269]|     "minInterval": "(最小5分钟)",
+[F111:270]|     "autoDeadline": "自动设定 DDL",
+[F111:271]|     "afterGeneration": "(生成后)",
+[F111:272]|     "priority": "优先级",
+[F111:273]|     "active": "启用",
+[F111:274]|     "noRules": "暂无自动化规则",
+[F111:275]|     "every": "每",
+[F111:276]|     "minutes": "分钟",
+[F111:277]|     "hours": "小时",
+[F111:278]|     "days": "天",
+[F111:279]|     "globalRules": "全局规则",
+[F111:280]|     "workspaceRules": "工作区规则",
+[F111:281]|     "saveRule": "保存规则",
+[F111:282]|     "unknownZone": "未知分区",
+[F111:283]|     "ddl": "DDL",
+[F111:284]|     "autoGenerated": "{{desc}}\n(自动生成)",
+[F111:285]|     "autoGeneratedSuffix": "自动生成"
+[F111:286]|   },
+[F111:287]|   "urgency": {
+[F111:288]|     "overdue": "已逾期",
+[F111:289]|     "overduePrefix": "已逾期 ",
+[F111:290]|     "remainingPrefix": "剩余 ",
+[F111:291]|     "veryUrgent": "重要且紧急",
+[F111:292]|     "urgent": "重要或紧急",
+[F111:293]|     "soon": "一般",
+[F111:294]|     "upcoming": "低优先级",
+[F111:295]|     "later": "低优先级",
+[F111:296]|     "farFuture": "低优先级",
+[F111:297]|     "noDeadline": "未设截止日期",
+[F111:298]|     "todayOverdue": "今天 (已逾期)",
+[F111:299]|     "tomorrowOverdue": "明天 (已逾期)",
+[F111:300]|     "weekOverdue": "本周 (已逾期)",
+[F111:301]|     "exactOverdue": "{{date}} (已逾期)",
+[F111:302]|     "daysHours": "{{days}}天{{hours}}时",
+[F111:303]|     "hoursMins": "{{hours}}时{{mins}}分",
+[F111:304]|     "mins": "{{mins}}分"
+[F111:305]|   },
+[F111:306]|   "time": {
+[F111:307]|     "hoursMinsSecs": "{{hours}}小时{{mins}}分{{secs}}秒",
+[F111:308]|     "minsSecs": "{{mins}}分{{secs}}秒",
+[F111:309]|     "secs": "{{secs}}秒",
+[F111:310]|     "hM": "{{hours}}h {{mins}}m",
+[F111:311]|     "m": "{{mins}}m"
+[F111:312]|   },
+[F111:313]|   "messages": {
+[F111:314]|     "confirmDelete": "确定要删除这个模板吗？此操作无法撤销。",
+[F111:315]|     "deleteZoneWarning": "删除分区将同时删除其下所有任务",
+[F111:316]|     "deleteTaskWarning": "确定要删除这个任务吗？",
+[F111:317]|     "timerComplete": "时间到！",
+[F111:318]|     "breakComplete": "休息结束！",
+[F111:319]|     "taskCompleted": "任务已完成",
+[F111:320]|     "workspaceSaved": "工作区已保存",
+[F111:321]|     "workspaceRestored": "已恢复历史工作区",
+[F111:322]|     "settingsReset": "设置已重置",
+[F111:323]|     "confirmOverwrite": "确认覆盖",
+[F111:324]|     "overwriteConfirm": "该记录已存在，是否覆盖之前的存档？"
+[F111:325]|   },
+[F111:326]|   "toast": {
+[F111:327]|     "focusComplete": "专注完成！",
+[F111:328]|     "taskAccumulated": "任务 \"{{title}}\" 累计工作 {{minutes}} 分钟",
+[F111:329]|     "breakEnd": "休息结束",
+[F111:330]|     "readyForNext": "准备好开始新的专注了吗？",
+[F111:331]|     "taskSelected": "已选择任务",
+[F111:332]|     "clickToStartTimer": "点击\"开始专注\"为 \"{{title}}\" 计时",
+[F111:333]|     "clickToStart": "点击\"开始专注\"开始计时",
+[F111:334]|     "undo": "已撤销",
+[F111:335]|     "redo": "已重做",
+[F111:336]|     "taskCopied": "任务已复制",
+[F111:337]|     "zoneCopied": "工作区 \"{{name}}\" 已复制",
+[F111:338]|     "zonePasted": "已粘贴工作区 \"{{name}}\"",
+[F111:339]|     "taskPasted": "任务已粘贴",
+[F111:340]|     "subtaskPasted": "子任务已粘贴",
+[F111:341]|     "taskDeleted": "任务已删除",
+[F111:342]|     "archived": "已存入历史",
+[F111:343]|     "archiveSuccessDesc": "工作区 \"{{name}}\" 已保存到历史记录",
+[F111:344]|     "workspaceCreated": "新工作区已创建",
+[F111:345]|     "workspaceCreatedTemplate": "使用模板创建了新工作区",
+[F111:346]|     "workspaceCreatedBlank": "创建了空白工作区",
+[F111:347]|     "autoSaved": "已自动保存"
+[F111:348]|   },
+[F111:349]|   "window": {
+[F111:350]|     "pin": "置顶窗口",
+[F111:351]|     "unpin": "取消置顶",
+[F111:352]|     "collapseToBall": "收起为悬浮球",
+[F111:353]|     "minimize": "最小化",
+[F111:354]|     "close": "关闭"
+[F111:355]|   },
+[F111:356]|   "weightedSort": "加权排序"
+[F111:357]| }
 
 ================================================================================
-文件路径: src\store\slices\settingsSlice.ts(F112) (约合大小: 5 KB)
+文件路径: src\store\index.ts(F112) (约合大小: 6 KB)
 ================================================================================
-[F112:1]| import type { StateCreator } from 'zustand';
-[F112:2]| import type { Template, SortConfig, ConfigProfile, RecurringTemplate } from '@/types';
-[F112:3]| import { DEFAULT_SETTINGS, PREDEFINED_TEMPLATES } from '@/types';
-[F112:4]| import type { ZoneSlice } from './zoneSlice';
-[F112:5]| import type { TaskSlice } from './taskSlice';
-[F112:6]| 
-[F112:7]| export interface SettingsState {
-[F112:8]|   settings: {
-[F112:9]|     language: string;
-[F112:10]|     workDuration: number;
-[F112:11]|     breakDuration: number;
-[F112:12]|     longBreakDuration: number;
-[F112:13]|     autoStartBreak: boolean;
-[F112:14]|     soundEnabled: boolean;
-[F112:15]|     collapsed: boolean;
-[F112:16]|     collapsePosition: { x: number; y: number };
-[F112:17]|     globalViewSort: SortConfig;
-[F112:18]|     globalViewLeafMode: boolean;
-[F112:19]|     autoSaveEnabled: boolean;
-[F112:20]|     autoSaveInterval: number;
-[F112:21]|   };
-[F112:22]|   customTemplates: Template[];
-[F112:23]|   configProfiles: ConfigProfile[];
-[F112:24]| }
-[F112:25]| 
-[F112:26]| export interface SettingsActions {
-[F112:27]|   updateSettings: (settings: Partial<SettingsState['settings']>) => void;
-[F112:28]|   saveCustomTemplate: (name: string) => void;
-[F112:29]|   deleteCustomTemplate: (id: string) => void;
-[F112:30]|   renameCustomTemplate: (id: string, newName: string) => void;
-[F112:31]|   applyTemplate: (templateId: string) => void;
-[F112:32]|   saveConfigProfile: (name: string, globalRules: RecurringTemplate[]) => void;
-[F112:33]|   applyConfigProfile: (profileId: string) => void;
-[F112:34]|   deleteConfigProfile: (id: string) => void;
-[F112:35]|   updateConfigProfile: (id: string, updates: Partial<ConfigProfile>) => void;
-[F112:36]|   importConfigProfile: (importedData: Partial<ConfigProfile>) => boolean;
-[F112:37]| }
-[F112:38]| 
-[F112:39]| export type SettingsSlice = SettingsState & SettingsActions;
-[F112:40]| 
-[F112:41]| export const createSettingsSlice: StateCreator<SettingsSlice & ZoneSlice & TaskSlice, [], [], SettingsSlice> = (set, get) => ({
-[F112:42]|   settings: DEFAULT_SETTINGS,
-[F112:43]|   customTemplates: [],
-[F112:44]|   configProfiles: [],
-[F112:45]| 
-[F112:46]|   updateSettings: (newSettings) => set((state) => ({
-[F112:47]|     settings: { ...state.settings, ...newSettings }
-[F112:48]|   })),
-[F112:49]| 
-[F112:50]|   saveCustomTemplate: (name) => set((state) => {
-[F112:51]|     const zones = get().zones.map(z => ({
-[F112:52]|       name: z.name,
-[F112:53]|       color: z.color,
-[F112:54]|       order: z.order,
-[F112:55]|     }));
-[F112:56]| 
-[F112:57]|     const newTemplate: Template = {
-[F112:58]|       id: `template-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-[F112:59]|       name,
-[F112:60]|       description: `自定义模板 - ${zones.length} 个分区`,
-[F112:61]|       icon: 'User',
-[F112:62]|       zones,
-[F112:63]|     };
-[F112:64]| 
-[F112:65]|     return { customTemplates: [...state.customTemplates, newTemplate] };
-[F112:66]|   }),
-[F112:67]| 
-[F112:68]|   deleteCustomTemplate: (id) => set((state) => ({
-[F112:69]|     customTemplates: state.customTemplates.filter(t => t.id !== id)
-[F112:70]|   })),
-[F112:71]| 
-[F112:72]|   renameCustomTemplate: (id, newName) => set((state) => ({
-[F112:73]|     customTemplates: state.customTemplates.map(t =>
-[F112:74]|       t.id === id ? { ...t, name: newName } : t
-[F112:75]|     )
-[F112:76]|   })),
-[F112:77]| 
-[F112:78]|   applyTemplate: (templateId) => set((state) => {
-[F112:79]|     const predefined = PREDEFINED_TEMPLATES.find(t => t.id === templateId);
-[F112:80]|     const custom = state.customTemplates.find(t => t.id === templateId);
-[F112:81]|     const template = predefined || custom;
-[F112:82]| 
-[F112:83]|     if (!template) return state;
-[F112:84]| 
-[F112:85]|     const newZones = template.zones.map((z, index) => ({
-[F112:86]|       id: `zone-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
-[F112:87]|       name: z.name,
-[F112:88]|       color: z.color,
-[F112:89]|       order: z.order,
-[F112:90]|       createdAt: Date.now(),
-[F112:91]|     }));
-[F112:92]| 
-[F112:93]|     return { zones: newZones, tasks: [] };
-[F112:94]|   }),
-[F112:95]| 
-[F112:96]|   saveConfigProfile: (name, globalRules) => set((state) => {
-[F112:97]|     const newProfile: ConfigProfile = {
-[F112:98]|       id: `profile-${Date.now()}`,
-[F112:99]|       name,
-[F112:100]|       createdAt: Date.now(),
-[F112:101]|       settings: JSON.parse(JSON.stringify(state.settings)),
-[F112:102]|       customTemplates: JSON.parse(JSON.stringify(state.customTemplates)),
-[F112:103]|       recurringTemplates: JSON.parse(JSON.stringify(globalRules)),
-[F112:104]|     };
-[F112:105]|     return { configProfiles: [newProfile, ...(state.configProfiles || [])] };
-[F112:106]|   }),
-[F112:107]| 
-[F112:108]|   applyConfigProfile: (profileId) => set((state) => {
-[F112:109]|     const profile = state.configProfiles?.find(p => p.id === profileId);
-[F112:110]|     if (!profile) return state;
+[F112:1]| import { create } from 'zustand';
+[F112:2]| import { persist, createJSONStorage, type PersistOptions } from 'zustand/middleware';
+[F112:3]| import { sqliteStorage, setIsHydrated, onStoreReload, resetStorageState } from '@/lib/storage-adapter';
+[F112:4]| import { persistentLog } from '@/lib/persistent-log';
+[F112:5]| import { clearDbCache } from '@/lib/db';
+[F112:6]| import { createUISlice, type UISlice } from './slices/uiSlice';
+[F112:7]| import { createZoneSlice, type ZoneSlice } from './slices/zoneSlice';
+[F112:8]| import { createTaskSlice, type TaskSlice } from './slices/taskSlice';
+[F112:9]| import { createHistorySlice, type HistorySlice } from './slices/historySlice';
+[F112:10]| import { createSettingsSlice, type SettingsSlice } from './slices/settingsSlice';
+[F112:11]| import { createUndoSlice, type UndoSlice } from './slices/undoSlice';
+[F112:12]| import { DEFAULT_SETTINGS } from '@/types';
+[F112:13]| 
+[F112:14]| export type AppStore = UISlice & ZoneSlice & TaskSlice & HistorySlice & SettingsSlice & UndoSlice;
+[F112:15]| 
+[F112:16]| // 合并函数：确保新添加的设置字段使用默认值
+[F112:17]| // 关键：persistedState 必须优先于 currentState，否则会导致数据丢失
+[F112:18]| const mergeSettings = <T, S>(persistedState: T | undefined, currentState: S): T & S => {
+[F112:19]|   // 如果没有持久化数据，直接返回当前状态（默认状态）
+[F112:20]|   if (!persistedState) {
+[F112:21]|     console.log('[MERGE] No persisted state, using currentState');
+[F112:22]|     return currentState as T & S;
+[F112:23]|   }
+[F112:24]| 
+[F112:25]|   const persisted = persistedState as Record<string, unknown>;
+[F112:26]|   const persistedSettings = persisted.settings as Record<string, unknown> || {};
+[F112:27]|   const stateNested = persisted.state as Record<string, unknown> | undefined;
+[F112:28]| 
+[F112:29]|   // 调试：打印原始 persisted 数据
+[F112:30]|   console.log('[MERGE] Raw persisted:', JSON.stringify(persisted).substring(0, 500));
+[F112:31]| 
+[F112:32]|   // 处理可能的嵌套结构 { state: { tasks, zones } } 或扁平结构 { tasks, zones }
+[F112:33]|   let tasks = persisted.tasks || stateNested?.tasks;
+[F112:34]|   let zones = persisted.zones || stateNested?.zones;
+[F112:35]| 
+[F112:36]|   const tasksArr = tasks as unknown[];
+[F112:37]|   const zonesArr = zones as unknown[];
+[F112:38]|   console.log('[MERGE] Extracted tasks:', tasksArr?.length, 'zones:', zonesArr?.length);
+[F112:39]| 
+[F112:40]|   // 对每个设置字段应用默认值
+[F112:41]|   const mergedSettings = { ...DEFAULT_SETTINGS };
+[F112:42]|   Object.keys(mergedSettings).forEach((key) => {
+[F112:43]|     // 如果持久化状态中有该值，使用持久化值
+[F112:44]|     if (persistedSettings[key] !== undefined) {
+[F112:45]|       (mergedSettings as Record<string, unknown>)[key] = persistedSettings[key];
+[F112:46]|     }
+[F112:47]|   });
+[F112:48]| 
+[F112:49]|   // 关键修复：persisted 必须放在 currentState 之后，这样 persisted 的数据会覆盖 currentState
+[F112:50]|   const result = {
+[F112:51]|     ...(currentState as Record<string, unknown>),
+[F112:52]|     ...persisted,
+[F112:53]|     tasks: tasksArr || [],
+[F112:54]|     zones: zonesArr || [],
+[F112:55]|     settings: mergedSettings,
+[F112:56]|   } as T & S;
+[F112:57]| 
+[F112:58]|   const resultTyped = result as Record<string, unknown>;
+[F112:59]|   const resultTasks = resultTyped.tasks as unknown[];
+[F112:60]|   const resultZones = resultTyped.zones as unknown[];
+[F112:61]|   console.log('[MERGE] Result tasks:', resultTasks?.length, 'zones:', resultZones?.length);
+[F112:62]| 
+[F112:63]|   return result;
+[F112:64]| };
+[F112:65]| 
+[F112:66]| // 组合所有 slices
+[F112:67]| // 先创建 store 的基础实现
+[F112:68]| const storeImpl = (...a: Parameters<typeof createUISlice>) => ({
+[F112:69]|   ...createUISlice(...a),
+[F112:70]|   ...createZoneSlice(...a),
+[F112:71]|   ...createTaskSlice(...a),
+[F112:72]|   ...createHistorySlice(...a),
+[F112:73]|   ...createSettingsSlice(...a),
+[F112:74]|   ...createUndoSlice(...a),
+[F112:75]| });
+[F112:76]| 
+[F112:77]| // persist 配置
+[F112:78]| const persistOptions: Parameters<typeof persist>[1] = {
+[F112:79]|   name: 'focus-flow-storage-v4',
+[F112:80]|   storage: createJSONStorage(() => sqliteStorage),
+[F112:81]|   merge: mergeSettings,
+[F112:82]|   // 监控水合状态
+[F112:83]|   onRehydrateStorage: () => {
+[F112:84]|     return (state, error) => {
+[F112:85]|       if (error) {
+[F112:86]|         console.error('[ZUSTAND] Hydration failed', error);
+[F112:87]|         persistentLog('Store', 'Hydration FAILED', 'ERROR', String(error));
+[F112:88]|       } else {
+[F112:89]|         console.log('[ZUSTAND] Hydration complete, tasks:', state?.tasks?.length);
+[F112:90]|         persistentLog('Store', 'Hydration complete', 'INFO', { tasks: state?.tasks?.length, zones: state?.zones?.length });
+[F112:91]|         // 标记水合完成
+[F112:92]|         setIsHydrated(true);
+[F112:93]|       }
+[F112:94]|     };
+[F112:95]|   },
+[F112:96]|   partialize: (state) => ({
+[F112:97]|     currentView: state.currentView,
+[F112:98]|     activeZoneId: state.activeZoneId,
+[F112:99]|     focusedTaskId: state.focusedTaskId,
+[F112:100]|     activeHistoryId: state.activeHistoryId,
+[F112:101]|     zones: state.zones,
+[F112:102]|     tasks: state.tasks,
+[F112:103]|     currentWorkspace: state.currentWorkspace,
+[F112:104]|     historyWorkspaces: state.historyWorkspaces,
+[F112:105]|     customTemplates: state.customTemplates,
+[F112:106]|     configProfiles: state.configProfiles || [],
+[F112:107]|     settings: state.settings,
+[F112:108]|     recurringTemplates: state.recurringTemplates || [],
+[F112:109]|   }),
+[F112:110]| };
 [F112:111]| 
-[F112:112]|     // 智能回退防崩：如果规则的 zoneId 当前工作区没有，降级到第一个可用分区
-[F112:113]|     const currentZones = get().zones;
-[F112:114]|     const fallbackZoneId = currentZones.length > 0 ? currentZones[0].id : '';
-[F112:115]|     const validRules = profile.recurringTemplates.map(rule => ({
-[F112:116]|       ...rule,
-[F112:117]|       zoneId: currentZones.some(z => z.id === rule.zoneId) ? rule.zoneId : fallbackZoneId
-[F112:118]|     }));
+[F112:112]| // 创建带有 persist 中间件的 store
+[F112:113]| export const useAppStore = create<AppStore>()(
+[F112:114]|   persist(storeImpl, persistOptions)
+[F112:115]| );
+[F112:116]| 
+[F112:117]| // 🚀 注册单页切换后的重新加载回调
+[F112:118]| let unregisterReload: (() => void) | null = null;
 [F112:119]| 
-[F112:120]|     // 合并逻辑：保留当前的局部规则，替换全局规则为快照中的全局规则
-[F112:121]|     const allCurrentRules = (state as any).recurringTemplates || [];
-[F112:122]|     const localRules = allCurrentRules.filter((r: RecurringTemplate) => r.scope === 'workspace');
-[F112:123]|     const mergedRules = [...localRules, ...validRules];
-[F112:124]| 
-[F112:125]|     return {
-[F112:126]|       settings: profile.settings,
-[F112:127]|       customTemplates: profile.customTemplates,
-[F112:128]|       recurringTemplates: mergedRules,
-[F112:129]|     } as SettingsState & { recurringTemplates: RecurringTemplate[] };
-[F112:130]|   }),
-[F112:131]| 
-[F112:132]|   deleteConfigProfile: (id) => set((state) => ({
-[F112:133]|     configProfiles: (state.configProfiles || []).filter(p => p.id !== id)
-[F112:134]|   })),
+[F112:120]| export function initStoreReloadHandler() {
+[F112:121]|   // 如果已经注册过，先取消注册
+[F112:122]|   if (unregisterReload) {
+[F112:123]|     unregisterReload();
+[F112:124]|   }
+[F112:125]| 
+[F112:126]|   // 注册新的 reload 回调
+[F112:127]|   unregisterReload = onStoreReload(async () => {
+[F112:128]|     console.log('[Store] Reload callback triggered');
+[F112:129]|     persistentLog('Store', 'Reload callback triggered', 'INFO');
+[F112:130]| 
+[F112:131]|     try {
+[F112:132]|       // 1. 重置存储状态
+[F112:133]|       resetStorageState();
+[F112:134]|       clearDbCache();
 [F112:135]| 
-[F112:136]|   updateConfigProfile: (id, updates) => set((state) => ({
-[F112:137]|     configProfiles: (state.configProfiles || []).map(p =>
-[F112:138]|       p.id === id ? { ...p, ...updates } : p
-[F112:139]|     )
-[F112:140]|   })),
-[F112:141]| 
-[F112:142]|   importConfigProfile: (parsed) => {
-[F112:143]|     try {
-[F112:144]|       if (!parsed || !parsed.settings) return false;
-[F112:145]| 
-[F112:146]|       const newProfile: ConfigProfile = {
-[F112:147]|         id: `profile-imported-${Date.now()}`,
-[F112:148]|         name: parsed.name || `导入配置 ${new Date().toLocaleDateString()}`,
-[F112:149]|         createdAt: Date.now(),
-[F112:150]|         settings: parsed.settings,
-[F112:151]|         customTemplates: parsed.customTemplates || [],
-[F112:152]|         recurringTemplates: parsed.recurringTemplates || [],
-[F112:153]|       };
-[F112:154]| 
-[F112:155]|       set((state) => ({
-[F112:156]|         configProfiles: [newProfile, ...(state.configProfiles || [])]
-[F112:157]|       }));
-[F112:158]|       return true;
-[F112:159]|     } catch {
-[F112:160]|       return false;
-[F112:161]|     }
-[F112:162]|   },
-[F112:163]| });
+[F112:136]|       // 2. 强制 Zustand 重新 hydration
+[F112:137]|       // @ts-ignore - persist 内部 API
+[F112:138]|       const persistImpl = useAppStore.persist;
+[F112:139]| 
+[F112:140]|       if (persistImpl) {
+[F112:141]|         // 清除当前的 persisted state
+[F112:142]|         // @ts-ignore
+[F112:143]|         persistImpl.setOptions({ ...persistOptions, storage: createJSONStorage(() => sqliteStorage) });
+[F112:144]| 
+[F112:145]|         // 🚀 关键修复：清除 Zustand 内部缓存，强制从数据库重新读取
+[F112:146]|         // @ts-ignore - persist 内部 API
+[F112:147]|         try {
+[F112:148]|           // 清除 storedState 缓存
+[F112:149]|           persistImpl.setState({ storedState: undefined }, true);
+[F112:150]|         } catch (e) {
+[F112:151]|           console.log('[Store] Could not clear storedState cache, trying alternative method');
+[F112:152]|         }
+[F112:153]| 
+[F112:154]|         // 重新触发 hydration
+[F112:155]|         await persistImpl.rehydrate();
+[F112:156]| 
+[F112:157]|         console.log('[Store] Rehydration complete');
+[F112:158]|         persistentLog('Store', 'Rehydration complete', 'INFO');
+[F112:159]|       }
+[F112:160]|     } catch (error) {
+[F112:161]|       console.error('[Store] Error during reload:', error);
+[F112:162]|       persistentLog('Store', 'Reload error', 'ERROR', String(error));
+[F112:163]|     }
+[F112:164]|   });
+[F112:165]| 
+[F112:166]|   console.log('[Store] Reload handler registered');
+[F112:167]| }
+[F112:168]| 
+[F112:169]| // 在模块加载时初始化 reload handler
+[F112:170]| if (typeof window !== 'undefined') {
+[F112:171]|   // 延迟执行，确保所有模块都已加载
+[F112:172]|   setTimeout(() => {
+[F112:173]|     initStoreReloadHandler();
+[F112:174]|   }, 0);
+[F112:175]| }
 
 ================================================================================
-文件路径: src\store\slices\taskSlice.ts(F113) (约合大小: 17 KB)
+文件路径: src\store\slices\historySlice.ts(F113) (约合大小: 9 KB)
 ================================================================================
 [F113:1]| import type { StateCreator } from 'zustand';
-[F113:2]| import type { Task, TaskPriority, TaskUrgency, DeadlineType, RecurringTemplate } from '@/types';
-[F113:3]| import type { UndoSlice } from './undoSlice';
-[F113:4]| import i18n from '@/lib/i18n';
-[F113:5]| 
-[F113:6]| export interface TaskComputedTime {
-[F113:7]|   totalWorkTime: number;
-[F113:8]|   estimatedTime: number;
-[F113:9]| }
-[F113:10]| 
-[F113:11]| export interface TaskState {
-[F113:12]|   tasks: Task[];
-[F113:13]|   // 预计算的任务时间，避免渲染时递归计算
-[F113:14]|   taskComputedTimes: Record<string, TaskComputedTime>;
-[F113:15]|   // 定时任务模板
-[F113:16]|   recurringTemplates: RecurringTemplate[];
-[F113:17]| }
-[F113:18]| 
-[F113:19]| export interface TaskActions {
-[F113:20]|   addTask: (zoneId: string, title: string, description: string, priority?: TaskPriority, urgency?: TaskUrgency, deadline?: number | null, deadlineType?: DeadlineType, parentId?: string | null) => void;
-[F113:21]|   updateTask: (id: string, updates: Partial<Task>) => void;
-[F113:22]|   toggleTask: (id: string) => void;
-[F113:23]|   deleteTask: (id: string) => void;
-[F113:24]|   reorderTasks: (zoneId: string, newTasks: Task[]) => void;
-[F113:25]|   clearCompleted: (zoneId?: string) => void;
-[F113:26]|   toggleExpanded: (id: string) => void;
-[F113:27]|   toggleSubtasksCollapsed: (id: string) => void;
-[F113:28]|   expandTask: (id: string) => void;
-[F113:29]|   moveTaskNode: (activeId: string, newParentId: string | null, anchorId: string | null, zoneId: string) => void;
-[F113:30]|   // 定时任务相关
-[F113:31]|   addRecurringTemplate: (template: Omit<RecurringTemplate, 'id' | 'lastTriggeredAt'>) => void;
-[F113:32]|   updateRecurringTemplate: (id: string, updates: Partial<RecurringTemplate>) => void;
-[F113:33]|   deleteRecurringTemplate: (id: string) => void;
-[F113:34]|   checkRecurringTasks: () => void;
-[F113:35]| }
-[F113:36]| 
-[F113:37]| export interface TaskComputed {
-[F113:38]|   getTasksByZone: (zoneId: string) => Task[];
-[F113:39]|   getRootTasks: (zoneId: string) => Task[];
-[F113:40]|   getChildTasks: (parentId: string) => Task[];
-[F113:41]|   getStats: () => { total: number; completed: number; pending: number; highPriority: number; urgent: number };
-[F113:42]| }
-[F113:43]| 
-[F113:44]| export interface TaskTimerActions {
-[F113:45]|   addWorkTime: (taskId: string, seconds: number) => void;
-[F113:46]|   getTotalWorkTime: (taskId: string) => number;
-[F113:47]|   getEstimatedTime: (taskId: string) => number;
-[F113:48]| }
-[F113:49]| 
-[F113:50]| export type TaskSlice = TaskState & TaskActions & TaskComputed & TaskTimerActions;
+[F113:2]| import type { HistoryWorkspace, CurrentWorkspace, Zone, Task } from '@/types';
+[F113:3]| import type { TaskSlice } from './taskSlice';
+[F113:4]| import type { ZoneSlice } from './zoneSlice';
+[F113:5]| import i18n from '@/lib/i18n';
+[F113:6]| 
+[F113:7]| export interface HistoryState {
+[F113:8]|   historyWorkspaces: HistoryWorkspace[];
+[F113:9]|   currentWorkspace: CurrentWorkspace;
+[F113:10]| }
+[F113:11]| 
+[F113:12]| export interface HistoryActions {
+[F113:13]|   archiveCurrentWorkspace: (name?: string, summary?: string) => string;
+[F113:14]|   quickArchiveCurrentWorkspace: () => string | null;
+[F113:15]|   autoSaveSnapshot: () => string | null;
+[F113:16]|   overwriteHistoryWorkspace: (historyId: string) => void;
+[F113:17]|   restoreFromHistory: (historyId: string) => void;
+[F113:18]|   createNewWorkspace: (name?: string, templateId?: string) => void;
+[F113:19]|   deleteHistoryWorkspace: (id: string) => void;
+[F113:20]|   renameHistoryWorkspace: (id: string, newName: string) => void;
+[F113:21]|   updateHistorySummary: (id: string, summary: string) => void;
+[F113:22]|   exportHistoryToJson: (historyId: string) => string | null;
+[F113:23]|   exportAllHistoryToJson: () => string;
+[F113:24]|   importHistoryFromJson: (jsonString: string) => boolean;
+[F113:25]|   importAllHistoryFromJson: (jsonString: string) => number;
+[F113:26]|   hasUnsavedChanges: () => boolean;
+[F113:27]| }
+[F113:28]| 
+[F113:29]| export type HistorySlice = HistoryState & HistoryActions;
+[F113:30]| 
+[F113:31]| // 创建新工作区结构
+[F113:32]| const createWorkspaceData = (name = i18n.t('workspace.defaultName')): CurrentWorkspace => ({
+[F113:33]|   id: `workspace-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+[F113:34]|   name,
+[F113:35]|   zones: [],
+[F113:36]|   tasks: [],
+[F113:37]|   sessions: [],
+[F113:38]|   createdAt: Date.now(),
+[F113:39]|   lastModified: Date.now(),
+[F113:40]| });
+[F113:41]| 
+[F113:42]| export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSlice, [], [], HistorySlice> = (set, get) => ({
+[F113:43]|   historyWorkspaces: [],
+[F113:44]|   currentWorkspace: createWorkspaceData(),
+[F113:45]| 
+[F113:46]|   archiveCurrentWorkspace: (name, summary) => {
+[F113:47]|     const historyId = `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+[F113:48]|     const state = get() as unknown as { zones: Zone[]; tasks: Task[]; currentWorkspace: CurrentWorkspace; historyWorkspaces: HistoryWorkspace[] };
+[F113:49]|     const zones = state.zones;
+[F113:50]|     const tasks = state.tasks;
 [F113:51]| 
-[F113:52]| // 辅助函数：向上递归更新所有父任务的 totalWorkTime
-[F113:53]| const updateParentWorkTimes = (tasks: Task[], childId: string, addedSeconds: number): void => {
-[F113:54]|   const child = tasks.find(t => t.id === childId);
-[F113:55]|   if (!child?.parentId) return;
-[F113:56]| 
-[F113:57]|   const parent = tasks.find(t => t.id === child.parentId);
-[F113:58]|   if (!parent) return;
-[F113:59]| 
-[F113:60]|   const parentIndex = tasks.findIndex(t => t.id === parent.id);
-[F113:61]|   if (parentIndex === -1) return;
+[F113:52]|     const history: HistoryWorkspace = {
+[F113:53]|       ...state.currentWorkspace,
+[F113:54]|       id: historyId,
+[F113:55]|       name: name || state.currentWorkspace.name,
+[F113:56]|       zones,
+[F113:57]|       tasks,
+[F113:58]|       sessions: [],
+[F113:59]|       summary: summary || i18n.t('workspace.defaultSummary', { zones: zones.length, tasks: tasks.length }),
+[F113:60]|       lastModified: Date.now(),
+[F113:61]|     };
 [F113:62]| 
-[F113:63]|   tasks[parentIndex] = {
-[F113:64]|     ...parent,
-[F113:65]|     totalWorkTime: (parent.totalWorkTime || 0) + addedSeconds
-[F113:66]|   };
-[F113:67]| 
-[F113:68]|   updateParentWorkTimes(tasks, parent.id, addedSeconds);
-[F113:69]| };
-[F113:70]| 
-[F113:71]| // 辅助函数：递归计算任务的 totalWorkTime
-[F113:72]| const recalculateTotalWorkTime = (tasks: Task[], taskId: string): number => {
-[F113:73]|   const taskIndex = tasks.findIndex(t => t.id === taskId);
-[F113:74]|   if (taskIndex === -1) return 0;
-[F113:75]| 
-[F113:76]|   const task = tasks[taskIndex];
-[F113:77]|   const childTasks = tasks.filter(t => t.parentId === taskId);
-[F113:78]| 
-[F113:79]|   const childrenTotalTime = childTasks.reduce((sum, child) => {
-[F113:80]|     return sum + recalculateTotalWorkTime(tasks, child.id);
-[F113:81]|   }, 0);
-[F113:82]| 
-[F113:83]|   const totalWorkTime = (task.ownTime || 0) + childrenTotalTime;
-[F113:84]| 
-[F113:85]|   tasks[taskIndex] = { ...task, totalWorkTime };
-[F113:86]| 
-[F113:87]|   return totalWorkTime;
-[F113:88]| };
-[F113:89]| 
-[F113:90]| // 辅助函数：递归计算任务的 estimatedTime
-[F113:91]| const recalculateEstimatedTime = (tasks: Task[], taskId: string): number => {
-[F113:92]|   const taskIndex = tasks.findIndex(t => t.id === taskId);
-[F113:93]|   if (taskIndex === -1) return 0;
-[F113:94]| 
-[F113:95]|   const task = tasks[taskIndex];
-[F113:96]| 
-[F113:97]|   if (task.estimatedTime !== undefined && task.estimatedTime > 0) {
-[F113:98]|     return task.estimatedTime;
-[F113:99]|   }
-[F113:100]| 
-[F113:101]|   const childTasks = tasks.filter(t => t.parentId === taskId);
-[F113:102]|   const childrenEstimatedTime = childTasks.reduce((sum, child) => {
-[F113:103]|     return sum + recalculateEstimatedTime(tasks, child.id);
-[F113:104]|   }, 0);
-[F113:105]| 
-[F113:106]|   if (childrenEstimatedTime > 0) {
-[F113:107]|     tasks[taskIndex] = { ...task, estimatedTime: childrenEstimatedTime };
-[F113:108]|   }
-[F113:109]| 
-[F113:110]|   return childrenEstimatedTime;
-[F113:111]| };
+[F113:63]|     set({
+[F113:64]|       historyWorkspaces: [history, ...state.historyWorkspaces],
+[F113:65]|       currentWorkspace: createWorkspaceData(state.currentWorkspace.name),
+[F113:66]|       zones: [],
+[F113:67]|       tasks: [],
+[F113:68]|     });
+[F113:69]| 
+[F113:70]|     return historyId;
+[F113:71]|   },
+[F113:72]| 
+[F113:73]|   quickArchiveCurrentWorkspace: () => {
+[F113:74]|     const state = get() as unknown as { zones: Zone[]; tasks: Task[]; currentWorkspace: CurrentWorkspace; historyWorkspaces: HistoryWorkspace[] };
+[F113:75]|     const zones = state.zones;
+[F113:76]|     const tasks = state.tasks;
+[F113:77]| 
+[F113:78]|     if (zones.length === 0 && tasks.length === 0) {
+[F113:79]|       return null;
+[F113:80]|     }
+[F113:81]| 
+[F113:82]|     const historyId = `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+[F113:83]|     const history: HistoryWorkspace = {
+[F113:84]|       ...state.currentWorkspace,
+[F113:85]|       id: historyId,
+[F113:86]|       zones,
+[F113:87]|       tasks,
+[F113:88]|       sessions: [],
+[F113:89]|       summary: i18n.t('workspace.defaultSummary', { zones: zones.length, tasks: tasks.length }),
+[F113:90]|       lastModified: Date.now(),
+[F113:91]|     };
+[F113:92]| 
+[F113:93]|     set({
+[F113:94]|       historyWorkspaces: [history, ...state.historyWorkspaces],
+[F113:95]|       currentWorkspace: createWorkspaceData(state.currentWorkspace.name),
+[F113:96]|       zones: [],
+[F113:97]|       tasks: [],
+[F113:98]|     });
+[F113:99]| 
+[F113:100]|     return historyId;
+[F113:101]|   },
+[F113:102]| 
+[F113:103]|   // 自动保存快照 - 覆盖式更新策略
+[F113:104]|   autoSaveSnapshot: () => {
+[F113:105]|     const state = get() as unknown as { zones: Zone[]; tasks: Task[]; currentWorkspace: CurrentWorkspace; historyWorkspaces: HistoryWorkspace[] };
+[F113:106]|     const zones = state.zones;
+[F113:107]|     const tasks = state.tasks;
+[F113:108]| 
+[F113:109]|     if (zones.length === 0 && tasks.length === 0) {
+[F113:110]|       return null;
+[F113:111]|     }
 [F113:112]| 
-[F113:113]| // 辅助函数：更新父任务的 estimatedTime
-[F113:114]| const updateParentEstimatedTime = (tasks: Task[], parentId: string): void => {
-[F113:115]|   const parent = tasks.find(t => t.id === parentId);
-[F113:116]|   if (!parent) return;
-[F113:117]| 
-[F113:118]|   if (parent.estimatedTime === undefined) {
-[F113:119]|     recalculateEstimatedTime(tasks, parentId);
-[F113:120]|   }
-[F113:121]| 
-[F113:122]|   if (parent.parentId) {
-[F113:123]|     updateParentEstimatedTime(tasks, parent.parentId);
-[F113:124]|   }
-[F113:125]| };
+[F113:113]|     // 固定的自动保存ID
+[F113:114]|     const AUTO_SAVE_ID = 'auto-save-fixed-slot';
+[F113:115]| 
+[F113:116]|     const snapshot: HistoryWorkspace = {
+[F113:117]|       ...state.currentWorkspace,
+[F113:118]|       id: AUTO_SAVE_ID,
+[F113:119]|       name: i18n.t('workspace.autoSaveName'),
+[F113:120]|       zones: JSON.parse(JSON.stringify(zones)),
+[F113:121]|       tasks: JSON.parse(JSON.stringify(tasks)),
+[F113:122]|       sessions: [],
+[F113:123]|       summary: i18n.t('workspace.defaultSummary', { zones: zones.length, tasks: tasks.length }),
+[F113:124]|       lastModified: Date.now(),
+[F113:125]|     };
 [F113:126]| 
-[F113:127]| // 预计算所有任务的时间
-[F113:128]| const computeAllTaskTimes = (tasks: Task[]): Record<string, TaskComputedTime> => {
-[F113:129]|   const computed: Record<string, TaskComputedTime> = {};
-[F113:130]| 
-[F113:131]|   // 先计算所有任务的 estimatedTime（自底向上）
-[F113:132]|   const rootTasks = tasks.filter(t => !t.parentId);
-[F113:133]|   const computeEstimated = (taskId: string): number => {
-[F113:134]|     const task = tasks.find(t => t.id === taskId);
-[F113:135]|     if (!task) return 0;
-[F113:136]| 
-[F113:137]|     if (task.estimatedTime !== undefined && task.estimatedTime > 0) {
-[F113:138]|       computed[taskId] = computed[taskId] || { totalWorkTime: 0, estimatedTime: 0 };
-[F113:139]|       computed[taskId].estimatedTime = task.estimatedTime;
-[F113:140]|       return task.estimatedTime;
-[F113:141]|     }
+[F113:127]|     const newHistories = [...state.historyWorkspaces];
+[F113:128]|     const existingIndex = newHistories.findIndex(h => h.id === AUTO_SAVE_ID);
+[F113:129]| 
+[F113:130]|     if (existingIndex !== -1) {
+[F113:131]|       // 已存在则覆盖并移到最前面
+[F113:132]|       newHistories.splice(existingIndex, 1);
+[F113:133]|       newHistories.unshift(snapshot);
+[F113:134]|     } else {
+[F113:135]|       // 不存在则插入头部
+[F113:136]|       newHistories.unshift(snapshot);
+[F113:137]|     }
+[F113:138]| 
+[F113:139]|     set({
+[F113:140]|       historyWorkspaces: newHistories.slice(0, 100),
+[F113:141]|     });
 [F113:142]| 
-[F113:143]|     const children = tasks.filter(t => t.parentId === taskId);
-[F113:144]|     const childrenEst = children.reduce((sum, child) => sum + computeEstimated(child.id), 0);
+[F113:143]|     return AUTO_SAVE_ID;
+[F113:144]|   },
 [F113:145]| 
-[F113:146]|     computed[taskId] = computed[taskId] || { totalWorkTime: 0, estimatedTime: 0 };
-[F113:147]|     computed[taskId].estimatedTime = childrenEst;
-[F113:148]|     return childrenEst;
-[F113:149]|   };
+[F113:146]|   overwriteHistoryWorkspace: (historyId) => {
+[F113:147]|     set((state) => {
+[F113:148]|       const historyIndex = state.historyWorkspaces.findIndex(h => h.id === historyId);
+[F113:149]|       if (historyIndex === -1) return state;
 [F113:150]| 
-[F113:151]|   rootTasks.forEach(t => computeEstimated(t.id));
-[F113:152]| 
-[F113:153]|   // 再计算所有任务的 totalWorkTime（自底向上）
-[F113:154]|   const computeTotalWorkTime = (taskId: string): number => {
-[F113:155]|     const task = tasks.find(t => t.id === taskId);
-[F113:156]|     if (!task) return 0;
-[F113:157]| 
-[F113:158]|     const children = tasks.filter(t => t.parentId === taskId);
-[F113:159]|     const childrenTotal = children.reduce((sum, child) => sum + computeTotalWorkTime(child.id), 0);
-[F113:160]| 
-[F113:161]|     const total = (task.ownTime || 0) + childrenTotal;
-[F113:162]| 
-[F113:163]|     if (!computed[taskId]) {
-[F113:164]|       computed[taskId] = { totalWorkTime: 0, estimatedTime: 0 };
-[F113:165]|     }
-[F113:166]|     computed[taskId].totalWorkTime = total;
+[F113:151]|       const stateWithData = state as unknown as { zones: Zone[]; tasks: Task[]; currentWorkspace: CurrentWorkspace };
+[F113:152]|       const currentZones = stateWithData.zones;
+[F113:153]|       const currentTasks = stateWithData.tasks;
+[F113:154]| 
+[F113:155]|       const history = state.historyWorkspaces[historyIndex];
+[F113:156]|       const overwritten: HistoryWorkspace = {
+[F113:157]|         ...history,
+[F113:158]|         zones: currentZones,
+[F113:159]|         tasks: currentTasks,
+[F113:160]|         sessions: [],
+[F113:161]|         summary: i18n.t('workspace.defaultSummary', { zones: currentZones.length, tasks: currentTasks.length }),
+[F113:162]|         lastModified: Date.now(),
+[F113:163]|       };
+[F113:164]| 
+[F113:165]|       const newHistory = [...state.historyWorkspaces];
+[F113:166]|       newHistory[historyIndex] = overwritten;
 [F113:167]| 
-[F113:168]|     return total;
-[F113:169]|   };
-[F113:170]| 
-[F113:171]|   rootTasks.forEach(t => computeTotalWorkTime(t.id));
-[F113:172]| 
-[F113:173]|   return computed;
-[F113:174]| };
-[F113:175]| 
-[F113:176]| export const createTaskSlice: StateCreator<TaskSlice & UndoSlice, [], [], TaskSlice> = (set, get) => ({
-[F113:177]|   tasks: [],
-[F113:178]|   taskComputedTimes: {},
-[F113:179]|   recurringTemplates: [],
-[F113:180]| 
-[F113:181]|   addTask: (zoneId, title, description, priority = 'medium', urgency = 'low', deadline = null, deadlineType = 'none', parentId = null) => {
-[F113:182]|     get().saveSnapshot?.();
-[F113:183]|     set((state) => {
-[F113:184]|       const tasks = [...state.tasks];
-[F113:185]|     const siblings = tasks.filter(t =>
-[F113:186]|       parentId ? t.parentId === parentId : (t.zoneId === zoneId && !t.parentId)
-[F113:187]|     );
-[F113:188]|     const maxOrder = siblings.length > 0 ? Math.max(...siblings.map(t => t.order)) : -1;
+[F113:168]|       return {
+[F113:169]|         historyWorkspaces: newHistory,
+[F113:170]|         currentWorkspace: { ...history, sourceHistoryId: historyId, zones: currentZones, tasks: currentTasks },
+[F113:171]|         zones: currentZones,
+[F113:172]|         tasks: currentTasks,
+[F113:173]|       };
+[F113:174]|     });
+[F113:175]|   },
+[F113:176]| 
+[F113:177]|   restoreFromHistory: (historyId) => {
+[F113:178]|     set((state) => {
+[F113:179]|       const history = state.historyWorkspaces.find(h => h.id === historyId);
+[F113:180]|       if (!history) return state;
+[F113:181]| 
+[F113:182]|       return {
+[F113:183]|         currentWorkspace: { ...history, sourceHistoryId: historyId },
+[F113:184]|         zones: history.zones,
+[F113:185]|         tasks: history.tasks,
+[F113:186]|       };
+[F113:187]|     });
+[F113:188]|   },
 [F113:189]| 
-[F113:190]|     const newTask: Task = {
-[F113:191]|       id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-[F113:192]|       zoneId, parentId, title, description, priority, urgency,
-[F113:193]|       deadline,
-[F113:194]|       deadlineType,
-[F113:195]|       completed: false, isCollapsed: false, expanded: false,
-[F113:196]|       order: maxOrder + 1, createdAt: Date.now(), totalWorkTime: 0, ownTime: 0
-[F113:197]|     };
-[F113:198]| 
-[F113:199]|     const newTasks = [...tasks, newTask];
+[F113:190]|   createNewWorkspace: (name, _templateId) => {
+[F113:191]|     const state = get();
+[F113:192]|     const workspaceName = name || state.currentWorkspace.name;
+[F113:193]| 
+[F113:194]|     set({
+[F113:195]|       currentWorkspace: createWorkspaceData(workspaceName),
+[F113:196]|       zones: [],
+[F113:197]|       tasks: [],
+[F113:198]|     });
+[F113:199]|   },
 [F113:200]| 
-[F113:201]|     if (parentId) {
-[F113:202]|       updateParentEstimatedTime(newTasks, parentId);
-[F113:203]|     }
+[F113:201]|   deleteHistoryWorkspace: (id) => set((state) => ({
+[F113:202]|     historyWorkspaces: state.historyWorkspaces.filter(h => h.id !== id)
+[F113:203]|   })),
 [F113:204]| 
-[F113:205]|     // 预计算所有任务时间
-[F113:206]|     const computedTimes = computeAllTaskTimes(newTasks);
-[F113:207]| 
-[F113:208]|     return { tasks: newTasks, taskComputedTimes: computedTimes };
-[F113:209]|     });
-[F113:210]|   },
-[F113:211]| 
-[F113:212]|   updateTask: (id, updates) => {
-[F113:213]|     get().saveSnapshot?.();
-[F113:214]|     set((state) => {
-[F113:215]|     const tasks = [...state.tasks];
-[F113:216]|     const taskIndex = tasks.findIndex(t => t.id === id);
-[F113:217]|     if (taskIndex === -1) return state;
-[F113:218]| 
-[F113:219]|     const task = tasks[taskIndex];
-[F113:220]|     const hasEstimatedTimeUpdate = 'estimatedTime' in updates;
-[F113:221]| 
-[F113:222]|     const newTasks = tasks.map(t => t.id === id ? { ...t, ...updates } : t);
-[F113:223]| 
-[F113:224]|     if (hasEstimatedTimeUpdate && task.parentId) {
-[F113:225]|       updateParentEstimatedTime(newTasks, task.parentId);
-[F113:226]|     }
-[F113:227]| 
-[F113:228]|     // 预计算所有任务时间
-[F113:229]|     const computedTimes = computeAllTaskTimes(newTasks);
-[F113:230]| 
-[F113:231]|     return { tasks: newTasks, taskComputedTimes: computedTimes };
-[F113:232]|     });
-[F113:233]|   },
+[F113:205]|   renameHistoryWorkspace: (id, newName) => set((state) => ({
+[F113:206]|     historyWorkspaces: state.historyWorkspaces.map(h =>
+[F113:207]|       h.id === id ? { ...h, name: newName, lastModified: Date.now() } : h
+[F113:208]|     )
+[F113:209]|   })),
+[F113:210]| 
+[F113:211]|   updateHistorySummary: (id, summary) => set((state) => ({
+[F113:212]|     historyWorkspaces: state.historyWorkspaces.map(h =>
+[F113:213]|       h.id === id ? { ...h, summary, lastModified: Date.now() } : h
+[F113:214]|     )
+[F113:215]|   })),
+[F113:216]| 
+[F113:217]|   exportHistoryToJson: (historyId) => {
+[F113:218]|     const history = get().historyWorkspaces.find(h => h.id === historyId);
+[F113:219]|     if (!history) return null;
+[F113:220]|     return JSON.stringify(history, null, 2);
+[F113:221]|   },
+[F113:222]| 
+[F113:223]|   exportAllHistoryToJson: () => {
+[F113:224]|     return JSON.stringify(get().historyWorkspaces, null, 2);
+[F113:225]|   },
+[F113:226]| 
+[F113:227]|   importHistoryFromJson: (jsonString) => {
+[F113:228]|     try {
+[F113:229]|       const parsed = JSON.parse(jsonString);
+[F113:230]|       // 兼容旧格式：允许 zones/tasks 为空或不存在
+[F113:231]|       if (!parsed.id || !parsed.name) {
+[F113:232]|         return false;
+[F113:233]|       }
 [F113:234]| 
-[F113:235]|   toggleTask: (id) => {
-[F113:236]|     get().saveSnapshot?.();
-[F113:237]|     set((state) => {
-[F113:238]|     const tasks = [...state.tasks];
-[F113:239]|     const targetIndex = tasks.findIndex(t => t.id === id);
-[F113:240]|     if (targetIndex === -1) return state;
-[F113:241]| 
-[F113:242]|     const targetTask = tasks[targetIndex];
-[F113:243]|     const newCompleted = !targetTask.completed;
-[F113:244]|     const now = Date.now();
-[F113:245]| 
-[F113:246]|     tasks[targetIndex] = {
-[F113:247]|       ...targetTask,
-[F113:248]|       completed: newCompleted,
-[F113:249]|       completedAt: newCompleted ? now : undefined
-[F113:250]|     };
-[F113:251]| 
-[F113:252]|     // 向下递归：更新所有子孙
-[F113:253]|     const updateDescendants = (parentId: string, isCompleted: boolean) => {
-[F113:254]|       tasks.forEach((t, idx) => {
-[F113:255]|         if (t.parentId === parentId) {
-[F113:256]|           tasks[idx] = { ...t, completed: isCompleted, completedAt: isCompleted ? now : undefined };
-[F113:257]|           updateDescendants(t.id, isCompleted);
-[F113:258]|         }
-[F113:259]|       });
-[F113:260]|     };
-[F113:261]|     updateDescendants(id, newCompleted);
-[F113:262]| 
-[F113:263]|     // 向上递归：更新所有祖先的完成状态
-[F113:264]|     const updateAncestors = (childId: string, isCompleted: boolean) => {
-[F113:265]|       const child = tasks.find(t => t.id === childId);
-[F113:266]|       if (!child?.parentId) return;
-[F113:267]| 
-[F113:268]|       const parent = tasks.find(t => t.id === child.parentId);
-[F113:269]|       if (!parent) return;
-[F113:270]| 
-[F113:271]|       // 检查是否所有子任务都完成
-[F113:272]|       const siblings = tasks.filter(t => t.parentId === parent.id);
-[F113:273]|       const allSiblingsCompleted = siblings.every(t => t.completed);
-[F113:274]| 
-[F113:275]|       // 只有当父任务没有开启"preventAutoComplete"时，才自动更新完成状态
-[F113:276]|       if (allSiblingsCompleted !== parent.completed && !parent.preventAutoComplete) {
-[F113:277]|         const parentIndex = tasks.findIndex(t => t.id === parent.id);
-[F113:278]|         tasks[parentIndex] = {
-[F113:279]|           ...parent,
-[F113:280]|           completed: allSiblingsCompleted,
-[F113:281]|           completedAt: allSiblingsCompleted ? now : undefined
-[F113:282]|         };
-[F113:283]|       }
-[F113:284]| 
-[F113:285]|       updateAncestors(parent.id, isCompleted);
-[F113:286]|     };
-[F113:287]|     updateAncestors(id, newCompleted);
-[F113:288]| 
-[F113:289]|     return { tasks };
-[F113:290]|     });
-[F113:291]|   },
-[F113:292]| 
-[F113:293]|   deleteTask: (id) => {
-[F113:294]|     get().saveSnapshot?.();
-[F113:295]|     set((state) => {
-[F113:296]|     const getAllDescendantIds = (parentId: string, allTasks: Task[]): string[] => {
-[F113:297]|       const children = allTasks.filter(t => t.parentId === parentId);
-[F113:298]|       return children.flatMap(child => [child.id, ...getAllDescendantIds(child.id, allTasks)]);
-[F113:299]|     };
-[F113:300]| 
-[F113:301]|     const idsToDelete = [id, ...getAllDescendantIds(id, state.tasks)];
-[F113:302]|     const deletedTask = state.tasks.find(t => t.id === id);
-[F113:303]|     const parentId = deletedTask?.parentId;
-[F113:304]| 
-[F113:305]|     const tasks = [...state.tasks];
-[F113:306]|     const newTasks = tasks.filter(t => !idsToDelete.includes(t.id));
-[F113:307]| 
-[F113:308]|     if (parentId) {
-[F113:309]|       updateParentEstimatedTime(newTasks, parentId);
-[F113:310]|     }
-[F113:311]| 
-[F113:312]|     return { tasks: newTasks };
-[F113:313]|     });
-[F113:314]|   },
-[F113:315]| 
-[F113:316]|   reorderTasks: (zoneId, newTasks) => set((state) => {
-[F113:317]|     const otherTasks = state.tasks.filter(t => t.zoneId !== zoneId);
-[F113:318]|     return { tasks: [...otherTasks, ...newTasks] };
-[F113:319]|   }),
-[F113:320]| 
-[F113:321]|   clearCompleted: (zoneId) => {
-[F113:322]|     get().saveSnapshot?.();
-[F113:323]|     set((state) => {
-[F113:324]|     const tasks = zoneId
-[F113:325]|       ? state.tasks.filter(t => !(t.zoneId === zoneId && t.completed))
-[F113:326]|       : state.tasks.filter(t => !t.completed);
-[F113:327]|     return { tasks };
-[F113:328]|     });
-[F113:329]|   },
-[F113:330]| 
-[F113:331]|   toggleExpanded: (id) => set((state) => ({
-[F113:332]|     tasks: state.tasks.map(t => t.id === id ? { ...t, expanded: !t.expanded } : t)
-[F113:333]|   })),
-[F113:334]| 
-[F113:335]|   toggleSubtasksCollapsed: (id) => set((state) => ({
-[F113:336]|     tasks: state.tasks.map(t => t.id === id ? { ...t, isCollapsed: !t.isCollapsed } : t)
-[F113:337]|   })),
-[F113:338]| 
-[F113:339]|   expandTask: (id) => set((state) => {
-[F113:340]|     const expandRecursive = (taskId: string, taskList: Task[]): Task[] => {
-[F113:341]|       return taskList.map(t => {
-[F113:342]|         if (t.id === taskId) {
-[F113:343]|           return { ...t, expanded: true, isCollapsed: false };
-[F113:344]|         }
-[F113:345]|         if (t.parentId === taskId) {
-[F113:346]|           // 递归展开子任务
-[F113:347]|           const expandedChild = expandRecursive(t.id, taskList);
-[F113:348]|           return expandedChild.find(ct => ct.id === t.id) || t;
-[F113:349]|         }
-[F113:350]|         return t;
-[F113:351]|       });
-[F113:352]|     };
-[F113:353]|     return { tasks: expandRecursive(id, state.tasks) };
-[F113:354]|   }),
-[F113:355]| 
-[F113:356]|   moveTaskNode: (activeId, newParentId, anchorId, zoneId) => set((state) => {
-[F113:357]|     const tasks = [...state.tasks];
-[F113:358]|     const activeIndex = tasks.findIndex(t => t.id === activeId);
-[F113:359]|     if (activeIndex === -1) return state;
-[F113:360]| 
-[F113:361]|     const activeTask = { ...tasks[activeIndex], zoneId, parentId: newParentId };
-[F113:362]| 
-[F113:363]|     // 获取目标路径（Zone + Parent）下除了当前任务以外的所有兄弟任务，并按顺序排列
-[F113:364]|     const siblings = tasks
-[F113:365]|       .filter(t => t.zoneId === zoneId && t.parentId === newParentId && t.id !== activeId)
-[F113:366]|       .sort((a, b) => a.order - b.order);
-[F113:367]| 
-[F113:368]|     // 计算插入位置：如果有锚点，插在锚点之后；否则插在最前面（索引 0）
-[F113:369]|     let insertIndex = 0;
-[F113:370]|     if (anchorId) {
-[F113:371]|       const anchorSiblingIndex = siblings.findIndex(t => t.id === anchorId);
-[F113:372]|       if (anchorSiblingIndex !== -1) {
-[F113:373]|         insertIndex = anchorSiblingIndex + 1;
-[F113:374]|       }
-[F113:375]|     }
-[F113:376]| 
-[F113:377]|     // 将当前任务插入到兄弟数组的正确位置
-[F113:378]|     siblings.splice(insertIndex, 0, activeTask);
-[F113:379]| 
-[F113:380]|     // 统一更新该路径下所有兄弟任务的 order 值
-[F113:381]|     siblings.forEach((s, idx) => {
-[F113:382]|       const taskIdx = tasks.findIndex(t => t.id === s.id);
-[F113:383]|       if (taskIdx !== -1) {
-[F113:384]|         tasks[taskIdx] = { ...tasks[taskIdx], order: idx, zoneId, parentId: newParentId };
-[F113:385]|       }
-[F113:386]|     });
-[F113:387]| 
-[F113:388]|     return { tasks };
-[F113:389]|   }),
-[F113:390]| 
-[F113:391]|   // Computed helpers
-[F113:392]|   getTasksByZone: (zoneId) => get().tasks.filter(t => t.zoneId === zoneId),
-[F113:393]| 
-[F113:394]|   getRootTasks: (zoneId) => get().tasks
-[F113:395]|     .filter(t => t.zoneId === zoneId && !t.parentId)
-[F113:396]|     .sort((a, b) => a.order - b.order),
-[F113:397]| 
-[F113:398]|   getChildTasks: (parentId) => get().tasks
-[F113:399]|     .filter(t => t.parentId === parentId)
-[F113:400]|     .sort((a, b) => a.order - b.order),
-[F113:401]| 
-[F113:402]|   getStats: () => {
-[F113:403]|     const tasks = get().tasks;
-[F113:404]|     const total = tasks.length;
-[F113:405]|     const completed = tasks.filter(t => t.completed).length;
-[F113:406]|     const pending = total - completed;
-[F113:407]|     const highPriority = tasks.filter(t => t.priority === 'high' && !t.completed).length;
-[F113:408]|     const urgent = tasks.filter(t => t.urgency === 'urgent' && !t.completed).length;
-[F113:409]|     return { total, completed, pending, highPriority, urgent };
-[F113:410]|   },
-[F113:411]| 
-[F113:412]|   // Timer helpers
-[F113:413]|   addWorkTime: (taskId, seconds) => set((state) => {
-[F113:414]|     const tasks = [...state.tasks];
-[F113:415]|     const taskIndex = tasks.findIndex(t => t.id === taskId);
-[F113:416]|     if (taskIndex === -1) return state;
-[F113:417]| 
-[F113:418]|     const task = tasks[taskIndex];
-[F113:419]|     const oldTotalWorkTime = task.totalWorkTime || 0;
-[F113:420]|     const newOwnTime = (task.ownTime || 0) + seconds;
-[F113:421]| 
-[F113:422]|     tasks[taskIndex] = { ...task, ownTime: newOwnTime };
-[F113:423]| 
-[F113:424]|     recalculateTotalWorkTime(tasks, taskId);
-[F113:425]| 
-[F113:426]|     const newTask = tasks.find(t => t.id === taskId);
-[F113:427]|     const newTotalWorkTime = newTask?.totalWorkTime || 0;
-[F113:428]| 
-[F113:429]|     const delta = newTotalWorkTime - oldTotalWorkTime;
-[F113:430]|     if (delta > 0) {
-[F113:431]|       updateParentWorkTimes(tasks, taskId, delta);
-[F113:432]|     }
-[F113:433]| 
-[F113:434]|     // 预计算所有任务时间
-[F113:435]|     const computedTimes = computeAllTaskTimes(tasks);
-[F113:436]| 
-[F113:437]|     return { tasks, taskComputedTimes: computedTimes };
-[F113:438]|   }),
-[F113:439]| 
-[F113:440]|   getTotalWorkTime: (taskId) => {
-[F113:441]|     const task = get().tasks.find(t => t.id === taskId);
-[F113:442]|     return task?.totalWorkTime || 0;
-[F113:443]|   },
-[F113:444]| 
-[F113:445]|   getEstimatedTime: (taskId) => {
-[F113:446]|     const task = get().tasks.find(t => t.id === taskId);
-[F113:447]|     if (!task) return 0;
-[F113:448]|     if (task.estimatedTime !== undefined && task.estimatedTime > 0) {
-[F113:449]|       return task.estimatedTime;
-[F113:450]|     }
-[F113:451]|     const childTasks = get().tasks.filter(t => t.parentId === taskId);
-[F113:452]|     return childTasks.reduce((sum, child) => sum + get().getEstimatedTime(child.id), 0);
-[F113:453]|   },
-[F113:454]| 
-[F113:455]|   // 定时任务模板相关
-[F113:456]|   addRecurringTemplate: (template) => set((state) => ({
-[F113:457]|     recurringTemplates: [
-[F113:458]|       ...(state.recurringTemplates || []),
-[F113:459]|       {
-[F113:460]|         ...template,
-[F113:461]|         id: `rec-${Date.now()}`,
-[F113:462]|         lastTriggeredAt: Date.now(),
-[F113:463]|         isActive: template.isActive ?? true,
-[F113:464]|         scope: template.scope || 'global',
-[F113:465]|       },
-[F113:466]|     ],
-[F113:467]|   })),
-[F113:468]| 
-[F113:469]|   updateRecurringTemplate: (id, updates) => set((state) => ({
-[F113:470]|     recurringTemplates: (state.recurringTemplates || []).map(t =>
-[F113:471]|       t.id === id ? { ...t, ...updates } : t
-[F113:472]|     ),
-[F113:473]|   })),
-[F113:474]| 
-[F113:475]|   deleteRecurringTemplate: (id) => set((state) => ({
-[F113:476]|     recurringTemplates: (state.recurringTemplates || []).filter(t => t.id !== id),
-[F113:477]|   })),
-[F113:478]| 
-[F113:479]|   checkRecurringTasks: () => set((state) => {
-[F113:480]|     const now = Date.now();
-[F113:481]|     const templates = state.recurringTemplates || [];
-[F113:482]|     let hasChanges = false;
-[F113:483]|     let newTasks = [...state.tasks];
-[F113:484]|     const newTemplates = [...templates];
-[F113:485]| 
-[F113:486]|     templates.forEach((tpl, index) => {
-[F113:487]|       if (!tpl.isActive) return;
-[F113:488]| 
-[F113:489]|       // 计算时间差 (分钟)
-[F113:490]|       const diffMinutes = (now - tpl.lastTriggeredAt) / 1000 / 60;
-[F113:491]| 
-[F113:492]|       if (diffMinutes >= tpl.intervalMinutes) {
-[F113:493]|         hasChanges = true;
-[F113:494]| 
-[F113:495]|         // 生成新任务
-[F113:496]|         const deadline = tpl.deadlineOffsetHours > 0
-[F113:497]|           ? now + (tpl.deadlineOffsetHours * 60 * 60 * 1000)
-[F113:498]|           : null;
-[F113:499]| 
-[F113:500]|         const newTask: Task = {
-[F113:501]|           id: `task-auto-${Date.now()}-${index}`,
-[F113:502]|           zoneId: tpl.zoneId,
-[F113:503]|           parentId: null,
-[F113:504]|           title: tpl.title,
-[F113:505]|           description: tpl.description + '\n(' + i18n.t('recurring.autoGeneratedSuffix') + ')',
-[F113:506]|           priority: tpl.priority,
-[F113:507]|           urgency: 'low',
-[F113:508]|           deadline: deadline,
-[F113:509]|           deadlineType: deadline ? 'exact' : 'none',
-[F113:510]|           completed: false,
-[F113:511]|           isCollapsed: false,
-[F113:512]|           expanded: false,
-[F113:513]|           order: 0,
-[F113:514]|           createdAt: now,
-[F113:515]|           totalWorkTime: 0,
-[F113:516]|           ownTime: 0,
-[F113:517]|           isRecurring: true,
-[F113:518]|         };
-[F113:519]| 
-[F113:520]|         newTasks.unshift(newTask);
-[F113:521]| 
-[F113:522]|         // 更新模板最后触发时间
-[F113:523]|         newTemplates[index] = { ...tpl, lastTriggeredAt: now };
-[F113:524]|       }
-[F113:525]|     });
-[F113:526]| 
-[F113:527]|     if (hasChanges) {
-[F113:528]|       // 预计算时间
-[F113:529]|       const computedTimes = computeAllTaskTimes(newTasks);
-[F113:530]|       return { tasks: newTasks, recurringTemplates: newTemplates, taskComputedTimes: computedTimes };
-[F113:531]|     }
-[F113:532]|     return {};
-[F113:533]|   }),
-[F113:534]| });
+[F113:235]|       // 生成新的 ID 避免冲突
+[F113:236]|       const newHistory: HistoryWorkspace = {
+[F113:237]|         id: `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+[F113:238]|         name: parsed.name || i18n.t('common.unnamed'),
+[F113:239]|         summary: parsed.summary || '',
+[F113:240]|         createdAt: parsed.createdAt || Date.now(),
+[F113:241]|         lastModified: Date.now(),
+[F113:242]|         zones: parsed.zones || [],
+[F113:243]|         tasks: parsed.tasks || [],
+[F113:244]|         sessions: parsed.sessions || [],
+[F113:245]|       };
+[F113:246]| 
+[F113:247]|       set((state) => ({
+[F113:248]|         historyWorkspaces: [newHistory, ...state.historyWorkspaces]
+[F113:249]|       }));
+[F113:250]| 
+[F113:251]|       return true;
+[F113:252]|     } catch {
+[F113:253]|       return false;
+[F113:254]|     }
+[F113:255]|   },
+[F113:256]| 
+[F113:257]|   importAllHistoryFromJson: (jsonString) => {
+[F113:258]|     try {
+[F113:259]|       const parsed = JSON.parse(jsonString);
+[F113:260]|       // 兼容：可能是单个对象或数组
+[F113:261]|       const histories = Array.isArray(parsed) ? parsed : [parsed];
+[F113:262]|       if (!Array.isArray(histories)) return 0;
+[F113:263]| 
+[F113:264]|       let imported = 0;
+[F113:265]|       const newHistories = histories.map(h => {
+[F113:266]|         if (!h.id || !h.name) return null;
+[F113:267]|         imported++;
+[F113:268]|         return {
+[F113:269]|           id: `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+[F113:270]|           name: h.name || i18n.t('common.unnamed'),
+[F113:271]|           summary: h.summary || '',
+[F113:272]|           createdAt: h.createdAt || Date.now(),
+[F113:273]|           lastModified: Date.now(),
+[F113:274]|           zones: h.zones || [],
+[F113:275]|           tasks: h.tasks || [],
+[F113:276]|           sessions: h.sessions || [],
+[F113:277]|         };
+[F113:278]|       }).filter(Boolean) as HistoryWorkspace[];
+[F113:279]| 
+[F113:280]|       set((state) => ({
+[F113:281]|         historyWorkspaces: [...newHistories, ...state.historyWorkspaces]
+[F113:282]|       }));
+[F113:283]| 
+[F113:284]|       return imported;
+[F113:285]|     } catch {
+[F113:286]|       return 0;
+[F113:287]|     }
+[F113:288]|   },
+[F113:289]| 
+[F113:290]|   hasUnsavedChanges: () => {
+[F113:291]|     const state = get();
+[F113:292]|     // 检查当前工作区是否有内容（zones 或 tasks 存储在 store 顶层）
+[F113:293]|     return (state as unknown as { zones: unknown[]; tasks: unknown[] }).zones.length > 0 ||
+[F113:294]|            (state as unknown as { zones: unknown[]; tasks: unknown[] }).tasks.length > 0;
+[F113:295]|   },
+[F113:296]| });
 
 ================================================================================
-文件路径: src\store\slices\uiSlice.ts(F114) (约合大小: 0 KB)
+文件路径: src\store\slices\settingsSlice.ts(F114) (约合大小: 5 KB)
 ================================================================================
 [F114:1]| import type { StateCreator } from 'zustand';
-[F114:2]| import type { AppState } from '@/types';
-[F114:3]| 
-[F114:4]| export interface UIState {
-[F114:5]|   currentView: AppState['currentView'];
-[F114:6]|   activeZoneId: string | null;
-[F114:7]|   focusedTaskId: string | null;
-[F114:8]|   activeHistoryId: string | null;
-[F114:9]| }
-[F114:10]| 
-[F114:11]| export interface UIActions {
-[F114:12]|   setCurrentView: (view: AppState['currentView']) => void;
-[F114:13]|   setActiveZoneId: (id: string | null) => void;
-[F114:14]|   setFocusedTaskId: (id: string | null) => void;
-[F114:15]| }
-[F114:16]| 
-[F114:17]| export type UISlice = UIState & UIActions;
-[F114:18]| 
-[F114:19]| export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set) => ({
-[F114:20]|   currentView: 'zones',
-[F114:21]|   activeZoneId: null,
-[F114:22]|   focusedTaskId: null,
-[F114:23]|   activeHistoryId: null,
-[F114:24]| 
-[F114:25]|   setCurrentView: (view) => set({ currentView: view }),
-[F114:26]|   setActiveZoneId: (id) => set({ activeZoneId: id, focusedTaskId: null }),
-[F114:27]|   setFocusedTaskId: (id) => set({ focusedTaskId: id }),
-[F114:28]| });
+[F114:2]| import type { Template, SortConfig, ConfigProfile, RecurringTemplate } from '@/types';
+[F114:3]| import { DEFAULT_SETTINGS, PREDEFINED_TEMPLATES } from '@/types';
+[F114:4]| import type { ZoneSlice } from './zoneSlice';
+[F114:5]| import type { TaskSlice } from './taskSlice';
+[F114:6]| 
+[F114:7]| export interface SettingsState {
+[F114:8]|   settings: {
+[F114:9]|     language: string;
+[F114:10]|     workDuration: number;
+[F114:11]|     breakDuration: number;
+[F114:12]|     longBreakDuration: number;
+[F114:13]|     autoStartBreak: boolean;
+[F114:14]|     soundEnabled: boolean;
+[F114:15]|     collapsed: boolean;
+[F114:16]|     collapsePosition: { x: number; y: number };
+[F114:17]|     globalViewSort: SortConfig;
+[F114:18]|     globalViewLeafMode: boolean;
+[F114:19]|     autoSaveEnabled: boolean;
+[F114:20]|     autoSaveInterval: number;
+[F114:21]|   };
+[F114:22]|   customTemplates: Template[];
+[F114:23]|   configProfiles: ConfigProfile[];
+[F114:24]| }
+[F114:25]| 
+[F114:26]| export interface SettingsActions {
+[F114:27]|   updateSettings: (settings: Partial<SettingsState['settings']>) => void;
+[F114:28]|   saveCustomTemplate: (name: string) => void;
+[F114:29]|   deleteCustomTemplate: (id: string) => void;
+[F114:30]|   renameCustomTemplate: (id: string, newName: string) => void;
+[F114:31]|   applyTemplate: (templateId: string) => void;
+[F114:32]|   saveConfigProfile: (name: string, globalRules: RecurringTemplate[]) => void;
+[F114:33]|   applyConfigProfile: (profileId: string) => void;
+[F114:34]|   deleteConfigProfile: (id: string) => void;
+[F114:35]|   updateConfigProfile: (id: string, updates: Partial<ConfigProfile>) => void;
+[F114:36]|   importConfigProfile: (importedData: Partial<ConfigProfile>) => boolean;
+[F114:37]| }
+[F114:38]| 
+[F114:39]| export type SettingsSlice = SettingsState & SettingsActions;
+[F114:40]| 
+[F114:41]| export const createSettingsSlice: StateCreator<SettingsSlice & ZoneSlice & TaskSlice, [], [], SettingsSlice> = (set, get) => ({
+[F114:42]|   settings: DEFAULT_SETTINGS,
+[F114:43]|   customTemplates: [],
+[F114:44]|   configProfiles: [],
+[F114:45]| 
+[F114:46]|   updateSettings: (newSettings) => set((state) => ({
+[F114:47]|     settings: { ...state.settings, ...newSettings }
+[F114:48]|   })),
+[F114:49]| 
+[F114:50]|   saveCustomTemplate: (name) => set((state) => {
+[F114:51]|     const zones = get().zones.map(z => ({
+[F114:52]|       name: z.name,
+[F114:53]|       color: z.color,
+[F114:54]|       order: z.order,
+[F114:55]|     }));
+[F114:56]| 
+[F114:57]|     const newTemplate: Template = {
+[F114:58]|       id: `template-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+[F114:59]|       name,
+[F114:60]|       description: `自定义模板 - ${zones.length} 个分区`,
+[F114:61]|       icon: 'User',
+[F114:62]|       zones,
+[F114:63]|     };
+[F114:64]| 
+[F114:65]|     return { customTemplates: [...state.customTemplates, newTemplate] };
+[F114:66]|   }),
+[F114:67]| 
+[F114:68]|   deleteCustomTemplate: (id) => set((state) => ({
+[F114:69]|     customTemplates: state.customTemplates.filter(t => t.id !== id)
+[F114:70]|   })),
+[F114:71]| 
+[F114:72]|   renameCustomTemplate: (id, newName) => set((state) => ({
+[F114:73]|     customTemplates: state.customTemplates.map(t =>
+[F114:74]|       t.id === id ? { ...t, name: newName } : t
+[F114:75]|     )
+[F114:76]|   })),
+[F114:77]| 
+[F114:78]|   applyTemplate: (templateId) => set((state) => {
+[F114:79]|     const predefined = PREDEFINED_TEMPLATES.find(t => t.id === templateId);
+[F114:80]|     const custom = state.customTemplates.find(t => t.id === templateId);
+[F114:81]|     const template = predefined || custom;
+[F114:82]| 
+[F114:83]|     if (!template) return state;
+[F114:84]| 
+[F114:85]|     const newZones = template.zones.map((z, index) => ({
+[F114:86]|       id: `zone-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
+[F114:87]|       name: z.name,
+[F114:88]|       color: z.color,
+[F114:89]|       order: z.order,
+[F114:90]|       createdAt: Date.now(),
+[F114:91]|     }));
+[F114:92]| 
+[F114:93]|     return { zones: newZones, tasks: [] };
+[F114:94]|   }),
+[F114:95]| 
+[F114:96]|   saveConfigProfile: (name, globalRules) => set((state) => {
+[F114:97]|     const newProfile: ConfigProfile = {
+[F114:98]|       id: `profile-${Date.now()}`,
+[F114:99]|       name,
+[F114:100]|       createdAt: Date.now(),
+[F114:101]|       settings: JSON.parse(JSON.stringify(state.settings)),
+[F114:102]|       customTemplates: JSON.parse(JSON.stringify(state.customTemplates)),
+[F114:103]|       recurringTemplates: JSON.parse(JSON.stringify(globalRules)),
+[F114:104]|     };
+[F114:105]|     return { configProfiles: [newProfile, ...(state.configProfiles || [])] };
+[F114:106]|   }),
+[F114:107]| 
+[F114:108]|   applyConfigProfile: (profileId) => set((state) => {
+[F114:109]|     const profile = state.configProfiles?.find(p => p.id === profileId);
+[F114:110]|     if (!profile) return state;
+[F114:111]| 
+[F114:112]|     // 智能回退防崩：如果规则的 zoneId 当前工作区没有，降级到第一个可用分区
+[F114:113]|     const currentZones = get().zones;
+[F114:114]|     const fallbackZoneId = currentZones.length > 0 ? currentZones[0].id : '';
+[F114:115]|     const validRules = profile.recurringTemplates.map(rule => ({
+[F114:116]|       ...rule,
+[F114:117]|       zoneId: currentZones.some(z => z.id === rule.zoneId) ? rule.zoneId : fallbackZoneId
+[F114:118]|     }));
+[F114:119]| 
+[F114:120]|     // 合并逻辑：保留当前的局部规则，替换全局规则为快照中的全局规则
+[F114:121]|     const allCurrentRules = (state as any).recurringTemplates || [];
+[F114:122]|     const localRules = allCurrentRules.filter((r: RecurringTemplate) => r.scope === 'workspace');
+[F114:123]|     const mergedRules = [...localRules, ...validRules];
+[F114:124]| 
+[F114:125]|     return {
+[F114:126]|       settings: profile.settings,
+[F114:127]|       customTemplates: profile.customTemplates,
+[F114:128]|       recurringTemplates: mergedRules,
+[F114:129]|     } as SettingsState & { recurringTemplates: RecurringTemplate[] };
+[F114:130]|   }),
+[F114:131]| 
+[F114:132]|   deleteConfigProfile: (id) => set((state) => ({
+[F114:133]|     configProfiles: (state.configProfiles || []).filter(p => p.id !== id)
+[F114:134]|   })),
+[F114:135]| 
+[F114:136]|   updateConfigProfile: (id, updates) => set((state) => ({
+[F114:137]|     configProfiles: (state.configProfiles || []).map(p =>
+[F114:138]|       p.id === id ? { ...p, ...updates } : p
+[F114:139]|     )
+[F114:140]|   })),
+[F114:141]| 
+[F114:142]|   importConfigProfile: (parsed) => {
+[F114:143]|     try {
+[F114:144]|       if (!parsed || !parsed.settings) return false;
+[F114:145]| 
+[F114:146]|       const newProfile: ConfigProfile = {
+[F114:147]|         id: `profile-imported-${Date.now()}`,
+[F114:148]|         name: parsed.name || `导入配置 ${new Date().toLocaleDateString()}`,
+[F114:149]|         createdAt: Date.now(),
+[F114:150]|         settings: parsed.settings,
+[F114:151]|         customTemplates: parsed.customTemplates || [],
+[F114:152]|         recurringTemplates: parsed.recurringTemplates || [],
+[F114:153]|       };
+[F114:154]| 
+[F114:155]|       set((state) => ({
+[F114:156]|         configProfiles: [newProfile, ...(state.configProfiles || [])]
+[F114:157]|       }));
+[F114:158]|       return true;
+[F114:159]|     } catch {
+[F114:160]|       return false;
+[F114:161]|     }
+[F114:162]|   },
+[F114:163]| });
 
 ================================================================================
-文件路径: src\store\slices\undoSlice.ts(F115) (约合大小: 2 KB)
+文件路径: src\store\slices\taskSlice.ts(F115) (约合大小: 17 KB)
 ================================================================================
 [F115:1]| import type { StateCreator } from 'zustand';
-[F115:2]| import type { Task, Zone } from '@/types';
-[F115:3]| import type { TaskSlice } from './taskSlice';
-[F115:4]| import type { ZoneSlice } from './zoneSlice';
+[F115:2]| import type { Task, TaskPriority, TaskUrgency, DeadlineType, RecurringTemplate } from '@/types';
+[F115:3]| import type { UndoSlice } from './undoSlice';
+[F115:4]| import i18n from '@/lib/i18n';
 [F115:5]| 
-[F115:6]| // 定义快照的数据结构
-[F115:7]| interface Snapshot {
-[F115:8]|   tasks: Task[];
-[F115:9]|   zones: Zone[];
-[F115:10]| }
-[F115:11]| 
-[F115:12]| export interface UndoState {
-[F115:13]|   past: Snapshot[];
-[F115:14]|   future: Snapshot[];
-[F115:15]| }
-[F115:16]| 
-[F115:17]| export interface UndoActions {
-[F115:18]|   saveSnapshot: () => void;
-[F115:19]|   undo: () => void;
-[F115:20]|   redo: () => void;
-[F115:21]|   clearHistory: () => void;
-[F115:22]| }
-[F115:23]| 
-[F115:24]| export type UndoSlice = UndoState & UndoActions;
-[F115:25]| 
-[F115:26]| export const createUndoSlice: StateCreator<
-[F115:27]|   UndoSlice & TaskSlice & ZoneSlice,
-[F115:28]|   [],
-[F115:29]|   [],
-[F115:30]|   UndoSlice
-[F115:31]| > = (set, get) => ({
-[F115:32]|   past: [],
-[F115:33]|   future: [],
-[F115:34]| 
-[F115:35]|   // 在执行破坏性操作前调用此方法
-[F115:36]|   saveSnapshot: () => {
-[F115:37]|     const { tasks, zones } = get();
-[F115:38]|     // 深拷贝当前状态
-[F115:39]|     const currentSnapshot: Snapshot = {
-[F115:40]|       tasks: JSON.parse(JSON.stringify(tasks)),
-[F115:41]|       zones: JSON.parse(JSON.stringify(zones)),
-[F115:42]|     };
+[F115:6]| export interface TaskComputedTime {
+[F115:7]|   totalWorkTime: number;
+[F115:8]|   estimatedTime: number;
+[F115:9]| }
+[F115:10]| 
+[F115:11]| export interface TaskState {
+[F115:12]|   tasks: Task[];
+[F115:13]|   // 预计算的任务时间，避免渲染时递归计算
+[F115:14]|   taskComputedTimes: Record<string, TaskComputedTime>;
+[F115:15]|   // 定时任务模板
+[F115:16]|   recurringTemplates: RecurringTemplate[];
+[F115:17]| }
+[F115:18]| 
+[F115:19]| export interface TaskActions {
+[F115:20]|   addTask: (zoneId: string, title: string, description: string, priority?: TaskPriority, urgency?: TaskUrgency, deadline?: number | null, deadlineType?: DeadlineType, parentId?: string | null) => void;
+[F115:21]|   updateTask: (id: string, updates: Partial<Task>) => void;
+[F115:22]|   toggleTask: (id: string) => void;
+[F115:23]|   deleteTask: (id: string) => void;
+[F115:24]|   reorderTasks: (zoneId: string, newTasks: Task[]) => void;
+[F115:25]|   clearCompleted: (zoneId?: string) => void;
+[F115:26]|   toggleExpanded: (id: string) => void;
+[F115:27]|   toggleSubtasksCollapsed: (id: string) => void;
+[F115:28]|   expandTask: (id: string) => void;
+[F115:29]|   moveTaskNode: (activeId: string, newParentId: string | null, anchorId: string | null, zoneId: string) => void;
+[F115:30]|   // 定时任务相关
+[F115:31]|   addRecurringTemplate: (template: Omit<RecurringTemplate, 'id' | 'lastTriggeredAt'>) => void;
+[F115:32]|   updateRecurringTemplate: (id: string, updates: Partial<RecurringTemplate>) => void;
+[F115:33]|   deleteRecurringTemplate: (id: string) => void;
+[F115:34]|   checkRecurringTasks: () => void;
+[F115:35]| }
+[F115:36]| 
+[F115:37]| export interface TaskComputed {
+[F115:38]|   getTasksByZone: (zoneId: string) => Task[];
+[F115:39]|   getRootTasks: (zoneId: string) => Task[];
+[F115:40]|   getChildTasks: (parentId: string) => Task[];
+[F115:41]|   getStats: () => { total: number; completed: number; pending: number; highPriority: number; urgent: number };
+[F115:42]| }
 [F115:43]| 
-[F115:44]|     set((state) => ({
-[F115:45]|       past: [...state.past, currentSnapshot].slice(-20), // 限制最多撤销 20 步，防止内存溢出
-[F115:46]|       future: [], // 新操作清空重做栈
-[F115:47]|     }));
-[F115:48]|   },
+[F115:44]| export interface TaskTimerActions {
+[F115:45]|   addWorkTime: (taskId: string, seconds: number) => void;
+[F115:46]|   getTotalWorkTime: (taskId: string) => number;
+[F115:47]|   getEstimatedTime: (taskId: string) => number;
+[F115:48]| }
 [F115:49]| 
-[F115:50]|   undo: () => {
-[F115:51]|     const { past, future, tasks, zones } = get();
-[F115:52]|     if (past.length === 0) return;
-[F115:53]| 
-[F115:54]|     const previous = past[past.length - 1];
-[F115:55]|     const newPast = past.slice(0, past.length - 1);
+[F115:50]| export type TaskSlice = TaskState & TaskActions & TaskComputed & TaskTimerActions;
+[F115:51]| 
+[F115:52]| // 辅助函数：向上递归更新所有父任务的 totalWorkTime
+[F115:53]| const updateParentWorkTimes = (tasks: Task[], childId: string, addedSeconds: number): void => {
+[F115:54]|   const child = tasks.find(t => t.id === childId);
+[F115:55]|   if (!child?.parentId) return;
 [F115:56]| 
-[F115:57]|     // 保存当前状态到 future
-[F115:58]|     const currentSnapshot: Snapshot = { tasks, zones };
+[F115:57]|   const parent = tasks.find(t => t.id === child.parentId);
+[F115:58]|   if (!parent) return;
 [F115:59]| 
-[F115:60]|     set({
-[F115:61]|       past: newPast,
-[F115:62]|       future: [currentSnapshot, ...future],
-[F115:63]|       tasks: previous.tasks,
-[F115:64]|       zones: previous.zones,
-[F115:65]|     });
-[F115:66]|   },
+[F115:60]|   const parentIndex = tasks.findIndex(t => t.id === parent.id);
+[F115:61]|   if (parentIndex === -1) return;
+[F115:62]| 
+[F115:63]|   tasks[parentIndex] = {
+[F115:64]|     ...parent,
+[F115:65]|     totalWorkTime: (parent.totalWorkTime || 0) + addedSeconds
+[F115:66]|   };
 [F115:67]| 
-[F115:68]|   redo: () => {
-[F115:69]|     const { past, future, tasks, zones } = get();
-[F115:70]|     if (future.length === 0) return;
-[F115:71]| 
-[F115:72]|     const next = future[0];
-[F115:73]|     const newFuture = future.slice(1);
-[F115:74]| 
-[F115:75]|     // 保存当前状态到 past
-[F115:76]|     const currentSnapshot: Snapshot = { tasks, zones };
-[F115:77]| 
-[F115:78]|     set({
-[F115:79]|       past: [...past, currentSnapshot],
-[F115:80]|       future: newFuture,
-[F115:81]|       tasks: next.tasks,
-[F115:82]|       zones: next.zones,
-[F115:83]|     });
-[F115:84]|   },
-[F115:85]| 
-[F115:86]|   clearHistory: () => set({ past: [], future: [] }),
-[F115:87]| });
+[F115:68]|   updateParentWorkTimes(tasks, parent.id, addedSeconds);
+[F115:69]| };
+[F115:70]| 
+[F115:71]| // 辅助函数：递归计算任务的 totalWorkTime
+[F115:72]| const recalculateTotalWorkTime = (tasks: Task[], taskId: string): number => {
+[F115:73]|   const taskIndex = tasks.findIndex(t => t.id === taskId);
+[F115:74]|   if (taskIndex === -1) return 0;
+[F115:75]| 
+[F115:76]|   const task = tasks[taskIndex];
+[F115:77]|   const childTasks = tasks.filter(t => t.parentId === taskId);
+[F115:78]| 
+[F115:79]|   const childrenTotalTime = childTasks.reduce((sum, child) => {
+[F115:80]|     return sum + recalculateTotalWorkTime(tasks, child.id);
+[F115:81]|   }, 0);
+[F115:82]| 
+[F115:83]|   const totalWorkTime = (task.ownTime || 0) + childrenTotalTime;
+[F115:84]| 
+[F115:85]|   tasks[taskIndex] = { ...task, totalWorkTime };
+[F115:86]| 
+[F115:87]|   return totalWorkTime;
+[F115:88]| };
+[F115:89]| 
+[F115:90]| // 辅助函数：递归计算任务的 estimatedTime
+[F115:91]| const recalculateEstimatedTime = (tasks: Task[], taskId: string): number => {
+[F115:92]|   const taskIndex = tasks.findIndex(t => t.id === taskId);
+[F115:93]|   if (taskIndex === -1) return 0;
+[F115:94]| 
+[F115:95]|   const task = tasks[taskIndex];
+[F115:96]| 
+[F115:97]|   if (task.estimatedTime !== undefined && task.estimatedTime > 0) {
+[F115:98]|     return task.estimatedTime;
+[F115:99]|   }
+[F115:100]| 
+[F115:101]|   const childTasks = tasks.filter(t => t.parentId === taskId);
+[F115:102]|   const childrenEstimatedTime = childTasks.reduce((sum, child) => {
+[F115:103]|     return sum + recalculateEstimatedTime(tasks, child.id);
+[F115:104]|   }, 0);
+[F115:105]| 
+[F115:106]|   if (childrenEstimatedTime > 0) {
+[F115:107]|     tasks[taskIndex] = { ...task, estimatedTime: childrenEstimatedTime };
+[F115:108]|   }
+[F115:109]| 
+[F115:110]|   return childrenEstimatedTime;
+[F115:111]| };
+[F115:112]| 
+[F115:113]| // 辅助函数：更新父任务的 estimatedTime
+[F115:114]| const updateParentEstimatedTime = (tasks: Task[], parentId: string): void => {
+[F115:115]|   const parent = tasks.find(t => t.id === parentId);
+[F115:116]|   if (!parent) return;
+[F115:117]| 
+[F115:118]|   if (parent.estimatedTime === undefined) {
+[F115:119]|     recalculateEstimatedTime(tasks, parentId);
+[F115:120]|   }
+[F115:121]| 
+[F115:122]|   if (parent.parentId) {
+[F115:123]|     updateParentEstimatedTime(tasks, parent.parentId);
+[F115:124]|   }
+[F115:125]| };
+[F115:126]| 
+[F115:127]| // 预计算所有任务的时间
+[F115:128]| const computeAllTaskTimes = (tasks: Task[]): Record<string, TaskComputedTime> => {
+[F115:129]|   const computed: Record<string, TaskComputedTime> = {};
+[F115:130]| 
+[F115:131]|   // 先计算所有任务的 estimatedTime（自底向上）
+[F115:132]|   const rootTasks = tasks.filter(t => !t.parentId);
+[F115:133]|   const computeEstimated = (taskId: string): number => {
+[F115:134]|     const task = tasks.find(t => t.id === taskId);
+[F115:135]|     if (!task) return 0;
+[F115:136]| 
+[F115:137]|     if (task.estimatedTime !== undefined && task.estimatedTime > 0) {
+[F115:138]|       computed[taskId] = computed[taskId] || { totalWorkTime: 0, estimatedTime: 0 };
+[F115:139]|       computed[taskId].estimatedTime = task.estimatedTime;
+[F115:140]|       return task.estimatedTime;
+[F115:141]|     }
+[F115:142]| 
+[F115:143]|     const children = tasks.filter(t => t.parentId === taskId);
+[F115:144]|     const childrenEst = children.reduce((sum, child) => sum + computeEstimated(child.id), 0);
+[F115:145]| 
+[F115:146]|     computed[taskId] = computed[taskId] || { totalWorkTime: 0, estimatedTime: 0 };
+[F115:147]|     computed[taskId].estimatedTime = childrenEst;
+[F115:148]|     return childrenEst;
+[F115:149]|   };
+[F115:150]| 
+[F115:151]|   rootTasks.forEach(t => computeEstimated(t.id));
+[F115:152]| 
+[F115:153]|   // 再计算所有任务的 totalWorkTime（自底向上）
+[F115:154]|   const computeTotalWorkTime = (taskId: string): number => {
+[F115:155]|     const task = tasks.find(t => t.id === taskId);
+[F115:156]|     if (!task) return 0;
+[F115:157]| 
+[F115:158]|     const children = tasks.filter(t => t.parentId === taskId);
+[F115:159]|     const childrenTotal = children.reduce((sum, child) => sum + computeTotalWorkTime(child.id), 0);
+[F115:160]| 
+[F115:161]|     const total = (task.ownTime || 0) + childrenTotal;
+[F115:162]| 
+[F115:163]|     if (!computed[taskId]) {
+[F115:164]|       computed[taskId] = { totalWorkTime: 0, estimatedTime: 0 };
+[F115:165]|     }
+[F115:166]|     computed[taskId].totalWorkTime = total;
+[F115:167]| 
+[F115:168]|     return total;
+[F115:169]|   };
+[F115:170]| 
+[F115:171]|   rootTasks.forEach(t => computeTotalWorkTime(t.id));
+[F115:172]| 
+[F115:173]|   return computed;
+[F115:174]| };
+[F115:175]| 
+[F115:176]| export const createTaskSlice: StateCreator<TaskSlice & UndoSlice, [], [], TaskSlice> = (set, get) => ({
+[F115:177]|   tasks: [],
+[F115:178]|   taskComputedTimes: {},
+[F115:179]|   recurringTemplates: [],
+[F115:180]| 
+[F115:181]|   addTask: (zoneId, title, description, priority = 'medium', urgency = 'low', deadline = null, deadlineType = 'none', parentId = null) => {
+[F115:182]|     get().saveSnapshot?.();
+[F115:183]|     set((state) => {
+[F115:184]|       const tasks = [...state.tasks];
+[F115:185]|     const siblings = tasks.filter(t =>
+[F115:186]|       parentId ? t.parentId === parentId : (t.zoneId === zoneId && !t.parentId)
+[F115:187]|     );
+[F115:188]|     const maxOrder = siblings.length > 0 ? Math.max(...siblings.map(t => t.order)) : -1;
+[F115:189]| 
+[F115:190]|     const newTask: Task = {
+[F115:191]|       id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+[F115:192]|       zoneId, parentId, title, description, priority, urgency,
+[F115:193]|       deadline,
+[F115:194]|       deadlineType,
+[F115:195]|       completed: false, isCollapsed: false, expanded: false,
+[F115:196]|       order: maxOrder + 1, createdAt: Date.now(), totalWorkTime: 0, ownTime: 0
+[F115:197]|     };
+[F115:198]| 
+[F115:199]|     const newTasks = [...tasks, newTask];
+[F115:200]| 
+[F115:201]|     if (parentId) {
+[F115:202]|       updateParentEstimatedTime(newTasks, parentId);
+[F115:203]|     }
+[F115:204]| 
+[F115:205]|     // 预计算所有任务时间
+[F115:206]|     const computedTimes = computeAllTaskTimes(newTasks);
+[F115:207]| 
+[F115:208]|     return { tasks: newTasks, taskComputedTimes: computedTimes };
+[F115:209]|     });
+[F115:210]|   },
+[F115:211]| 
+[F115:212]|   updateTask: (id, updates) => {
+[F115:213]|     get().saveSnapshot?.();
+[F115:214]|     set((state) => {
+[F115:215]|     const tasks = [...state.tasks];
+[F115:216]|     const taskIndex = tasks.findIndex(t => t.id === id);
+[F115:217]|     if (taskIndex === -1) return state;
+[F115:218]| 
+[F115:219]|     const task = tasks[taskIndex];
+[F115:220]|     const hasEstimatedTimeUpdate = 'estimatedTime' in updates;
+[F115:221]| 
+[F115:222]|     const newTasks = tasks.map(t => t.id === id ? { ...t, ...updates } : t);
+[F115:223]| 
+[F115:224]|     if (hasEstimatedTimeUpdate && task.parentId) {
+[F115:225]|       updateParentEstimatedTime(newTasks, task.parentId);
+[F115:226]|     }
+[F115:227]| 
+[F115:228]|     // 预计算所有任务时间
+[F115:229]|     const computedTimes = computeAllTaskTimes(newTasks);
+[F115:230]| 
+[F115:231]|     return { tasks: newTasks, taskComputedTimes: computedTimes };
+[F115:232]|     });
+[F115:233]|   },
+[F115:234]| 
+[F115:235]|   toggleTask: (id) => {
+[F115:236]|     get().saveSnapshot?.();
+[F115:237]|     set((state) => {
+[F115:238]|     const tasks = [...state.tasks];
+[F115:239]|     const targetIndex = tasks.findIndex(t => t.id === id);
+[F115:240]|     if (targetIndex === -1) return state;
+[F115:241]| 
+[F115:242]|     const targetTask = tasks[targetIndex];
+[F115:243]|     const newCompleted = !targetTask.completed;
+[F115:244]|     const now = Date.now();
+[F115:245]| 
+[F115:246]|     tasks[targetIndex] = {
+[F115:247]|       ...targetTask,
+[F115:248]|       completed: newCompleted,
+[F115:249]|       completedAt: newCompleted ? now : undefined
+[F115:250]|     };
+[F115:251]| 
+[F115:252]|     // 向下递归：更新所有子孙
+[F115:253]|     const updateDescendants = (parentId: string, isCompleted: boolean) => {
+[F115:254]|       tasks.forEach((t, idx) => {
+[F115:255]|         if (t.parentId === parentId) {
+[F115:256]|           tasks[idx] = { ...t, completed: isCompleted, completedAt: isCompleted ? now : undefined };
+[F115:257]|           updateDescendants(t.id, isCompleted);
+[F115:258]|         }
+[F115:259]|       });
+[F115:260]|     };
+[F115:261]|     updateDescendants(id, newCompleted);
+[F115:262]| 
+[F115:263]|     // 向上递归：更新所有祖先的完成状态
+[F115:264]|     const updateAncestors = (childId: string, isCompleted: boolean) => {
+[F115:265]|       const child = tasks.find(t => t.id === childId);
+[F115:266]|       if (!child?.parentId) return;
+[F115:267]| 
+[F115:268]|       const parent = tasks.find(t => t.id === child.parentId);
+[F115:269]|       if (!parent) return;
+[F115:270]| 
+[F115:271]|       // 检查是否所有子任务都完成
+[F115:272]|       const siblings = tasks.filter(t => t.parentId === parent.id);
+[F115:273]|       const allSiblingsCompleted = siblings.every(t => t.completed);
+[F115:274]| 
+[F115:275]|       // 只有当父任务没有开启"preventAutoComplete"时，才自动更新完成状态
+[F115:276]|       if (allSiblingsCompleted !== parent.completed && !parent.preventAutoComplete) {
+[F115:277]|         const parentIndex = tasks.findIndex(t => t.id === parent.id);
+[F115:278]|         tasks[parentIndex] = {
+[F115:279]|           ...parent,
+[F115:280]|           completed: allSiblingsCompleted,
+[F115:281]|           completedAt: allSiblingsCompleted ? now : undefined
+[F115:282]|         };
+[F115:283]|       }
+[F115:284]| 
+[F115:285]|       updateAncestors(parent.id, isCompleted);
+[F115:286]|     };
+[F115:287]|     updateAncestors(id, newCompleted);
+[F115:288]| 
+[F115:289]|     return { tasks };
+[F115:290]|     });
+[F115:291]|   },
+[F115:292]| 
+[F115:293]|   deleteTask: (id) => {
+[F115:294]|     get().saveSnapshot?.();
+[F115:295]|     set((state) => {
+[F115:296]|     const getAllDescendantIds = (parentId: string, allTasks: Task[]): string[] => {
+[F115:297]|       const children = allTasks.filter(t => t.parentId === parentId);
+[F115:298]|       return children.flatMap(child => [child.id, ...getAllDescendantIds(child.id, allTasks)]);
+[F115:299]|     };
+[F115:300]| 
+[F115:301]|     const idsToDelete = [id, ...getAllDescendantIds(id, state.tasks)];
+[F115:302]|     const deletedTask = state.tasks.find(t => t.id === id);
+[F115:303]|     const parentId = deletedTask?.parentId;
+[F115:304]| 
+[F115:305]|     const tasks = [...state.tasks];
+[F115:306]|     const newTasks = tasks.filter(t => !idsToDelete.includes(t.id));
+[F115:307]| 
+[F115:308]|     if (parentId) {
+[F115:309]|       updateParentEstimatedTime(newTasks, parentId);
+[F115:310]|     }
+[F115:311]| 
+[F115:312]|     return { tasks: newTasks };
+[F115:313]|     });
+[F115:314]|   },
+[F115:315]| 
+[F115:316]|   reorderTasks: (zoneId, newTasks) => set((state) => {
+[F115:317]|     const otherTasks = state.tasks.filter(t => t.zoneId !== zoneId);
+[F115:318]|     return { tasks: [...otherTasks, ...newTasks] };
+[F115:319]|   }),
+[F115:320]| 
+[F115:321]|   clearCompleted: (zoneId) => {
+[F115:322]|     get().saveSnapshot?.();
+[F115:323]|     set((state) => {
+[F115:324]|     const tasks = zoneId
+[F115:325]|       ? state.tasks.filter(t => !(t.zoneId === zoneId && t.completed))
+[F115:326]|       : state.tasks.filter(t => !t.completed);
+[F115:327]|     return { tasks };
+[F115:328]|     });
+[F115:329]|   },
+[F115:330]| 
+[F115:331]|   toggleExpanded: (id) => set((state) => ({
+[F115:332]|     tasks: state.tasks.map(t => t.id === id ? { ...t, expanded: !t.expanded } : t)
+[F115:333]|   })),
+[F115:334]| 
+[F115:335]|   toggleSubtasksCollapsed: (id) => set((state) => ({
+[F115:336]|     tasks: state.tasks.map(t => t.id === id ? { ...t, isCollapsed: !t.isCollapsed } : t)
+[F115:337]|   })),
+[F115:338]| 
+[F115:339]|   expandTask: (id) => set((state) => {
+[F115:340]|     const expandRecursive = (taskId: string, taskList: Task[]): Task[] => {
+[F115:341]|       return taskList.map(t => {
+[F115:342]|         if (t.id === taskId) {
+[F115:343]|           return { ...t, expanded: true, isCollapsed: false };
+[F115:344]|         }
+[F115:345]|         if (t.parentId === taskId) {
+[F115:346]|           // 递归展开子任务
+[F115:347]|           const expandedChild = expandRecursive(t.id, taskList);
+[F115:348]|           return expandedChild.find(ct => ct.id === t.id) || t;
+[F115:349]|         }
+[F115:350]|         return t;
+[F115:351]|       });
+[F115:352]|     };
+[F115:353]|     return { tasks: expandRecursive(id, state.tasks) };
+[F115:354]|   }),
+[F115:355]| 
+[F115:356]|   moveTaskNode: (activeId, newParentId, anchorId, zoneId) => set((state) => {
+[F115:357]|     const tasks = [...state.tasks];
+[F115:358]|     const activeIndex = tasks.findIndex(t => t.id === activeId);
+[F115:359]|     if (activeIndex === -1) return state;
+[F115:360]| 
+[F115:361]|     const activeTask = { ...tasks[activeIndex], zoneId, parentId: newParentId };
+[F115:362]| 
+[F115:363]|     // 获取目标路径（Zone + Parent）下除了当前任务以外的所有兄弟任务，并按顺序排列
+[F115:364]|     const siblings = tasks
+[F115:365]|       .filter(t => t.zoneId === zoneId && t.parentId === newParentId && t.id !== activeId)
+[F115:366]|       .sort((a, b) => a.order - b.order);
+[F115:367]| 
+[F115:368]|     // 计算插入位置：如果有锚点，插在锚点之后；否则插在最前面（索引 0）
+[F115:369]|     let insertIndex = 0;
+[F115:370]|     if (anchorId) {
+[F115:371]|       const anchorSiblingIndex = siblings.findIndex(t => t.id === anchorId);
+[F115:372]|       if (anchorSiblingIndex !== -1) {
+[F115:373]|         insertIndex = anchorSiblingIndex + 1;
+[F115:374]|       }
+[F115:375]|     }
+[F115:376]| 
+[F115:377]|     // 将当前任务插入到兄弟数组的正确位置
+[F115:378]|     siblings.splice(insertIndex, 0, activeTask);
+[F115:379]| 
+[F115:380]|     // 统一更新该路径下所有兄弟任务的 order 值
+[F115:381]|     siblings.forEach((s, idx) => {
+[F115:382]|       const taskIdx = tasks.findIndex(t => t.id === s.id);
+[F115:383]|       if (taskIdx !== -1) {
+[F115:384]|         tasks[taskIdx] = { ...tasks[taskIdx], order: idx, zoneId, parentId: newParentId };
+[F115:385]|       }
+[F115:386]|     });
+[F115:387]| 
+[F115:388]|     return { tasks };
+[F115:389]|   }),
+[F115:390]| 
+[F115:391]|   // Computed helpers
+[F115:392]|   getTasksByZone: (zoneId) => get().tasks.filter(t => t.zoneId === zoneId),
+[F115:393]| 
+[F115:394]|   getRootTasks: (zoneId) => get().tasks
+[F115:395]|     .filter(t => t.zoneId === zoneId && !t.parentId)
+[F115:396]|     .sort((a, b) => a.order - b.order),
+[F115:397]| 
+[F115:398]|   getChildTasks: (parentId) => get().tasks
+[F115:399]|     .filter(t => t.parentId === parentId)
+[F115:400]|     .sort((a, b) => a.order - b.order),
+[F115:401]| 
+[F115:402]|   getStats: () => {
+[F115:403]|     const tasks = get().tasks;
+[F115:404]|     const total = tasks.length;
+[F115:405]|     const completed = tasks.filter(t => t.completed).length;
+[F115:406]|     const pending = total - completed;
+[F115:407]|     const highPriority = tasks.filter(t => t.priority === 'high' && !t.completed).length;
+[F115:408]|     const urgent = tasks.filter(t => t.urgency === 'urgent' && !t.completed).length;
+[F115:409]|     return { total, completed, pending, highPriority, urgent };
+[F115:410]|   },
+[F115:411]| 
+[F115:412]|   // Timer helpers
+[F115:413]|   addWorkTime: (taskId, seconds) => set((state) => {
+[F115:414]|     const tasks = [...state.tasks];
+[F115:415]|     const taskIndex = tasks.findIndex(t => t.id === taskId);
+[F115:416]|     if (taskIndex === -1) return state;
+[F115:417]| 
+[F115:418]|     const task = tasks[taskIndex];
+[F115:419]|     const oldTotalWorkTime = task.totalWorkTime || 0;
+[F115:420]|     const newOwnTime = (task.ownTime || 0) + seconds;
+[F115:421]| 
+[F115:422]|     tasks[taskIndex] = { ...task, ownTime: newOwnTime };
+[F115:423]| 
+[F115:424]|     recalculateTotalWorkTime(tasks, taskId);
+[F115:425]| 
+[F115:426]|     const newTask = tasks.find(t => t.id === taskId);
+[F115:427]|     const newTotalWorkTime = newTask?.totalWorkTime || 0;
+[F115:428]| 
+[F115:429]|     const delta = newTotalWorkTime - oldTotalWorkTime;
+[F115:430]|     if (delta > 0) {
+[F115:431]|       updateParentWorkTimes(tasks, taskId, delta);
+[F115:432]|     }
+[F115:433]| 
+[F115:434]|     // 预计算所有任务时间
+[F115:435]|     const computedTimes = computeAllTaskTimes(tasks);
+[F115:436]| 
+[F115:437]|     return { tasks, taskComputedTimes: computedTimes };
+[F115:438]|   }),
+[F115:439]| 
+[F115:440]|   getTotalWorkTime: (taskId) => {
+[F115:441]|     const task = get().tasks.find(t => t.id === taskId);
+[F115:442]|     return task?.totalWorkTime || 0;
+[F115:443]|   },
+[F115:444]| 
+[F115:445]|   getEstimatedTime: (taskId) => {
+[F115:446]|     const task = get().tasks.find(t => t.id === taskId);
+[F115:447]|     if (!task) return 0;
+[F115:448]|     if (task.estimatedTime !== undefined && task.estimatedTime > 0) {
+[F115:449]|       return task.estimatedTime;
+[F115:450]|     }
+[F115:451]|     const childTasks = get().tasks.filter(t => t.parentId === taskId);
+[F115:452]|     return childTasks.reduce((sum, child) => sum + get().getEstimatedTime(child.id), 0);
+[F115:453]|   },
+[F115:454]| 
+[F115:455]|   // 定时任务模板相关
+[F115:456]|   addRecurringTemplate: (template) => set((state) => ({
+[F115:457]|     recurringTemplates: [
+[F115:458]|       ...(state.recurringTemplates || []),
+[F115:459]|       {
+[F115:460]|         ...template,
+[F115:461]|         id: `rec-${Date.now()}`,
+[F115:462]|         lastTriggeredAt: Date.now(),
+[F115:463]|         isActive: template.isActive ?? true,
+[F115:464]|         scope: template.scope || 'global',
+[F115:465]|       },
+[F115:466]|     ],
+[F115:467]|   })),
+[F115:468]| 
+[F115:469]|   updateRecurringTemplate: (id, updates) => set((state) => ({
+[F115:470]|     recurringTemplates: (state.recurringTemplates || []).map(t =>
+[F115:471]|       t.id === id ? { ...t, ...updates } : t
+[F115:472]|     ),
+[F115:473]|   })),
+[F115:474]| 
+[F115:475]|   deleteRecurringTemplate: (id) => set((state) => ({
+[F115:476]|     recurringTemplates: (state.recurringTemplates || []).filter(t => t.id !== id),
+[F115:477]|   })),
+[F115:478]| 
+[F115:479]|   checkRecurringTasks: () => set((state) => {
+[F115:480]|     const now = Date.now();
+[F115:481]|     const templates = state.recurringTemplates || [];
+[F115:482]|     let hasChanges = false;
+[F115:483]|     let newTasks = [...state.tasks];
+[F115:484]|     const newTemplates = [...templates];
+[F115:485]| 
+[F115:486]|     templates.forEach((tpl, index) => {
+[F115:487]|       if (!tpl.isActive) return;
+[F115:488]| 
+[F115:489]|       // 计算时间差 (分钟)
+[F115:490]|       const diffMinutes = (now - tpl.lastTriggeredAt) / 1000 / 60;
+[F115:491]| 
+[F115:492]|       if (diffMinutes >= tpl.intervalMinutes) {
+[F115:493]|         hasChanges = true;
+[F115:494]| 
+[F115:495]|         // 生成新任务
+[F115:496]|         const deadline = tpl.deadlineOffsetHours > 0
+[F115:497]|           ? now + (tpl.deadlineOffsetHours * 60 * 60 * 1000)
+[F115:498]|           : null;
+[F115:499]| 
+[F115:500]|         const newTask: Task = {
+[F115:501]|           id: `task-auto-${Date.now()}-${index}`,
+[F115:502]|           zoneId: tpl.zoneId,
+[F115:503]|           parentId: null,
+[F115:504]|           title: tpl.title,
+[F115:505]|           description: tpl.description + '\n(' + i18n.t('recurring.autoGeneratedSuffix') + ')',
+[F115:506]|           priority: tpl.priority,
+[F115:507]|           urgency: 'low',
+[F115:508]|           deadline: deadline,
+[F115:509]|           deadlineType: deadline ? 'exact' : 'none',
+[F115:510]|           completed: false,
+[F115:511]|           isCollapsed: false,
+[F115:512]|           expanded: false,
+[F115:513]|           order: 0,
+[F115:514]|           createdAt: now,
+[F115:515]|           totalWorkTime: 0,
+[F115:516]|           ownTime: 0,
+[F115:517]|           isRecurring: true,
+[F115:518]|         };
+[F115:519]| 
+[F115:520]|         newTasks.unshift(newTask);
+[F115:521]| 
+[F115:522]|         // 更新模板最后触发时间
+[F115:523]|         newTemplates[index] = { ...tpl, lastTriggeredAt: now };
+[F115:524]|       }
+[F115:525]|     });
+[F115:526]| 
+[F115:527]|     if (hasChanges) {
+[F115:528]|       // 预计算时间
+[F115:529]|       const computedTimes = computeAllTaskTimes(newTasks);
+[F115:530]|       return { tasks: newTasks, recurringTemplates: newTemplates, taskComputedTimes: computedTimes };
+[F115:531]|     }
+[F115:532]|     return {};
+[F115:533]|   }),
+[F115:534]| });
 
 ================================================================================
-文件路径: src\store\slices\zoneSlice.ts(F116) (约合大小: 1 KB)
+文件路径: src\store\slices\uiSlice.ts(F116) (约合大小: 0 KB)
 ================================================================================
 [F116:1]| import type { StateCreator } from 'zustand';
-[F116:2]| import type { Zone } from '@/types';
-[F116:3]| import type { TaskSlice } from './taskSlice';
-[F116:4]| 
-[F116:5]| export interface ZoneState {
-[F116:6]|   zones: Zone[];
-[F116:7]| }
-[F116:8]| 
-[F116:9]| export interface ZoneActions {
-[F116:10]|   addZone: (name: string, color: string) => void;
-[F116:11]|   updateZone: (id: string, updates: Partial<Zone>) => void;
-[F116:12]|   deleteZone: (id: string) => void;
-[F116:13]|   reorderZones: (newOrder: Zone[]) => void;
-[F116:14]|   getZoneById: (id: string) => Zone | undefined;
+[F116:2]| import type { AppState } from '@/types';
+[F116:3]| 
+[F116:4]| export interface UIState {
+[F116:5]|   currentView: AppState['currentView'];
+[F116:6]|   activeZoneId: string | null;
+[F116:7]|   focusedTaskId: string | null;
+[F116:8]|   activeHistoryId: string | null;
+[F116:9]| }
+[F116:10]| 
+[F116:11]| export interface UIActions {
+[F116:12]|   setCurrentView: (view: AppState['currentView']) => void;
+[F116:13]|   setActiveZoneId: (id: string | null) => void;
+[F116:14]|   setFocusedTaskId: (id: string | null) => void;
 [F116:15]| }
 [F116:16]| 
-[F116:17]| export type ZoneSlice = ZoneState & ZoneActions;
+[F116:17]| export type UISlice = UIState & UIActions;
 [F116:18]| 
-[F116:19]| // 辅助函数：创建新分区
-[F116:20]| const createZone = (name: string, color: string, order: number): Zone => ({
-[F116:21]|   id: `zone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-[F116:22]|   name,
-[F116:23]|   color,
-[F116:24]|   order,
-[F116:25]|   createdAt: Date.now(),
-[F116:26]| });
-[F116:27]| 
-[F116:28]| export const createZoneSlice: StateCreator<ZoneSlice & TaskSlice & { saveSnapshot?: () => void }, [], [], ZoneSlice> = (set, get) => ({
-[F116:29]|   zones: [],
-[F116:30]| 
-[F116:31]|   addZone: (name, color) => {
-[F116:32]|     get().saveSnapshot?.();
-[F116:33]| 
-[F116:34]|     set((state) => {
-[F116:35]|     const maxOrder = state.zones.length > 0 ? Math.max(...state.zones.map(z => z.order)) : -1;
-[F116:36]|     const newZone = createZone(name, color, maxOrder + 1);
-[F116:37]|     return { zones: [...state.zones, newZone] };
-[F116:38]|     });
-[F116:39]|   },
-[F116:40]| 
-[F116:41]|   updateZone: (id, updates) => set((state) => ({
-[F116:42]|     zones: state.zones.map(z => z.id === id ? { ...z, ...updates } : z)
-[F116:43]|   })),
-[F116:44]| 
-[F116:45]|   deleteZone: (id) => {
-[F116:46]|     get().saveSnapshot?.();
-[F116:47]| 
-[F116:48]|     set((state) => {
-[F116:49]|     // 删除分区时，同时删除该分区下的所有任务
-[F116:50]|     const tasks = get().tasks.filter(t => t.zoneId !== id);
-[F116:51]|     return {
-[F116:52]|       zones: state.zones.filter(z => z.id !== id),
-[F116:53]|       tasks,
-[F116:54]|     };
-[F116:55]|     });
-[F116:56]|   },
-[F116:57]| 
-[F116:58]|   reorderZones: (newOrder) => set({ zones: newOrder }),
-[F116:59]| 
-[F116:60]|   getZoneById: (id) => get().zones.find(z => z.id === id),
-[F116:61]| });
+[F116:19]| export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set) => ({
+[F116:20]|   currentView: 'zones',
+[F116:21]|   activeZoneId: null,
+[F116:22]|   focusedTaskId: null,
+[F116:23]|   activeHistoryId: null,
+[F116:24]| 
+[F116:25]|   setCurrentView: (view) => set({ currentView: view }),
+[F116:26]|   setActiveZoneId: (id) => set({ activeZoneId: id, focusedTaskId: null }),
+[F116:27]|   setFocusedTaskId: (id) => set({ focusedTaskId: id }),
+[F116:28]| });
 
 ================================================================================
-文件路径: src\types\index.ts(F117) (约合大小: 7 KB)
+文件路径: src\store\slices\undoSlice.ts(F117) (约合大小: 2 KB)
 ================================================================================
-[F117:1]| export type TaskPriority = 'low' | 'medium' | 'high';
-[F117:2]| export type TaskUrgency = 'low' | 'medium' | 'high' | 'urgent';
-[F117:3]| export type DeadlineType = 'exact' | 'today' | 'tomorrow' | 'week' | 'none';
-[F117:4]| export type TimerMode = 'work' | 'break' | 'longBreak' | 'idle';
-[F117:5]| export type GlobalViewSortMode = 'zone' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime' | 'timeDiff' | 'deadline';
-[F117:6]| 
-[F117:7]| export interface SortConfig {
-[F117:8]|   mode: GlobalViewSortMode;
-[F117:9]|   priorityWeight: number;
-[F117:10]|   deadlineWeight: number; // 替换原来的 urgencyWeight
-[F117:11]| }
-[F117:12]| 
-[F117:13]| // 内部剪贴板数据类型
-[F117:14]| export interface ClipboardData {
-[F117:15]|   type: 'task' | 'zone';
-[F117:16]|   data: Task | { zone: Zone; tasks: Task[] };
-[F117:17]|   timestamp: number;
-[F117:18]| }
-[F117:19]| 
-[F117:20]| export interface Task {
-[F117:21]|   id: string;
-[F117:22]|   zoneId: string;
-[F117:23]|   parentId: string | null;  // 父任务ID，null表示顶级任务
-[F117:24]|   isCollapsed: boolean;      // 是否折叠子任务
-[F117:25]|   title: string;
-[F117:26]|   description: string;
-[F117:27]|   completed: boolean;
-[F117:28]|   priority: TaskPriority;
-[F117:29]|   urgency: TaskUrgency;     // 保留用于显示，但值由 deadline 自动计算
-[F117:30]|   deadline: number | null;  // 截止时间戳（毫秒）
-[F117:31]|   deadlineType: DeadlineType; // 截止时间类型
-[F117:32]|   order: number;
-[F117:33]|   createdAt: number;
-[F117:34]|   completedAt?: number;
-[F117:35]|   expanded: boolean;
-[F117:36]|   totalWorkTime: number; // 累计工作时间（秒），包含所有子任务的时间
-[F117:37]|   ownTime?: number;      // 独立计时时间（秒），仅在该任务上花费的时间，不含子任务
-[F117:38]|   estimatedTime?: number; // 预期时间（分钟），创建时可填也可后续编辑
-[F117:39]|   preventAutoComplete?: boolean; // 开启后即使所有子任务完成也不会自动结束
-[F117:40]|   isRecurring?: boolean; // 标识是否由定时器生成
-[F117:41]| }
-[F117:42]| 
-[F117:43]| // 定时任务模板
-[F117:44]| export interface RecurringTemplate {
-[F117:45]|   id: string;
-[F117:46]|   title: string;
-[F117:47]|   description: string;
-[F117:48]|   zoneId: string;
-[F117:49]|   priority: TaskPriority;
-[F117:50]|   intervalMinutes: number; // 循环间隔(分钟)
-[F117:51]|   deadlineOffsetHours: number; // 自动设定截止时间的偏移量(小时)
-[F117:52]|   lastTriggeredAt: number; // 上次生成的时间
-[F117:53]|   isActive: boolean;
-[F117:54]|   scope?: 'global' | 'workspace'; // 规则作用域标识
-[F117:55]| }
+[F117:1]| import type { StateCreator } from 'zustand';
+[F117:2]| import type { Task, Zone } from '@/types';
+[F117:3]| import type { TaskSlice } from './taskSlice';
+[F117:4]| import type { ZoneSlice } from './zoneSlice';
+[F117:5]| 
+[F117:6]| // 定义快照的数据结构
+[F117:7]| interface Snapshot {
+[F117:8]|   tasks: Task[];
+[F117:9]|   zones: Zone[];
+[F117:10]| }
+[F117:11]| 
+[F117:12]| export interface UndoState {
+[F117:13]|   past: Snapshot[];
+[F117:14]|   future: Snapshot[];
+[F117:15]| }
+[F117:16]| 
+[F117:17]| export interface UndoActions {
+[F117:18]|   saveSnapshot: () => void;
+[F117:19]|   undo: () => void;
+[F117:20]|   redo: () => void;
+[F117:21]|   clearHistory: () => void;
+[F117:22]| }
+[F117:23]| 
+[F117:24]| export type UndoSlice = UndoState & UndoActions;
+[F117:25]| 
+[F117:26]| export const createUndoSlice: StateCreator<
+[F117:27]|   UndoSlice & TaskSlice & ZoneSlice,
+[F117:28]|   [],
+[F117:29]|   [],
+[F117:30]|   UndoSlice
+[F117:31]| > = (set, get) => ({
+[F117:32]|   past: [],
+[F117:33]|   future: [],
+[F117:34]| 
+[F117:35]|   // 在执行破坏性操作前调用此方法
+[F117:36]|   saveSnapshot: () => {
+[F117:37]|     const { tasks, zones } = get();
+[F117:38]|     // 深拷贝当前状态
+[F117:39]|     const currentSnapshot: Snapshot = {
+[F117:40]|       tasks: JSON.parse(JSON.stringify(tasks)),
+[F117:41]|       zones: JSON.parse(JSON.stringify(zones)),
+[F117:42]|     };
+[F117:43]| 
+[F117:44]|     set((state) => ({
+[F117:45]|       past: [...state.past, currentSnapshot].slice(-20), // 限制最多撤销 20 步，防止内存溢出
+[F117:46]|       future: [], // 新操作清空重做栈
+[F117:47]|     }));
+[F117:48]|   },
+[F117:49]| 
+[F117:50]|   undo: () => {
+[F117:51]|     const { past, future, tasks, zones } = get();
+[F117:52]|     if (past.length === 0) return;
+[F117:53]| 
+[F117:54]|     const previous = past[past.length - 1];
+[F117:55]|     const newPast = past.slice(0, past.length - 1);
 [F117:56]| 
-[F117:57]| // 配置环境包（快照）
-[F117:58]| export interface ConfigProfile {
-[F117:59]|   id: string;
-[F117:60]|   name: string;
-[F117:61]|   createdAt: number;
-[F117:62]|   settings: AppState['settings'];
-[F117:63]|   customTemplates: Template[];
-[F117:64]|   recurringTemplates: RecurringTemplate[];
-[F117:65]| }
-[F117:66]| 
-[F117:67]| export interface Zone {
-[F117:68]|   id: string;
-[F117:69]|   name?: string;
-[F117:70]|   nameKey?: string;
-[F117:71]|   color: string;
-[F117:72]|   order: number;
-[F117:73]|   createdAt: number;
-[F117:74]| }
-[F117:75]| 
-[F117:76]| // 历史工作区（替代原来的 Archive）
-[F117:77]| export interface HistoryWorkspace {
-[F117:78]|   id: string;
-[F117:79]|   name: string;
-[F117:80]|   summary: string;
-[F117:81]|   createdAt: number;
-[F117:82]|   lastModified: number;
-[F117:83]|   zones: Zone[];
-[F117:84]|   tasks: Task[];
-[F117:85]|   sessions: PomodoroSession[];
-[F117:86]| }
-[F117:87]| 
-[F117:88]| // 当前工作区
-[F117:89]| export interface CurrentWorkspace {
-[F117:90]|   id: string;
-[F117:91]|   name: string;
-[F117:92]|   zones: Zone[];
-[F117:93]|   tasks: Task[];
-[F117:94]|   sessions: PomodoroSession[];
-[F117:95]|   createdAt: number;
-[F117:96]|   lastModified: number;
-[F117:97]|   sourceHistoryId?: string; // 来自哪个历史记录（恢复时设置）
-[F117:98]| }
-[F117:99]| 
-[F117:100]| export interface Template {
-[F117:101]|   id: string;
-[F117:102]|   name?: string;
-[F117:103]|   nameKey?: string;
-[F117:104]|   description?: string;
-[F117:105]|   descKey?: string;
-[F117:106]|   icon: string;
-[F117:107]|   zones: Omit<Zone, 'id' | 'createdAt'>[];
-[F117:108]| }
-[F117:109]| 
-[F117:110]| export interface PomodoroSession {
-[F117:111]|   id: string;
-[F117:112]|   taskId: string;
-[F117:113]|   startTime: number;
-[F117:114]|   endTime?: number;
-[F117:115]|   completed: boolean;
-[F117:116]| }
-[F117:117]| 
-[F117:118]| export interface AppState {
-[F117:119]|   currentView: 'zones' | 'global' | 'history' | 'settings';
-[F117:120]|   activeZoneId: string | null;
-[F117:121]|   focusedTaskId: string | null; // 从全局视图导航到分区时聚焦的任务ID
-[F117:122]|   activeHistoryId: string | null; // 当前查看的历史工作区ID
-[F117:123]|   // 当前工作区
-[F117:124]|   currentWorkspace: CurrentWorkspace;
-[F117:125]|   // 历史工作区列表
-[F117:126]|   historyWorkspaces: HistoryWorkspace[];
-[F117:127]|   // 自定义模板列表
-[F117:128]|   customTemplates: Template[];
-[F117:129]|   // 设置
-[F117:130]|   settings: {
-[F117:131]|     language: string;
-[F117:132]|     workDuration: number;
-[F117:133]|     breakDuration: number;
-[F117:134]|     longBreakDuration: number;
-[F117:135]|     autoStartBreak: boolean;
-[F117:136]|     soundEnabled: boolean;
-[F117:137]|     collapsed: boolean;
-[F117:138]|     collapsePosition: { x: number; y: number };
-[F117:139]|     globalViewSort: SortConfig;
-[F117:140]|     globalViewLeafMode: boolean; // 叶子节点模式状态
-[F117:141]|     autoSaveEnabled: boolean;
-[F117:142]|     autoSaveInterval: number;
-[F117:143]|   };
-[F117:144]|   // 定时任务模板列表
-[F117:145]|   recurringTemplates: RecurringTemplate[];
-[F117:146]|   // 配置环境包列表
-[F117:147]|   configProfiles: ConfigProfile[];
-[F117:148]| }
-[F117:149]| 
-[F117:150]| export interface TimerState {
-[F117:151]|   mode: TimerMode;
-[F117:152]|   timeRemaining: number;
-[F117:153]|   isRunning: boolean;
-[F117:154]|   currentTaskId: string | null;
-[F117:155]|   currentSessionStartTime?: number; // 当前专注会话开始时间
-[F117:156]|   pausedTimeRemaining?: number;     // 暂停时的剩余时间（秒）
-[F117:157]| }
-[F117:158]| 
-[F117:159]| // Predefined templates
-[F117:160]| export const PREDEFINED_TEMPLATES: Template[] = [
-[F117:161]|   {
-[F117:162]|     id: 'general',
-[F117:163]|     nameKey: 'template.templateGeneral',
-[F117:164]|     descKey: 'template.templateGeneralDesc',
-[F117:165]|     icon: 'LayoutGrid',
-[F117:166]|     zones: [
-[F117:167]|       { nameKey: 'zone.workZone', color: '#3b82f6', order: 0 },
-[F117:168]|       { nameKey: 'zone.studyZone', color: '#8b5cf6', order: 1 },
-[F117:169]|       { nameKey: 'zone.lifeZone', color: '#22c55e', order: 2 },
-[F117:170]|     ],
-[F117:171]|   },
-[F117:172]|   {
-[F117:173]|     id: 'project',
-[F117:174]|     nameKey: 'template.templateProject',
-[F117:175]|     descKey: 'template.templateProjectDesc',
-[F117:176]|     icon: 'FolderKanban',
-[F117:177]|     zones: [
-[F117:178]|       { nameKey: 'zone.projectA', color: '#f59e0b', order: 0 },
-[F117:179]|       { nameKey: 'zone.projectB', color: '#ec4899', order: 1 },
-[F117:180]|       { nameKey: 'zone.projectC', color: '#06b6d4', order: 2 },
-[F117:181]|       { nameKey: 'zone.other', color: '#6b7280', order: 3 },
-[F117:182]|     ],
-[F117:183]|   },
-[F117:184]|   {
-[F117:185]|     id: 'dev',
-[F117:186]|     nameKey: 'template.templateDev',
-[F117:187]|     descKey: 'template.templateDevDesc',
-[F117:188]|     icon: 'Code',
-[F117:189]|     zones: [
-[F117:190]|       { nameKey: 'zone.devZone', color: '#3b82f6', order: 0 },
-[F117:191]|       { nameKey: 'zone.testZone', color: '#22c55e', order: 1 },
-[F117:192]|       { nameKey: 'zone.docZone', color: '#f59e0b', order: 2 },
-[F117:193]|       { nameKey: 'zone.bugFix', color: '#ef4444', order: 3 },
-[F117:194]|     ],
-[F117:195]|   },
-[F117:196]|   {
-[F117:197]|     id: 'blank',
-[F117:198]|     nameKey: 'template.templateBlank',
-[F117:199]|     descKey: 'template.templateBlankDesc',
-[F117:200]|     icon: 'FileX',
-[F117:201]|     zones: [],
-[F117:202]|   },
-[F117:203]| ];
-[F117:204]| 
-[F117:205]| // Predefined colors for zones
-[F117:206]| export const ZONE_COLORS = [
-[F117:207]|   '#3b82f6', // blue
-[F117:208]|   '#22c55e', // green
-[F117:209]|   '#f59e0b', // yellow
-[F117:210]|   '#ef4444', // red
-[F117:211]|   '#8b5cf6', // purple
-[F117:212]|   '#ec4899', // pink
-[F117:213]|   '#06b6d4', // cyan
-[F117:214]|   '#f97316', // orange
-[F117:215]|   '#6366f1', // indigo
-[F117:216]|   '#14b8a6', // teal
-[F117:217]|   '#84cc16', // lime
-[F117:218]|   '#6b7280', // gray
-[F117:219]| ];
-[F117:220]| 
-[F117:221]| // 默认设置（正常值）
-[F117:222]| export const DEFAULT_SETTINGS = {
-[F117:223]|   language: 'zh', // 默认语言
-[F117:224]|   workDuration: 25 * 60, // 25分钟
-[F117:225]|   breakDuration: 5 * 60, // 5分钟
-[F117:226]|   longBreakDuration: 15 * 60, // 15分钟
-[F117:227]|   autoStartBreak: false,
-[F117:228]|   soundEnabled: true,
-[F117:229]|   collapsed: false,
-[F117:230]|   collapsePosition: { x: 100, y: 100 },
-[F117:231]|   globalViewSort: {
-[F117:232]|     mode: 'zone' as GlobalViewSortMode,
-[F117:233]|     priorityWeight: 0.6, // 60%
-[F117:234]|     deadlineWeight: 0.4, // 40%
-[F117:235]|   },
-[F117:236]|   globalViewLeafMode: false,
-[F117:237]|   autoSaveEnabled: true, // 默认开启自动保存
-[F117:238]|   autoSaveInterval: 120, // 自动保存间隔（秒），默认120秒
-[F117:239]|   recurringTemplates: [], // 定时任务模板列表
-[F117:240]| };
-[F117:241]| 
-[F117:242]| // 格式化时间为可读字符串
-[F117:243]| export function formatDuration(seconds: number): string {
-[F117:244]|   const hours = Math.floor(seconds / 3600);
-[F117:245]|   const mins = Math.floor((seconds % 3600) / 60);
-[F117:246]|   
-[F117:247]|   if (hours > 0) {
-[F117:248]|     return `${hours}h ${mins}m`;
-[F117:249]|   }
-[F117:250]|   return `${mins}m`;
-[F117:251]| }
-[F117:252]| 
-[F117:253]| // 格式化时间为详细字符串
-[F117:254]| export function formatDurationDetailed(seconds: number): string {
-[F117:255]|   const hours = Math.floor(seconds / 3600);
-[F117:256]|   const mins = Math.floor((seconds % 3600) / 60);
-[F117:257]|   const secs = seconds % 60;
-[F117:258]|   
-[F117:259]|   if (hours > 0) {
-[F117:260]|     return `${hours}小时 ${mins}分 ${secs}秒`;
-[F117:261]|   }
-[F117:262]|   if (mins > 0) {
-[F117:263]|     return `${mins}分 ${secs}秒`;
-[F117:264]|   }
-[F117:265]|   return `${secs}秒`;
-[F117:266]| }
+[F117:57]|     // 保存当前状态到 future
+[F117:58]|     const currentSnapshot: Snapshot = { tasks, zones };
+[F117:59]| 
+[F117:60]|     set({
+[F117:61]|       past: newPast,
+[F117:62]|       future: [currentSnapshot, ...future],
+[F117:63]|       tasks: previous.tasks,
+[F117:64]|       zones: previous.zones,
+[F117:65]|     });
+[F117:66]|   },
+[F117:67]| 
+[F117:68]|   redo: () => {
+[F117:69]|     const { past, future, tasks, zones } = get();
+[F117:70]|     if (future.length === 0) return;
+[F117:71]| 
+[F117:72]|     const next = future[0];
+[F117:73]|     const newFuture = future.slice(1);
+[F117:74]| 
+[F117:75]|     // 保存当前状态到 past
+[F117:76]|     const currentSnapshot: Snapshot = { tasks, zones };
+[F117:77]| 
+[F117:78]|     set({
+[F117:79]|       past: [...past, currentSnapshot],
+[F117:80]|       future: newFuture,
+[F117:81]|       tasks: next.tasks,
+[F117:82]|       zones: next.zones,
+[F117:83]|     });
+[F117:84]|   },
+[F117:85]| 
+[F117:86]|   clearHistory: () => set({ past: [], future: [] }),
+[F117:87]| });
+
+================================================================================
+文件路径: src\store\slices\zoneSlice.ts(F118) (约合大小: 1 KB)
+================================================================================
+[F118:1]| import type { StateCreator } from 'zustand';
+[F118:2]| import type { Zone } from '@/types';
+[F118:3]| import type { TaskSlice } from './taskSlice';
+[F118:4]| 
+[F118:5]| export interface ZoneState {
+[F118:6]|   zones: Zone[];
+[F118:7]| }
+[F118:8]| 
+[F118:9]| export interface ZoneActions {
+[F118:10]|   addZone: (name: string, color: string) => void;
+[F118:11]|   updateZone: (id: string, updates: Partial<Zone>) => void;
+[F118:12]|   deleteZone: (id: string) => void;
+[F118:13]|   reorderZones: (newOrder: Zone[]) => void;
+[F118:14]|   getZoneById: (id: string) => Zone | undefined;
+[F118:15]| }
+[F118:16]| 
+[F118:17]| export type ZoneSlice = ZoneState & ZoneActions;
+[F118:18]| 
+[F118:19]| // 辅助函数：创建新分区
+[F118:20]| const createZone = (name: string, color: string, order: number): Zone => ({
+[F118:21]|   id: `zone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+[F118:22]|   name,
+[F118:23]|   color,
+[F118:24]|   order,
+[F118:25]|   createdAt: Date.now(),
+[F118:26]| });
+[F118:27]| 
+[F118:28]| export const createZoneSlice: StateCreator<ZoneSlice & TaskSlice & { saveSnapshot?: () => void }, [], [], ZoneSlice> = (set, get) => ({
+[F118:29]|   zones: [],
+[F118:30]| 
+[F118:31]|   addZone: (name, color) => {
+[F118:32]|     get().saveSnapshot?.();
+[F118:33]| 
+[F118:34]|     set((state) => {
+[F118:35]|     const maxOrder = state.zones.length > 0 ? Math.max(...state.zones.map(z => z.order)) : -1;
+[F118:36]|     const newZone = createZone(name, color, maxOrder + 1);
+[F118:37]|     return { zones: [...state.zones, newZone] };
+[F118:38]|     });
+[F118:39]|   },
+[F118:40]| 
+[F118:41]|   updateZone: (id, updates) => set((state) => ({
+[F118:42]|     zones: state.zones.map(z => z.id === id ? { ...z, ...updates } : z)
+[F118:43]|   })),
+[F118:44]| 
+[F118:45]|   deleteZone: (id) => {
+[F118:46]|     get().saveSnapshot?.();
+[F118:47]| 
+[F118:48]|     set((state) => {
+[F118:49]|     // 删除分区时，同时删除该分区下的所有任务
+[F118:50]|     const tasks = get().tasks.filter(t => t.zoneId !== id);
+[F118:51]|     return {
+[F118:52]|       zones: state.zones.filter(z => z.id !== id),
+[F118:53]|       tasks,
+[F118:54]|     };
+[F118:55]|     });
+[F118:56]|   },
+[F118:57]| 
+[F118:58]|   reorderZones: (newOrder) => set({ zones: newOrder }),
+[F118:59]| 
+[F118:60]|   getZoneById: (id) => get().zones.find(z => z.id === id),
+[F118:61]| });
+
+================================================================================
+文件路径: src\types\index.ts(F119) (约合大小: 7 KB)
+================================================================================
+[F119:1]| export type TaskPriority = 'low' | 'medium' | 'high';
+[F119:2]| export type TaskUrgency = 'low' | 'medium' | 'high' | 'urgent';
+[F119:3]| export type DeadlineType = 'exact' | 'today' | 'tomorrow' | 'week' | 'none';
+[F119:4]| export type TimerMode = 'work' | 'break' | 'longBreak' | 'idle';
+[F119:5]| export type GlobalViewSortMode = 'zone' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime' | 'timeDiff' | 'deadline';
+[F119:6]| 
+[F119:7]| export interface SortConfig {
+[F119:8]|   mode: GlobalViewSortMode;
+[F119:9]|   priorityWeight: number;
+[F119:10]|   deadlineWeight: number; // 替换原来的 urgencyWeight
+[F119:11]| }
+[F119:12]| 
+[F119:13]| // 内部剪贴板数据类型
+[F119:14]| export interface ClipboardData {
+[F119:15]|   type: 'task' | 'zone';
+[F119:16]|   data: Task | { zone: Zone; tasks: Task[] };
+[F119:17]|   timestamp: number;
+[F119:18]| }
+[F119:19]| 
+[F119:20]| export interface Task {
+[F119:21]|   id: string;
+[F119:22]|   zoneId: string;
+[F119:23]|   parentId: string | null;  // 父任务ID，null表示顶级任务
+[F119:24]|   isCollapsed: boolean;      // 是否折叠子任务
+[F119:25]|   title: string;
+[F119:26]|   description: string;
+[F119:27]|   completed: boolean;
+[F119:28]|   priority: TaskPriority;
+[F119:29]|   urgency: TaskUrgency;     // 保留用于显示，但值由 deadline 自动计算
+[F119:30]|   deadline: number | null;  // 截止时间戳（毫秒）
+[F119:31]|   deadlineType: DeadlineType; // 截止时间类型
+[F119:32]|   order: number;
+[F119:33]|   createdAt: number;
+[F119:34]|   completedAt?: number;
+[F119:35]|   expanded: boolean;
+[F119:36]|   totalWorkTime: number; // 累计工作时间（秒），包含所有子任务的时间
+[F119:37]|   ownTime?: number;      // 独立计时时间（秒），仅在该任务上花费的时间，不含子任务
+[F119:38]|   estimatedTime?: number; // 预期时间（分钟），创建时可填也可后续编辑
+[F119:39]|   preventAutoComplete?: boolean; // 开启后即使所有子任务完成也不会自动结束
+[F119:40]|   isRecurring?: boolean; // 标识是否由定时器生成
+[F119:41]| }
+[F119:42]| 
+[F119:43]| // 定时任务模板
+[F119:44]| export interface RecurringTemplate {
+[F119:45]|   id: string;
+[F119:46]|   title: string;
+[F119:47]|   description: string;
+[F119:48]|   zoneId: string;
+[F119:49]|   priority: TaskPriority;
+[F119:50]|   intervalMinutes: number; // 循环间隔(分钟)
+[F119:51]|   deadlineOffsetHours: number; // 自动设定截止时间的偏移量(小时)
+[F119:52]|   lastTriggeredAt: number; // 上次生成的时间
+[F119:53]|   isActive: boolean;
+[F119:54]|   scope?: 'global' | 'workspace'; // 规则作用域标识
+[F119:55]| }
+[F119:56]| 
+[F119:57]| // 配置环境包（快照）
+[F119:58]| export interface ConfigProfile {
+[F119:59]|   id: string;
+[F119:60]|   name: string;
+[F119:61]|   createdAt: number;
+[F119:62]|   settings: AppState['settings'];
+[F119:63]|   customTemplates: Template[];
+[F119:64]|   recurringTemplates: RecurringTemplate[];
+[F119:65]| }
+[F119:66]| 
+[F119:67]| export interface Zone {
+[F119:68]|   id: string;
+[F119:69]|   name?: string;
+[F119:70]|   nameKey?: string;
+[F119:71]|   color: string;
+[F119:72]|   order: number;
+[F119:73]|   createdAt: number;
+[F119:74]| }
+[F119:75]| 
+[F119:76]| // 历史工作区（替代原来的 Archive）
+[F119:77]| export interface HistoryWorkspace {
+[F119:78]|   id: string;
+[F119:79]|   name: string;
+[F119:80]|   summary: string;
+[F119:81]|   createdAt: number;
+[F119:82]|   lastModified: number;
+[F119:83]|   zones: Zone[];
+[F119:84]|   tasks: Task[];
+[F119:85]|   sessions: PomodoroSession[];
+[F119:86]| }
+[F119:87]| 
+[F119:88]| // 当前工作区
+[F119:89]| export interface CurrentWorkspace {
+[F119:90]|   id: string;
+[F119:91]|   name: string;
+[F119:92]|   zones: Zone[];
+[F119:93]|   tasks: Task[];
+[F119:94]|   sessions: PomodoroSession[];
+[F119:95]|   createdAt: number;
+[F119:96]|   lastModified: number;
+[F119:97]|   sourceHistoryId?: string; // 来自哪个历史记录（恢复时设置）
+[F119:98]| }
+[F119:99]| 
+[F119:100]| export interface Template {
+[F119:101]|   id: string;
+[F119:102]|   name?: string;
+[F119:103]|   nameKey?: string;
+[F119:104]|   description?: string;
+[F119:105]|   descKey?: string;
+[F119:106]|   icon: string;
+[F119:107]|   zones: Omit<Zone, 'id' | 'createdAt'>[];
+[F119:108]| }
+[F119:109]| 
+[F119:110]| export interface PomodoroSession {
+[F119:111]|   id: string;
+[F119:112]|   taskId: string;
+[F119:113]|   startTime: number;
+[F119:114]|   endTime?: number;
+[F119:115]|   completed: boolean;
+[F119:116]| }
+[F119:117]| 
+[F119:118]| export interface AppState {
+[F119:119]|   currentView: 'zones' | 'global' | 'history' | 'settings';
+[F119:120]|   activeZoneId: string | null;
+[F119:121]|   focusedTaskId: string | null; // 从全局视图导航到分区时聚焦的任务ID
+[F119:122]|   activeHistoryId: string | null; // 当前查看的历史工作区ID
+[F119:123]|   // 当前工作区
+[F119:124]|   currentWorkspace: CurrentWorkspace;
+[F119:125]|   // 历史工作区列表
+[F119:126]|   historyWorkspaces: HistoryWorkspace[];
+[F119:127]|   // 自定义模板列表
+[F119:128]|   customTemplates: Template[];
+[F119:129]|   // 设置
+[F119:130]|   settings: {
+[F119:131]|     language: string;
+[F119:132]|     workDuration: number;
+[F119:133]|     breakDuration: number;
+[F119:134]|     longBreakDuration: number;
+[F119:135]|     autoStartBreak: boolean;
+[F119:136]|     soundEnabled: boolean;
+[F119:137]|     collapsed: boolean;
+[F119:138]|     collapsePosition: { x: number; y: number };
+[F119:139]|     globalViewSort: SortConfig;
+[F119:140]|     globalViewLeafMode: boolean; // 叶子节点模式状态
+[F119:141]|     autoSaveEnabled: boolean;
+[F119:142]|     autoSaveInterval: number;
+[F119:143]|   };
+[F119:144]|   // 定时任务模板列表
+[F119:145]|   recurringTemplates: RecurringTemplate[];
+[F119:146]|   // 配置环境包列表
+[F119:147]|   configProfiles: ConfigProfile[];
+[F119:148]| }
+[F119:149]| 
+[F119:150]| export interface TimerState {
+[F119:151]|   mode: TimerMode;
+[F119:152]|   timeRemaining: number;
+[F119:153]|   isRunning: boolean;
+[F119:154]|   currentTaskId: string | null;
+[F119:155]|   currentSessionStartTime?: number; // 当前专注会话开始时间
+[F119:156]|   pausedTimeRemaining?: number;     // 暂停时的剩余时间（秒）
+[F119:157]| }
+[F119:158]| 
+[F119:159]| // Predefined templates
+[F119:160]| export const PREDEFINED_TEMPLATES: Template[] = [
+[F119:161]|   {
+[F119:162]|     id: 'general',
+[F119:163]|     nameKey: 'template.templateGeneral',
+[F119:164]|     descKey: 'template.templateGeneralDesc',
+[F119:165]|     icon: 'LayoutGrid',
+[F119:166]|     zones: [
+[F119:167]|       { nameKey: 'zone.workZone', color: '#3b82f6', order: 0 },
+[F119:168]|       { nameKey: 'zone.studyZone', color: '#8b5cf6', order: 1 },
+[F119:169]|       { nameKey: 'zone.lifeZone', color: '#22c55e', order: 2 },
+[F119:170]|     ],
+[F119:171]|   },
+[F119:172]|   {
+[F119:173]|     id: 'project',
+[F119:174]|     nameKey: 'template.templateProject',
+[F119:175]|     descKey: 'template.templateProjectDesc',
+[F119:176]|     icon: 'FolderKanban',
+[F119:177]|     zones: [
+[F119:178]|       { nameKey: 'zone.projectA', color: '#f59e0b', order: 0 },
+[F119:179]|       { nameKey: 'zone.projectB', color: '#ec4899', order: 1 },
+[F119:180]|       { nameKey: 'zone.projectC', color: '#06b6d4', order: 2 },
+[F119:181]|       { nameKey: 'zone.other', color: '#6b7280', order: 3 },
+[F119:182]|     ],
+[F119:183]|   },
+[F119:184]|   {
+[F119:185]|     id: 'dev',
+[F119:186]|     nameKey: 'template.templateDev',
+[F119:187]|     descKey: 'template.templateDevDesc',
+[F119:188]|     icon: 'Code',
+[F119:189]|     zones: [
+[F119:190]|       { nameKey: 'zone.devZone', color: '#3b82f6', order: 0 },
+[F119:191]|       { nameKey: 'zone.testZone', color: '#22c55e', order: 1 },
+[F119:192]|       { nameKey: 'zone.docZone', color: '#f59e0b', order: 2 },
+[F119:193]|       { nameKey: 'zone.bugFix', color: '#ef4444', order: 3 },
+[F119:194]|     ],
+[F119:195]|   },
+[F119:196]|   {
+[F119:197]|     id: 'blank',
+[F119:198]|     nameKey: 'template.templateBlank',
+[F119:199]|     descKey: 'template.templateBlankDesc',
+[F119:200]|     icon: 'FileX',
+[F119:201]|     zones: [],
+[F119:202]|   },
+[F119:203]| ];
+[F119:204]| 
+[F119:205]| // Predefined colors for zones
+[F119:206]| export const ZONE_COLORS = [
+[F119:207]|   '#3b82f6', // blue
+[F119:208]|   '#22c55e', // green
+[F119:209]|   '#f59e0b', // yellow
+[F119:210]|   '#ef4444', // red
+[F119:211]|   '#8b5cf6', // purple
+[F119:212]|   '#ec4899', // pink
+[F119:213]|   '#06b6d4', // cyan
+[F119:214]|   '#f97316', // orange
+[F119:215]|   '#6366f1', // indigo
+[F119:216]|   '#14b8a6', // teal
+[F119:217]|   '#84cc16', // lime
+[F119:218]|   '#6b7280', // gray
+[F119:219]| ];
+[F119:220]| 
+[F119:221]| // 默认设置（正常值）
+[F119:222]| export const DEFAULT_SETTINGS = {
+[F119:223]|   language: 'zh', // 默认语言
+[F119:224]|   workDuration: 25 * 60, // 25分钟
+[F119:225]|   breakDuration: 5 * 60, // 5分钟
+[F119:226]|   longBreakDuration: 15 * 60, // 15分钟
+[F119:227]|   autoStartBreak: false,
+[F119:228]|   soundEnabled: true,
+[F119:229]|   collapsed: false,
+[F119:230]|   collapsePosition: { x: 100, y: 100 },
+[F119:231]|   globalViewSort: {
+[F119:232]|     mode: 'zone' as GlobalViewSortMode,
+[F119:233]|     priorityWeight: 0.6, // 60%
+[F119:234]|     deadlineWeight: 0.4, // 40%
+[F119:235]|   },
+[F119:236]|   globalViewLeafMode: false,
+[F119:237]|   autoSaveEnabled: true, // 默认开启自动保存
+[F119:238]|   autoSaveInterval: 120, // 自动保存间隔（秒），默认120秒
+[F119:239]|   recurringTemplates: [], // 定时任务模板列表
+[F119:240]| };
+[F119:241]| 
+[F119:242]| // 格式化时间为可读字符串
+[F119:243]| export function formatDuration(seconds: number): string {
+[F119:244]|   const hours = Math.floor(seconds / 3600);
+[F119:245]|   const mins = Math.floor((seconds % 3600) / 60);
+[F119:246]|   
+[F119:247]|   if (hours > 0) {
+[F119:248]|     return `${hours}h ${mins}m`;
+[F119:249]|   }
+[F119:250]|   return `${mins}m`;
+[F119:251]| }
+[F119:252]| 
+[F119:253]| // 格式化时间为详细字符串
+[F119:254]| export function formatDurationDetailed(seconds: number): string {
+[F119:255]|   const hours = Math.floor(seconds / 3600);
+[F119:256]|   const mins = Math.floor((seconds % 3600) / 60);
+[F119:257]|   const secs = seconds % 60;
+[F119:258]|   
+[F119:259]|   if (hours > 0) {
+[F119:260]|     return `${hours}小时 ${mins}分 ${secs}秒`;
+[F119:261]|   }
+[F119:262]|   if (mins > 0) {
+[F119:263]|     return `${mins}分 ${secs}秒`;
+[F119:264]|   }
+[F119:265]|   return `${secs}秒`;
+[F119:266]| }
 
 ## 统计信息
-- 包含文件数: 117
-- 总大小: 1889 KB
+- 包含文件数: 119
+- 总大小: 1936 KB

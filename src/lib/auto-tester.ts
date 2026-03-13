@@ -62,7 +62,7 @@ function updateProgress(current: number, total: number, message: string = '') {
 }
 
 // 清除进度显示
-function clearProgress() {
+export function clearProgress() {
   if (_progressElement) {
     _progressElement.remove();
     _progressElement = null;

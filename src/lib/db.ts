@@ -1,6 +1,6 @@
 import Database from '@tauri-apps/plugin-sql';
 import { appDataDir, join } from '@tauri-apps/api/path';
-import { exists, mkdir, copyFile } from '@tauri-apps/plugin-fs';
+import { exists, mkdir} from '@tauri-apps/plugin-fs';
 import type { Task, CurrentWorkspace, HistoryWorkspace, Template } from '@/types';
 import { setIsSwitching, setIsReloadingForSwitch } from './storage-adapter';
 import { persistentLog } from './persistent-log';
@@ -18,8 +18,6 @@ let dbPromise: Promise<Database> | null = null;
 let dbInstance: Database | null = null;
 // 记录当前数据库路径，用于检测路径变化
 let currentDbPath: string | null = null;
-// 标记是否正在进行目录切换（用于单页切换）
-let isReloadingForSwitch = false;
 
 /**
  * 清除数据库缓存 - 在切换目录时调用
@@ -73,14 +71,12 @@ export async function getDbPath(): Promise<string> {
 export async function changeDbPath(newFolder: string): Promise<void> {
   console.log('[DB] changeDbPath START - newFolder:', newFolder);
   const currentPath = await getDbPath();
-  const pathFromStorage = localStorage.getItem(PATH_STORAGE_KEY);
-  console.log(`[DB] changeDbPath - From: ${currentPath}, To: ${newFolder}, Storage: ${pathFromStorage}`);
-  persistentLog('DB', 'changeDbPath START', 'INFO', { from: currentPath, to: newFolder, storageKey: pathFromStorage });
+  const _pathFromStorage = localStorage.getItem(PATH_STORAGE_KEY);
+  console.log(`[DB] changeDbPath - From: ${currentPath}, To: ${newFolder}, Storage: ${_pathFromStorage}`);
+  persistentLog('DB', 'changeDbPath START', 'INFO', { from: currentPath, to: newFolder, storageKey: _pathFromStorage });
 
   // 🚨 开启切换锁，阻止所有写入
   setIsSwitching(true);
-  // 标记正在切换
-  isReloadingForSwitch = true;
   // [DEBUG] console.log('[DB] changeDbPath - Switching lock set to TRUE');
 
   try {
@@ -100,7 +96,6 @@ export async function changeDbPath(newFolder: string): Promise<void> {
       // [DEBUG] console.log('[DB] Same path, skipping');
       // 重要：即使路径相同，也需要重置切换锁！
       setIsSwitching(false);
-      isReloadingForSwitch = false;
       return;
     }
 
@@ -151,7 +146,6 @@ export async function changeDbPath(newFolder: string): Promise<void> {
     persistentLog('DB', 'Triggering store reload', 'INFO', { newPath });
 
     // 设置切换状态
-    isReloadingForSwitch = true;
     setIsReloadingForSwitch(true);
 
     // 动态导入并触发应用重新加载数据
@@ -167,7 +161,6 @@ export async function changeDbPath(newFolder: string): Promise<void> {
     }
 
     // 重置切换标记
-    isReloadingForSwitch = false;
     setIsReloadingForSwitch(false);
     // 注意：skipWrite 锁不再在这里清除
     // 而是在 storage-adapter.ts 的 getItem 中，当成功读取到有效数据后才清除
@@ -177,7 +170,6 @@ export async function changeDbPath(newFolder: string): Promise<void> {
   } catch (error) {
     console.error('[DB] changeDbPath error:', error);
     console.warn('切换目录失败: ' + error);
-    isReloadingForSwitch = false;
     setIsReloadingForSwitch(false);
     setIsSwitching(false);
     // 注意：skipWrite 锁也不在这里清除，让 storage-adapter 处理
@@ -190,8 +182,6 @@ export async function changeDbPath(newFolder: string): Promise<void> {
 export async function getDb(): Promise<Database> {
   // 详细日志：追踪路径变化
   const dbPath = await getDbPath();
-  const pathFromStorage = localStorage.getItem(PATH_STORAGE_KEY);
-  // [DEBUG] console.log('[DB] getDb - PATH_STORAGE_KEY:', pathFromStorage);
   // [DEBUG] console.log('[DB] getDb - getDbPath():', dbPath);
   // [DEBUG] console.log('[DB] getDb - currentDbPath:', currentDbPath);
 

@@ -3,7 +3,7 @@ import { dbGetItem, dbSetItem, dbRemoveItem } from '@/lib/db';
 import { persistentLog } from './persistent-log';
 
 // 记录应用的启动时间
-const bootTime = Date.now();
+// const bootTime = Date.now();
 // 记录是否已完成水合
 let _isHydrated = false;
 // 切换锁：目录切换期间阻止所有写入
@@ -146,7 +146,7 @@ if (typeof window !== 'undefined') {
   });
 }
 
-function logTrace(action: string, data: string | null, source: string) {
+function logTrace(_action: string, _data: string | null, _source: string) {
   // [DEBUG] 详细追踪功能，生产环境可关闭
   // if (process.env.NODE_ENV !== 'development') return;
   // const timeSinceBoot = Date.now() - bootTime;
@@ -158,7 +158,7 @@ function logTrace(action: string, data: string | null, source: string) {
 let _hasReadValidData = false;
 // 🚀 存储从 SQLite 加载的有效数据（用于对比空状态写入）
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-let _loadedValidData: string | null = null;
+// let _loadedValidData: string | null = null;
 // 🚀 存储加载时的有效任务/区域数量
 let _loadedTasksCount = 0;
 let _loadedZonesCount = 0;
@@ -202,7 +202,7 @@ export const sqliteStorage: StateStorage = {
         } catch (e) {}
 
         // 🚀 保存加载的有效数据，用于后续对比
-        _loadedValidData = sqliteValue;
+        // _loadedValidData = sqliteValue;
         _loadedTasksCount = tasks;
         _loadedZonesCount = zones;
         _hasReadValidData = true;
