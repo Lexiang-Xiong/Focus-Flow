@@ -236,8 +236,15 @@ export function GlobalView({
           const aUrgencyScore = aEffective ? (leafModeRankScores[a.id] || 0) : 0;
           const bUrgencyScore = bEffective ? (leafModeRankScores[b.id] || 0) : 0;
           return bUrgencyScore - aUrgencyScore;
-        case 'weighted':
-          return calculateWeightedScore(b) - calculateWeightedScore(a);
+        case 'weighted': {
+          const scoreA = calculateWeightedScore(a);
+          const scoreB = calculateWeightedScore(b);
+          if (scoreA !== scoreB) return scoreB - scoreA; // 降序
+          // 分数完全相同时，优先基于实际截止时间兜底排序（使用继承而非自身定义）
+          const ddlA = getInheritedDeadline(a, tasks) || Infinity;
+          const ddlB = getInheritedDeadline(b, tasks) || Infinity;
+          return ddlA - ddlB;
+        }
         case 'workTime':
           // 按执行时间降序，未工作排最后，使用动态计算的值
           return calculateTotalWorkTime(b.id) - calculateTotalWorkTime(a.id);

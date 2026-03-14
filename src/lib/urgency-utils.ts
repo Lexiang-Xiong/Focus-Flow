@@ -25,11 +25,13 @@ export function calculateRankScores(tasks: Task[]): Record<string, number> {
   const scores: Record<string, number> = {};
   const count = withDeadline.length;
 
+  let currentRankIndex = 0;
   withDeadline.forEach((task, index) => {
-    // 排名越靠前分数越高。如果只有1个任务，分数为 1
-    // 分数公式：(count - 1 - index) / (count - 1)
-    // 这样最早截止的（index=0）得到最高分 1
-    scores[task.id] = count > 1 ? (count - 1 - index) / (count - 1) : 1;
+    // 排名越靠前分数越高，对于有同等实际截止日期（如继承）的任务，给予完全相同的排位分数
+    if (index > 0 && task.effectiveDeadline !== withDeadline[index - 1].effectiveDeadline) {
+      currentRankIndex = index;
+    }
+    scores[task.id] = count > 1 ? (count - 1 - currentRankIndex) / (count - 1) : 1;
   });
 
   return scores;
@@ -242,7 +244,7 @@ export function sortTasks(
     const scoreB = (priorityB * pWeight) + (rankB * dWeight);
 
     if (scoreA !== scoreB) return scoreB - scoreA; // 分数高的排前面
-    return (a.deadline || Infinity) - (b.deadline || Infinity); // 同分按 DDL 先后排
+    return (getInheritedDeadline(a, tasks) || Infinity) - (getInheritedDeadline(b, tasks) || Infinity); // 同分按实际 DDL（继承或自设）先后排
   });
 
   // 无 DDL 的任务排在后面，保持原有顺序

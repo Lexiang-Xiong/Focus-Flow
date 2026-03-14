@@ -2,7 +2,7 @@ export type TaskPriority = 'low' | 'medium' | 'high';
 export type TaskUrgency = 'low' | 'medium' | 'high' | 'urgent';
 export type DeadlineType = 'exact' | 'today' | 'tomorrow' | 'week' | 'none';
 export type TimerMode = 'work' | 'break' | 'longBreak' | 'idle';
-export type GlobalViewSortMode = 'zone' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime' | 'timeDiff' | 'deadline';
+export type GlobalViewSortMode = 'manual' | 'zone' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime' | 'timeDiff' | 'deadline';
 
 export interface SortConfig {
   mode: GlobalViewSortMode;
@@ -138,6 +138,8 @@ export interface AppState {
     collapsePosition: { x: number; y: number };
     globalViewSort: SortConfig;
     globalViewLeafMode: boolean; // 叶子节点模式状态
+    zoneViewSort: SortConfig;    // 新增：局部视图排序状态
+    zoneViewLeafMode: boolean;   // 新增：局部视图叶子模式状态
     autoSaveEnabled: boolean;
     autoSaveInterval: number;
   };
@@ -234,6 +236,12 @@ export const DEFAULT_SETTINGS = {
     deadlineWeight: 0.4, // 40%
   },
   globalViewLeafMode: false,
+  zoneViewSort: {
+    mode: 'manual' as GlobalViewSortMode,
+    priorityWeight: 0.6,
+    deadlineWeight: 0.4,
+  },
+  zoneViewLeafMode: false,
   autoSaveEnabled: true, // 默认开启自动保存
   autoSaveInterval: 120, // 自动保存间隔（秒），默认120秒
   recurringTemplates: [], // 定时任务模板列表

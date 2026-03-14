@@ -307,6 +307,11 @@ export function SettingsPanel({
         priorityWeight: weight / 100,
         deadlineWeight: (100 - weight) / 100,
       },
+      zoneViewSort: {
+        mode: settings.zoneViewSort?.mode || 'manual',
+        priorityWeight: weight / 100,
+        deadlineWeight: (100 - weight) / 100,
+      }
     });
   };
 
@@ -321,6 +326,11 @@ export function SettingsPanel({
         priorityWeight: pWeight / 100,
         deadlineWeight: dWeight / 100,
       },
+      zoneViewSort: {
+        mode: settings.zoneViewSort?.mode || 'manual',
+        priorityWeight: pWeight / 100,
+        deadlineWeight: dWeight / 100,
+      }
     });
   };
 
@@ -338,6 +348,9 @@ export function SettingsPanel({
       autoStartBreak: DEFAULT_SETTINGS.autoStartBreak,
       soundEnabled: DEFAULT_SETTINGS.soundEnabled,
       globalViewSort: DEFAULT_SETTINGS.globalViewSort,
+      zoneViewSort: DEFAULT_SETTINGS.zoneViewSort,
+      zoneViewLeafMode: DEFAULT_SETTINGS.zoneViewLeafMode,
+      globalViewLeafMode: DEFAULT_SETTINGS.globalViewLeafMode,
       autoSaveEnabled: DEFAULT_SETTINGS.autoSaveEnabled,
       autoSaveInterval: DEFAULT_SETTINGS.autoSaveInterval,
     });

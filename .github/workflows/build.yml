@@ -50,12 +50,12 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'Focus Flow v__VERSION__'
           releaseBody: |
-            Focus Flow - 浮动待办事项应用
+            Focus Flow
 
-            ## 下载说明
-            - Windows: 下载 `.exe` 安装包 (NSIS)
-            - macOS: 下载 `.dmg` (Intel) 或 `.app.tar.gz` (Apple Silicon)
-            - Linux: 下载 `.AppImage`、`.deb` 或 `.rpm`
+            ## Download the instructions
+            - Windows: `.exe`(NSIS)
+            - macOS: `.dmg` (Intel) or `.app.tar.gz` (Apple Silicon)
+            - Linux: `.AppImage`、`.deb` 或 `.rpm`
           releaseDraft: true
           prerelease: false
 
@@ -104,12 +104,12 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'Focus Flow v__VERSION__'
           releaseBody: |
-            Focus Flow - 浮动待办事项应用
+            Focus Flow
 
-            ## 下载说明
-            - Windows: 下载 `.exe` 安装包 (NSIS)
-            - macOS: 下载 `.dmg` (Intel) 或 `.app.tar.gz` (Apple Silicon)
-            - Linux: 下载 `.AppImage`、`.deb` 或 `.rpm`
+            ## Download the instructions
+            - Windows: `.exe`(NSIS)
+            - macOS: `.dmg` (Intel) or `.app.tar.gz` (Apple Silicon)
+            - Linux: `.AppImage`、`.deb` 或 `.rpm`
           releaseDraft: true
           prerelease: false
 
@@ -153,11 +153,11 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'Focus Flow v__VERSION__'
           releaseBody: |
-            Focus Flow - 浮动待办事项应用
+            Focus Flow
 
-            ## 下载说明
-            - Windows: 下载 `.exe` 安装包 (NSIS)
-            - macOS: 下载 `.dmg` (Intel) 或 `.app.tar.gz` (Apple Silicon)
-            - Linux: 下载 `.AppImage`、`.deb` 或 `.rpm`
+            ## Download the instructions
+            - Windows: `.exe`(NSIS)
+            - macOS: `.dmg` (Intel) or `.app.tar.gz` (Apple Silicon)
+            - Linux: `.AppImage`、`.deb` 或 `.rpm`
           releaseDraft: true
           prerelease: false

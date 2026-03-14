@@ -28,7 +28,7 @@ import {
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { TaskItem } from './TaskItem';
 import type { Task, TaskPriority, TaskUrgency, DeadlineType, Zone } from '@/types';
-import { convertDeadlineType, getInheritedDeadline } from '@/lib/urgency-utils';
+import { convertDeadlineType, getInheritedDeadline, calculateRankScores } from '@/lib/urgency-utils';
 import { useAppStore } from '@/store';
 import { getFlattenedTasks, calculateNewPosition, type FlattenedTask } from '@/lib/tree-utils';
 import { useTranslation } from 'react-i18next';
@@ -69,7 +69,7 @@ export function TaskList({
   onSelectTask,
   onClearCompleted,
 }: TaskListProps) {
-  const { moveTaskNode, expandTask, getTotalWorkTime, getEstimatedTime } = useAppStore();
+  const { moveTaskNode, expandTask, getTotalWorkTime, getEstimatedTime, settings, updateSettings } = useAppStore();
   const { t, i18n } = useTranslation();
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -93,9 +93,20 @@ export function TaskList({
     }
   };
 
-  // 新增：局部视图模式状态
-  const [isLeafMode, setIsLeafMode] = useState(false);
-  const [sortMode, setSortMode] = useState<'manual' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime'>('manual');
+  // 从 settings 中获取视图模式状态
+  const isLeafMode = settings.zoneViewLeafMode || false;
+  const sortMode = settings.zoneViewSort?.mode || 'manual';
+
+  const setIsLeafMode = (value: boolean) => {
+    updateSettings({ zoneViewLeafMode: value });
+  };
+
+  const setSortMode = (val: 'manual' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime') => {
+    updateSettings({
+      zoneViewSort: { ...(settings.zoneViewSort || { priorityWeight: 0.6, deadlineWeight: 0.4 }), mode: val }
+    });
+  };
+
   const [addingSubtaskParentId, setAddingSubtaskParentId] = useState<string | null>(null);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [newSubtaskDescription, setNewSubtaskDescription] = useState('');
@@ -284,13 +295,30 @@ export function TaskList({
           case 'estimatedTime':
             return (b.estimatedTime || 0) - (a.estimatedTime || 0);
           case 'weighted': {
-            const aTaskAny = tasks.find(t => t.id === a.id) as any || {priorityWeight: 50, deadlineWeight: 50};
-            const bTaskAny = tasks.find(t => t.id === b.id) as any || {priorityWeight: 50, deadlineWeight: 50};
-            const aScoreDdl = getInheritedDeadline(a, tasks) || 0;
-            const bScoreDdl = getInheritedDeadline(b, tasks) || 0;
-            const aScore = (priorityOrder[a.priority] * (aTaskAny.priorityWeight || 50)) + ((aScoreDdl ? 10000000000 - aScoreDdl : 0) * (aTaskAny.deadlineWeight || 50));
-            const bScore = (priorityOrder[b.priority] * (bTaskAny.priorityWeight || 50)) + ((bScoreDdl ? 10000000000 - bScoreDdl : 0) * (bTaskAny.deadlineWeight || 50));
-            return aScore - bScore;
+            // 获取最新的全局设置权重（适配本地模式，没有单设局部权重时使用全局）
+            const state = useAppStore.getState();
+            const pWeight = state.settings.zoneViewSort?.priorityWeight ?? state.settings.globalViewSort?.priorityWeight ?? 0.6;
+            const dWeight = state.settings.zoneViewSort?.deadlineWeight ?? state.settings.globalViewSort?.deadlineWeight ?? 0.4;
+
+            // 使用归一化的优先级分数：高=1, 中=0.5, 低=0
+            const normPriorityA = (2 - priorityOrder[a.priority]) / 2;
+            const normPriorityB = (2 - priorityOrder[b.priority]) / 2;
+
+            const aEffective = getInheritedDeadline(a, tasks);
+            const bEffective = getInheritedDeadline(b, tasks);
+
+            // 使用 calculateRankScores 计算排名分数
+            const rankScores = calculateRankScores(tasks);
+            const aScoreDdl = aEffective ? (rankScores[a.id] || 0) : 0;
+            const bScoreDdl = bEffective ? (rankScores[b.id] || 0) : 0;
+
+            const aScore = normPriorityA * pWeight + aScoreDdl * dWeight;
+            const bScore = normPriorityB * pWeight + bScoreDdl * dWeight;
+
+            // 分数高的排在前面
+            if (bScore !== aScore) return bScore - aScore;
+            // 分数相同时，按实际 DDL（继承或自设）兜底
+            return (aEffective || Infinity) - (bEffective || Infinity);
           }
           default:
             return 0;
