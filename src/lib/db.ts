@@ -218,6 +218,10 @@ export async function getDb(): Promise<Database> {
 
 // 初始化关系型表结构
 async function initializeTables(db: Database): Promise<void> {
+  // 🚀 性能优化：开启 WAL 模式，解决高频写入时的 UI 微卡顿
+  await db.execute('PRAGMA journal_mode = WAL;');
+  await db.execute('PRAGMA synchronous = NORMAL;');
+  
   // app_settings 表 (单行配置)
   await db.execute(`
     CREATE TABLE IF NOT EXISTS app_settings (

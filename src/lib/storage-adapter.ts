@@ -14,6 +14,7 @@ let _isReloadingForSwitch = false;
 let _skipWriteUntilChange = false;
 // 重新加载回调函数列表
 type ReloadCallback = () => void | Promise<void>;
+let _writeDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
 const reloadCallbacks: ReloadCallback[] = [];
 
 export function getIsHydrated() {
@@ -321,24 +322,44 @@ export const sqliteStorage: StateStorage = {
     }
 
     // 写入 localStorage（确保 changeDbPath 备份可以读取到正确数据）
-    localStorage.setItem(name, value);
-    persistentLog('Storage', 'setItem to localStorage', 'DEBUG');
+    // localStorage.setItem(name, value);
+    // persistentLog('Storage', 'setItem to localStorage', 'DEBUG');
 
-    // 同时写入 SQLite
-    try {
-      // 写入前再次检查路径是否匹配
-      const currentPath = localStorage.getItem('FOCUS_FLOW_DB_PATH');
-      const dbPath = await import('@/lib/db').then(m => m.getDbPath());
-      if (currentPath !== dbPath) {
-        console.error(`[Storage] ⚠️ PATH MISMATCH! localStorage: ${currentPath}, getDbPath: ${dbPath}`);
-        persistentLog('Storage', 'PATH MISMATCH!', 'ERROR', { localStoragePath: currentPath, dbPath });
+    // // 同时写入 SQLite
+    // try {
+    //   // 写入前再次检查路径是否匹配
+    //   const currentPath = localStorage.getItem('FOCUS_FLOW_DB_PATH');
+    //   const dbPath = await import('@/lib/db').then(m => m.getDbPath());
+    //   if (currentPath !== dbPath) {
+    //     console.error(`[Storage] ⚠️ PATH MISMATCH! localStorage: ${currentPath}, getDbPath: ${dbPath}`);
+    //     persistentLog('Storage', 'PATH MISMATCH!', 'ERROR', { localStoragePath: currentPath, dbPath });
+    //   }
+
+    //   await dbSetItem(name, value);
+    //   persistentLog('Storage', 'setItem SUCCESS', 'DEBUG');
+    // } catch (error) {
+    //   persistentLog('Storage', 'setItem SQLite ERROR', 'ERROR', String(error));
+    // }
+    if (_writeDebounceTimeout) clearTimeout(_writeDebounceTimeout);
+
+    _writeDebounceTimeout = setTimeout(async () => {
+      // 1. 先写 localStorage (轻量)
+      localStorage.setItem(name, value);
+
+      // 2. 再写 SQLite (重量)
+      try {
+        const currentPath = localStorage.getItem('FOCUS_FLOW_DB_PATH');
+        const { getDbPath: fetchPath } = await import('@/lib/db');
+        const dbPath = await fetchPath();
+        
+        if (currentPath === dbPath) {
+          await dbSetItem(name, value);
+          persistentLog('Storage', 'setItem SUCCESS (Debounced)', 'DEBUG');
+        }
+      } catch (error) {
+        persistentLog('Storage', 'setItem SQLite ERROR', 'ERROR', String(error));
       }
-
-      await dbSetItem(name, value);
-      persistentLog('Storage', 'setItem SUCCESS', 'DEBUG');
-    } catch (error) {
-      persistentLog('Storage', 'setItem SQLite ERROR', 'ERROR', String(error));
-    }
+    }, 500); // 500ms 内重复操作会合并为一次写入
   },
 
   removeItem: async (name: string): Promise<void> => {

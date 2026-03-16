@@ -18,6 +18,7 @@ import { PREDEFINED_TEMPLATES } from '@/types';
 import { useTranslation } from 'react-i18next';
 import { AutoTester } from '@/lib/auto-tester';
 import { startDataMonitor, stopDataMonitor } from '@/lib/db-monitor';
+import { invoke } from '@tauri-apps/api/core';
 import './App.css';
 
 function App() {
@@ -77,8 +78,11 @@ function App() {
 
   // 启动数据变化监控（用于调试数据丢失问题）
   useEffect(() => {
-    startDataMonitor();
-    return () => stopDataMonitor();
+    // import.meta.env.DEV 是 Vite 提供的环境变量，仅在开发环境下为 true
+    if (import.meta.env.DEV) {
+      startDataMonitor();
+      return () => stopDataMonitor();
+    }
   }, []);
 
   // 同步 i18n 和 settings.language
@@ -140,11 +144,13 @@ function App() {
   }, [tasks]);
 
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const collapsedPositionRef = useRef<{x: number, y: number} | null>(null);
 
   // 使用ref存储activeTaskId和tasks，确保计时器回调中能获取最新值
   const activeTaskIdRef = useRef<string | null>(null);
   const tasksRef = useRef<typeof tasks>([]);
   const timerRef = useRef<{ isRunning: boolean; mode: string }>({ isRunning: false, mode: 'idle' });
+  const sessionWorkTimeRef = useRef(0);
 
   // 同步ref和state
   useEffect(() => {
@@ -159,18 +165,43 @@ function App() {
   const addWorkTimeRef = useRef(addWorkTime);
   addWorkTimeRef.current = addWorkTime;
 
+  const syncWorkTime = useCallback(() => {
+      const currentActiveTaskId = activeTaskIdRef.current;
+      if (currentActiveTaskId && sessionWorkTimeRef.current > 0) {
+        // 将内存中累积的秒数一次性写入 Store
+        addWorkTimeRef.current(currentActiveTaskId, sessionWorkTimeRef.current);
+        // 写入后清空内存累积
+        sessionWorkTimeRef.current = 0;
+      }
+    }, []);
+
   // 处理计时器滴答，累计任务时间
+  // const handleTimerTick = useCallback(() => {
+  //   const currentActiveTaskId = activeTaskIdRef.current;
+  //   const currentTimer = timerRef.current;
+
+  //   if (currentActiveTaskId && currentTimer.isRunning && currentTimer.mode === 'work') {
+  //     // 使用 addWorkTime 累加时间：当前任务增加 ownTime
+  //     addWorkTimeRef.current(currentActiveTaskId, 1);
+  //   }
+  // }, []);
+
   const handleTimerTick = useCallback(() => {
-    const currentActiveTaskId = activeTaskIdRef.current;
     const currentTimer = timerRef.current;
 
-    if (currentActiveTaskId && currentTimer.isRunning && currentTimer.mode === 'work') {
-      // 使用 addWorkTime 累加时间：当前任务增加 ownTime
-      addWorkTimeRef.current(currentActiveTaskId, 1);
+    if (activeTaskIdRef.current && currentTimer.isRunning && currentTimer.mode === 'work') {
+      // 每秒只加内存里的变量，不操作 Store
+      sessionWorkTimeRef.current += 1;
+
+      // 每 60 秒同步一次，防止程序意外崩溃导致一整条番茄钟数据丢失
+      if (sessionWorkTimeRef.current >= 60) {
+        syncWorkTime();
+      }
     }
-  }, []);
+  }, [syncWorkTime]);
 
   const handleTimerComplete = useCallback((mode: TimerMode) => {
+    syncWorkTime(); // 专注结束时，立刻把剩余的秒数存入 Store
     if (mode === 'work' && activeTaskId) {
       const task = tasks.find(t => t.id === activeTaskId);
       if (task) {
@@ -386,13 +417,48 @@ function App() {
     const willCollapse = !settings.collapsed;
 
     try {
-      const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
+      const { getCurrentWindow, LogicalSize, LogicalPosition, availableMonitors} = await import('@tauri-apps/api/window');
       const win = getCurrentWindow();
 
       if (willCollapse) {
         await win.setSize(new LogicalSize(COLLAPSED_SIZE.width, COLLAPSED_SIZE.height));
+
+        if (collapsedPositionRef.current) {
+          const { x, y } = collapsedPositionRef.current;
+          await win.setPosition(new LogicalPosition(x, y));
+        }
       } else {
         await win.setSize(new LogicalSize(NORMAL_SIZE.width, NORMAL_SIZE.height));
+        // ===== 新增：展开时居中到屏幕 =====
+        // 获取所有显示器，并找到包含窗口当前位置的那个
+        const monitors = await availableMonitors();
+        const currentPos = await win.outerPosition();
+        
+        // 简单方案：使用第一个显示器（通常是主屏）或者包含当前坐标的显示器
+        const currentMonitor = monitors.find(m => {
+          const { position, size } = m;
+          return (
+            currentPos.x >= position.x &&
+            currentPos.x <= position.x + size.width &&
+            currentPos.y >= position.y &&
+            currentPos.y <= position.y + size.height
+          );
+        }) || monitors[0]; // 默认使用主显示器
+        
+        if (currentMonitor) {
+        const sf = currentMonitor.scaleFactor;
+        collapsedPositionRef.current = {
+          x: currentPos.x / sf,
+          y: currentPos.y / sf
+        };
+        
+        // 注意：所有计算都要除以 scaleFactor 转换为逻辑像素
+        const x = currentMonitor.position.x / sf + (currentMonitor.size.width / sf - NORMAL_SIZE.width) / 2;
+        const y = currentMonitor.position.y / sf + (currentMonitor.size.height / sf - NORMAL_SIZE.height) / 2;
+        
+        await win.setPosition(new LogicalPosition(x, y));
+      }
+        // ==================================
         await win.setFocus();
       }
     } catch (e) {
@@ -445,6 +511,48 @@ function App() {
 
     return () => clearInterval(intervalId);
   }, [settings.autoSaveEnabled, settings.autoSaveInterval, hasUnsavedChanges, autoSaveSnapshot, t]);
+
+  // --- 在此处插入以下代码 ---
+  // 💾 自动全量容灾备份逻辑 (每 10 分钟执行一次)
+  useEffect(() => {
+    const BACKUP_INTERVAL = 10 * 60 * 1000;
+    const backupTimer = setInterval(async () => {
+      try {
+        // const { writeTextFile } = await import('@tauri-apps/plugin-fs');
+        const { dirname, join } = await import('@tauri-apps/api/path');
+        const { getDbPath } = await import('@/lib/db'); 
+        
+        // 1. 获取数据库所在目录
+        const dbPath = await getDbPath();
+        const dbDir = await dirname(dbPath);
+        const backupPath = await join(dbDir, 'focus_flow_backup.json');
+
+        // 2. 导出核心数据快照
+        const state = useAppStore.getState();
+        // 将当前工作区伪装成历史记录，连同现有的历史记录一起导出为数组
+        const currentWork = {
+          ...state.currentWorkspace,
+          name: `${state.currentWorkspace.name} (${t('workspace.archive')})`,
+          zones: state.zones,
+          tasks: state.tasks,
+          lastModified: Date.now()
+        };
+        
+        // 核心：直接导出为数组格式
+        const backupData = JSON.stringify([currentWork, ...state.historyWorkspaces], null, 2);
+
+        await invoke('save_backup', { 
+          path: backupPath, 
+          data: backupData 
+        });
+
+        console.log('[AutoBackup] 备份成功，格式已对齐导入标准');
+      } catch (error) {
+        console.error('[AutoBackup] 自动备份失败:', error);
+      }
+    }, BACKUP_INTERVAL);
+    return () => clearInterval(backupTimer);
+  }, [t]); // 记得添加 t 依赖项
 
   // 定时任务心跳 - 每分钟检查一次
   useEffect(() => {
@@ -501,7 +609,7 @@ function App() {
           taskTitle={activeTask?.title || t('timer.noTaskSelected')}
           progress={timer.progress}
           onStart={() => timer.start('work', activeTaskId)}
-          onPause={timer.pause}
+          onPause={() => { timer.pause(); syncWorkTime(); }}
           onResume={timer.resume}
           onExpand={handleToggleCollapse}
         />

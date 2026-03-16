@@ -1674,12 +1674,12 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F21:50]|           tagName: ${{ github.ref_name }}
 [F21:51]|           releaseName: 'Focus Flow v__VERSION__'
 [F21:52]|           releaseBody: |
-[F21:53]|             Focus Flow - 浮动待办事项应用
+[F21:53]|             Focus Flow
 [F21:54]| 
-[F21:55]|             ## 下载说明
-[F21:56]|             - Windows: 下载 `.exe` 安装包 (NSIS)
-[F21:57]|             - macOS: 下载 `.dmg` (Intel) 或 `.app.tar.gz` (Apple Silicon)
-[F21:58]|             - Linux: 下载 `.AppImage`、`.deb` 或 `.rpm`
+[F21:55]|             ## Download the instructions
+[F21:56]|             - Windows: `.exe`(NSIS)
+[F21:57]|             - macOS: `.dmg` (Intel) or `.app.tar.gz` (Apple Silicon)
+[F21:58]|             - Linux: `.AppImage`、`.deb` 或 `.rpm`
 [F21:59]|           releaseDraft: true
 [F21:60]|           prerelease: false
 [F21:61]| 
@@ -1728,12 +1728,12 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F21:104]|           tagName: ${{ github.ref_name }}
 [F21:105]|           releaseName: 'Focus Flow v__VERSION__'
 [F21:106]|           releaseBody: |
-[F21:107]|             Focus Flow - 浮动待办事项应用
+[F21:107]|             Focus Flow
 [F21:108]| 
-[F21:109]|             ## 下载说明
-[F21:110]|             - Windows: 下载 `.exe` 安装包 (NSIS)
-[F21:111]|             - macOS: 下载 `.dmg` (Intel) 或 `.app.tar.gz` (Apple Silicon)
-[F21:112]|             - Linux: 下载 `.AppImage`、`.deb` 或 `.rpm`
+[F21:109]|             ## Download the instructions
+[F21:110]|             - Windows: `.exe`(NSIS)
+[F21:111]|             - macOS: `.dmg` (Intel) or `.app.tar.gz` (Apple Silicon)
+[F21:112]|             - Linux: `.AppImage`、`.deb` 或 `.rpm`
 [F21:113]|           releaseDraft: true
 [F21:114]|           prerelease: false
 [F21:115]| 
@@ -1777,12 +1777,12 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F21:153]|           tagName: ${{ github.ref_name }}
 [F21:154]|           releaseName: 'Focus Flow v__VERSION__'
 [F21:155]|           releaseBody: |
-[F21:156]|             Focus Flow - 浮动待办事项应用
+[F21:156]|             Focus Flow
 [F21:157]| 
-[F21:158]|             ## 下载说明
-[F21:159]|             - Windows: 下载 `.exe` 安装包 (NSIS)
-[F21:160]|             - macOS: 下载 `.dmg` (Intel) 或 `.app.tar.gz` (Apple Silicon)
-[F21:161]|             - Linux: 下载 `.AppImage`、`.deb` 或 `.rpm`
+[F21:158]|             ## Download the instructions
+[F21:159]|             - Windows: `.exe`(NSIS)
+[F21:160]|             - macOS: `.dmg` (Intel) or `.app.tar.gz` (Apple Silicon)
+[F21:161]|             - Linux: `.AppImage`、`.deb` 或 `.rpm`
 [F21:162]|           releaseDraft: true
 [F21:163]|           prerelease: false
 
@@ -4715,7 +4715,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F29:2889]| }
 
 ================================================================================
-文件路径: src\App.tsx(F30) (约合大小: 25 KB)
+文件路径: src\App.tsx(F30) (约合大小: 26 KB)
 ================================================================================
 [F30:1]| import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 [F30:2]| import { FloatWindow } from '@/components/FloatWindow';
@@ -4859,562 +4859,598 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F30:140]|   }, [tasks]);
 [F30:141]| 
 [F30:142]|   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
-[F30:143]| 
-[F30:144]|   // 使用ref存储activeTaskId和tasks，确保计时器回调中能获取最新值
-[F30:145]|   const activeTaskIdRef = useRef<string | null>(null);
-[F30:146]|   const tasksRef = useRef<typeof tasks>([]);
-[F30:147]|   const timerRef = useRef<{ isRunning: boolean; mode: string }>({ isRunning: false, mode: 'idle' });
-[F30:148]| 
-[F30:149]|   // 同步ref和state
-[F30:150]|   useEffect(() => {
-[F30:151]|     activeTaskIdRef.current = activeTaskId;
-[F30:152]|   }, [activeTaskId]);
-[F30:153]| 
-[F30:154]|   useEffect(() => {
-[F30:155]|     tasksRef.current = tasks;
-[F30:156]|   }, [tasks]);
-[F30:157]| 
-[F30:158]|   // 使用 ref 保持 addWorkTime 稳定，避免计时器回调重复创建
-[F30:159]|   const addWorkTimeRef = useRef(addWorkTime);
-[F30:160]|   addWorkTimeRef.current = addWorkTime;
-[F30:161]| 
-[F30:162]|   // 处理计时器滴答，累计任务时间
-[F30:163]|   const handleTimerTick = useCallback(() => {
-[F30:164]|     const currentActiveTaskId = activeTaskIdRef.current;
-[F30:165]|     const currentTimer = timerRef.current;
-[F30:166]| 
-[F30:167]|     if (currentActiveTaskId && currentTimer.isRunning && currentTimer.mode === 'work') {
-[F30:168]|       // 使用 addWorkTime 累加时间：当前任务增加 ownTime
-[F30:169]|       addWorkTimeRef.current(currentActiveTaskId, 1);
-[F30:170]|     }
-[F30:171]|   }, []);
-[F30:172]| 
-[F30:173]|   const handleTimerComplete = useCallback((mode: TimerMode) => {
-[F30:174]|     if (mode === 'work' && activeTaskId) {
-[F30:175]|       const task = tasks.find(t => t.id === activeTaskId);
-[F30:176]|       if (task) {
-[F30:177]|         const minutes = Math.floor((task.totalWorkTime || 0) / 60);
-[F30:178]|         toast.success(t('toast.focusComplete'), {
-[F30:179]|           description: t('toast.taskAccumulated', { title: task.title, minutes }),
-[F30:180]|         });
-[F30:181]|       }
-[F30:182]|     } else if (mode === 'break' || mode === 'longBreak') {
-[F30:183]|       toast.info(t('toast.breakEnd'), {
-[F30:184]|         description: t('toast.readyForNext'),
-[F30:185]|       });
-[F30:186]|     }
-[F30:187]|   }, [activeTaskId, tasks, t]);
-[F30:188]| 
-[F30:189]|   const timer = useTimer({
-[F30:190]|     workDuration: settings.workDuration,
-[F30:191]|     breakDuration: settings.breakDuration,
-[F30:192]|     longBreakDuration: settings.longBreakDuration,
-[F30:193]|     autoStartBreak: settings.autoStartBreak,
-[F30:194]|     soundEnabled: settings.soundEnabled,
-[F30:195]|     onComplete: handleTimerComplete,
-[F30:196]|     onTick: handleTimerTick,
-[F30:197]|   });
-[F30:198]| 
-[F30:199]|   // 剪贴板功能
-[F30:200]|   const {
-[F30:201]|     copyTask,
-[F30:202]|     copyZone,
-[F30:203]|     pasteTask,
-[F30:204]|     pasteZone,
-[F30:205]|     getOriginalParentId,
-[F30:206]|     hasTask,
-[F30:207]|     hasZone,
-[F30:208]|   } = useClipboard();
-[F30:209]| 
-[F30:210]|   // 同步timerRef
-[F30:211]|   useEffect(() => {
-[F30:212]|     timerRef.current = { isRunning: timer.isRunning, mode: timer.mode };
-[F30:213]|   }, [timer.isRunning, timer.mode]);
-[F30:214]| 
-[F30:215]|   // 使用 ref 追踪当前模式
-[F30:216]|   const currentModeRef = useRef<TimerMode>('work');
-[F30:217]|   useEffect(() => {
-[F30:218]|     currentModeRef.current = timer.mode;
-[F30:219]|   }, [timer.mode]);
-[F30:220]| 
-[F30:221]|   // 监听 settings 变化
-[F30:222]|   useEffect(() => {
-[F30:223]|     if (timer.mode === 'idle' && !timer.isRunning) {
-[F30:224]|       const targetDuration = currentModeRef.current === 'break'
-[F30:225]|         ? settings.breakDuration
-[F30:226]|         : currentModeRef.current === 'longBreak'
-[F30:227]|         ? settings.longBreakDuration
-[F30:228]|         : settings.workDuration;
-[F30:229]| 
-[F30:230]|       if (timer.timeRemaining !== targetDuration) {
-[F30:231]|         timer.updateTime(targetDuration);
-[F30:232]|       }
-[F30:233]|     }
-[F30:234]|   }, [settings.workDuration, settings.breakDuration, settings.longBreakDuration, timer]);
-[F30:235]| 
-[F30:236]|   // 键盘快捷键监听
-[F30:237]|   useEffect(() => {
-[F30:238]|     const handleKeyDown = (e: KeyboardEvent) => {
-[F30:239]|       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-[F30:240]|         return;
-[F30:241]|       }
-[F30:242]| 
-[F30:243]|       // Ctrl+Z 撤销
-[F30:244]|       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-[F30:245]|         e.preventDefault();
-[F30:246]|         undo();
-[F30:247]|         toast.info(t('toast.undo'));
-[F30:248]|         return;
-[F30:249]|       }
-[F30:250]| 
-[F30:251]|       // Ctrl+Shift+Z 或 Ctrl+Y 重做
-[F30:252]|       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
-[F30:253]|         e.preventDefault();
-[F30:254]|         redo();
-[F30:255]|         toast.info(t('toast.redo'));
-[F30:256]|         return;
-[F30:257]|       }
-[F30:258]| 
-[F30:259]|       // 尝试获取当前操作的区域上下文
-[F30:260]|       let currentZone = getZoneById(activeZoneId || '') || null;
-[F30:261]| 
-[F30:262]|       // 如果没有选中分区，尝试通过"选中任务"或"当前聚焦的任务"来推断分区
-[F30:263]|       if (!currentZone) {
-[F30:264]|         const contextTaskId = activeTaskId || focusedTaskId;
-[F30:265]|         if (contextTaskId) {
-[F30:266]|           const contextTask = tasks.find(t => t.id === contextTaskId);
-[F30:267]|           if (contextTask) {
-[F30:268]|             currentZone = getZoneById(contextTask.zoneId) || null;
-[F30:269]|           }
-[F30:270]|         }
-[F30:271]|       }
-[F30:272]| 
-[F30:273]|       if (e.ctrlKey && e.key === 'c') {
-[F30:274]|         if (activeTaskId) {
-[F30:275]|           const task = tasks.find(t => t.id === activeTaskId);
-[F30:276]|           if (task) {
-[F30:277]|             copyTask(task);
-[F30:278]|             toast.success(t('toast.taskCopied'));
-[F30:279]|             return;
-[F30:280]|           }
-[F30:281]|         }
-[F30:282]|         if (currentZone) {
-[F30:283]|           const zoneTasks = tasks.filter(t => t.zoneId === currentZone.id);
-[F30:284]|           if (zoneTasks.length > 0) {
-[F30:285]|             copyZone(currentZone, zoneTasks);
-[F30:286]|             toast.success(t('toast.zoneCopied', { name: currentZone.name }));
-[F30:287]|           }
-[F30:288]|         }
-[F30:289]|       }
-[F30:290]| 
-[F30:291]|       if (e.ctrlKey && e.key === 'v') {
-[F30:292]|         if (hasZone && currentZone) {
-[F30:293]|           const result = pasteZone(zones);
-[F30:294]|           if (result) {
-[F30:295]|             // 直接更新 store
-[F30:296]|             result.zone.id = `zone-${Date.now()}`;
-[F30:297]|             addZone(result.zone.name || t('common.unnamed'), result.zone.color);
-[F30:298]|             const newTasks = result.tasks.map(t => ({ ...t, id: `task-${Date.now()}-${Math.random()}`, zoneId: result.zone.id }));
-[F30:299]|             newTasks.forEach(t => {
-[F30:300]|               useAppStore.getState().addTask(t.zoneId, t.title, t.description, t.priority, t.urgency, t.deadline || null, t.deadlineType || 'none', t.parentId);
-[F30:301]|             });
-[F30:302]|             toast.success(t('toast.zonePasted', { name: result.zone.name || t('common.unnamed') }));
-[F30:303]|           }
-[F30:304]|         } else if (hasTask && currentZone) {
-[F30:305]|           const newTask = pasteTask(currentZone.id);
-[F30:306]|           if (newTask) {
-[F30:307]|             let targetZoneId = currentZone.id;
-[F30:308]|             let parentId: string | null = null;
-[F30:309]| 
-[F30:310]|             if (currentView === 'global') {
-[F30:311]|               // 1. 全局模式下：无视当前的聚焦路径，直接粘贴在被复制者的同一层级
-[F30:312]|               parentId = getOriginalParentId();
-[F30:313]|               if (parentId) {
-[F30:314]|                 const parentTask = tasks.find(t => t.id === parentId);
-[F30:315]|                 if (parentTask) {
-[F30:316]|                   targetZoneId = parentTask.zoneId;
-[F30:317]|                 }
-[F30:318]|               }
-[F30:319]|             } else if (focusedTaskId) {
-[F30:320]|               // 2. 分区模式且有聚焦（面包屑路径）：粘贴为当前所处路径（文件夹）的子任务，与选中的 activeTaskId 无关
-[F30:321]|               const focusedTask = tasks.find(t => t.id === focusedTaskId);
-[F30:322]|               if (focusedTask) {
-[F30:323]|                 parentId = focusedTaskId;
-[F30:324]|                 targetZoneId = focusedTask.zoneId;
-[F30:325]|               }
-[F30:326]|             } else {
-[F30:327]|               // 3. 普通分区视图，无聚焦：粘贴为根级任务
-[F30:328]|               parentId = null;
-[F30:329]|             }
-[F30:330]| 
-[F30:331]|             useAppStore.getState().addTask(
-[F30:332]|               targetZoneId,
-[F30:333]|               newTask.title,
-[F30:334]|               newTask.description,
-[F30:335]|               newTask.priority,
-[F30:336]|               newTask.urgency,
-[F30:337]|               newTask.deadline || null,
-[F30:338]|               newTask.deadlineType || 'none',
-[F30:339]|               parentId
-[F30:340]|             );
-[F30:341]|             toast.success(parentId ? t('toast.subtaskPasted') : t('toast.taskPasted'));
-[F30:342]|           }
-[F30:343]|         }
-[F30:344]|       }
-[F30:345]| 
-[F30:346]|       // Delete 键删除选中的任务
-[F30:347]|       if (e.key === 'Delete' && activeTaskId) {
-[F30:348]|         const task = tasks.find(t => t.id === activeTaskId);
-[F30:349]|         if (task) {
-[F30:350]|           deleteTask(activeTaskId);
-[F30:351]|           toast.success(t('toast.taskDeleted'));
-[F30:352]|           setActiveTaskId(null);
-[F30:353]|         }
-[F30:354]|       }
-[F30:355]|     };
-[F30:356]| 
-[F30:357]|     window.addEventListener('keydown', handleKeyDown);
-[F30:358]|     return () => window.removeEventListener('keydown', handleKeyDown);
-[F30:359]|   }, [activeTaskId, tasks, zones, getZoneById, activeZoneId, focusedTaskId, currentView, copyTask, copyZone, pasteTask, pasteZone, getOriginalParentId, hasTask, hasZone, addZone, deleteTask]);
-[F30:360]| 
-[F30:361]|   const handleStartTimer = useCallback(() => {
-[F30:362]|     const incompleteTasksList = tasks.filter((t) => !t.completed);
-[F30:363]|     if (incompleteTasksList.length > 0 && !activeTaskId) {
-[F30:364]|       setActiveTaskId(incompleteTasksList[0].id);
-[F30:365]|       timer.start('work', incompleteTasksList[0].id);
-[F30:366]|     } else {
-[F30:367]|       timer.start('work', activeTaskId);
-[F30:368]|     }
-[F30:369]|   }, [timer, tasks, activeTaskId]);
-[F30:370]| 
-[F30:371]|   const handleSelectTask = useCallback((taskId: string) => {
-[F30:372]|     setActiveTaskId(taskId);
-[F30:373]|     if (timer.mode === 'idle') {
-[F30:374]|       const task = tasks.find(t => t.id === taskId);
-[F30:375]|       toast.info(t('toast.taskSelected'), {
-[F30:376]|         description: task ? t('toast.clickToStartTimer', { title: task.title }) : t('toast.clickToStart'),
-[F30:377]|       });
-[F30:378]|     }
-[F30:379]|   }, [timer.mode, tasks, t]);
-[F30:380]| 
-[F30:381]|   // 窗口尺寸常量
-[F30:382]|   const NORMAL_SIZE = { width: 750, height: 650 };
-[F30:383]|   const COLLAPSED_SIZE = { width: 280, height: 40 };
-[F30:384]| 
-[F30:385]|   const handleToggleCollapse = useCallback(async () => {
-[F30:386]|     const willCollapse = !settings.collapsed;
-[F30:387]| 
-[F30:388]|     try {
-[F30:389]|       const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
-[F30:390]|       const win = getCurrentWindow();
-[F30:391]| 
-[F30:392]|       if (willCollapse) {
-[F30:393]|         await win.setSize(new LogicalSize(COLLAPSED_SIZE.width, COLLAPSED_SIZE.height));
-[F30:394]|       } else {
-[F30:395]|         await win.setSize(new LogicalSize(NORMAL_SIZE.width, NORMAL_SIZE.height));
-[F30:396]|         await win.setFocus();
-[F30:397]|       }
-[F30:398]|     } catch (e) {
-[F30:399]|       console.error('调整窗口大小失败:', e);
-[F30:400]|     }
-[F30:401]| 
-[F30:402]|     updateSettings({ collapsed: willCollapse });
-[F30:403]|   }, [settings.collapsed, updateSettings]);
-[F30:404]| 
-[F30:405]|   const handleArchiveCurrent = useCallback((name: string, summary: string) => {
-[F30:406]|     const id = archiveCurrentWorkspace(name, summary);
-[F30:407]|     toast.success(t('toast.archived'), {
-[F30:408]|       description: t('toast.archiveSuccessDesc', { name }),
-[F30:409]|     });
-[F30:410]|     return id;
-[F30:411]|   }, [archiveCurrentWorkspace, t]);
-[F30:412]| 
-[F30:413]|   const handleCreateNewWorkspace = useCallback((name?: string, templateId?: string) => {
-[F30:414]|     createNewWorkspace(name, templateId);
-[F30:415]|     if (templateId) {
-[F30:416]|       toast.success(t('toast.workspaceCreatedTemplate'));
-[F30:417]|     } else {
-[F30:418]|       toast.success(t('toast.workspaceCreatedBlank'));
-[F30:419]|     }
-[F30:420]|   }, [createNewWorkspace, t]);
-[F30:421]| 
-[F30:422]|   const handleRestoreFromHistory = useCallback((historyId: string) => {
-[F30:423]|     restoreFromHistory(historyId);
-[F30:424]|     toast.success(t('messages.workspaceRestored'));
-[F30:425]|   }, [restoreFromHistory]);
-[F30:426]| 
-[F30:427]|   // Update timer when active task changes
-[F30:428]|   useEffect(() => {
-[F30:429]|     if (timer.currentTaskId && timer.currentTaskId !== activeTaskId) {
-[F30:430]|       setActiveTaskId(timer.currentTaskId);
-[F30:431]|     }
-[F30:432]|   }, [timer.currentTaskId, activeTaskId]);
-[F30:433]| 
-[F30:434]|   // 自动保存历史
-[F30:435]|   useEffect(() => {
-[F30:436]|     if (!settings.autoSaveEnabled) return;
+[F30:143]|   const collapsedPositionRef = useRef<{x: number, y: number} | null>(null);
+[F30:144]| 
+[F30:145]|   // 使用ref存储activeTaskId和tasks，确保计时器回调中能获取最新值
+[F30:146]|   const activeTaskIdRef = useRef<string | null>(null);
+[F30:147]|   const tasksRef = useRef<typeof tasks>([]);
+[F30:148]|   const timerRef = useRef<{ isRunning: boolean; mode: string }>({ isRunning: false, mode: 'idle' });
+[F30:149]| 
+[F30:150]|   // 同步ref和state
+[F30:151]|   useEffect(() => {
+[F30:152]|     activeTaskIdRef.current = activeTaskId;
+[F30:153]|   }, [activeTaskId]);
+[F30:154]| 
+[F30:155]|   useEffect(() => {
+[F30:156]|     tasksRef.current = tasks;
+[F30:157]|   }, [tasks]);
+[F30:158]| 
+[F30:159]|   // 使用 ref 保持 addWorkTime 稳定，避免计时器回调重复创建
+[F30:160]|   const addWorkTimeRef = useRef(addWorkTime);
+[F30:161]|   addWorkTimeRef.current = addWorkTime;
+[F30:162]| 
+[F30:163]|   // 处理计时器滴答，累计任务时间
+[F30:164]|   const handleTimerTick = useCallback(() => {
+[F30:165]|     const currentActiveTaskId = activeTaskIdRef.current;
+[F30:166]|     const currentTimer = timerRef.current;
+[F30:167]| 
+[F30:168]|     if (currentActiveTaskId && currentTimer.isRunning && currentTimer.mode === 'work') {
+[F30:169]|       // 使用 addWorkTime 累加时间：当前任务增加 ownTime
+[F30:170]|       addWorkTimeRef.current(currentActiveTaskId, 1);
+[F30:171]|     }
+[F30:172]|   }, []);
+[F30:173]| 
+[F30:174]|   const handleTimerComplete = useCallback((mode: TimerMode) => {
+[F30:175]|     if (mode === 'work' && activeTaskId) {
+[F30:176]|       const task = tasks.find(t => t.id === activeTaskId);
+[F30:177]|       if (task) {
+[F30:178]|         const minutes = Math.floor((task.totalWorkTime || 0) / 60);
+[F30:179]|         toast.success(t('toast.focusComplete'), {
+[F30:180]|           description: t('toast.taskAccumulated', { title: task.title, minutes }),
+[F30:181]|         });
+[F30:182]|       }
+[F30:183]|     } else if (mode === 'break' || mode === 'longBreak') {
+[F30:184]|       toast.info(t('toast.breakEnd'), {
+[F30:185]|         description: t('toast.readyForNext'),
+[F30:186]|       });
+[F30:187]|     }
+[F30:188]|   }, [activeTaskId, tasks, t]);
+[F30:189]| 
+[F30:190]|   const timer = useTimer({
+[F30:191]|     workDuration: settings.workDuration,
+[F30:192]|     breakDuration: settings.breakDuration,
+[F30:193]|     longBreakDuration: settings.longBreakDuration,
+[F30:194]|     autoStartBreak: settings.autoStartBreak,
+[F30:195]|     soundEnabled: settings.soundEnabled,
+[F30:196]|     onComplete: handleTimerComplete,
+[F30:197]|     onTick: handleTimerTick,
+[F30:198]|   });
+[F30:199]| 
+[F30:200]|   // 剪贴板功能
+[F30:201]|   const {
+[F30:202]|     copyTask,
+[F30:203]|     copyZone,
+[F30:204]|     pasteTask,
+[F30:205]|     pasteZone,
+[F30:206]|     getOriginalParentId,
+[F30:207]|     hasTask,
+[F30:208]|     hasZone,
+[F30:209]|   } = useClipboard();
+[F30:210]| 
+[F30:211]|   // 同步timerRef
+[F30:212]|   useEffect(() => {
+[F30:213]|     timerRef.current = { isRunning: timer.isRunning, mode: timer.mode };
+[F30:214]|   }, [timer.isRunning, timer.mode]);
+[F30:215]| 
+[F30:216]|   // 使用 ref 追踪当前模式
+[F30:217]|   const currentModeRef = useRef<TimerMode>('work');
+[F30:218]|   useEffect(() => {
+[F30:219]|     currentModeRef.current = timer.mode;
+[F30:220]|   }, [timer.mode]);
+[F30:221]| 
+[F30:222]|   // 监听 settings 变化
+[F30:223]|   useEffect(() => {
+[F30:224]|     if (timer.mode === 'idle' && !timer.isRunning) {
+[F30:225]|       const targetDuration = currentModeRef.current === 'break'
+[F30:226]|         ? settings.breakDuration
+[F30:227]|         : currentModeRef.current === 'longBreak'
+[F30:228]|         ? settings.longBreakDuration
+[F30:229]|         : settings.workDuration;
+[F30:230]| 
+[F30:231]|       if (timer.timeRemaining !== targetDuration) {
+[F30:232]|         timer.updateTime(targetDuration);
+[F30:233]|       }
+[F30:234]|     }
+[F30:235]|   }, [settings.workDuration, settings.breakDuration, settings.longBreakDuration, timer]);
+[F30:236]| 
+[F30:237]|   // 键盘快捷键监听
+[F30:238]|   useEffect(() => {
+[F30:239]|     const handleKeyDown = (e: KeyboardEvent) => {
+[F30:240]|       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+[F30:241]|         return;
+[F30:242]|       }
+[F30:243]| 
+[F30:244]|       // Ctrl+Z 撤销
+[F30:245]|       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+[F30:246]|         e.preventDefault();
+[F30:247]|         undo();
+[F30:248]|         toast.info(t('toast.undo'));
+[F30:249]|         return;
+[F30:250]|       }
+[F30:251]| 
+[F30:252]|       // Ctrl+Shift+Z 或 Ctrl+Y 重做
+[F30:253]|       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+[F30:254]|         e.preventDefault();
+[F30:255]|         redo();
+[F30:256]|         toast.info(t('toast.redo'));
+[F30:257]|         return;
+[F30:258]|       }
+[F30:259]| 
+[F30:260]|       // 尝试获取当前操作的区域上下文
+[F30:261]|       let currentZone = getZoneById(activeZoneId || '') || null;
+[F30:262]| 
+[F30:263]|       // 如果没有选中分区，尝试通过"选中任务"或"当前聚焦的任务"来推断分区
+[F30:264]|       if (!currentZone) {
+[F30:265]|         const contextTaskId = activeTaskId || focusedTaskId;
+[F30:266]|         if (contextTaskId) {
+[F30:267]|           const contextTask = tasks.find(t => t.id === contextTaskId);
+[F30:268]|           if (contextTask) {
+[F30:269]|             currentZone = getZoneById(contextTask.zoneId) || null;
+[F30:270]|           }
+[F30:271]|         }
+[F30:272]|       }
+[F30:273]| 
+[F30:274]|       if (e.ctrlKey && e.key === 'c') {
+[F30:275]|         if (activeTaskId) {
+[F30:276]|           const task = tasks.find(t => t.id === activeTaskId);
+[F30:277]|           if (task) {
+[F30:278]|             copyTask(task);
+[F30:279]|             toast.success(t('toast.taskCopied'));
+[F30:280]|             return;
+[F30:281]|           }
+[F30:282]|         }
+[F30:283]|         if (currentZone) {
+[F30:284]|           const zoneTasks = tasks.filter(t => t.zoneId === currentZone.id);
+[F30:285]|           if (zoneTasks.length > 0) {
+[F30:286]|             copyZone(currentZone, zoneTasks);
+[F30:287]|             toast.success(t('toast.zoneCopied', { name: currentZone.name }));
+[F30:288]|           }
+[F30:289]|         }
+[F30:290]|       }
+[F30:291]| 
+[F30:292]|       if (e.ctrlKey && e.key === 'v') {
+[F30:293]|         if (hasZone && currentZone) {
+[F30:294]|           const result = pasteZone(zones);
+[F30:295]|           if (result) {
+[F30:296]|             // 直接更新 store
+[F30:297]|             result.zone.id = `zone-${Date.now()}`;
+[F30:298]|             addZone(result.zone.name || t('common.unnamed'), result.zone.color);
+[F30:299]|             const newTasks = result.tasks.map(t => ({ ...t, id: `task-${Date.now()}-${Math.random()}`, zoneId: result.zone.id }));
+[F30:300]|             newTasks.forEach(t => {
+[F30:301]|               useAppStore.getState().addTask(t.zoneId, t.title, t.description, t.priority, t.urgency, t.deadline || null, t.deadlineType || 'none', t.parentId);
+[F30:302]|             });
+[F30:303]|             toast.success(t('toast.zonePasted', { name: result.zone.name || t('common.unnamed') }));
+[F30:304]|           }
+[F30:305]|         } else if (hasTask && currentZone) {
+[F30:306]|           const newTask = pasteTask(currentZone.id);
+[F30:307]|           if (newTask) {
+[F30:308]|             let targetZoneId = currentZone.id;
+[F30:309]|             let parentId: string | null = null;
+[F30:310]| 
+[F30:311]|             if (currentView === 'global') {
+[F30:312]|               // 1. 全局模式下：无视当前的聚焦路径，直接粘贴在被复制者的同一层级
+[F30:313]|               parentId = getOriginalParentId();
+[F30:314]|               if (parentId) {
+[F30:315]|                 const parentTask = tasks.find(t => t.id === parentId);
+[F30:316]|                 if (parentTask) {
+[F30:317]|                   targetZoneId = parentTask.zoneId;
+[F30:318]|                 }
+[F30:319]|               }
+[F30:320]|             } else if (focusedTaskId) {
+[F30:321]|               // 2. 分区模式且有聚焦（面包屑路径）：粘贴为当前所处路径（文件夹）的子任务，与选中的 activeTaskId 无关
+[F30:322]|               const focusedTask = tasks.find(t => t.id === focusedTaskId);
+[F30:323]|               if (focusedTask) {
+[F30:324]|                 parentId = focusedTaskId;
+[F30:325]|                 targetZoneId = focusedTask.zoneId;
+[F30:326]|               }
+[F30:327]|             } else {
+[F30:328]|               // 3. 普通分区视图，无聚焦：粘贴为根级任务
+[F30:329]|               parentId = null;
+[F30:330]|             }
+[F30:331]| 
+[F30:332]|             useAppStore.getState().addTask(
+[F30:333]|               targetZoneId,
+[F30:334]|               newTask.title,
+[F30:335]|               newTask.description,
+[F30:336]|               newTask.priority,
+[F30:337]|               newTask.urgency,
+[F30:338]|               newTask.deadline || null,
+[F30:339]|               newTask.deadlineType || 'none',
+[F30:340]|               parentId
+[F30:341]|             );
+[F30:342]|             toast.success(parentId ? t('toast.subtaskPasted') : t('toast.taskPasted'));
+[F30:343]|           }
+[F30:344]|         }
+[F30:345]|       }
+[F30:346]| 
+[F30:347]|       // Delete 键删除选中的任务
+[F30:348]|       if (e.key === 'Delete' && activeTaskId) {
+[F30:349]|         const task = tasks.find(t => t.id === activeTaskId);
+[F30:350]|         if (task) {
+[F30:351]|           deleteTask(activeTaskId);
+[F30:352]|           toast.success(t('toast.taskDeleted'));
+[F30:353]|           setActiveTaskId(null);
+[F30:354]|         }
+[F30:355]|       }
+[F30:356]|     };
+[F30:357]| 
+[F30:358]|     window.addEventListener('keydown', handleKeyDown);
+[F30:359]|     return () => window.removeEventListener('keydown', handleKeyDown);
+[F30:360]|   }, [activeTaskId, tasks, zones, getZoneById, activeZoneId, focusedTaskId, currentView, copyTask, copyZone, pasteTask, pasteZone, getOriginalParentId, hasTask, hasZone, addZone, deleteTask]);
+[F30:361]| 
+[F30:362]|   const handleStartTimer = useCallback(() => {
+[F30:363]|     const incompleteTasksList = tasks.filter((t) => !t.completed);
+[F30:364]|     if (incompleteTasksList.length > 0 && !activeTaskId) {
+[F30:365]|       setActiveTaskId(incompleteTasksList[0].id);
+[F30:366]|       timer.start('work', incompleteTasksList[0].id);
+[F30:367]|     } else {
+[F30:368]|       timer.start('work', activeTaskId);
+[F30:369]|     }
+[F30:370]|   }, [timer, tasks, activeTaskId]);
+[F30:371]| 
+[F30:372]|   const handleSelectTask = useCallback((taskId: string) => {
+[F30:373]|     setActiveTaskId(taskId);
+[F30:374]|     if (timer.mode === 'idle') {
+[F30:375]|       const task = tasks.find(t => t.id === taskId);
+[F30:376]|       toast.info(t('toast.taskSelected'), {
+[F30:377]|         description: task ? t('toast.clickToStartTimer', { title: task.title }) : t('toast.clickToStart'),
+[F30:378]|       });
+[F30:379]|     }
+[F30:380]|   }, [timer.mode, tasks, t]);
+[F30:381]| 
+[F30:382]|   // 窗口尺寸常量
+[F30:383]|   const NORMAL_SIZE = { width: 750, height: 650 };
+[F30:384]|   const COLLAPSED_SIZE = { width: 280, height: 40 };
+[F30:385]| 
+[F30:386]|   const handleToggleCollapse = useCallback(async () => {
+[F30:387]|     const willCollapse = !settings.collapsed;
+[F30:388]| 
+[F30:389]|     try {
+[F30:390]|       const { getCurrentWindow, LogicalSize, LogicalPosition, availableMonitors} = await import('@tauri-apps/api/window');
+[F30:391]|       const win = getCurrentWindow();
+[F30:392]| 
+[F30:393]|       if (willCollapse) {
+[F30:394]|         await win.setSize(new LogicalSize(COLLAPSED_SIZE.width, COLLAPSED_SIZE.height));
+[F30:395]| 
+[F30:396]|         if (collapsedPositionRef.current) {
+[F30:397]|           const { x, y } = collapsedPositionRef.current;
+[F30:398]|           await win.setPosition(new LogicalPosition(x, y));
+[F30:399]|         }
+[F30:400]|       } else {
+[F30:401]|         await win.setSize(new LogicalSize(NORMAL_SIZE.width, NORMAL_SIZE.height));
+[F30:402]|         // ===== 新增：展开时居中到屏幕 =====
+[F30:403]|         // 获取所有显示器，并找到包含窗口当前位置的那个
+[F30:404]|         const monitors = await availableMonitors();
+[F30:405]|         const currentPos = await win.outerPosition();
+[F30:406]|         
+[F30:407]|         // 简单方案：使用第一个显示器（通常是主屏）或者包含当前坐标的显示器
+[F30:408]|         const currentMonitor = monitors.find(m => {
+[F30:409]|           const { position, size } = m;
+[F30:410]|           return (
+[F30:411]|             currentPos.x >= position.x &&
+[F30:412]|             currentPos.x <= position.x + size.width &&
+[F30:413]|             currentPos.y >= position.y &&
+[F30:414]|             currentPos.y <= position.y + size.height
+[F30:415]|           );
+[F30:416]|         }) || monitors[0]; // 默认使用主显示器
+[F30:417]|         
+[F30:418]|         if (currentMonitor) {
+[F30:419]|         const sf = currentMonitor.scaleFactor;
+[F30:420]|         collapsedPositionRef.current = {
+[F30:421]|           x: currentPos.x / sf,
+[F30:422]|           y: currentPos.y / sf
+[F30:423]|         };
+[F30:424]|         
+[F30:425]|         // 注意：所有计算都要除以 scaleFactor 转换为逻辑像素
+[F30:426]|         const x = currentMonitor.position.x / sf + (currentMonitor.size.width / sf - NORMAL_SIZE.width) / 2;
+[F30:427]|         const y = currentMonitor.position.y / sf + (currentMonitor.size.height / sf - NORMAL_SIZE.height) / 2;
+[F30:428]|         
+[F30:429]|         await win.setPosition(new LogicalPosition(x, y));
+[F30:430]|       }
+[F30:431]|         // ==================================
+[F30:432]|         await win.setFocus();
+[F30:433]|       }
+[F30:434]|     } catch (e) {
+[F30:435]|       console.error('调整窗口大小失败:', e);
+[F30:436]|     }
 [F30:437]| 
-[F30:438]|     const interval = settings.autoSaveInterval * 1000; // 转换为毫秒
-[F30:439]|     const intervalId = setInterval(() => {
-[F30:440]|       if (hasUnsavedChanges()) {
-[F30:441]|         autoSaveSnapshot();
-[F30:442]|         toast.success(t('toast.autoSaved'));
-[F30:443]|       }
-[F30:444]|     }, interval);
-[F30:445]| 
-[F30:446]|     return () => clearInterval(intervalId);
-[F30:447]|   }, [settings.autoSaveEnabled, settings.autoSaveInterval, hasUnsavedChanges, autoSaveSnapshot, t]);
+[F30:438]|     updateSettings({ collapsed: willCollapse });
+[F30:439]|   }, [settings.collapsed, updateSettings]);
+[F30:440]| 
+[F30:441]|   const handleArchiveCurrent = useCallback((name: string, summary: string) => {
+[F30:442]|     const id = archiveCurrentWorkspace(name, summary);
+[F30:443]|     toast.success(t('toast.archived'), {
+[F30:444]|       description: t('toast.archiveSuccessDesc', { name }),
+[F30:445]|     });
+[F30:446]|     return id;
+[F30:447]|   }, [archiveCurrentWorkspace, t]);
 [F30:448]| 
-[F30:449]|   // 定时任务心跳 - 每分钟检查一次
-[F30:450]|   useEffect(() => {
-[F30:451]|     // 首次加载检查一次
-[F30:452]|     checkRecurringTasks();
-[F30:453]| 
-[F30:454]|     const interval = setInterval(() => {
-[F30:455]|       checkRecurringTasks();
-[F30:456]|     }, 60000); // 60秒
+[F30:449]|   const handleCreateNewWorkspace = useCallback((name?: string, templateId?: string) => {
+[F30:450]|     createNewWorkspace(name, templateId);
+[F30:451]|     if (templateId) {
+[F30:452]|       toast.success(t('toast.workspaceCreatedTemplate'));
+[F30:453]|     } else {
+[F30:454]|       toast.success(t('toast.workspaceCreatedBlank'));
+[F30:455]|     }
+[F30:456]|   }, [createNewWorkspace, t]);
 [F30:457]| 
-[F30:458]|     return () => clearInterval(interval);
-[F30:459]|   }, [checkRecurringTasks]);
-[F30:460]| 
-[F30:461]|   // Loading state
-[F30:462]|   const [isLoaded, setIsLoaded] = useState(false);
-[F30:463]|   useEffect(() => {
-[F30:464]|     // 短暂延迟确保 store 已初始化
-[F30:465]|     const timer = setTimeout(() => setIsLoaded(true), 100);
-[F30:466]|     return () => clearTimeout(timer);
-[F30:467]|   }, []);
-[F30:468]| 
-[F30:469]|   // 🚨 自动化测试检测：应用启动时检查是否需要继续测试
-[F30:470]|   useEffect(() => {
-[F30:471]|     if (isLoaded) {
-[F30:472]|       // 延迟一点确保 Zustand hydration 完成
-[F30:473]|       setTimeout(() => {
-[F30:474]|         AutoTester.checkAndRun();
-[F30:475]|       }, 500);
-[F30:476]|     }
-[F30:477]|   }, [isLoaded]);
-[F30:478]| 
-[F30:479]|   if (!isLoaded) {
-[F30:480]|     return (
-[F30:481]|       <div className="loading-screen">
-[F30:482]|         <div className="loading-spinner" />
-[F30:483]|         <span>{t('common.loading')}</span>
-[F30:484]|       </div>
-[F30:485]|     );
-[F30:486]|   }
-[F30:487]| 
-[F30:488]|   // 悬浮条模式
-[F30:489]|   if (settings.collapsed) {
-[F30:490]|     const activeTask = tasks.find(t => t.id === activeTaskId);
-[F30:491]|     const stats = getStats();
-[F30:492]| 
-[F30:493]|     return (
-[F30:494]|       <>
-[F30:495]|         <CollapseButton
-[F30:496]|           pendingTasks={stats.pending}
-[F30:497]|           isTimerRunning={timer.isRunning}
-[F30:498]|           timerMode={timer.mode}
-[F30:499]|           formattedTime={timer.formattedTime}
-[F30:500]|           activeTaskId={activeTaskId}
-[F30:501]|           taskTitle={activeTask?.title || t('timer.noTaskSelected')}
-[F30:502]|           progress={timer.progress}
-[F30:503]|           onStart={() => timer.start('work', activeTaskId)}
-[F30:504]|           onPause={timer.pause}
-[F30:505]|           onResume={timer.resume}
-[F30:506]|           onExpand={handleToggleCollapse}
-[F30:507]|         />
-[F30:508]|         <Toaster position="top-center" />
-[F30:509]|       </>
-[F30:510]|     );
-[F30:511]|   }
-[F30:512]| 
-[F30:513]|   const activeZone = getZoneById(activeZoneId || '') || null;
-[F30:514]|   const currentZoneTasks = activeZone ? getTasksByZone(activeZone.id) : [];
-[F30:515]| 
-[F30:516]|   return (
-[F30:517]|     <>
-[F30:518]|       <FloatWindow onCollapse={handleToggleCollapse}>
-[F30:519]|         <div className="app-container">
-[F30:520]|           {/* Timer Section */}
-[F30:521]|           <PomodoroTimer
-[F30:522]|             mode={timer.mode}
-[F30:523]|             formattedTime={timer.formattedTime}
-[F30:524]|             timeRemaining={timer.timeRemaining}
-[F30:525]|             isRunning={timer.isRunning}
-[F30:526]|             progress={timer.progress}
-[F30:527]|             completedSessions={timer.completedSessions}
-[F30:528]|             workDuration={settings.workDuration}
-[F30:529]|             breakDuration={settings.breakDuration}
-[F30:530]|             longBreakDuration={settings.longBreakDuration}
-[F30:531]|             onStart={handleStartTimer}
-[F30:532]|             onPause={timer.pause}
-[F30:533]|             onResume={timer.resume}
-[F30:534]|             onStop={timer.stop}
-[F30:535]|             onSkip={timer.skip}
-[F30:536]|             onUpdateTime={(seconds, mode) => {
-[F30:537]|               if (mode === 'work') {
-[F30:538]|                 updateSettings({ workDuration: seconds });
-[F30:539]|               } else if (mode === 'break') {
-[F30:540]|                 updateSettings({ breakDuration: seconds });
-[F30:541]|               } else if (mode === 'longBreak') {
-[F30:542]|                 updateSettings({ longBreakDuration: seconds });
-[F30:543]|               }
-[F30:544]|               timer.updateTime(seconds);
-[F30:545]|             }}
-[F30:546]|             onSetMode={(newMode) => {
-[F30:547]|               timer.setMode(newMode);
-[F30:548]|             }}
-[F30:549]|           />
-[F30:550]| 
-[F30:551]|           {/* Divider */}
-[F30:552]|           <div className="section-divider" />
-[F30:553]| 
-[F30:554]|           {/* Main Content */}
-[F30:555]|           <ResizablePanelGroup direction="horizontal" className="main-content">
-[F30:556]|             <ResizablePanel defaultSize="40%" minSize="5%" maxSize="95%">
-[F30:557]|               <ZoneManager
-[F30:558]|                 zones={zones}
-[F30:559]|                 activeZoneId={activeZoneId}
-[F30:560]|                 templates={PREDEFINED_TEMPLATES}
-[F30:561]|                 customTemplates={customTemplates}
-[F30:562]|                 onSelectZone={(zoneId) => {
-[F30:563]|                   setActiveZoneId(zoneId);
-[F30:564]|                   setCurrentView(zoneId === null ? 'global' : 'zones');
-[F30:565]|                 }}
-[F30:566]|                 onAddZone={addZone}
-[F30:567]|                 onUpdateZone={useAppStore.getState().updateZone}
-[F30:568]|                 onDeleteZone={useAppStore.getState().deleteZone}
-[F30:569]|                 onReorderZones={useAppStore.getState().reorderZones}
-[F30:570]|                 onApplyTemplate={(templateId) => {
-[F30:571]|                   // 应用模板前先自动保存当前工作区
-[F30:572]|                   if (currentWorkspace.tasks.length > 0) {
-[F30:573]|                     archiveCurrentWorkspace();
-[F30:574]|                   }
-[F30:575]|                   useAppStore.getState().applyTemplate(templateId);
-[F30:576]|                 }}
-[F30:577]|                 onViewChange={(view) => {
-[F30:578]|                   setCurrentView(view);
-[F30:579]|                   if (view === 'global') setActiveZoneId(null);
-[F30:580]|                 }}
-[F30:581]|                 onOpenHistory={() => setCurrentView('history')}
-[F30:582]|                 onOpenSettings={() => setCurrentView('settings')}
-[F30:583]|                 onSaveAsTemplate={saveCustomTemplate}
-[F30:584]|                 onDeleteCustomTemplate={deleteCustomTemplate}
-[F30:585]|               />
-[F30:586]|             </ResizablePanel>
-[F30:587]| 
-[F30:588]|             <ResizableHandle className="resize-handle" withHandle />
+[F30:458]|   const handleRestoreFromHistory = useCallback((historyId: string) => {
+[F30:459]|     restoreFromHistory(historyId);
+[F30:460]|     toast.success(t('messages.workspaceRestored'));
+[F30:461]|   }, [restoreFromHistory]);
+[F30:462]| 
+[F30:463]|   // Update timer when active task changes
+[F30:464]|   useEffect(() => {
+[F30:465]|     if (timer.currentTaskId && timer.currentTaskId !== activeTaskId) {
+[F30:466]|       setActiveTaskId(timer.currentTaskId);
+[F30:467]|     }
+[F30:468]|   }, [timer.currentTaskId, activeTaskId]);
+[F30:469]| 
+[F30:470]|   // 自动保存历史
+[F30:471]|   useEffect(() => {
+[F30:472]|     if (!settings.autoSaveEnabled) return;
+[F30:473]| 
+[F30:474]|     const interval = settings.autoSaveInterval * 1000; // 转换为毫秒
+[F30:475]|     const intervalId = setInterval(() => {
+[F30:476]|       if (hasUnsavedChanges()) {
+[F30:477]|         autoSaveSnapshot();
+[F30:478]|         toast.success(t('toast.autoSaved'));
+[F30:479]|       }
+[F30:480]|     }, interval);
+[F30:481]| 
+[F30:482]|     return () => clearInterval(intervalId);
+[F30:483]|   }, [settings.autoSaveEnabled, settings.autoSaveInterval, hasUnsavedChanges, autoSaveSnapshot, t]);
+[F30:484]| 
+[F30:485]|   // 定时任务心跳 - 每分钟检查一次
+[F30:486]|   useEffect(() => {
+[F30:487]|     // 首次加载检查一次
+[F30:488]|     checkRecurringTasks();
+[F30:489]| 
+[F30:490]|     const interval = setInterval(() => {
+[F30:491]|       checkRecurringTasks();
+[F30:492]|     }, 60000); // 60秒
+[F30:493]| 
+[F30:494]|     return () => clearInterval(interval);
+[F30:495]|   }, [checkRecurringTasks]);
+[F30:496]| 
+[F30:497]|   // Loading state
+[F30:498]|   const [isLoaded, setIsLoaded] = useState(false);
+[F30:499]|   useEffect(() => {
+[F30:500]|     // 短暂延迟确保 store 已初始化
+[F30:501]|     const timer = setTimeout(() => setIsLoaded(true), 100);
+[F30:502]|     return () => clearTimeout(timer);
+[F30:503]|   }, []);
+[F30:504]| 
+[F30:505]|   // 🚨 自动化测试检测：应用启动时检查是否需要继续测试
+[F30:506]|   useEffect(() => {
+[F30:507]|     if (isLoaded) {
+[F30:508]|       // 延迟一点确保 Zustand hydration 完成
+[F30:509]|       setTimeout(() => {
+[F30:510]|         AutoTester.checkAndRun();
+[F30:511]|       }, 500);
+[F30:512]|     }
+[F30:513]|   }, [isLoaded]);
+[F30:514]| 
+[F30:515]|   if (!isLoaded) {
+[F30:516]|     return (
+[F30:517]|       <div className="loading-screen">
+[F30:518]|         <div className="loading-spinner" />
+[F30:519]|         <span>{t('common.loading')}</span>
+[F30:520]|       </div>
+[F30:521]|     );
+[F30:522]|   }
+[F30:523]| 
+[F30:524]|   // 悬浮条模式
+[F30:525]|   if (settings.collapsed) {
+[F30:526]|     const activeTask = tasks.find(t => t.id === activeTaskId);
+[F30:527]|     const stats = getStats();
+[F30:528]| 
+[F30:529]|     return (
+[F30:530]|       <>
+[F30:531]|         <CollapseButton
+[F30:532]|           pendingTasks={stats.pending}
+[F30:533]|           isTimerRunning={timer.isRunning}
+[F30:534]|           timerMode={timer.mode}
+[F30:535]|           formattedTime={timer.formattedTime}
+[F30:536]|           activeTaskId={activeTaskId}
+[F30:537]|           taskTitle={activeTask?.title || t('timer.noTaskSelected')}
+[F30:538]|           progress={timer.progress}
+[F30:539]|           onStart={() => timer.start('work', activeTaskId)}
+[F30:540]|           onPause={timer.pause}
+[F30:541]|           onResume={timer.resume}
+[F30:542]|           onExpand={handleToggleCollapse}
+[F30:543]|         />
+[F30:544]|         <Toaster position="top-center" />
+[F30:545]|       </>
+[F30:546]|     );
+[F30:547]|   }
+[F30:548]| 
+[F30:549]|   const activeZone = getZoneById(activeZoneId || '') || null;
+[F30:550]|   const currentZoneTasks = activeZone ? getTasksByZone(activeZone.id) : [];
+[F30:551]| 
+[F30:552]|   return (
+[F30:553]|     <>
+[F30:554]|       <FloatWindow onCollapse={handleToggleCollapse}>
+[F30:555]|         <div className="app-container">
+[F30:556]|           {/* Timer Section */}
+[F30:557]|           <PomodoroTimer
+[F30:558]|             mode={timer.mode}
+[F30:559]|             formattedTime={timer.formattedTime}
+[F30:560]|             timeRemaining={timer.timeRemaining}
+[F30:561]|             isRunning={timer.isRunning}
+[F30:562]|             progress={timer.progress}
+[F30:563]|             completedSessions={timer.completedSessions}
+[F30:564]|             workDuration={settings.workDuration}
+[F30:565]|             breakDuration={settings.breakDuration}
+[F30:566]|             longBreakDuration={settings.longBreakDuration}
+[F30:567]|             onStart={handleStartTimer}
+[F30:568]|             onPause={timer.pause}
+[F30:569]|             onResume={timer.resume}
+[F30:570]|             onStop={timer.stop}
+[F30:571]|             onSkip={timer.skip}
+[F30:572]|             onUpdateTime={(seconds, mode) => {
+[F30:573]|               if (mode === 'work') {
+[F30:574]|                 updateSettings({ workDuration: seconds });
+[F30:575]|               } else if (mode === 'break') {
+[F30:576]|                 updateSettings({ breakDuration: seconds });
+[F30:577]|               } else if (mode === 'longBreak') {
+[F30:578]|                 updateSettings({ longBreakDuration: seconds });
+[F30:579]|               }
+[F30:580]|               timer.updateTime(seconds);
+[F30:581]|             }}
+[F30:582]|             onSetMode={(newMode) => {
+[F30:583]|               timer.setMode(newMode);
+[F30:584]|             }}
+[F30:585]|           />
+[F30:586]| 
+[F30:587]|           {/* Divider */}
+[F30:588]|           <div className="section-divider" />
 [F30:589]| 
-[F30:590]|             <ResizablePanel defaultSize="60%" minSize="5%">
-[F30:591]|               <div className="content-area">
-[F30:592]|                 {currentView === 'history' ? (
-[F30:593]|                   <HistoryManager
-[F30:594]|                     historyWorkspaces={historyWorkspaces}
-[F30:595]|                     templates={PREDEFINED_TEMPLATES}
-[F30:596]|                     currentSourceHistoryId={currentWorkspace.sourceHistoryId}
-[F30:597]|                     hasUnsavedChanges={hasUnsavedChanges}
-[F30:598]|                     onBack={() => setCurrentView('zones')}
-[F30:599]|                     onRestore={handleRestoreFromHistory}
-[F30:600]|                     onDelete={deleteHistoryWorkspace}
-[F30:601]|                     onRename={renameHistoryWorkspace}
-[F30:602]|                     onUpdateSummary={updateHistorySummary}
-[F30:603]|                     onCreateNewWorkspace={handleCreateNewWorkspace}
-[F30:604]|                     onArchiveCurrent={handleArchiveCurrent}
-[F30:605]|                     onQuickArchive={quickArchiveCurrentWorkspace}
-[F30:606]|                     onOverwriteHistory={overwriteHistoryWorkspace}
-[F30:607]|                     onExportHistory={exportHistoryToJson}
-[F30:608]|                     onExportAllHistory={exportAllHistoryToJson}
-[F30:609]|                     onImportHistory={importHistoryFromJson}
-[F30:610]|                     onImportAllHistory={importAllHistoryFromJson}
-[F30:611]|                     customTemplates={customTemplates}
-[F30:612]|                     onSaveCustomTemplate={saveCustomTemplate}
-[F30:613]|                     onDeleteCustomTemplate={deleteCustomTemplate}
-[F30:614]|                   />
-[F30:615]|                 ) : currentView === 'settings' ? (
-[F30:616]|                   <SettingsPanel
-[F30:617]|                     settings={settings}
-[F30:618]|                     zones={zones}
-[F30:619]|                     recurringTemplates={recurringTemplates}
-[F30:620]|                     onAddRecurringTemplate={addRecurringTemplate}
-[F30:621]|                     onUpdateRecurringTemplate={updateRecurringTemplate}
-[F30:622]|                     onDeleteRecurringTemplate={deleteRecurringTemplate}
-[F30:623]|                     onBack={() => setCurrentView('zones')}
-[F30:624]|                     onUpdateSettings={updateSettings}
-[F30:625]|                     onPreviewMode={timer.setMode}
-[F30:626]|                   />
-[F30:627]|                 ) : currentView === 'global' ? (
-[F30:628]|                   <GlobalView
-[F30:629]|                     zones={zones}
-[F30:630]|                     tasks={tasks}
-[F30:631]|                     activeTaskId={activeTaskId}
-[F30:632]|                     isTimerRunning={timer.isRunning}
-[F30:633]|                     sortConfig={settings.globalViewSort}
-[F30:634]|                     isLeafMode={settings.globalViewLeafMode}
-[F30:635]|                     onLeafModeChange={(isLeaf) => updateSettings({ globalViewLeafMode: isLeaf })}
-[F30:636]|                     onBack={() => {
-[F30:637]|                       setCurrentView('zones');
-[F30:638]|                       if (zones.length > 0) {
-[F30:639]|                         setActiveZoneId(zones[0].id);
-[F30:640]|                       }
-[F30:641]|                     }}
-[F30:642]|                     onToggleTask={toggleTask}
-[F30:643]|                     onDeleteTask={deleteTask}
-[F30:644]|                     onUpdateTask={updateTask}
-[F30:645]|                     onToggleExpanded={toggleExpanded}
-[F30:646]|                     onToggleSubtasksCollapsed={toggleSubtasksCollapsed}
-[F30:647]|                     onReorderTasks={reorderTasks}
-[F30:648]|                     onSelectTask={handleSelectTask}
-[F30:649]|                     onSortConfigChange={(config) => updateSettings({ globalViewSort: config })}
-[F30:650]|                     onNavigateToZone={(zoneId, taskId) => {
-[F30:651]|                       setActiveZoneId(zoneId);
-[F30:652]|                       setFocusedTaskId(taskId);
-[F30:653]|                       setCurrentView('zones');
-[F30:654]|                     }}
-[F30:655]|                     getTotalWorkTime={getTotalWorkTime}
-[F30:656]|                     getEstimatedTime={getEstimatedTime}
-[F30:657]|                     taskComputedTimes={taskComputedTimes}
-[F30:658]|                   />
-[F30:659]|                 ) : (
-[F30:660]|                   <TaskList
-[F30:661]|                     zone={activeZone}
-[F30:662]|                     zones={zones}
-[F30:663]|                     tasks={currentZoneTasks}
-[F30:664]|                     activeTaskId={activeTaskId}
-[F30:665]|                     isTimerRunning={timer.isRunning}
-[F30:666]|                     focusedTaskId={focusedTaskId}
-[F30:667]|                     onSetFocusedTaskId={setFocusedTaskId}
-[F30:668]|                     onAddTask={useAppStore.getState().addTask}
-[F30:669]|                     onToggleTask={toggleTask}
-[F30:670]|                     onDeleteTask={deleteTask}
-[F30:671]|                     onUpdateTask={updateTask}
-[F30:672]|                     onToggleExpanded={toggleExpanded}
-[F30:673]|                     onToggleSubtasksCollapsed={toggleSubtasksCollapsed}
-[F30:674]|                     onReorderTasks={reorderTasks}
-[F30:675]|                     onSelectTask={handleSelectTask}
-[F30:676]|                     onClearCompleted={clearCompleted}
-[F30:677]|                   />
-[F30:678]|                 )}
-[F30:679]|               </div>
-[F30:680]|             </ResizablePanel>
-[F30:681]|           </ResizablePanelGroup>
-[F30:682]|         </div>
-[F30:683]|       </FloatWindow>
-[F30:684]|       <Toaster
-[F30:685]|         position="top-center"
-[F30:686]|         toastOptions={{
-[F30:687]|           style: {
-[F30:688]|             background: 'rgba(30, 30, 40, 0.95)',
-[F30:689]|             border: '1px solid rgba(255, 255, 255, 0.1)',
-[F30:690]|             color: '#fff',
-[F30:691]|           },
-[F30:692]|         }}
-[F30:693]|       />
-[F30:694]|     </>
-[F30:695]|   );
-[F30:696]| }
-[F30:697]| 
-[F30:698]| export default App;
+[F30:590]|           {/* Main Content */}
+[F30:591]|           <ResizablePanelGroup direction="horizontal" className="main-content">
+[F30:592]|             <ResizablePanel defaultSize="40%" minSize="5%" maxSize="95%">
+[F30:593]|               <ZoneManager
+[F30:594]|                 zones={zones}
+[F30:595]|                 activeZoneId={activeZoneId}
+[F30:596]|                 templates={PREDEFINED_TEMPLATES}
+[F30:597]|                 customTemplates={customTemplates}
+[F30:598]|                 onSelectZone={(zoneId) => {
+[F30:599]|                   setActiveZoneId(zoneId);
+[F30:600]|                   setCurrentView(zoneId === null ? 'global' : 'zones');
+[F30:601]|                 }}
+[F30:602]|                 onAddZone={addZone}
+[F30:603]|                 onUpdateZone={useAppStore.getState().updateZone}
+[F30:604]|                 onDeleteZone={useAppStore.getState().deleteZone}
+[F30:605]|                 onReorderZones={useAppStore.getState().reorderZones}
+[F30:606]|                 onApplyTemplate={(templateId) => {
+[F30:607]|                   // 应用模板前先自动保存当前工作区
+[F30:608]|                   if (currentWorkspace.tasks.length > 0) {
+[F30:609]|                     archiveCurrentWorkspace();
+[F30:610]|                   }
+[F30:611]|                   useAppStore.getState().applyTemplate(templateId);
+[F30:612]|                 }}
+[F30:613]|                 onViewChange={(view) => {
+[F30:614]|                   setCurrentView(view);
+[F30:615]|                   if (view === 'global') setActiveZoneId(null);
+[F30:616]|                 }}
+[F30:617]|                 onOpenHistory={() => setCurrentView('history')}
+[F30:618]|                 onOpenSettings={() => setCurrentView('settings')}
+[F30:619]|                 onSaveAsTemplate={saveCustomTemplate}
+[F30:620]|                 onDeleteCustomTemplate={deleteCustomTemplate}
+[F30:621]|               />
+[F30:622]|             </ResizablePanel>
+[F30:623]| 
+[F30:624]|             <ResizableHandle className="resize-handle" withHandle />
+[F30:625]| 
+[F30:626]|             <ResizablePanel defaultSize="60%" minSize="5%">
+[F30:627]|               <div className="content-area">
+[F30:628]|                 {currentView === 'history' ? (
+[F30:629]|                   <HistoryManager
+[F30:630]|                     historyWorkspaces={historyWorkspaces}
+[F30:631]|                     templates={PREDEFINED_TEMPLATES}
+[F30:632]|                     currentSourceHistoryId={currentWorkspace.sourceHistoryId}
+[F30:633]|                     hasUnsavedChanges={hasUnsavedChanges}
+[F30:634]|                     onBack={() => setCurrentView('zones')}
+[F30:635]|                     onRestore={handleRestoreFromHistory}
+[F30:636]|                     onDelete={deleteHistoryWorkspace}
+[F30:637]|                     onRename={renameHistoryWorkspace}
+[F30:638]|                     onUpdateSummary={updateHistorySummary}
+[F30:639]|                     onCreateNewWorkspace={handleCreateNewWorkspace}
+[F30:640]|                     onArchiveCurrent={handleArchiveCurrent}
+[F30:641]|                     onQuickArchive={quickArchiveCurrentWorkspace}
+[F30:642]|                     onOverwriteHistory={overwriteHistoryWorkspace}
+[F30:643]|                     onExportHistory={exportHistoryToJson}
+[F30:644]|                     onExportAllHistory={exportAllHistoryToJson}
+[F30:645]|                     onImportHistory={importHistoryFromJson}
+[F30:646]|                     onImportAllHistory={importAllHistoryFromJson}
+[F30:647]|                     customTemplates={customTemplates}
+[F30:648]|                     onSaveCustomTemplate={saveCustomTemplate}
+[F30:649]|                     onDeleteCustomTemplate={deleteCustomTemplate}
+[F30:650]|                   />
+[F30:651]|                 ) : currentView === 'settings' ? (
+[F30:652]|                   <SettingsPanel
+[F30:653]|                     settings={settings}
+[F30:654]|                     zones={zones}
+[F30:655]|                     recurringTemplates={recurringTemplates}
+[F30:656]|                     onAddRecurringTemplate={addRecurringTemplate}
+[F30:657]|                     onUpdateRecurringTemplate={updateRecurringTemplate}
+[F30:658]|                     onDeleteRecurringTemplate={deleteRecurringTemplate}
+[F30:659]|                     onBack={() => setCurrentView('zones')}
+[F30:660]|                     onUpdateSettings={updateSettings}
+[F30:661]|                     onPreviewMode={timer.setMode}
+[F30:662]|                   />
+[F30:663]|                 ) : currentView === 'global' ? (
+[F30:664]|                   <GlobalView
+[F30:665]|                     zones={zones}
+[F30:666]|                     tasks={tasks}
+[F30:667]|                     activeTaskId={activeTaskId}
+[F30:668]|                     isTimerRunning={timer.isRunning}
+[F30:669]|                     sortConfig={settings.globalViewSort}
+[F30:670]|                     isLeafMode={settings.globalViewLeafMode}
+[F30:671]|                     onLeafModeChange={(isLeaf) => updateSettings({ globalViewLeafMode: isLeaf })}
+[F30:672]|                     onBack={() => {
+[F30:673]|                       setCurrentView('zones');
+[F30:674]|                       if (zones.length > 0) {
+[F30:675]|                         setActiveZoneId(zones[0].id);
+[F30:676]|                       }
+[F30:677]|                     }}
+[F30:678]|                     onToggleTask={toggleTask}
+[F30:679]|                     onDeleteTask={deleteTask}
+[F30:680]|                     onUpdateTask={updateTask}
+[F30:681]|                     onToggleExpanded={toggleExpanded}
+[F30:682]|                     onToggleSubtasksCollapsed={toggleSubtasksCollapsed}
+[F30:683]|                     onReorderTasks={reorderTasks}
+[F30:684]|                     onSelectTask={handleSelectTask}
+[F30:685]|                     onSortConfigChange={(config) => updateSettings({ globalViewSort: config })}
+[F30:686]|                     onNavigateToZone={(zoneId, taskId) => {
+[F30:687]|                       setActiveZoneId(zoneId);
+[F30:688]|                       setFocusedTaskId(taskId);
+[F30:689]|                       setCurrentView('zones');
+[F30:690]|                     }}
+[F30:691]|                     getTotalWorkTime={getTotalWorkTime}
+[F30:692]|                     getEstimatedTime={getEstimatedTime}
+[F30:693]|                     taskComputedTimes={taskComputedTimes}
+[F30:694]|                   />
+[F30:695]|                 ) : (
+[F30:696]|                   <TaskList
+[F30:697]|                     zone={activeZone}
+[F30:698]|                     zones={zones}
+[F30:699]|                     tasks={currentZoneTasks}
+[F30:700]|                     activeTaskId={activeTaskId}
+[F30:701]|                     isTimerRunning={timer.isRunning}
+[F30:702]|                     focusedTaskId={focusedTaskId}
+[F30:703]|                     onSetFocusedTaskId={setFocusedTaskId}
+[F30:704]|                     onAddTask={useAppStore.getState().addTask}
+[F30:705]|                     onToggleTask={toggleTask}
+[F30:706]|                     onDeleteTask={deleteTask}
+[F30:707]|                     onUpdateTask={updateTask}
+[F30:708]|                     onToggleExpanded={toggleExpanded}
+[F30:709]|                     onToggleSubtasksCollapsed={toggleSubtasksCollapsed}
+[F30:710]|                     onReorderTasks={reorderTasks}
+[F30:711]|                     onSelectTask={handleSelectTask}
+[F30:712]|                     onClearCompleted={clearCompleted}
+[F30:713]|                   />
+[F30:714]|                 )}
+[F30:715]|               </div>
+[F30:716]|             </ResizablePanel>
+[F30:717]|           </ResizablePanelGroup>
+[F30:718]|         </div>
+[F30:719]|       </FloatWindow>
+[F30:720]|       <Toaster
+[F30:721]|         position="top-center"
+[F30:722]|         toastOptions={{
+[F30:723]|           style: {
+[F30:724]|             background: 'rgba(30, 30, 40, 0.95)',
+[F30:725]|             border: '1px solid rgba(255, 255, 255, 0.1)',
+[F30:726]|             color: '#fff',
+[F30:727]|           },
+[F30:728]|         }}
+[F30:729]|       />
+[F30:730]|     </>
+[F30:731]|   );
+[F30:732]| }
+[F30:733]| 
+[F30:734]| export default App;
 
 ================================================================================
 文件路径: src\index.css(F31) (约合大小: 4 KB)
@@ -6365,763 +6401,770 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F36:236]|           const aUrgencyScore = aEffective ? (leafModeRankScores[a.id] || 0) : 0;
 [F36:237]|           const bUrgencyScore = bEffective ? (leafModeRankScores[b.id] || 0) : 0;
 [F36:238]|           return bUrgencyScore - aUrgencyScore;
-[F36:239]|         case 'weighted':
-[F36:240]|           return calculateWeightedScore(b) - calculateWeightedScore(a);
-[F36:241]|         case 'workTime':
-[F36:242]|           // 按执行时间降序，未工作排最后，使用动态计算的值
-[F36:243]|           return calculateTotalWorkTime(b.id) - calculateTotalWorkTime(a.id);
-[F36:244]|         case 'estimatedTime':
-[F36:245]|           // 按预期时间降序，未定义排最后，使用动态计算的值
-[F36:246]|           const aEst = calculateEstimatedTime(a.id);
-[F36:247]|           const bEst = calculateEstimatedTime(b.id);
-[F36:248]|           if (aEst === 0 && bEst === 0) return 0;
-[F36:249]|           if (aEst === 0) return 1; // 未定义排最后
-[F36:250]|           if (bEst === 0) return -1;
-[F36:251]|           return bEst - aEst;
-[F36:252]|         case 'timeDiff':
-[F36:253]|           // 按时间差降序（实际时间 - 预期时间），差值越大越靠前
-[F36:254]|           const aDiffTotal = calculateTotalWorkTime(a.id) / 60 - calculateEstimatedTime(a.id);
-[F36:255]|           const bDiffTotal = calculateTotalWorkTime(b.id) / 60 - calculateEstimatedTime(b.id);
-[F36:256]|           // 如果都没有预期时间，按工作时间排序
-[F36:257]|           const aHasEst = calculateEstimatedTime(a.id) > 0;
-[F36:258]|           const bHasEst = calculateEstimatedTime(b.id) > 0;
-[F36:259]|           if (!aHasEst && !bHasEst) {
-[F36:260]|             return calculateTotalWorkTime(b.id) - calculateTotalWorkTime(a.id);
-[F36:261]|           }
-[F36:262]|           if (!aHasEst) return 1;
-[F36:263]|           if (!bHasEst) return -1;
-[F36:264]|           return bDiffTotal - aDiffTotal;
-[F36:265]|         default:
-[F36:266]|           return 0;
-[F36:267]|       }
-[F36:268]|     });
-[F36:269]|   }, [rootTasks, sortConfig, zoneModeTasks, leafModeRankScores]);
-[F36:270]| 
-[F36:271]|   // Group tasks for all sorting modes
-[F36:272]|   const taskGroups = useMemo(() => {
-[F36:273]|     const groups: { title: string; color: string; tasks: Task[]; zoneId?: string }[] = [];
-[F36:274]| 
-[F36:275]|     // Zone mode: create groups by zone
-[F36:276]|     if (sortConfig.mode === 'zone') {
-[F36:277]|       zones.forEach((zone) => {
-[F36:278]|         const zoneTasks = sortedRootTasks.filter((t) => t.zoneId === zone.id);
-[F36:279]|         if (zoneTasks.length > 0) {
-[F36:280]|           groups.push({
-[F36:281]|             title: zone.name || t('zone.unknownZone'),
-[F36:282]|             color: zone.color,
-[F36:283]|             tasks: zoneTasks,
-[F36:284]|             zoneId: zone.id,
-[F36:285]|           });
-[F36:286]|         }
-[F36:287]|       });
-[F36:288]|       return groups;
-[F36:289]|     }
-[F36:290]| 
-[F36:291]|     if (sortConfig.mode === 'priority') {
-[F36:292]|       const priorityGroups: Record<TaskPriority, Task[]> = { high: [], medium: [], low: [] };
-[F36:293]|       sortedRootTasks.forEach((t) => priorityGroups[t.priority].push(t));
-[F36:294]| 
-[F36:295]|       const priorityLabels: Record<TaskPriority, { title: string; color: string }> = {
-[F36:296]|         high: { title: t('task.priorityHigh'), color: '#ef4444' },
-[F36:297]|         medium: { title: t('task.priorityMedium'), color: '#eab308' },
-[F36:298]|         low: { title: t('task.priorityLow'), color: '#22c55e' },
-[F36:299]|       };
-[F36:300]| 
-[F36:301]|       (['high', 'medium', 'low'] as TaskPriority[]).forEach((p) => {
-[F36:302]|         if (priorityGroups[p].length > 0) {
-[F36:303]|           groups.push({
-[F36:304]|             title: priorityLabels[p].title,
-[F36:305]|             color: priorityLabels[p].color,
-[F36:306]|             tasks: priorityGroups[p],
-[F36:307]|           });
-[F36:308]|         }
-[F36:309]|       });
-[F36:310]|     } else if (sortConfig.mode === 'urgency') {
-[F36:311]|       // 使用 deadline 排名自动计算 urgency
-[F36:312]|       const urgencyGroups: Record<TaskUrgency, Task[]> = { urgent: [], high: [], medium: [], low: [] };
-[F36:313]|       const noDeadlineTasks: Task[] = [];
-[F36:314]| 
-[F36:315]|       sortedRootTasks.forEach((t) => {
-[F36:316]|         const effectiveDeadline = getInheritedDeadline(t, tasks);
-[F36:317]|         if (!effectiveDeadline || effectiveDeadline <= 0) {
-[F36:318]|           noDeadlineTasks.push(t);
-[F36:319]|         } else {
-[F36:320]|           const score = leafModeRankScores[t.id] || 0;
-[F36:321]|           const urgency = mapRankToUrgency(score, true);
-[F36:322]|           urgencyGroups[urgency].push(t);
-[F36:323]|         }
-[F36:324]|       });
-[F36:325]| 
-[F36:326]|       const urgencyLabels: Record<TaskUrgency, { title: string; color: string }> = {
-[F36:327]|         urgent: { title: '紧急', color: '#dc2626' },
-[F36:328]|         high: { title: '高紧急度', color: '#f97316' },
-[F36:329]|         medium: { title: '中紧急度', color: '#eab308' },
-[F36:330]|         low: { title: '低紧急度', color: '#22c55e' },
-[F36:331]|       };
+[F36:239]|         case 'weighted': {
+[F36:240]|           const scoreA = calculateWeightedScore(a);
+[F36:241]|           const scoreB = calculateWeightedScore(b);
+[F36:242]|           if (scoreA !== scoreB) return scoreB - scoreA; // 降序
+[F36:243]|           // 分数完全相同时，优先基于实际截止时间兜底排序（使用继承而非自身定义）
+[F36:244]|           const ddlA = getInheritedDeadline(a, tasks) || Infinity;
+[F36:245]|           const ddlB = getInheritedDeadline(b, tasks) || Infinity;
+[F36:246]|           return ddlA - ddlB;
+[F36:247]|         }
+[F36:248]|         case 'workTime':
+[F36:249]|           // 按执行时间降序，未工作排最后，使用动态计算的值
+[F36:250]|           return calculateTotalWorkTime(b.id) - calculateTotalWorkTime(a.id);
+[F36:251]|         case 'estimatedTime':
+[F36:252]|           // 按预期时间降序，未定义排最后，使用动态计算的值
+[F36:253]|           const aEst = calculateEstimatedTime(a.id);
+[F36:254]|           const bEst = calculateEstimatedTime(b.id);
+[F36:255]|           if (aEst === 0 && bEst === 0) return 0;
+[F36:256]|           if (aEst === 0) return 1; // 未定义排最后
+[F36:257]|           if (bEst === 0) return -1;
+[F36:258]|           return bEst - aEst;
+[F36:259]|         case 'timeDiff':
+[F36:260]|           // 按时间差降序（实际时间 - 预期时间），差值越大越靠前
+[F36:261]|           const aDiffTotal = calculateTotalWorkTime(a.id) / 60 - calculateEstimatedTime(a.id);
+[F36:262]|           const bDiffTotal = calculateTotalWorkTime(b.id) / 60 - calculateEstimatedTime(b.id);
+[F36:263]|           // 如果都没有预期时间，按工作时间排序
+[F36:264]|           const aHasEst = calculateEstimatedTime(a.id) > 0;
+[F36:265]|           const bHasEst = calculateEstimatedTime(b.id) > 0;
+[F36:266]|           if (!aHasEst && !bHasEst) {
+[F36:267]|             return calculateTotalWorkTime(b.id) - calculateTotalWorkTime(a.id);
+[F36:268]|           }
+[F36:269]|           if (!aHasEst) return 1;
+[F36:270]|           if (!bHasEst) return -1;
+[F36:271]|           return bDiffTotal - aDiffTotal;
+[F36:272]|         default:
+[F36:273]|           return 0;
+[F36:274]|       }
+[F36:275]|     });
+[F36:276]|   }, [rootTasks, sortConfig, zoneModeTasks, leafModeRankScores]);
+[F36:277]| 
+[F36:278]|   // Group tasks for all sorting modes
+[F36:279]|   const taskGroups = useMemo(() => {
+[F36:280]|     const groups: { title: string; color: string; tasks: Task[]; zoneId?: string }[] = [];
+[F36:281]| 
+[F36:282]|     // Zone mode: create groups by zone
+[F36:283]|     if (sortConfig.mode === 'zone') {
+[F36:284]|       zones.forEach((zone) => {
+[F36:285]|         const zoneTasks = sortedRootTasks.filter((t) => t.zoneId === zone.id);
+[F36:286]|         if (zoneTasks.length > 0) {
+[F36:287]|           groups.push({
+[F36:288]|             title: zone.name || t('zone.unknownZone'),
+[F36:289]|             color: zone.color,
+[F36:290]|             tasks: zoneTasks,
+[F36:291]|             zoneId: zone.id,
+[F36:292]|           });
+[F36:293]|         }
+[F36:294]|       });
+[F36:295]|       return groups;
+[F36:296]|     }
+[F36:297]| 
+[F36:298]|     if (sortConfig.mode === 'priority') {
+[F36:299]|       const priorityGroups: Record<TaskPriority, Task[]> = { high: [], medium: [], low: [] };
+[F36:300]|       sortedRootTasks.forEach((t) => priorityGroups[t.priority].push(t));
+[F36:301]| 
+[F36:302]|       const priorityLabels: Record<TaskPriority, { title: string; color: string }> = {
+[F36:303]|         high: { title: t('task.priorityHigh'), color: '#ef4444' },
+[F36:304]|         medium: { title: t('task.priorityMedium'), color: '#eab308' },
+[F36:305]|         low: { title: t('task.priorityLow'), color: '#22c55e' },
+[F36:306]|       };
+[F36:307]| 
+[F36:308]|       (['high', 'medium', 'low'] as TaskPriority[]).forEach((p) => {
+[F36:309]|         if (priorityGroups[p].length > 0) {
+[F36:310]|           groups.push({
+[F36:311]|             title: priorityLabels[p].title,
+[F36:312]|             color: priorityLabels[p].color,
+[F36:313]|             tasks: priorityGroups[p],
+[F36:314]|           });
+[F36:315]|         }
+[F36:316]|       });
+[F36:317]|     } else if (sortConfig.mode === 'urgency') {
+[F36:318]|       // 使用 deadline 排名自动计算 urgency
+[F36:319]|       const urgencyGroups: Record<TaskUrgency, Task[]> = { urgent: [], high: [], medium: [], low: [] };
+[F36:320]|       const noDeadlineTasks: Task[] = [];
+[F36:321]| 
+[F36:322]|       sortedRootTasks.forEach((t) => {
+[F36:323]|         const effectiveDeadline = getInheritedDeadline(t, tasks);
+[F36:324]|         if (!effectiveDeadline || effectiveDeadline <= 0) {
+[F36:325]|           noDeadlineTasks.push(t);
+[F36:326]|         } else {
+[F36:327]|           const score = leafModeRankScores[t.id] || 0;
+[F36:328]|           const urgency = mapRankToUrgency(score, true);
+[F36:329]|           urgencyGroups[urgency].push(t);
+[F36:330]|         }
+[F36:331]|       });
 [F36:332]| 
-[F36:333]|       (['urgent', 'high', 'medium', 'low'] as TaskUrgency[]).forEach((u) => {
-[F36:334]|         if (urgencyGroups[u].length > 0) {
-[F36:335]|           groups.push({
-[F36:336]|             title: urgencyLabels[u].title,
-[F36:337]|             color: urgencyLabels[u].color,
-[F36:338]|             tasks: urgencyGroups[u],
-[F36:339]|           });
-[F36:340]|         }
-[F36:341]|       });
-[F36:342]| 
-[F36:343]|       // 添加"未设截止日期"分组
-[F36:344]|       if (noDeadlineTasks.length > 0) {
-[F36:345]|         groups.push({
-[F36:346]|           title: t('urgency.noDeadline'),
-[F36:347]|           color: '#6b7280',
-[F36:348]|           tasks: noDeadlineTasks,
-[F36:349]|         });
-[F36:350]|       }
-[F36:351]|     } else if (sortConfig.mode === 'weighted') {
-[F36:352]|       const scoreGroups: { title: string; color: string; minScore: number; tasks: Task[] }[] = [
-[F36:353]|         { title: t('urgency.veryUrgent'), color: '#dc2626', minScore: 0.75, tasks: [] },
-[F36:354]|         { title: t('urgency.urgent'), color: '#f97316', minScore: 0.5, tasks: [] },
-[F36:355]|         { title: t('view.normal'), color: '#eab308', minScore: 0.25, tasks: [] },
-[F36:356]|         { title: t('urgency.later'), color: '#22c55e', minScore: 0, tasks: [] },
-[F36:357]|       ];
-[F36:358]| 
-[F36:359]|       sortedRootTasks.forEach((t) => {
-[F36:360]|         const score = calculateWeightedScore(t);
-[F36:361]|         if (score >= 0.75) scoreGroups[0].tasks.push(t);
-[F36:362]|         else if (score >= 0.5) scoreGroups[1].tasks.push(t);
-[F36:363]|         else if (score >= 0.25) scoreGroups[2].tasks.push(t);
-[F36:364]|         else scoreGroups[3].tasks.push(t);
-[F36:365]|       });
-[F36:366]| 
-[F36:367]|       scoreGroups.forEach((g) => {
-[F36:368]|         if (g.tasks.length > 0) {
-[F36:369]|           groups.push({
-[F36:370]|             title: g.title,
-[F36:371]|             color: g.color,
-[F36:372]|             tasks: g.tasks,
-[F36:373]|           });
-[F36:374]|         }
-[F36:375]|       });
-[F36:376]|     } else if (sortConfig.mode === 'workTime' || sortConfig.mode === 'estimatedTime' || sortConfig.mode === 'timeDiff') {
-[F36:377]|       // 这三种模式按时间排序，不需要分组，直接显示所有任务
-[F36:378]|       if (sortedRootTasks.length > 0) {
-[F36:379]|         let title = '';
-[F36:380]|         let color = '#6b7280';
-[F36:381]|         switch (sortConfig.mode) {
-[F36:382]|           case 'workTime':
-[F36:383]|             title = t('view.sortByWorkTime') || 'By Time Worked';
-[F36:384]|             color = '#3b82f6';
-[F36:385]|             break;
-[F36:386]|           case 'estimatedTime':
-[F36:387]|             title = t('view.sortByEstimatedTime') || 'By Estimated Time';
-[F36:388]|             color = '#8b5cf6';
-[F36:389]|             break;
-[F36:390]|           case 'timeDiff':
-[F36:391]|             title = t('view.sortByTimeDiff') || 'By Time Difference';
-[F36:392]|             color = '#f59e0b';
-[F36:393]|             break;
-[F36:394]|         }
-[F36:395]|         groups.push({
-[F36:396]|           title,
-[F36:397]|           color,
-[F36:398]|           tasks: sortedRootTasks,
-[F36:399]|         });
-[F36:400]|       }
-[F36:401]|     }
-[F36:402]| 
-[F36:403]|     return groups;
-[F36:404]|   }, [sortedRootTasks, sortConfig.mode, zones]);
-[F36:405]| 
-[F36:406]|   const completedTasks = tasks.filter((t) => t.completed);
-[F36:407]| 
-[F36:408]|   // 使用 getFlattenedTasks 支持聚焦模式
-[F36:409]|   const flattenedTasks = useMemo(() => {
-[F36:410]|     return getFlattenedTasks(tasks, null, focusedTaskId);
-[F36:411]|   }, [tasks, focusedTaskId]);
+[F36:333]|       const urgencyLabels: Record<TaskUrgency, { title: string; color: string }> = {
+[F36:334]|         urgent: { title: '紧急', color: '#dc2626' },
+[F36:335]|         high: { title: '高紧急度', color: '#f97316' },
+[F36:336]|         medium: { title: '中紧急度', color: '#eab308' },
+[F36:337]|         low: { title: '低紧急度', color: '#22c55e' },
+[F36:338]|       };
+[F36:339]| 
+[F36:340]|       (['urgent', 'high', 'medium', 'low'] as TaskUrgency[]).forEach((u) => {
+[F36:341]|         if (urgencyGroups[u].length > 0) {
+[F36:342]|           groups.push({
+[F36:343]|             title: urgencyLabels[u].title,
+[F36:344]|             color: urgencyLabels[u].color,
+[F36:345]|             tasks: urgencyGroups[u],
+[F36:346]|           });
+[F36:347]|         }
+[F36:348]|       });
+[F36:349]| 
+[F36:350]|       // 添加"未设截止日期"分组
+[F36:351]|       if (noDeadlineTasks.length > 0) {
+[F36:352]|         groups.push({
+[F36:353]|           title: t('urgency.noDeadline'),
+[F36:354]|           color: '#6b7280',
+[F36:355]|           tasks: noDeadlineTasks,
+[F36:356]|         });
+[F36:357]|       }
+[F36:358]|     } else if (sortConfig.mode === 'weighted') {
+[F36:359]|       const scoreGroups: { title: string; color: string; minScore: number; tasks: Task[] }[] = [
+[F36:360]|         { title: t('urgency.veryUrgent'), color: '#dc2626', minScore: 0.75, tasks: [] },
+[F36:361]|         { title: t('urgency.urgent'), color: '#f97316', minScore: 0.5, tasks: [] },
+[F36:362]|         { title: t('view.normal'), color: '#eab308', minScore: 0.25, tasks: [] },
+[F36:363]|         { title: t('urgency.later'), color: '#22c55e', minScore: 0, tasks: [] },
+[F36:364]|       ];
+[F36:365]| 
+[F36:366]|       sortedRootTasks.forEach((t) => {
+[F36:367]|         const score = calculateWeightedScore(t);
+[F36:368]|         if (score >= 0.75) scoreGroups[0].tasks.push(t);
+[F36:369]|         else if (score >= 0.5) scoreGroups[1].tasks.push(t);
+[F36:370]|         else if (score >= 0.25) scoreGroups[2].tasks.push(t);
+[F36:371]|         else scoreGroups[3].tasks.push(t);
+[F36:372]|       });
+[F36:373]| 
+[F36:374]|       scoreGroups.forEach((g) => {
+[F36:375]|         if (g.tasks.length > 0) {
+[F36:376]|           groups.push({
+[F36:377]|             title: g.title,
+[F36:378]|             color: g.color,
+[F36:379]|             tasks: g.tasks,
+[F36:380]|           });
+[F36:381]|         }
+[F36:382]|       });
+[F36:383]|     } else if (sortConfig.mode === 'workTime' || sortConfig.mode === 'estimatedTime' || sortConfig.mode === 'timeDiff') {
+[F36:384]|       // 这三种模式按时间排序，不需要分组，直接显示所有任务
+[F36:385]|       if (sortedRootTasks.length > 0) {
+[F36:386]|         let title = '';
+[F36:387]|         let color = '#6b7280';
+[F36:388]|         switch (sortConfig.mode) {
+[F36:389]|           case 'workTime':
+[F36:390]|             title = t('view.sortByWorkTime') || 'By Time Worked';
+[F36:391]|             color = '#3b82f6';
+[F36:392]|             break;
+[F36:393]|           case 'estimatedTime':
+[F36:394]|             title = t('view.sortByEstimatedTime') || 'By Estimated Time';
+[F36:395]|             color = '#8b5cf6';
+[F36:396]|             break;
+[F36:397]|           case 'timeDiff':
+[F36:398]|             title = t('view.sortByTimeDiff') || 'By Time Difference';
+[F36:399]|             color = '#f59e0b';
+[F36:400]|             break;
+[F36:401]|         }
+[F36:402]|         groups.push({
+[F36:403]|           title,
+[F36:404]|           color,
+[F36:405]|           tasks: sortedRootTasks,
+[F36:406]|         });
+[F36:407]|       }
+[F36:408]|     }
+[F36:409]| 
+[F36:410]|     return groups;
+[F36:411]|   }, [sortedRootTasks, sortConfig.mode, zones]);
 [F36:412]| 
-[F36:413]|   // 计算 breadcrumbs
-[F36:414]|   const breadcrumbs = useMemo(() => {
-[F36:415]|     if (!focusedTaskId) return [];
-[F36:416]|     const path: Task[] = [];
-[F36:417]|     let current = tasks.find((t) => t.id === focusedTaskId);
-[F36:418]|     while (current) {
-[F36:419]|       path.unshift(current);
-[F36:420]|       current = current.parentId ? tasks.find((t) => t.id === current!.parentId) : undefined;
-[F36:421]|     }
-[F36:422]|     return path;
-[F36:423]|   }, [tasks, focusedTaskId]);
-[F36:424]| 
-[F36:425]|   // 计算当前焦点的根任务
-[F36:426]|   const focusedRootTasks = useMemo(() => {
-[F36:427]|     if (!focusedTaskId) return null;
-[F36:428]|     return flattenedTasks.filter(t => t.parentId === focusedTaskId);
-[F36:429]|   }, [flattenedTasks, focusedTaskId]);
-[F36:430]| 
-[F36:431]|   const handleDragEnd = (event: DragEndEvent) => {
-[F36:432]|     const { active, over } = event;
-[F36:433]| 
-[F36:434]|     if (over && active.id !== over.id) {
-[F36:435]|       // Find active and over tasks
-[F36:436]|       const activeTask = rootTasks.find((t) => t.id === active.id);
-[F36:437]|       const overTask = rootTasks.find((t) => t.id === over.id);
-[F36:438]| 
-[F36:439]|       if (!activeTask || !overTask) return;
+[F36:413]|   const completedTasks = tasks.filter((t) => t.completed);
+[F36:414]| 
+[F36:415]|   // 使用 getFlattenedTasks 支持聚焦模式
+[F36:416]|   const flattenedTasks = useMemo(() => {
+[F36:417]|     return getFlattenedTasks(tasks, null, focusedTaskId);
+[F36:418]|   }, [tasks, focusedTaskId]);
+[F36:419]| 
+[F36:420]|   // 计算 breadcrumbs
+[F36:421]|   const breadcrumbs = useMemo(() => {
+[F36:422]|     if (!focusedTaskId) return [];
+[F36:423]|     const path: Task[] = [];
+[F36:424]|     let current = tasks.find((t) => t.id === focusedTaskId);
+[F36:425]|     while (current) {
+[F36:426]|       path.unshift(current);
+[F36:427]|       current = current.parentId ? tasks.find((t) => t.id === current!.parentId) : undefined;
+[F36:428]|     }
+[F36:429]|     return path;
+[F36:430]|   }, [tasks, focusedTaskId]);
+[F36:431]| 
+[F36:432]|   // 计算当前焦点的根任务
+[F36:433]|   const focusedRootTasks = useMemo(() => {
+[F36:434]|     if (!focusedTaskId) return null;
+[F36:435]|     return flattenedTasks.filter(t => t.parentId === focusedTaskId);
+[F36:436]|   }, [flattenedTasks, focusedTaskId]);
+[F36:437]| 
+[F36:438]|   const handleDragEnd = (event: DragEndEvent) => {
+[F36:439]|     const { active, over } = event;
 [F36:440]| 
-[F36:441]|       // Case 1: Cross-zone drag - update zoneId
-[F36:442]|       if (activeTask.zoneId !== overTask.zoneId && sortConfig.mode === 'zone') {
-[F36:443]|         onUpdateTask(activeTask.id, { zoneId: overTask.zoneId });
-[F36:444]|         return;
-[F36:445]|       }
-[F36:446]| 
-[F36:447]|       // Case 2: Same zone - reorder
-[F36:448]|       const oldIndex = sortedRootTasks.findIndex((t) => t.id === active.id);
-[F36:449]|       const newIndex = sortedRootTasks.findIndex((t) => t.id === over.id);
-[F36:450]| 
-[F36:451]|       if (oldIndex !== -1 && newIndex !== -1) {
-[F36:452]|         const reordered = arrayMove(sortedRootTasks, oldIndex, newIndex);
-[F36:453]|         // Group by zone and reorder within each zone
-[F36:454]|         const zoneGroups = new Map<string, Task[]>();
-[F36:455]|         reordered.forEach((task) => {
-[F36:456]|           if (!zoneGroups.has(task.zoneId)) {
-[F36:457]|             zoneGroups.set(task.zoneId, []);
-[F36:458]|           }
-[F36:459]|           zoneGroups.get(task.zoneId)!.push(task);
-[F36:460]|         });
-[F36:461]| 
-[F36:462]|         // Update order for each zone
-[F36:463]|         zoneGroups.forEach((zoneTasks, zoneId) => {
-[F36:464]|           onReorderTasks(zoneId, zoneTasks);
-[F36:465]|         });
-[F36:466]|       }
-[F36:467]|     }
-[F36:468]|   };
-[F36:469]| 
-[F36:470]|   const getZoneColor = (zoneId: string) => {
-[F36:471]|     const zone = zones.find((z) => z.id === zoneId);
-[F36:472]|     return zone?.color || '#6b7280';
-[F36:473]|   };
-[F36:474]| 
-[F36:475]|   const getZoneName = (zoneId: string) => {
-[F36:476]|     const zone = zones.find((z) => z.id === zoneId);
-[F36:477]|     return zone?.name || t('zone.unknownZone');
-[F36:478]|   };
-[F36:479]| 
-[F36:480]|   const stats = {
-[F36:481]|     total: tasks.length,
-[F36:482]|     completed: completedTasks.length,
-[F36:483]|     pending: rootTasks.length,
-[F36:484]|     completionRate: tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0,
+[F36:441]|     if (over && active.id !== over.id) {
+[F36:442]|       // Find active and over tasks
+[F36:443]|       const activeTask = rootTasks.find((t) => t.id === active.id);
+[F36:444]|       const overTask = rootTasks.find((t) => t.id === over.id);
+[F36:445]| 
+[F36:446]|       if (!activeTask || !overTask) return;
+[F36:447]| 
+[F36:448]|       // Case 1: Cross-zone drag - update zoneId
+[F36:449]|       if (activeTask.zoneId !== overTask.zoneId && sortConfig.mode === 'zone') {
+[F36:450]|         onUpdateTask(activeTask.id, { zoneId: overTask.zoneId });
+[F36:451]|         return;
+[F36:452]|       }
+[F36:453]| 
+[F36:454]|       // Case 2: Same zone - reorder
+[F36:455]|       const oldIndex = sortedRootTasks.findIndex((t) => t.id === active.id);
+[F36:456]|       const newIndex = sortedRootTasks.findIndex((t) => t.id === over.id);
+[F36:457]| 
+[F36:458]|       if (oldIndex !== -1 && newIndex !== -1) {
+[F36:459]|         const reordered = arrayMove(sortedRootTasks, oldIndex, newIndex);
+[F36:460]|         // Group by zone and reorder within each zone
+[F36:461]|         const zoneGroups = new Map<string, Task[]>();
+[F36:462]|         reordered.forEach((task) => {
+[F36:463]|           if (!zoneGroups.has(task.zoneId)) {
+[F36:464]|             zoneGroups.set(task.zoneId, []);
+[F36:465]|           }
+[F36:466]|           zoneGroups.get(task.zoneId)!.push(task);
+[F36:467]|         });
+[F36:468]| 
+[F36:469]|         // Update order for each zone
+[F36:470]|         zoneGroups.forEach((zoneTasks, zoneId) => {
+[F36:471]|           onReorderTasks(zoneId, zoneTasks);
+[F36:472]|         });
+[F36:473]|       }
+[F36:474]|     }
+[F36:475]|   };
+[F36:476]| 
+[F36:477]|   const getZoneColor = (zoneId: string) => {
+[F36:478]|     const zone = zones.find((z) => z.id === zoneId);
+[F36:479]|     return zone?.color || '#6b7280';
+[F36:480]|   };
+[F36:481]| 
+[F36:482]|   const getZoneName = (zoneId: string) => {
+[F36:483]|     const zone = zones.find((z) => z.id === zoneId);
+[F36:484]|     return zone?.name || t('zone.unknownZone');
 [F36:485]|   };
 [F36:486]| 
-[F36:487]|   // Recursively render task with children for zone mode
-[F36:488]|   const renderTaskWithChildren = (task: Task, depth: number, maxExpandDepth: number): React.ReactNode => {
-[F36:489]|     const taskChildren = getChildTasks(task.id);
-[F36:490]|     const hasKids = taskChildren.length > 0;
-[F36:491]|     const showChildren = !task.isCollapsed && depth < maxExpandDepth;
-[F36:492]| 
-[F36:493]|     return (
-[F36:494]|       <div
-[F36:495]|         key={task.id}
-[F36:496]|         className="task-tree-item"
-[F36:497]|         style={{ paddingLeft: depth > 0 ? `${depth * 24}px` : undefined }}
-[F36:498]|       >
-[F36:499]|         <TaskItem
-[F36:500]|           task={task}
-[F36:501]|           zoneColor={getZoneColor(task.zoneId)}
-[F36:502]|           isActive={task.id === activeTaskId}
-[F36:503]|           isTimerRunning={isTimerRunning && task.id === activeTaskId}
-[F36:504]|           onToggle={onToggleTask}
-[F36:505]|           onDelete={onDeleteTask}
-[F36:506]|           onUpdate={onUpdateTask}
-[F36:507]|           onToggleExpanded={onToggleExpanded}
-[F36:508]|           onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
-[F36:509]|           onSelect={onSelectTask}
-[F36:510]|           onZoomIn={onNavigateToZone ? (id) => {
-[F36:511]|             const t = tasks.find(task => task.id === id);
-[F36:512]|             if (t) onNavigateToZone(t.zoneId, id);
-[F36:513]|           } : undefined}
-[F36:514]|           hasChildren={hasKids}
-[F36:515]|           depth={depth}
-[F36:516]|           getTotalWorkTime={getTotalWorkTime}
-[F36:517]|           getEstimatedTime={getEstimatedTime}
-[F36:518]|           rankScores={rankScores}
-[F36:519]|           allTasks={tasks}
-[F36:520]|         />
-[F36:521]|         {showChildren && taskChildren.map((child) => renderTaskWithChildren(child, depth + 1, maxExpandDepth))}
-[F36:522]|       </div>
-[F36:523]|     );
-[F36:524]|   };
-[F36:525]| 
-[F36:526]|   // Recursively render task with children for focused mode (always expand)
-[F36:527]|   const renderFocusedTaskWithChildren = (task: Task, depth: number): React.ReactNode => {
-[F36:528]|     const taskChildren = getChildTasks(task.id);
-[F36:529]|     const hasKids = taskChildren.length > 0;
-[F36:530]|     const showChildren = !task.isCollapsed;
-[F36:531]| 
-[F36:532]|     return (
-[F36:533]|       <div
-[F36:534]|         key={task.id}
-[F36:535]|         className="task-tree-item"
-[F36:536]|         style={{ paddingLeft: depth > 0 ? `${depth * 24}px` : undefined }}
-[F36:537]|       >
-[F36:538]|         <TaskItem
-[F36:539]|           task={task}
-[F36:540]|           zoneColor={getZoneColor(task.zoneId)}
-[F36:541]|           isActive={task.id === activeTaskId}
-[F36:542]|           isTimerRunning={isTimerRunning && task.id === activeTaskId}
-[F36:543]|           onToggle={onToggleTask}
-[F36:544]|           onDelete={onDeleteTask}
-[F36:545]|           onUpdate={onUpdateTask}
-[F36:546]|           onToggleExpanded={onToggleExpanded}
-[F36:547]|           onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
-[F36:548]|           onSelect={onSelectTask}
-[F36:549]|           onZoomIn={onNavigateToZone ? (id) => {
-[F36:550]|             const t = tasks.find(task => task.id === id);
-[F36:551]|             if (t) onNavigateToZone(t.zoneId, id);
-[F36:552]|           } : undefined}
-[F36:553]|           hasChildren={hasKids}
-[F36:554]|           depth={depth}
-[F36:555]|           isDraggable={false}
-[F36:556]|         />
-[F36:557]|         {showChildren && taskChildren.map((child) => renderFocusedTaskWithChildren(child, depth + 1))}
-[F36:558]|       </div>
-[F36:559]|     );
-[F36:560]|   };
-[F36:561]| 
-[F36:562]|   // Recursively render task with children for sorting modes (respecting viewDepth)
-[F36:563]|   const renderTaskWithDepth = (task: Task, currentDepth: number): React.ReactNode => {
-[F36:564]|     const taskChildren = getChildTasks(task.id);
-[F36:565]|     const hasKids = taskChildren.length > 0;
-[F36:566]|     const showChildren = !task.isCollapsed && currentDepth < viewDepth;
-[F36:567]| 
-[F36:568]|     return (
-[F36:569]|       <div
-[F36:570]|         key={task.id}
-[F36:571]|         className="task-tree-item"
-[F36:572]|         style={{ paddingLeft: currentDepth > 0 ? `${currentDepth * 24}px` : undefined }}
-[F36:573]|       >
-[F36:574]|         <TaskItem
-[F36:575]|           task={task}
-[F36:576]|           zoneColor={getZoneColor(task.zoneId)}
-[F36:577]|           isActive={task.id === activeTaskId}
-[F36:578]|           isTimerRunning={isTimerRunning && task.id === activeTaskId}
-[F36:579]|           onToggle={onToggleTask}
-[F36:580]|           onDelete={onDeleteTask}
-[F36:581]|           onUpdate={onUpdateTask}
-[F36:582]|           onToggleExpanded={onToggleExpanded}
-[F36:583]|           onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
-[F36:584]|           onSelect={onSelectTask}
-[F36:585]|           onZoomIn={onNavigateToZone ? (id) => {
-[F36:586]|             const t = tasks.find(task => task.id === id);
-[F36:587]|             if (t) onNavigateToZone(t.zoneId, id);
-[F36:588]|           } : undefined}
-[F36:589]|           hasChildren={hasKids}
-[F36:590]|           depth={currentDepth}
-[F36:591]|           isDraggable={sortConfig.mode === 'zone' && currentDepth === 0}
-[F36:592]|           getTotalWorkTime={getTotalWorkTime}
-[F36:593]|           getEstimatedTime={getEstimatedTime}
-[F36:594]|         />
-[F36:595]|         {showChildren && taskChildren.map((child) => renderTaskWithDepth(child, currentDepth + 1))}
-[F36:596]|       </div>
-[F36:597]|     );
-[F36:598]|   };
-[F36:599]| 
-[F36:600]|   // 缓存面包屑路径，避免重复计算
-[F36:601]|   const breadcrumbsCache = useMemo(() => new Map<string, Task[]>(), [tasks]);
-[F36:602]| 
-[F36:603]|   // 获取任务的父级路径用于叶子节点模式的上下文展示
-[F36:604]|   const getTaskBreadcrumbs = (taskId: string): Task[] => {
-[F36:605]|     // 检查缓存
-[F36:606]|     if (breadcrumbsCache.has(taskId)) {
-[F36:607]|       return breadcrumbsCache.get(taskId)!;
-[F36:608]|     }
+[F36:487]|   const stats = {
+[F36:488]|     total: tasks.length,
+[F36:489]|     completed: completedTasks.length,
+[F36:490]|     pending: rootTasks.length,
+[F36:491]|     completionRate: tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0,
+[F36:492]|   };
+[F36:493]| 
+[F36:494]|   // Recursively render task with children for zone mode
+[F36:495]|   const renderTaskWithChildren = (task: Task, depth: number, maxExpandDepth: number): React.ReactNode => {
+[F36:496]|     const taskChildren = getChildTasks(task.id);
+[F36:497]|     const hasKids = taskChildren.length > 0;
+[F36:498]|     const showChildren = !task.isCollapsed && depth < maxExpandDepth;
+[F36:499]| 
+[F36:500]|     return (
+[F36:501]|       <div
+[F36:502]|         key={task.id}
+[F36:503]|         className="task-tree-item"
+[F36:504]|         style={{ paddingLeft: depth > 0 ? `${depth * 24}px` : undefined }}
+[F36:505]|       >
+[F36:506]|         <TaskItem
+[F36:507]|           task={task}
+[F36:508]|           zoneColor={getZoneColor(task.zoneId)}
+[F36:509]|           isActive={task.id === activeTaskId}
+[F36:510]|           isTimerRunning={isTimerRunning && task.id === activeTaskId}
+[F36:511]|           onToggle={onToggleTask}
+[F36:512]|           onDelete={onDeleteTask}
+[F36:513]|           onUpdate={onUpdateTask}
+[F36:514]|           onToggleExpanded={onToggleExpanded}
+[F36:515]|           onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
+[F36:516]|           onSelect={onSelectTask}
+[F36:517]|           onZoomIn={onNavigateToZone ? (id) => {
+[F36:518]|             const t = tasks.find(task => task.id === id);
+[F36:519]|             if (t) onNavigateToZone(t.zoneId, id);
+[F36:520]|           } : undefined}
+[F36:521]|           hasChildren={hasKids}
+[F36:522]|           depth={depth}
+[F36:523]|           getTotalWorkTime={getTotalWorkTime}
+[F36:524]|           getEstimatedTime={getEstimatedTime}
+[F36:525]|           rankScores={rankScores}
+[F36:526]|           allTasks={tasks}
+[F36:527]|         />
+[F36:528]|         {showChildren && taskChildren.map((child) => renderTaskWithChildren(child, depth + 1, maxExpandDepth))}
+[F36:529]|       </div>
+[F36:530]|     );
+[F36:531]|   };
+[F36:532]| 
+[F36:533]|   // Recursively render task with children for focused mode (always expand)
+[F36:534]|   const renderFocusedTaskWithChildren = (task: Task, depth: number): React.ReactNode => {
+[F36:535]|     const taskChildren = getChildTasks(task.id);
+[F36:536]|     const hasKids = taskChildren.length > 0;
+[F36:537]|     const showChildren = !task.isCollapsed;
+[F36:538]| 
+[F36:539]|     return (
+[F36:540]|       <div
+[F36:541]|         key={task.id}
+[F36:542]|         className="task-tree-item"
+[F36:543]|         style={{ paddingLeft: depth > 0 ? `${depth * 24}px` : undefined }}
+[F36:544]|       >
+[F36:545]|         <TaskItem
+[F36:546]|           task={task}
+[F36:547]|           zoneColor={getZoneColor(task.zoneId)}
+[F36:548]|           isActive={task.id === activeTaskId}
+[F36:549]|           isTimerRunning={isTimerRunning && task.id === activeTaskId}
+[F36:550]|           onToggle={onToggleTask}
+[F36:551]|           onDelete={onDeleteTask}
+[F36:552]|           onUpdate={onUpdateTask}
+[F36:553]|           onToggleExpanded={onToggleExpanded}
+[F36:554]|           onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
+[F36:555]|           onSelect={onSelectTask}
+[F36:556]|           onZoomIn={onNavigateToZone ? (id) => {
+[F36:557]|             const t = tasks.find(task => task.id === id);
+[F36:558]|             if (t) onNavigateToZone(t.zoneId, id);
+[F36:559]|           } : undefined}
+[F36:560]|           hasChildren={hasKids}
+[F36:561]|           depth={depth}
+[F36:562]|           isDraggable={false}
+[F36:563]|         />
+[F36:564]|         {showChildren && taskChildren.map((child) => renderFocusedTaskWithChildren(child, depth + 1))}
+[F36:565]|       </div>
+[F36:566]|     );
+[F36:567]|   };
+[F36:568]| 
+[F36:569]|   // Recursively render task with children for sorting modes (respecting viewDepth)
+[F36:570]|   const renderTaskWithDepth = (task: Task, currentDepth: number): React.ReactNode => {
+[F36:571]|     const taskChildren = getChildTasks(task.id);
+[F36:572]|     const hasKids = taskChildren.length > 0;
+[F36:573]|     const showChildren = !task.isCollapsed && currentDepth < viewDepth;
+[F36:574]| 
+[F36:575]|     return (
+[F36:576]|       <div
+[F36:577]|         key={task.id}
+[F36:578]|         className="task-tree-item"
+[F36:579]|         style={{ paddingLeft: currentDepth > 0 ? `${currentDepth * 24}px` : undefined }}
+[F36:580]|       >
+[F36:581]|         <TaskItem
+[F36:582]|           task={task}
+[F36:583]|           zoneColor={getZoneColor(task.zoneId)}
+[F36:584]|           isActive={task.id === activeTaskId}
+[F36:585]|           isTimerRunning={isTimerRunning && task.id === activeTaskId}
+[F36:586]|           onToggle={onToggleTask}
+[F36:587]|           onDelete={onDeleteTask}
+[F36:588]|           onUpdate={onUpdateTask}
+[F36:589]|           onToggleExpanded={onToggleExpanded}
+[F36:590]|           onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
+[F36:591]|           onSelect={onSelectTask}
+[F36:592]|           onZoomIn={onNavigateToZone ? (id) => {
+[F36:593]|             const t = tasks.find(task => task.id === id);
+[F36:594]|             if (t) onNavigateToZone(t.zoneId, id);
+[F36:595]|           } : undefined}
+[F36:596]|           hasChildren={hasKids}
+[F36:597]|           depth={currentDepth}
+[F36:598]|           isDraggable={sortConfig.mode === 'zone' && currentDepth === 0}
+[F36:599]|           getTotalWorkTime={getTotalWorkTime}
+[F36:600]|           getEstimatedTime={getEstimatedTime}
+[F36:601]|         />
+[F36:602]|         {showChildren && taskChildren.map((child) => renderTaskWithDepth(child, currentDepth + 1))}
+[F36:603]|       </div>
+[F36:604]|     );
+[F36:605]|   };
+[F36:606]| 
+[F36:607]|   // 缓存面包屑路径，避免重复计算
+[F36:608]|   const breadcrumbsCache = useMemo(() => new Map<string, Task[]>(), [tasks]);
 [F36:609]| 
-[F36:610]|     const path: Task[] = [];
-[F36:611]|     let current = tasks.find(t => t.id === taskId);
-[F36:612]|     const visited = new Set<string>(); // 防止循环引用
-[F36:613]| 
-[F36:614]|     while (current?.parentId && !visited.has(current.id)) {
-[F36:615]|       visited.add(current.id);
-[F36:616]|       const parent = tasks.find(t => t.id === current!.parentId);
-[F36:617]|       if (parent) {
-[F36:618]|         path.unshift(parent);
-[F36:619]|         current = parent;
-[F36:620]|       } else break;
-[F36:621]|     }
-[F36:622]| 
-[F36:623]|     // 存入缓存
-[F36:624]|     breadcrumbsCache.set(taskId, path);
-[F36:625]|     return path;
-[F36:626]|   };
-[F36:627]| 
-[F36:628]|   // 专属的叶子节点渲染函数
-[F36:629]|   const renderLeafTask = (task: Task): React.ReactNode => {
-[F36:630]|     const path = getTaskBreadcrumbs(task.id);
-[F36:631]|     const zoneName = getZoneName(task.zoneId);
-[F36:632]|     const zoneColor = getZoneColor(task.zoneId);
-[F36:633]| 
-[F36:634]|     return (
-[F36:635]|       <div key={task.id} className="task-tree-item mb-1 relative">
-[F36:636]|         {/* 上下文面包屑：工作区 > 父任务1 > 父任务2 > ... */}
-[F36:637]|         <div className="flex items-center gap-1 pl-7 pr-2 text-[10px] text-white/40 mb-0.5 leading-none">
-[F36:638]|           {/* 工作区名称 */}
-[F36:639]|           <span
-[F36:640]|             className="truncate max-w-[80px] font-medium"
-[F36:641]|             style={{ color: zoneColor }}
-[F36:642]|             title={zoneName}
-[F36:643]|           >
-[F36:644]|             {zoneName}
-[F36:645]|           </span>
-[F36:646]|           {path.length > 0 && <span className="text-white/30">›</span>}
-[F36:647]|           {/* 父任务路径 */}
-[F36:648]|           {path.map((p, i) => (
-[F36:649]|             <span key={p.id} className="truncate max-w-[80px]">
-[F36:650]|               {p.title} {i < path.length - 1 ? <span className="text-white/30 mx-0.5">›</span> : ''}
-[F36:651]|             </span>
-[F36:652]|           ))}
-[F36:653]|         </div>
-[F36:654]|         <TaskItem
-[F36:655]|           task={task}
-[F36:656]|           zoneColor={getZoneColor(task.zoneId)}
-[F36:657]|           isActive={task.id === activeTaskId}
-[F36:658]|           isTimerRunning={isTimerRunning && task.id === activeTaskId}
-[F36:659]|           onToggle={onToggleTask}
-[F36:660]|           onDelete={onDeleteTask}
-[F36:661]|           onUpdate={onUpdateTask}
-[F36:662]|           onToggleExpanded={onToggleExpanded}
-[F36:663]|           onSelect={onSelectTask}
-[F36:664]|           onZoomIn={onNavigateToZone ? (id) => {
-[F36:665]|             const t = tasks.find(task => task.id === id);
-[F36:666]|             if (t) onNavigateToZone(t.zoneId, id);
-[F36:667]|           } : undefined}
-[F36:668]|           hasChildren={false}
-[F36:669]|           depth={0}
-[F36:670]|           isDraggable={false} // 安全限制：叶子模式下强制禁用拖拽
-[F36:671]|           getTotalWorkTime={getTotalWorkTime}
-[F36:672]|           getEstimatedTime={getEstimatedTime}
-[F36:673]|           rankScores={rankScores}
-[F36:674]|           allTasks={tasks}
-[F36:675]|         />
-[F36:676]|       </div>
-[F36:677]|     );
-[F36:678]|   };
-[F36:679]| 
-[F36:680]|   return (
-[F36:681]|     <div className="global-view-container">
-[F36:682]|       {/* Header */}
-[F36:683]|       <div className="global-view-header">
-[F36:684]|         <Button
-[F36:685]|           size="icon"
-[F36:686]|           variant="ghost"
-[F36:687]|           className="back-btn"
-[F36:688]|           onClick={onBack}
-[F36:689]|         >
-[F36:690]|           <ArrowLeft size={18} />
-[F36:691]|         </Button>
-[F36:692]|         <div className="global-view-title">
-[F36:693]|           <Globe size={18} className="text-blue-400 shrink-0" />
-[F36:694]|           <span className="truncate" title={t('view.globalView')}>{t('view.globalView')}</span>
-[F36:695]|           <span className="task-count shrink-0">({stats.completed}/{stats.total})</span>
-[F36:696]|         </div>
-[F36:697]|         <div className="flex items-center gap-2 ml-auto shrink-0">
-[F36:698]|           {/* 叶子节点模式切换开关 */}
-[F36:699]|           <Button
-[F36:700]|             variant="outline"
-[F36:701]|             size="sm"
-[F36:702]|             className={`h-8 px-2 border flex-shrink-0 ${isLeafMode ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-gray-800 text-gray-200 border-gray-600'}`}
-[F36:703]|             onClick={() => setIsLeafMode(!isLeafMode)}
-[F36:704]|             title={isLeafMode ? t('view.leafMode') : t('view.treeView')}
-[F36:705]|           >
-[F36:706]|             <Network size={14} className={isLeafMode ? "" : "opacity-70"} />
-[F36:707]|             {/* 核心修复：为文字添加 span 并根据需要处理 */}
-[F36:708]|             <span className="ml-1 whitespace-nowrap">
-[F36:709]|               {isLeafMode ? t('view.leafMode') : t('view.treeView')}
-[F36:710]|             </span>
-[F36:711]|           </Button>
-[F36:712]| 
-[F36:713]|           <div className="sort-mode-selector m-0">
-[F36:714]|           <Select
-[F36:715]|             value={sortConfig.mode}
-[F36:716]|             onValueChange={(value: GlobalViewSortMode) => {
-[F36:717]|               onSortConfigChange({ ...sortConfig, mode: value });
-[F36:718]|               // 保留用户之前的展开层级习惯
-[F36:719]|             }}
-[F36:720]|           >
-[F36:721]|             <SelectTrigger className="sort-select-trigger min-w-[100px] flex-shrink-0">
-[F36:722]|               <ArrowUpDown size={14} />
-[F36:723]|               <SelectValue placeholder={t('view.sortMode')} />
-[F36:724]|             </SelectTrigger>
-[F36:725]|             <SelectContent position="popper">
-[F36:726]|               <SelectItem value="zone">
-[F36:727]|                 <div className="sort-option">
-[F36:728]|                   <Globe size={14} />
-[F36:729]|                   <span>{t('view.sortByZone')}</span>
-[F36:730]|                 </div>
-[F36:731]|               </SelectItem>
-[F36:732]|               <SelectItem value="priority">
-[F36:733]|                 <div className="sort-option">
-[F36:734]|                   <Flag size={14} />
-[F36:735]|                   <span>{t('view.sortByPriority')}</span>
-[F36:736]|                 </div>
-[F36:737]|               </SelectItem>
-[F36:738]|               <SelectItem value="urgency">
-[F36:739]|                 <div className="sort-option">
-[F36:740]|                   <Zap size={14} />
-[F36:741]|                   <span>{t('view.sortByUrgency')}</span>
-[F36:742]|                 </div>
-[F36:743]|               </SelectItem>
-[F36:744]|               <SelectItem value="weighted">
-[F36:745]|                 <div className="sort-option">
-[F36:746]|                   <Flag size={14} />
+[F36:610]|   // 获取任务的父级路径用于叶子节点模式的上下文展示
+[F36:611]|   const getTaskBreadcrumbs = (taskId: string): Task[] => {
+[F36:612]|     // 检查缓存
+[F36:613]|     if (breadcrumbsCache.has(taskId)) {
+[F36:614]|       return breadcrumbsCache.get(taskId)!;
+[F36:615]|     }
+[F36:616]| 
+[F36:617]|     const path: Task[] = [];
+[F36:618]|     let current = tasks.find(t => t.id === taskId);
+[F36:619]|     const visited = new Set<string>(); // 防止循环引用
+[F36:620]| 
+[F36:621]|     while (current?.parentId && !visited.has(current.id)) {
+[F36:622]|       visited.add(current.id);
+[F36:623]|       const parent = tasks.find(t => t.id === current!.parentId);
+[F36:624]|       if (parent) {
+[F36:625]|         path.unshift(parent);
+[F36:626]|         current = parent;
+[F36:627]|       } else break;
+[F36:628]|     }
+[F36:629]| 
+[F36:630]|     // 存入缓存
+[F36:631]|     breadcrumbsCache.set(taskId, path);
+[F36:632]|     return path;
+[F36:633]|   };
+[F36:634]| 
+[F36:635]|   // 专属的叶子节点渲染函数
+[F36:636]|   const renderLeafTask = (task: Task): React.ReactNode => {
+[F36:637]|     const path = getTaskBreadcrumbs(task.id);
+[F36:638]|     const zoneName = getZoneName(task.zoneId);
+[F36:639]|     const zoneColor = getZoneColor(task.zoneId);
+[F36:640]| 
+[F36:641]|     return (
+[F36:642]|       <div key={task.id} className="task-tree-item mb-1 relative">
+[F36:643]|         {/* 上下文面包屑：工作区 > 父任务1 > 父任务2 > ... */}
+[F36:644]|         <div className="flex items-center gap-1 pl-7 pr-2 text-[10px] text-white/40 mb-0.5 leading-none">
+[F36:645]|           {/* 工作区名称 */}
+[F36:646]|           <span
+[F36:647]|             className="truncate max-w-[80px] font-medium"
+[F36:648]|             style={{ color: zoneColor }}
+[F36:649]|             title={zoneName}
+[F36:650]|           >
+[F36:651]|             {zoneName}
+[F36:652]|           </span>
+[F36:653]|           {path.length > 0 && <span className="text-white/30">›</span>}
+[F36:654]|           {/* 父任务路径 */}
+[F36:655]|           {path.map((p, i) => (
+[F36:656]|             <span key={p.id} className="truncate max-w-[80px]">
+[F36:657]|               {p.title} {i < path.length - 1 ? <span className="text-white/30 mx-0.5">›</span> : ''}
+[F36:658]|             </span>
+[F36:659]|           ))}
+[F36:660]|         </div>
+[F36:661]|         <TaskItem
+[F36:662]|           task={task}
+[F36:663]|           zoneColor={getZoneColor(task.zoneId)}
+[F36:664]|           isActive={task.id === activeTaskId}
+[F36:665]|           isTimerRunning={isTimerRunning && task.id === activeTaskId}
+[F36:666]|           onToggle={onToggleTask}
+[F36:667]|           onDelete={onDeleteTask}
+[F36:668]|           onUpdate={onUpdateTask}
+[F36:669]|           onToggleExpanded={onToggleExpanded}
+[F36:670]|           onSelect={onSelectTask}
+[F36:671]|           onZoomIn={onNavigateToZone ? (id) => {
+[F36:672]|             const t = tasks.find(task => task.id === id);
+[F36:673]|             if (t) onNavigateToZone(t.zoneId, id);
+[F36:674]|           } : undefined}
+[F36:675]|           hasChildren={false}
+[F36:676]|           depth={0}
+[F36:677]|           isDraggable={false} // 安全限制：叶子模式下强制禁用拖拽
+[F36:678]|           getTotalWorkTime={getTotalWorkTime}
+[F36:679]|           getEstimatedTime={getEstimatedTime}
+[F36:680]|           rankScores={rankScores}
+[F36:681]|           allTasks={tasks}
+[F36:682]|         />
+[F36:683]|       </div>
+[F36:684]|     );
+[F36:685]|   };
+[F36:686]| 
+[F36:687]|   return (
+[F36:688]|     <div className="global-view-container">
+[F36:689]|       {/* Header */}
+[F36:690]|       <div className="global-view-header">
+[F36:691]|         <Button
+[F36:692]|           size="icon"
+[F36:693]|           variant="ghost"
+[F36:694]|           className="back-btn"
+[F36:695]|           onClick={onBack}
+[F36:696]|         >
+[F36:697]|           <ArrowLeft size={18} />
+[F36:698]|         </Button>
+[F36:699]|         <div className="global-view-title">
+[F36:700]|           <Globe size={18} className="text-blue-400 shrink-0" />
+[F36:701]|           <span className="truncate" title={t('view.globalView')}>{t('view.globalView')}</span>
+[F36:702]|           <span className="task-count shrink-0">({stats.completed}/{stats.total})</span>
+[F36:703]|         </div>
+[F36:704]|         <div className="flex items-center gap-2 ml-auto shrink-0">
+[F36:705]|           {/* 叶子节点模式切换开关 */}
+[F36:706]|           <Button
+[F36:707]|             variant="outline"
+[F36:708]|             size="sm"
+[F36:709]|             className={`h-8 px-2 border flex-shrink-0 ${isLeafMode ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-gray-800 text-gray-200 border-gray-600'}`}
+[F36:710]|             onClick={() => setIsLeafMode(!isLeafMode)}
+[F36:711]|             title={isLeafMode ? t('view.leafMode') : t('view.treeView')}
+[F36:712]|           >
+[F36:713]|             <Network size={14} className={isLeafMode ? "" : "opacity-70"} />
+[F36:714]|             {/* 核心修复：为文字添加 span 并根据需要处理 */}
+[F36:715]|             <span className="ml-1 whitespace-nowrap">
+[F36:716]|               {isLeafMode ? t('view.leafMode') : t('view.treeView')}
+[F36:717]|             </span>
+[F36:718]|           </Button>
+[F36:719]| 
+[F36:720]|           <div className="sort-mode-selector m-0">
+[F36:721]|           <Select
+[F36:722]|             value={sortConfig.mode}
+[F36:723]|             onValueChange={(value: GlobalViewSortMode) => {
+[F36:724]|               onSortConfigChange({ ...sortConfig, mode: value });
+[F36:725]|               // 保留用户之前的展开层级习惯
+[F36:726]|             }}
+[F36:727]|           >
+[F36:728]|             <SelectTrigger className="sort-select-trigger min-w-[100px] flex-shrink-0">
+[F36:729]|               <ArrowUpDown size={14} />
+[F36:730]|               <SelectValue placeholder={t('view.sortMode')} />
+[F36:731]|             </SelectTrigger>
+[F36:732]|             <SelectContent position="popper">
+[F36:733]|               <SelectItem value="zone">
+[F36:734]|                 <div className="sort-option">
+[F36:735]|                   <Globe size={14} />
+[F36:736]|                   <span>{t('view.sortByZone')}</span>
+[F36:737]|                 </div>
+[F36:738]|               </SelectItem>
+[F36:739]|               <SelectItem value="priority">
+[F36:740]|                 <div className="sort-option">
+[F36:741]|                   <Flag size={14} />
+[F36:742]|                   <span>{t('view.sortByPriority')}</span>
+[F36:743]|                 </div>
+[F36:744]|               </SelectItem>
+[F36:745]|               <SelectItem value="urgency">
+[F36:746]|                 <div className="sort-option">
 [F36:747]|                   <Zap size={14} />
-[F36:748]|                   <span>{t('settings.weightedSort')}</span>
+[F36:748]|                   <span>{t('view.sortByUrgency')}</span>
 [F36:749]|                 </div>
 [F36:750]|               </SelectItem>
-[F36:751]|               <SelectItem value="workTime">
+[F36:751]|               <SelectItem value="weighted">
 [F36:752]|                 <div className="sort-option">
-[F36:753]|                   <Clock size={14} />
-[F36:754]|                   <span>{t('view.sortByWorkTime')}</span>
-[F36:755]|                 </div>
-[F36:756]|               </SelectItem>
-[F36:757]|               <SelectItem value="estimatedTime">
-[F36:758]|                 <div className="sort-option">
-[F36:759]|                   <Clock size={14} />
-[F36:760]|                   <span>{t('view.sortByEstimatedTime')}</span>
-[F36:761]|                 </div>
-[F36:762]|               </SelectItem>
-[F36:763]|               <SelectItem value="timeDiff">
-[F36:764]|                 <div className="sort-option">
-[F36:765]|                   <Clock size={14} />
-[F36:766]|                   <span>{t('view.sortByTimeDiff')}</span>
-[F36:767]|                 </div>
-[F36:768]|               </SelectItem>
-[F36:769]|             </SelectContent>
-[F36:770]|           </Select>
-[F36:771]|         </div>
-[F36:772]|         </div>
-[F36:773]|       </div>
-[F36:774]| 
-[F36:775]|       {/* Depth Controls for sorting modes */}
-[F36:776]|       {!isLeafMode && sortConfig.mode !== 'zone' && maxTreeDepth > 0 && !focusedTaskId && (
-[F36:777]|         <div className="depth-controls">
-[F36:778]|           <span className="depth-label">{t('view.expandDepth')}:</span>
-[F36:779]|           <Button
-[F36:780]|             size="sm"
-[F36:781]|             variant="ghost"
-[F36:782]|             onClick={() => setViewDepth(0)}
-[F36:783]|             className={viewDepth === 0 ? 'active' : ''}
-[F36:784]|             title={t('view.collapseAll')}
-[F36:785]|           >
-[F36:786]|             <CircleX size={14} />
-[F36:787]|           </Button>
-[F36:788]|           <Button
-[F36:789]|             size="sm"
-[F36:790]|             variant="ghost"
-[F36:791]|             onClick={() => setViewDepth(1)}
-[F36:792]|             className={viewDepth === 1 ? 'active' : ''}
-[F36:793]|             title={t('view.topLevelOnly')}
-[F36:794]|           >
-[F36:795]|             <ArrowUp size={14} />
-[F36:796]|           </Button>
-[F36:797]|           <Button
-[F36:798]|             size="sm"
-[F36:799]|             variant="ghost"
-[F36:800]|             onClick={() => setViewDepth(Math.max(0, viewDepth - 1))}
-[F36:801]|             disabled={viewDepth <= 0}
-[F36:802]|             title={t('view.collapseOneLevel')}
-[F36:803]|           >
-[F36:804]|             <ChevronUp size={14} />
-[F36:805]|           </Button>
-[F36:806]|           <span className="depth-value">{viewDepth}</span>
-[F36:807]|           <Button
-[F36:808]|             size="sm"
-[F36:809]|             variant="ghost"
-[F36:810]|             onClick={() => setViewDepth(Math.min(maxTreeDepth, viewDepth + 1))}
-[F36:811]|             disabled={viewDepth >= maxTreeDepth}
-[F36:812]|             title={t('view.expandOneLevel')}
-[F36:813]|           >
-[F36:814]|             <ChevronDown size={14} />
-[F36:815]|           </Button>
-[F36:816]|           <Button
-[F36:817]|             size="sm"
-[F36:818]|             variant="ghost"
-[F36:819]|             onClick={() => setViewDepth(maxTreeDepth)}
-[F36:820]|             className={viewDepth >= maxTreeDepth ? 'active' : ''}
-[F36:821]|             title={t('view.expandAll')}
-[F36:822]|           >
-[F36:823]|             <Layers size={14} />
-[F36:824]|           </Button>
-[F36:825]|         </div>
-[F36:826]|       )}
-[F36:827]| 
-[F36:828]|       {/* Breadcrumb Navigation for focused task */}
-[F36:829]|       {focusedTaskId && (
-[F36:830]|         <div className="flex items-center gap-1.5 px-1 py-2 mb-2 text-xs text-white/50 overflow-x-auto whitespace-nowrap border-b border-white/5">
-[F36:831]|           <button
-[F36:832]|             onClick={() => setFocusedTaskId(null)}
-[F36:833]|             className="hover:text-white flex items-center gap-1 transition-colors"
-[F36:834]|           >
-[F36:835]|             <Home size={12} /> {t('view.breadcrumb')}
-[F36:836]|           </button>
-[F36:837]|           {breadcrumbs.map((crumb) => (
-[F36:838]|             <React.Fragment key={crumb.id}>
-[F36:839]|               <ChevronRight size={12} className="opacity-50" />
-[F36:840]|               <button
-[F36:841]|                 onClick={() => setFocusedTaskId(crumb.id)}
-[F36:842]|                 className={`hover:text-white transition-colors ${crumb.id === focusedTaskId ? 'text-blue-400 font-medium' : ''}`}
-[F36:843]|               >
-[F36:844]|                 {crumb.title}
-[F36:845]|               </button>
-[F36:846]|             </React.Fragment>
-[F36:847]|           ))}
-[F36:848]|         </div>
-[F36:849]|       )}
-[F36:850]| 
-[F36:851]|       {/* Task List */}
-[F36:852]|       <ScrollArea className="task-scroll-area">
-[F36:853]|         <div className="tasks-container">
-[F36:854]|           {/* Focused task view - show only children of focused task */}
-[F36:855]|           {focusedTaskId && focusedRootTasks && focusedRootTasks.length > 0 ? (
-[F36:856]|             <div className="focused-task-view">
-[F36:857]|               {focusedRootTasks.map((task) => renderFocusedTaskWithChildren(task, 0))}
-[F36:858]|             </div>
-[F36:859]|           ) : focusedTaskId && focusedRootTasks && focusedRootTasks.length === 0 ? (
-[F36:860]|             <div className="empty-state">
-[F36:861]|               <p>{t('view.noSubtasksHere')}</p>
-[F36:862]|               <p className="empty-hint">{t('view.clickTitleHint')}</p>
-[F36:863]|             </div>
-[F36:864]|           ) : rootTasks.length === 0 && completedTasks.length === 0 ? (
-[F36:865]|             <div className="empty-state">
-[F36:866]|               <Globe size={48} className="empty-icon" />
-[F36:867]|               <p>{t('view.noTasksGlobal')}</p>
-[F36:868]|               <p className="empty-hint">{t('view.emptyGlobalView')}</p>
-[F36:869]|             </div>
-[F36:870]|           ) : (
-[F36:871]|             <>
-[F36:872]|               {/* All sorting modes use taskGroups with DndContext at root level */}
-[F36:873]|               {sortConfig.mode === 'zone' && taskGroups && taskGroups.length > 0 ? (
-[F36:874]|                 <DndContext
-[F36:875]|                   sensors={sensors}
-[F36:876]|                   collisionDetection={closestCenter}
-[F36:877]|                   onDragEnd={handleDragEnd}
-[F36:878]|                 >
-[F36:879]|                   {taskGroups.map((group) => (
-[F36:880]|                     <div key={group.title} className="task-group">
-[F36:881]|                       <div
-[F36:882]|                         className="group-label"
-[F36:883]|                         style={{
-[F36:884]|                           backgroundColor: `${group.color}15`,
-[F36:885]|                           borderLeftColor: group.color,
-[F36:886]|                         }}
-[F36:887]|                       >
-[F36:888]|                         <span style={{ color: group.color }}>{group.title}</span>
-[F36:889]|                         <span className="group-count">({group.tasks.length})</span>
-[F36:890]|                       </div>
-[F36:891]|                       <SortableContext
-[F36:892]|                         items={group.tasks.map((t) => t.id)}
-[F36:893]|                         strategy={verticalListSortingStrategy}
+[F36:753]|                   <Flag size={14} />
+[F36:754]|                   <Zap size={14} />
+[F36:755]|                   <span>{t('settings.weightedSort')}</span>
+[F36:756]|                 </div>
+[F36:757]|               </SelectItem>
+[F36:758]|               <SelectItem value="workTime">
+[F36:759]|                 <div className="sort-option">
+[F36:760]|                   <Clock size={14} />
+[F36:761]|                   <span>{t('view.sortByWorkTime')}</span>
+[F36:762]|                 </div>
+[F36:763]|               </SelectItem>
+[F36:764]|               <SelectItem value="estimatedTime">
+[F36:765]|                 <div className="sort-option">
+[F36:766]|                   <Clock size={14} />
+[F36:767]|                   <span>{t('view.sortByEstimatedTime')}</span>
+[F36:768]|                 </div>
+[F36:769]|               </SelectItem>
+[F36:770]|               <SelectItem value="timeDiff">
+[F36:771]|                 <div className="sort-option">
+[F36:772]|                   <Clock size={14} />
+[F36:773]|                   <span>{t('view.sortByTimeDiff')}</span>
+[F36:774]|                 </div>
+[F36:775]|               </SelectItem>
+[F36:776]|             </SelectContent>
+[F36:777]|           </Select>
+[F36:778]|         </div>
+[F36:779]|         </div>
+[F36:780]|       </div>
+[F36:781]| 
+[F36:782]|       {/* Depth Controls for sorting modes */}
+[F36:783]|       {!isLeafMode && sortConfig.mode !== 'zone' && maxTreeDepth > 0 && !focusedTaskId && (
+[F36:784]|         <div className="depth-controls">
+[F36:785]|           <span className="depth-label">{t('view.expandDepth')}:</span>
+[F36:786]|           <Button
+[F36:787]|             size="sm"
+[F36:788]|             variant="ghost"
+[F36:789]|             onClick={() => setViewDepth(0)}
+[F36:790]|             className={viewDepth === 0 ? 'active' : ''}
+[F36:791]|             title={t('view.collapseAll')}
+[F36:792]|           >
+[F36:793]|             <CircleX size={14} />
+[F36:794]|           </Button>
+[F36:795]|           <Button
+[F36:796]|             size="sm"
+[F36:797]|             variant="ghost"
+[F36:798]|             onClick={() => setViewDepth(1)}
+[F36:799]|             className={viewDepth === 1 ? 'active' : ''}
+[F36:800]|             title={t('view.topLevelOnly')}
+[F36:801]|           >
+[F36:802]|             <ArrowUp size={14} />
+[F36:803]|           </Button>
+[F36:804]|           <Button
+[F36:805]|             size="sm"
+[F36:806]|             variant="ghost"
+[F36:807]|             onClick={() => setViewDepth(Math.max(0, viewDepth - 1))}
+[F36:808]|             disabled={viewDepth <= 0}
+[F36:809]|             title={t('view.collapseOneLevel')}
+[F36:810]|           >
+[F36:811]|             <ChevronUp size={14} />
+[F36:812]|           </Button>
+[F36:813]|           <span className="depth-value">{viewDepth}</span>
+[F36:814]|           <Button
+[F36:815]|             size="sm"
+[F36:816]|             variant="ghost"
+[F36:817]|             onClick={() => setViewDepth(Math.min(maxTreeDepth, viewDepth + 1))}
+[F36:818]|             disabled={viewDepth >= maxTreeDepth}
+[F36:819]|             title={t('view.expandOneLevel')}
+[F36:820]|           >
+[F36:821]|             <ChevronDown size={14} />
+[F36:822]|           </Button>
+[F36:823]|           <Button
+[F36:824]|             size="sm"
+[F36:825]|             variant="ghost"
+[F36:826]|             onClick={() => setViewDepth(maxTreeDepth)}
+[F36:827]|             className={viewDepth >= maxTreeDepth ? 'active' : ''}
+[F36:828]|             title={t('view.expandAll')}
+[F36:829]|           >
+[F36:830]|             <Layers size={14} />
+[F36:831]|           </Button>
+[F36:832]|         </div>
+[F36:833]|       )}
+[F36:834]| 
+[F36:835]|       {/* Breadcrumb Navigation for focused task */}
+[F36:836]|       {focusedTaskId && (
+[F36:837]|         <div className="flex items-center gap-1.5 px-1 py-2 mb-2 text-xs text-white/50 overflow-x-auto whitespace-nowrap border-b border-white/5">
+[F36:838]|           <button
+[F36:839]|             onClick={() => setFocusedTaskId(null)}
+[F36:840]|             className="hover:text-white flex items-center gap-1 transition-colors"
+[F36:841]|           >
+[F36:842]|             <Home size={12} /> {t('view.breadcrumb')}
+[F36:843]|           </button>
+[F36:844]|           {breadcrumbs.map((crumb) => (
+[F36:845]|             <React.Fragment key={crumb.id}>
+[F36:846]|               <ChevronRight size={12} className="opacity-50" />
+[F36:847]|               <button
+[F36:848]|                 onClick={() => setFocusedTaskId(crumb.id)}
+[F36:849]|                 className={`hover:text-white transition-colors ${crumb.id === focusedTaskId ? 'text-blue-400 font-medium' : ''}`}
+[F36:850]|               >
+[F36:851]|                 {crumb.title}
+[F36:852]|               </button>
+[F36:853]|             </React.Fragment>
+[F36:854]|           ))}
+[F36:855]|         </div>
+[F36:856]|       )}
+[F36:857]| 
+[F36:858]|       {/* Task List */}
+[F36:859]|       <ScrollArea className="task-scroll-area">
+[F36:860]|         <div className="tasks-container">
+[F36:861]|           {/* Focused task view - show only children of focused task */}
+[F36:862]|           {focusedTaskId && focusedRootTasks && focusedRootTasks.length > 0 ? (
+[F36:863]|             <div className="focused-task-view">
+[F36:864]|               {focusedRootTasks.map((task) => renderFocusedTaskWithChildren(task, 0))}
+[F36:865]|             </div>
+[F36:866]|           ) : focusedTaskId && focusedRootTasks && focusedRootTasks.length === 0 ? (
+[F36:867]|             <div className="empty-state">
+[F36:868]|               <p>{t('view.noSubtasksHere')}</p>
+[F36:869]|               <p className="empty-hint">{t('view.clickTitleHint')}</p>
+[F36:870]|             </div>
+[F36:871]|           ) : rootTasks.length === 0 && completedTasks.length === 0 ? (
+[F36:872]|             <div className="empty-state">
+[F36:873]|               <Globe size={48} className="empty-icon" />
+[F36:874]|               <p>{t('view.noTasksGlobal')}</p>
+[F36:875]|               <p className="empty-hint">{t('view.emptyGlobalView')}</p>
+[F36:876]|             </div>
+[F36:877]|           ) : (
+[F36:878]|             <>
+[F36:879]|               {/* All sorting modes use taskGroups with DndContext at root level */}
+[F36:880]|               {sortConfig.mode === 'zone' && taskGroups && taskGroups.length > 0 ? (
+[F36:881]|                 <DndContext
+[F36:882]|                   sensors={sensors}
+[F36:883]|                   collisionDetection={closestCenter}
+[F36:884]|                   onDragEnd={handleDragEnd}
+[F36:885]|                 >
+[F36:886]|                   {taskGroups.map((group) => (
+[F36:887]|                     <div key={group.title} className="task-group">
+[F36:888]|                       <div
+[F36:889]|                         className="group-label"
+[F36:890]|                         style={{
+[F36:891]|                           backgroundColor: `${group.color}15`,
+[F36:892]|                           borderLeftColor: group.color,
+[F36:893]|                         }}
 [F36:894]|                       >
-[F36:895]|                         {group.tasks.map((task) =>
-[F36:896]|                           isLeafMode ? renderLeafTask(task) : renderTaskWithDepth(task, 0)
-[F36:897]|                         )}
-[F36:898]|                       </SortableContext>
-[F36:899]|                     </div>
-[F36:900]|                   ))}
-[F36:901]|                 </DndContext>
-[F36:902]|               ) : sortConfig.mode !== 'zone' ? (
-[F36:903]|                 /* Non-zone sorting modes */
-[F36:904]|                 taskGroups?.map((group) => (
-[F36:905]|                   <div key={group.title} className="task-group">
-[F36:906]|                     <div
-[F36:907]|                       className="group-label"
-[F36:908]|                       style={{
-[F36:909]|                         backgroundColor: `${group.color}15`,
-[F36:910]|                         borderLeftColor: group.color,
-[F36:911]|                       }}
-[F36:912]|                     >
-[F36:913]|                       <span style={{ color: group.color }}>{group.title}</span>
-[F36:914]|                       <span className="group-count">({group.tasks.length})</span>
-[F36:915]|                     </div>
-[F36:916]|                     <SortableContext
-[F36:917]|                       items={group.tasks.map((t) => t.id)}
-[F36:918]|                       strategy={verticalListSortingStrategy}
+[F36:895]|                         <span style={{ color: group.color }}>{group.title}</span>
+[F36:896]|                         <span className="group-count">({group.tasks.length})</span>
+[F36:897]|                       </div>
+[F36:898]|                       <SortableContext
+[F36:899]|                         items={group.tasks.map((t) => t.id)}
+[F36:900]|                         strategy={verticalListSortingStrategy}
+[F36:901]|                       >
+[F36:902]|                         {group.tasks.map((task) =>
+[F36:903]|                           isLeafMode ? renderLeafTask(task) : renderTaskWithDepth(task, 0)
+[F36:904]|                         )}
+[F36:905]|                       </SortableContext>
+[F36:906]|                     </div>
+[F36:907]|                   ))}
+[F36:908]|                 </DndContext>
+[F36:909]|               ) : sortConfig.mode !== 'zone' ? (
+[F36:910]|                 /* Non-zone sorting modes */
+[F36:911]|                 taskGroups?.map((group) => (
+[F36:912]|                   <div key={group.title} className="task-group">
+[F36:913]|                     <div
+[F36:914]|                       className="group-label"
+[F36:915]|                       style={{
+[F36:916]|                         backgroundColor: `${group.color}15`,
+[F36:917]|                         borderLeftColor: group.color,
+[F36:918]|                       }}
 [F36:919]|                     >
-[F36:920]|                       {group.tasks.map((task) =>
-[F36:921]|                         isLeafMode ? renderLeafTask(task) : renderTaskWithDepth(task, 0)
-[F36:922]|                       )}
-[F36:923]|                     </SortableContext>
-[F36:924]|                   </div>
-[F36:925]|                 ))
-[F36:926]|               ) : null}
-[F36:927]| 
-[F36:928]|               {/* Completed Tasks */}
-[F36:929]|               {completedTasks.length > 0 && (
-[F36:930]|                 <div className="completed-section">
-[F36:931]|                   <button
-[F36:932]|                     className="completed-toggle"
-[F36:933]|                     onClick={() => setShowCompleted(!showCompleted)}
-[F36:934]|                   >
-[F36:935]|                     <CheckCircle2 size={14} className="text-green-400" />
-[F36:936]|                     <span>{t('task.completed')} ({completedTasks.length})</span>
-[F36:937]|                     <span className={`toggle-arrow ${showCompleted ? 'open' : ''}`}>
-[F36:938]|                       ▼
-[F36:939]|                     </span>
-[F36:940]|                   </button>
-[F36:941]| 
-[F36:942]|                   {showCompleted && (
-[F36:943]|                     <div className="completed-tasks">
-[F36:944]|                       {/* 将已完成列表改为扁平化渲染，无论是不是子任务都单独列出 */}
-[F36:945]|                       {completedTasks.map((task) => (
-[F36:946]|                         <div key={task.id} className="task-tree-item relative mb-1">
-[F36:947]|                           {/* 添加轻量级的父任务面包屑提示，避免只看到子任务不知道归属 */}
-[F36:948]|                           {task.parentId && (
-[F36:949]|                             <div className="flex items-center gap-1 pl-7 pr-2 text-[10px] text-white/40 mb-0.5">
-[F36:950]|                               <span>{getZoneName(task.zoneId)}</span>
-[F36:951]|                               <span className="text-white/30">›</span>
-[F36:952]|                               <span className="truncate max-w-[120px]">{tasks.find(t => t.id === task.parentId)?.title || '...'}</span>
-[F36:953]|                             </div>
-[F36:954]|                           )}
-[F36:955]|                           <TaskItem
-[F36:956]|                             task={task}
-[F36:957]|                             zoneColor={getZoneColor(task.zoneId)}
-[F36:958]|                             isActive={false}
-[F36:959]|                             isTimerRunning={false}
-[F36:960]|                             onToggle={onToggleTask}
-[F36:961]|                             onDelete={onDeleteTask}
-[F36:962]|                             onUpdate={onUpdateTask}
-[F36:963]|                             onToggleExpanded={onToggleExpanded}
-[F36:964]|                             onSelect={onSelectTask}
-[F36:965]|                             hasChildren={false}
-[F36:966]|                             depth={0}
-[F36:967]|                             isDraggable={false}
-[F36:968]|                             getTotalWorkTime={getTotalWorkTime}
-[F36:969]|                             getEstimatedTime={getEstimatedTime}
-[F36:970]|                           />
-[F36:971]|                         </div>
-[F36:972]|                       ))}
-[F36:973]|                     </div>
-[F36:974]|                   )}
-[F36:975]|                 </div>
-[F36:976]|               )}
-[F36:977]|             </>
-[F36:978]|           )}
-[F36:979]|         </div>
-[F36:980]|       </ScrollArea>
-[F36:981]| 
-[F36:982]|       {/* Footer Stats */}
-[F36:983]|       <div className="task-list-footer">
-[F36:984]|         <div className="footer-stat">
-[F36:985]|           <span className="stat-label">{t('task.completionRate')}</span>
-[F36:986]|           <span className="stat-value">{stats.completionRate}%</span>
-[F36:987]|         </div>
-[F36:988]|         <div className="footer-stat">
-[F36:989]|           <span className="stat-label">{t('task.pending')}</span>
-[F36:990]|           <span className="stat-value">{stats.pending}</span>
-[F36:991]|         </div>
-[F36:992]|       </div>
-[F36:993]|     </div>
-[F36:994]|   );
-[F36:995]| }
+[F36:920]|                       <span style={{ color: group.color }}>{group.title}</span>
+[F36:921]|                       <span className="group-count">({group.tasks.length})</span>
+[F36:922]|                     </div>
+[F36:923]|                     <SortableContext
+[F36:924]|                       items={group.tasks.map((t) => t.id)}
+[F36:925]|                       strategy={verticalListSortingStrategy}
+[F36:926]|                     >
+[F36:927]|                       {group.tasks.map((task) =>
+[F36:928]|                         isLeafMode ? renderLeafTask(task) : renderTaskWithDepth(task, 0)
+[F36:929]|                       )}
+[F36:930]|                     </SortableContext>
+[F36:931]|                   </div>
+[F36:932]|                 ))
+[F36:933]|               ) : null}
+[F36:934]| 
+[F36:935]|               {/* Completed Tasks */}
+[F36:936]|               {completedTasks.length > 0 && (
+[F36:937]|                 <div className="completed-section">
+[F36:938]|                   <button
+[F36:939]|                     className="completed-toggle"
+[F36:940]|                     onClick={() => setShowCompleted(!showCompleted)}
+[F36:941]|                   >
+[F36:942]|                     <CheckCircle2 size={14} className="text-green-400" />
+[F36:943]|                     <span>{t('task.completed')} ({completedTasks.length})</span>
+[F36:944]|                     <span className={`toggle-arrow ${showCompleted ? 'open' : ''}`}>
+[F36:945]|                       ▼
+[F36:946]|                     </span>
+[F36:947]|                   </button>
+[F36:948]| 
+[F36:949]|                   {showCompleted && (
+[F36:950]|                     <div className="completed-tasks">
+[F36:951]|                       {/* 将已完成列表改为扁平化渲染，无论是不是子任务都单独列出 */}
+[F36:952]|                       {completedTasks.map((task) => (
+[F36:953]|                         <div key={task.id} className="task-tree-item relative mb-1">
+[F36:954]|                           {/* 添加轻量级的父任务面包屑提示，避免只看到子任务不知道归属 */}
+[F36:955]|                           {task.parentId && (
+[F36:956]|                             <div className="flex items-center gap-1 pl-7 pr-2 text-[10px] text-white/40 mb-0.5">
+[F36:957]|                               <span>{getZoneName(task.zoneId)}</span>
+[F36:958]|                               <span className="text-white/30">›</span>
+[F36:959]|                               <span className="truncate max-w-[120px]">{tasks.find(t => t.id === task.parentId)?.title || '...'}</span>
+[F36:960]|                             </div>
+[F36:961]|                           )}
+[F36:962]|                           <TaskItem
+[F36:963]|                             task={task}
+[F36:964]|                             zoneColor={getZoneColor(task.zoneId)}
+[F36:965]|                             isActive={false}
+[F36:966]|                             isTimerRunning={false}
+[F36:967]|                             onToggle={onToggleTask}
+[F36:968]|                             onDelete={onDeleteTask}
+[F36:969]|                             onUpdate={onUpdateTask}
+[F36:970]|                             onToggleExpanded={onToggleExpanded}
+[F36:971]|                             onSelect={onSelectTask}
+[F36:972]|                             hasChildren={false}
+[F36:973]|                             depth={0}
+[F36:974]|                             isDraggable={false}
+[F36:975]|                             getTotalWorkTime={getTotalWorkTime}
+[F36:976]|                             getEstimatedTime={getEstimatedTime}
+[F36:977]|                           />
+[F36:978]|                         </div>
+[F36:979]|                       ))}
+[F36:980]|                     </div>
+[F36:981]|                   )}
+[F36:982]|                 </div>
+[F36:983]|               )}
+[F36:984]|             </>
+[F36:985]|           )}
+[F36:986]|         </div>
+[F36:987]|       </ScrollArea>
+[F36:988]| 
+[F36:989]|       {/* Footer Stats */}
+[F36:990]|       <div className="task-list-footer">
+[F36:991]|         <div className="footer-stat">
+[F36:992]|           <span className="stat-label">{t('task.completionRate')}</span>
+[F36:993]|           <span className="stat-value">{stats.completionRate}%</span>
+[F36:994]|         </div>
+[F36:995]|         <div className="footer-stat">
+[F36:996]|           <span className="stat-label">{t('task.pending')}</span>
+[F36:997]|           <span className="stat-value">{stats.pending}</span>
+[F36:998]|         </div>
+[F36:999]|       </div>
+[F36:1000]|     </div>
+[F36:1001]|   );
+[F36:1002]| }
 
 ================================================================================
 文件路径: src\components\HistoryManager.tsx(F37) (约合大小: 33 KB)
@@ -8356,7 +8399,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F38:370]| }
 
 ================================================================================
-文件路径: src\components\SettingsPanel.tsx(F39) (约合大小: 38 KB)
+文件路径: src\components\SettingsPanel.tsx(F39) (约合大小: 39 KB)
 ================================================================================
 [F39:1]| import { useState, useEffect, useMemo } from 'react';
 [F39:2]| import { useTranslation } from 'react-i18next';
@@ -8667,617 +8710,630 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F39:307]|         priorityWeight: weight / 100,
 [F39:308]|         deadlineWeight: (100 - weight) / 100,
 [F39:309]|       },
-[F39:310]|     });
-[F39:311]|   };
-[F39:312]| 
-[F39:313]|   const handleDeadlineWeightChange = (value: number[]) => {
-[F39:314]|     // 紧急度 Slider 正向联动：拖动紧急度时，优先级跟随反向变动
-[F39:315]|     const dWeight = value[0];
-[F39:316]|     const pWeight = 100 - dWeight;
-[F39:317]|     setPriorityWeight(pWeight);
-[F39:318]|     onUpdateSettings({
-[F39:319]|       globalViewSort: {
-[F39:320]|         mode: settings.globalViewSort.mode as GlobalViewSortMode,
-[F39:321]|         priorityWeight: pWeight / 100,
-[F39:322]|         deadlineWeight: dWeight / 100,
-[F39:323]|       },
-[F39:324]|     });
-[F39:325]|   };
-[F39:326]| 
-[F39:327]|   const handleReset = () => {
-[F39:328]|     setWorkMinutes(25);
-[F39:329]|     setBreakMinutes(5);
-[F39:330]|     setLongBreakMinutes(15);
-[F39:331]|     setPriorityWeight(DEFAULT_SETTINGS.globalViewSort.priorityWeight * 100);
-[F39:332]|     setAutoSaveInterval(DEFAULT_SETTINGS.autoSaveInterval);
-[F39:333]|     // deadlineWeight 会通过 useMemo 自动计算
-[F39:334]|     onUpdateSettings({
-[F39:335]|       workDuration: DEFAULT_SETTINGS.workDuration,
-[F39:336]|       breakDuration: DEFAULT_SETTINGS.breakDuration,
-[F39:337]|       longBreakDuration: DEFAULT_SETTINGS.longBreakDuration,
-[F39:338]|       autoStartBreak: DEFAULT_SETTINGS.autoStartBreak,
-[F39:339]|       soundEnabled: DEFAULT_SETTINGS.soundEnabled,
-[F39:340]|       globalViewSort: DEFAULT_SETTINGS.globalViewSort,
-[F39:341]|       autoSaveEnabled: DEFAULT_SETTINGS.autoSaveEnabled,
-[F39:342]|       autoSaveInterval: DEFAULT_SETTINGS.autoSaveInterval,
-[F39:343]|     });
-[F39:344]|   };
-[F39:345]| 
-[F39:346]|   return (
-[F39:347]|     <div className="settings-panel-container">
-[F39:348]|       {/* Header */}
-[F39:349]|       <div className="settings-panel-header">
-[F39:350]|         <Button
-[F39:351]|           size="icon"
-[F39:352]|           variant="ghost"
-[F39:353]|           className="back-btn"
-[F39:354]|           onClick={onBack}
-[F39:355]|         >
-[F39:356]|           <ArrowLeft size={18} />
-[F39:357]|         </Button>
-[F39:358]|         <div className="settings-panel-title">
-[F39:359]|           <Settings size={18} className="text-blue-400" />
-[F39:360]|           <span>{t('settings.title')}</span>
-[F39:361]|         </div>
-[F39:362]|       </div>
-[F39:363]| 
-[F39:364]|       {/* Settings Content */}
-[F39:365]|       <div className="settings-content">
-[F39:366]|         {/* Language Settings */}
-[F39:367]|         <div className="settings-section">
-[F39:368]|           <h3 className="settings-section-title">
-[F39:369]|             <Settings size={14} className="mr-2" />
-[F39:370]|             {t('settings.language')}
-[F39:371]|           </h3>
-[F39:372]|           <div className="setting-item">
-[F39:373]|             <div className="setting-label">
-[F39:374]|               <span>{t('settings.language')}</span>
-[F39:375]|               <Select
-[F39:376]|                 value={settings.language || 'zh'}
-[F39:377]|                 onValueChange={(val) => {
-[F39:378]|                   onUpdateSettings({ language: val });
-[F39:379]|                   i18n.changeLanguage(val);
-[F39:380]|                 }}
-[F39:381]|               >
-[F39:382]|                 <SelectTrigger className="w-32">
-[F39:383]|                   <SelectValue />
-[F39:384]|                 </SelectTrigger>
-[F39:385]|                 <SelectContent>
-[F39:386]|                   <SelectItem value="zh">简体中文</SelectItem>
-[F39:387]|                   <SelectItem value="en">English</SelectItem>
-[F39:388]|                 </SelectContent>
-[F39:389]|               </Select>
-[F39:390]|             </div>
-[F39:391]|           </div>
-[F39:392]|         </div>
-[F39:393]| 
-[F39:394]|         {/* Timer Settings */}
-[F39:395]|         <div className="settings-section">
-[F39:396]|           <h3 className="settings-section-title">
-[F39:397]|             <Clock size={14} className="mr-2" />
-[F39:398]|             {t('settings.timerSettings')}
-[F39:399]|           </h3>
-[F39:400]| 
-[F39:401]|           {/* Work Duration */}
-[F39:402]|           <div className="setting-item">
-[F39:403]|             <div className="setting-label">
-[F39:404]|               <span>{t('settings.workDuration')} {t('settings.workDurationMinutes')}</span>
-[F39:405]|               <Input
-[F39:406]|                 type="number"
-[F39:407]|                 value={workMinutes}
-[F39:408]|                 onChange={(e) => {
-[F39:409]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
-[F39:410]|                   setWorkMinutes(val);
-[F39:411]|                   onUpdateSettings({ workDuration: val * 60 });
-[F39:412]|                 }}
-[F39:413]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
-[F39:414]|                 min={1}
-[F39:415]|               />
-[F39:416]|             </div>
-[F39:417]|             <Slider
-[F39:418]|               value={[workMinutes]}
-[F39:419]|               onValueChange={handleWorkDurationChange}
-[F39:420]|               onValueCommit={handleWorkDurationCommit}
-[F39:421]|               min={1}
-[F39:422]|               max={120}
-[F39:423]|               step={1}
-[F39:424]|               className="setting-slider mt-2"
-[F39:425]|             />
-[F39:426]|           </div>
-[F39:427]| 
-[F39:428]|           {/* Break Duration */}
-[F39:429]|           <div className="setting-item">
-[F39:430]|             <div className="setting-label">
-[F39:431]|               <span>{t('settings.breakDuration')} {t('settings.workDurationMinutes')}</span>
-[F39:432]|               <Input
-[F39:433]|                 type="number"
-[F39:434]|                 value={breakMinutes}
-[F39:435]|                 onChange={(e) => {
-[F39:436]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
-[F39:437]|                   setBreakMinutes(val);
-[F39:438]|                   onUpdateSettings({ breakDuration: val * 60 });
-[F39:439]|                 }}
-[F39:440]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
-[F39:441]|                 min={1}
-[F39:442]|               />
-[F39:443]|             </div>
-[F39:444]|             <Slider
-[F39:445]|               value={[breakMinutes]}
-[F39:446]|               onValueChange={handleBreakDurationChange}
-[F39:447]|               onValueCommit={handleBreakDurationCommit}
-[F39:448]|               min={1}
-[F39:449]|               max={60}
-[F39:450]|               step={1}
-[F39:451]|               className="setting-slider mt-2"
-[F39:452]|             />
-[F39:453]|           </div>
-[F39:454]| 
-[F39:455]|           {/* Long Break Duration */}
-[F39:456]|           <div className="setting-item">
-[F39:457]|             <div className="setting-label">
-[F39:458]|               <span>{t('settings.longBreakDuration')} {t('settings.workDurationMinutes')}</span>
-[F39:459]|               <Input
-[F39:460]|                 type="number"
-[F39:461]|                 value={longBreakMinutes}
-[F39:462]|                 onChange={(e) => {
-[F39:463]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
-[F39:464]|                   setLongBreakMinutes(val);
-[F39:465]|                   onUpdateSettings({ longBreakDuration: val * 60 });
-[F39:466]|                 }}
-[F39:467]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
-[F39:468]|                 min={1}
-[F39:469]|               />
-[F39:470]|             </div>
-[F39:471]|             <Slider
-[F39:472]|               value={[longBreakMinutes]}
-[F39:473]|               onValueChange={handleLongBreakDurationChange}
-[F39:474]|               onValueCommit={handleLongBreakDurationCommit}
-[F39:475]|               min={1}
-[F39:476]|               max={90}
-[F39:477]|               step={1}
-[F39:478]|               className="setting-slider mt-2"
-[F39:479]|             />
-[F39:480]|           </div>
-[F39:481]|         </div>
-[F39:482]| 
-[F39:483]|         {/* Weighted Sort Settings */}
-[F39:484]|         <div className="settings-section">
-[F39:485]|           <h3 className="settings-section-title">
-[F39:486]|             <Flag size={14} className="mr-2" />
-[F39:487]|             {t('settings.weightedSort')}
-[F39:488]|           </h3>
-[F39:489]|           <p className="settings-section-desc">
-[F39:490]|             {t('settings.weightedSortDesc')}
-[F39:491]|           </p>
-[F39:492]| 
-[F39:493]|           {/* Priority Weight */}
-[F39:494]|           <div className="setting-item">
-[F39:495]|             <div className="setting-label">
-[F39:496]|               <Flag size={14} className="mr-2 text-red-400" />
-[F39:497]|               <span>{t('settings.priorityWeight')}</span>
-[F39:498]|               <span className="setting-value">{priorityWeight}%</span>
-[F39:499]|             </div>
-[F39:500]|             <Slider
-[F39:501]|               value={[priorityWeight]}
-[F39:502]|               onValueChange={handlePriorityWeightChange}
-[F39:503]|               min={0}
-[F39:504]|               max={100}
-[F39:505]|               step={10}
-[F39:506]|               className="setting-slider mt-2"
-[F39:507]|             />
-[F39:508]|           </div>
-[F39:509]| 
-[F39:510]|           {/* Urgency Weight */}
-[F39:511]|           <div className="setting-item">
-[F39:512]|             <div className="setting-label">
-[F39:513]|               <Zap size={14} className="mr-2 text-orange-400" />
-[F39:514]|               <span>{t('settings.deadlineWeight')}</span>
-[F39:515]|               <span className="setting-value">{deadlineWeight}%</span>
-[F39:516]|             </div>
-[F39:517]|             <Slider
-[F39:518]|               value={[deadlineWeight]}
-[F39:519]|               onValueChange={handleDeadlineWeightChange}
-[F39:520]|               min={0}
-[F39:521]|               max={100}
-[F39:522]|               step={10}
-[F39:523]|               className="setting-slider mt-2"
-[F39:524]|             />
-[F39:525]|           </div>
-[F39:526]|         </div>
-[F39:527]| 
-[F39:528]|         {/* Other Settings */}
-[F39:529]|         <div className="settings-section">
-[F39:530]|           <h3 className="settings-section-title">
-[F39:531]|             <Volume2 size={14} className="mr-2" />
-[F39:532]|             {t('settings.otherSettings')}
-[F39:533]|           </h3>
-[F39:534]| 
-[F39:535]|           {/* Auto Start Break */}
-[F39:536]|           <div className="setting-item switch">
-[F39:537]|             <div className="setting-label">
-[F39:538]|               <span>{t('settings.autoStartBreak')}</span>
-[F39:539]|               <span className="setting-desc">{t('settings.autoStartBreakDesc')}</span>
-[F39:540]|             </div>
-[F39:541]|             <Switch
-[F39:542]|               checked={settings.autoStartBreak}
-[F39:543]|               onCheckedChange={(checked) => onUpdateSettings({ autoStartBreak: checked })}
-[F39:544]|             />
-[F39:545]|           </div>
-[F39:546]| 
-[F39:547]|           {/* Sound Enabled */}
-[F39:548]|           <div className="setting-item switch">
-[F39:549]|             <div className="setting-label">
-[F39:550]|               <span>{t('settings.soundEnabled')}</span>
-[F39:551]|               <span className="setting-desc">{t('settings.soundEnabledDesc')}</span>
-[F39:552]|             </div>
-[F39:553]|             <Switch
-[F39:554]|               checked={settings.soundEnabled}
-[F39:555]|               onCheckedChange={(checked) => onUpdateSettings({ soundEnabled: checked })}
-[F39:556]|             />
-[F39:557]|           </div>
-[F39:558]| 
-[F39:559]|           {/* Auto Save Enabled */}
-[F39:560]|           <div className="setting-item switch">
-[F39:561]|             <div className="setting-label">
-[F39:562]|               <span>{t('settings.autoSaveEnabled')}</span>
-[F39:563]|               <span className="setting-desc">{t('settings.autoSaveEnabledDesc')}</span>
-[F39:564]|             </div>
-[F39:565]|             <Switch
-[F39:566]|               checked={settings.autoSaveEnabled || false}
-[F39:567]|               onCheckedChange={(checked) => onUpdateSettings({ autoSaveEnabled: checked })}
-[F39:568]|             />
-[F39:569]|           </div>
-[F39:570]| 
-[F39:571]|           {/* Auto Save Interval */}
-[F39:572]|           {settings.autoSaveEnabled && (
-[F39:573]|             <div className="setting-item">
-[F39:574]|               <div className="setting-label">
-[F39:575]|                 <span>{t('settings.autoSaveInterval')} {t('settings.autoSaveIntervalSeconds')}</span>
-[F39:576]|                 <Input
-[F39:577]|                   type="number"
-[F39:578]|                   value={autoSaveInterval}
-[F39:579]|                   onChange={(e) => {
-[F39:580]|                     const val = Math.max(10, parseInt(e.target.value) || 60);
-[F39:581]|                     setAutoSaveInterval(val);
-[F39:582]|                     onUpdateSettings({ autoSaveInterval: val });
-[F39:583]|                   }}
-[F39:584]|                   className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
-[F39:585]|                   min={10}
-[F39:586]|                 />
-[F39:587]|               </div>
-[F39:588]|               <Slider
-[F39:589]|                 value={[autoSaveInterval]}
-[F39:590]|                 onValueChange={(value) => {
-[F39:591]|                   setAutoSaveInterval(value[0]);
-[F39:592]|                 }}
-[F39:593]|                 onValueCommit={(value) => {
-[F39:594]|                   onUpdateSettings({ autoSaveInterval: value[0] });
-[F39:595]|                 }}
-[F39:596]|                 min={10}
-[F39:597]|                 max={300}
-[F39:598]|                 step={10}
-[F39:599]|                 className="setting-slider mt-2"
-[F39:600]|               />
-[F39:601]|             </div>
-[F39:602]|           )}
-[F39:603]|         </div>
-[F39:604]| 
-[F39:605]|         {/* Data Storage Settings */}
-[F39:606]|         <div className="settings-section">
-[F39:607]|           <h3 className="settings-section-title">
-[F39:608]|             <Database size={14} className="mr-2 text-emerald-400" />
-[F39:609]|             {t('settings.dataStorage') || 'Data Storage'}
-[F39:610]|           </h3>
-[F39:611]|           <p className="settings-section-desc">
-[F39:612]|             {t('settings.dataStorageDesc') || 'Change where your data is saved. Select a cloud drive folder (like OneDrive, iCloud, or Dropbox) to sync across devices.'}
-[F39:613]|           </p>
-[F39:614]| 
-[F39:615]|           <div className="setting-item flex flex-col gap-2">
-[F39:616]|             <div className="text-xs text-white/50 break-all bg-black/20 p-2 rounded border border-white/10 flex items-center justify-between">
-[F39:617]|               <span className="truncate">{currentDbPath || t('common.loading')}</span>
-[F39:618]|             </div>
-[F39:619]|             <Button
-[F39:620]|               variant="outline"
-[F39:621]|               size="sm"
-[F39:622]|               className="w-fit"
-[F39:623]|               onClick={handleChangeDbPath}
-[F39:624]|             >
-[F39:625]|               <FolderOpen size={14} className="mr-2" />
-[F39:626]|               {t('settings.changeLocation') || 'Change Location'}
-[F39:627]|             </Button>
-[F39:628]|           </div>
-[F39:629]|         </div>
-[F39:630]| 
-[F39:631]|         {/* Recurring Tasks Settings */}
-[F39:632]|         <div className="settings-section">
-[F39:633]|           <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
-[F39:634]|             <h3 className="flex items-center text-xs font-semibold text-white/70">
-[F39:635]|               <Repeat size={14} className="mr-2 text-green-400" />
-[F39:636]|               {t('settings.recurringTasks')}
-[F39:637]|             </h3>
-[F39:638]|             <Button size="sm" className="h-6 text-xs px-2 bg-blue-600 hover:bg-blue-500 text-white" onClick={() => setShowRecurringDialog(true)}>
-[F39:639]|               <Plus size={12} className="mr-1" />
-[F39:640]|               {t('settings.newRule')}
-[F39:641]|             </Button>
-[F39:642]|           </div>
-[F39:643]|           <p className="settings-section-desc mb-3">
-[F39:644]|             {t('settings.recurringTasksDesc')}
-[F39:645]|           </p>
-[F39:646]| 
-[F39:647]|           <div className="flex flex-col gap-2">
-[F39:648]|             {!recurringTemplates || recurringTemplates.length === 0 ? (
-[F39:649]|               <div className="text-center py-4 text-xs text-white/30 bg-black/10 rounded-md border border-dashed border-white/10">
-[F39:650]|                 {t('recurring.noRules')}
-[F39:651]|               </div>
-[F39:652]|             ) : (
-[F39:653]|               recurringTemplates.map(tpl => (
-[F39:654]|                 <div key={tpl.id} className="flex flex-col gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
-[F39:655]|                   <div className="flex items-center justify-between">
-[F39:656]|                     <span className="text-sm font-medium text-white/90">{tpl.title}</span>
-[F39:657]|                     <div className="flex items-center gap-2">
-[F39:658]|                       <Switch
-[F39:659]|                         checked={tpl.isActive}
-[F39:660]|                         onCheckedChange={(c) => onUpdateRecurringTemplate(tpl.id, { isActive: c })}
-[F39:661]|                       />
-[F39:662]|                       <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-blue-400 hover:bg-blue-400/10" onClick={() => handleEditTemplate(tpl)} title={t('settings.editRule')}>
-[F39:663]|                         <Edit2 size={12} />
-[F39:664]|                       </Button>
-[F39:665]|                       <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10" onClick={() => onDeleteRecurringTemplate(tpl.id)}>
-[F39:666]|                         <Trash2 size={12} />
-[F39:667]|                       </Button>
-[F39:668]|                     </div>
-[F39:669]|                   </div>
-[F39:670]|                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/50">
-[F39:671]|                     <span className="flex items-center">
-[F39:672]|                       <Repeat size={10} className="mr-1" />
-[F39:673]|                       {t('recurring.every')} {tpl.intervalMinutes >= 1440 ? `${tpl.intervalMinutes / 1440} ${t('recurring.days')}` : tpl.intervalMinutes >= 60 ? `${tpl.intervalMinutes / 60} ${t('recurring.hours')}` : `${tpl.intervalMinutes} ${t('recurring.minutes')}`}
-[F39:674]|                     </span>
-[F39:675]|                     <span className="flex items-center">
-[F39:676]|                       <Clock size={10} className="mr-1" />
-[F39:677]|                       {t('recurring.ddl')}: {t('recurring.afterGeneration')} {tpl.deadlineOffsetHours >= 24 ? `${tpl.deadlineOffsetHours / 24} ${t('recurring.days')}` : `${tpl.deadlineOffsetHours} ${t('recurring.hours')}`}
-[F39:678]|                     </span>
-[F39:679]|                     <span className="flex items-center">
-[F39:680]|                       <Flag size={10} className="mr-1" />
-[F39:681]|                       {t('recurring.targetZone')}: {zones.find(z => z.id === tpl.zoneId)?.name || t('recurring.unknownZone')}
-[F39:682]|                     </span>
-[F39:683]|                   </div>
-[F39:684]|                 </div>
-[F39:685]|               ))
-[F39:686]|             )}
-[F39:687]|           </div>
-[F39:688]|         </div>
-[F39:689]| 
-[F39:690]|         {/* 新建定时任务的弹窗 */}
-[F39:691]|         <Dialog open={showRecurringDialog} onOpenChange={setShowRecurringDialog}>
-[F39:692]|           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
-[F39:693]|             <DialogHeader>
-[F39:694]|               <DialogTitle>{editingTemplate ? t('recurring.editRule') : t('recurring.addRule')}</DialogTitle>
-[F39:695]|             </DialogHeader>
-[F39:696]|             <div className="flex flex-col gap-4 py-2">
-[F39:697]|               <div className="flex flex-col gap-2">
-[F39:698]|                 <label className="text-xs text-white/60">{t('recurring.ruleTitle')}</label>
-[F39:699]|                 <Input value={recTitle} onChange={e => setRecTitle(e.target.value)} className="bg-black/30 border-white/20" placeholder={t('recurring.ruleTitlePlaceholder')} />
-[F39:700]|               </div>
-[F39:701]| 
-[F39:702]|               <div className="flex flex-col gap-2">
-[F39:703]|                 <label className="text-xs text-white/60">{t('recurring.ruleDescription')}</label>
-[F39:704]|                 <Input value={recDesc} onChange={e => setRecDesc(e.target.value)} className="bg-black/30 border-white/20" placeholder={t('recurring.ruleDescriptionPlaceholder')} />
-[F39:705]|               </div>
-[F39:706]| 
-[F39:707]|               <div className="flex gap-4">
-[F39:708]|                 <div className="flex flex-col gap-2 flex-1">
-[F39:709]|                   <label className="text-xs text-white/60">{t('recurring.triggerInterval')} <span className="text-white/30 text-[10px]">{t('recurring.minInterval')}</span></label>
-[F39:710]|                   <div className="flex items-center gap-2">
-[F39:711]|                     <Input
-[F39:712]|                       type="number"
-[F39:713]|                       min={recIntervalUnit === 'minutes' ? 5 : 1}
-[F39:714]|                       value={recIntervalValue}
-[F39:715]|                       onChange={e => {
-[F39:716]|                         const val = Number(e.target.value);
-[F39:717]|                         // 如果单位是分钟，限制最低输入为5
-[F39:718]|                         if (recIntervalUnit === 'minutes' && val < 5 && val !== 0) {
-[F39:719]|                           setRecIntervalValue(5);
-[F39:720]|                         } else {
-[F39:721]|                           setRecIntervalValue(val);
-[F39:722]|                         }
-[F39:723]|                       }}
-[F39:724]|                       className="bg-black/30 border-white/20"
-[F39:725]|                     />
-[F39:726]|                     <Select value={recIntervalUnit} onValueChange={(v: 'minutes' | 'hours' | 'days') => {
-[F39:727]|                       setRecIntervalUnit(v);
-[F39:728]|                       if (v === 'minutes' && recIntervalValue < 5) {
-[F39:729]|                         setRecIntervalValue(5);
-[F39:730]|                       }
-[F39:731]|                     }}>
-[F39:732]|                       <SelectTrigger className="w-[80px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
-[F39:733]|                       <SelectContent><SelectItem value="minutes">{t('recurring.minutes')}</SelectItem><SelectItem value="hours">{t('recurring.hours')}</SelectItem><SelectItem value="days">{t('recurring.days')}</SelectItem></SelectContent>
-[F39:734]|                     </Select>
-[F39:735]|                   </div>
-[F39:736]|                 </div>
-[F39:737]|                 <div className="flex flex-col gap-2 flex-1">
-[F39:738]|                   <label className="text-xs text-white/60">{t('recurring.targetZone')}</label>
-[F39:739]|                   <Select value={recZoneId} onValueChange={setRecZoneId}>
-[F39:740]|                     <SelectTrigger className="bg-black/30 border-white/20"><SelectValue placeholder={t('recurring.selectZone')} /></SelectTrigger>
-[F39:741]|                     <SelectContent>
-[F39:742]|                       {zones.map(z => <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>)}
-[F39:743]|                     </SelectContent>
-[F39:744]|                   </Select>
-[F39:745]|                 </div>
-[F39:746]|               </div>
-[F39:747]| 
-[F39:748]|               <div className="flex gap-4">
-[F39:749]|                 <div className="flex flex-col gap-2 flex-1">
-[F39:750]|                   <label className="text-xs text-white/60">{t('recurring.autoDeadline')} {t('recurring.afterGeneration')}</label>
-[F39:751]|                   <div className="flex items-center gap-2">
-[F39:752]|                     <Input type="number" min={0} value={recDeadlineValue} onChange={e => setRecDeadlineValue(Number(e.target.value))} className="bg-black/30 border-white/20" />
-[F39:753]|                     <Select value={recDeadlineUnit} onValueChange={(v: 'hours' | 'days') => setRecDeadlineUnit(v)}>
-[F39:754]|                       <SelectTrigger className="w-[80px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
-[F39:755]|                       <SelectContent><SelectItem value="hours">{t('recurring.hours')}</SelectItem><SelectItem value="days">{t('recurring.days')}</SelectItem></SelectContent>
-[F39:756]|                     </Select>
-[F39:757]|                   </div>
+[F39:310]|       zoneViewSort: {
+[F39:311]|         mode: settings.zoneViewSort?.mode || 'manual',
+[F39:312]|         priorityWeight: weight / 100,
+[F39:313]|         deadlineWeight: (100 - weight) / 100,
+[F39:314]|       }
+[F39:315]|     });
+[F39:316]|   };
+[F39:317]| 
+[F39:318]|   const handleDeadlineWeightChange = (value: number[]) => {
+[F39:319]|     // 紧急度 Slider 正向联动：拖动紧急度时，优先级跟随反向变动
+[F39:320]|     const dWeight = value[0];
+[F39:321]|     const pWeight = 100 - dWeight;
+[F39:322]|     setPriorityWeight(pWeight);
+[F39:323]|     onUpdateSettings({
+[F39:324]|       globalViewSort: {
+[F39:325]|         mode: settings.globalViewSort.mode as GlobalViewSortMode,
+[F39:326]|         priorityWeight: pWeight / 100,
+[F39:327]|         deadlineWeight: dWeight / 100,
+[F39:328]|       },
+[F39:329]|       zoneViewSort: {
+[F39:330]|         mode: settings.zoneViewSort?.mode || 'manual',
+[F39:331]|         priorityWeight: pWeight / 100,
+[F39:332]|         deadlineWeight: dWeight / 100,
+[F39:333]|       }
+[F39:334]|     });
+[F39:335]|   };
+[F39:336]| 
+[F39:337]|   const handleReset = () => {
+[F39:338]|     setWorkMinutes(25);
+[F39:339]|     setBreakMinutes(5);
+[F39:340]|     setLongBreakMinutes(15);
+[F39:341]|     setPriorityWeight(DEFAULT_SETTINGS.globalViewSort.priorityWeight * 100);
+[F39:342]|     setAutoSaveInterval(DEFAULT_SETTINGS.autoSaveInterval);
+[F39:343]|     // deadlineWeight 会通过 useMemo 自动计算
+[F39:344]|     onUpdateSettings({
+[F39:345]|       workDuration: DEFAULT_SETTINGS.workDuration,
+[F39:346]|       breakDuration: DEFAULT_SETTINGS.breakDuration,
+[F39:347]|       longBreakDuration: DEFAULT_SETTINGS.longBreakDuration,
+[F39:348]|       autoStartBreak: DEFAULT_SETTINGS.autoStartBreak,
+[F39:349]|       soundEnabled: DEFAULT_SETTINGS.soundEnabled,
+[F39:350]|       globalViewSort: DEFAULT_SETTINGS.globalViewSort,
+[F39:351]|       zoneViewSort: DEFAULT_SETTINGS.zoneViewSort,
+[F39:352]|       zoneViewLeafMode: DEFAULT_SETTINGS.zoneViewLeafMode,
+[F39:353]|       globalViewLeafMode: DEFAULT_SETTINGS.globalViewLeafMode,
+[F39:354]|       autoSaveEnabled: DEFAULT_SETTINGS.autoSaveEnabled,
+[F39:355]|       autoSaveInterval: DEFAULT_SETTINGS.autoSaveInterval,
+[F39:356]|     });
+[F39:357]|   };
+[F39:358]| 
+[F39:359]|   return (
+[F39:360]|     <div className="settings-panel-container">
+[F39:361]|       {/* Header */}
+[F39:362]|       <div className="settings-panel-header">
+[F39:363]|         <Button
+[F39:364]|           size="icon"
+[F39:365]|           variant="ghost"
+[F39:366]|           className="back-btn"
+[F39:367]|           onClick={onBack}
+[F39:368]|         >
+[F39:369]|           <ArrowLeft size={18} />
+[F39:370]|         </Button>
+[F39:371]|         <div className="settings-panel-title">
+[F39:372]|           <Settings size={18} className="text-blue-400" />
+[F39:373]|           <span>{t('settings.title')}</span>
+[F39:374]|         </div>
+[F39:375]|       </div>
+[F39:376]| 
+[F39:377]|       {/* Settings Content */}
+[F39:378]|       <div className="settings-content">
+[F39:379]|         {/* Language Settings */}
+[F39:380]|         <div className="settings-section">
+[F39:381]|           <h3 className="settings-section-title">
+[F39:382]|             <Settings size={14} className="mr-2" />
+[F39:383]|             {t('settings.language')}
+[F39:384]|           </h3>
+[F39:385]|           <div className="setting-item">
+[F39:386]|             <div className="setting-label">
+[F39:387]|               <span>{t('settings.language')}</span>
+[F39:388]|               <Select
+[F39:389]|                 value={settings.language || 'zh'}
+[F39:390]|                 onValueChange={(val) => {
+[F39:391]|                   onUpdateSettings({ language: val });
+[F39:392]|                   i18n.changeLanguage(val);
+[F39:393]|                 }}
+[F39:394]|               >
+[F39:395]|                 <SelectTrigger className="w-32">
+[F39:396]|                   <SelectValue />
+[F39:397]|                 </SelectTrigger>
+[F39:398]|                 <SelectContent>
+[F39:399]|                   <SelectItem value="zh">简体中文</SelectItem>
+[F39:400]|                   <SelectItem value="en">English</SelectItem>
+[F39:401]|                 </SelectContent>
+[F39:402]|               </Select>
+[F39:403]|             </div>
+[F39:404]|           </div>
+[F39:405]|         </div>
+[F39:406]| 
+[F39:407]|         {/* Timer Settings */}
+[F39:408]|         <div className="settings-section">
+[F39:409]|           <h3 className="settings-section-title">
+[F39:410]|             <Clock size={14} className="mr-2" />
+[F39:411]|             {t('settings.timerSettings')}
+[F39:412]|           </h3>
+[F39:413]| 
+[F39:414]|           {/* Work Duration */}
+[F39:415]|           <div className="setting-item">
+[F39:416]|             <div className="setting-label">
+[F39:417]|               <span>{t('settings.workDuration')} {t('settings.workDurationMinutes')}</span>
+[F39:418]|               <Input
+[F39:419]|                 type="number"
+[F39:420]|                 value={workMinutes}
+[F39:421]|                 onChange={(e) => {
+[F39:422]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
+[F39:423]|                   setWorkMinutes(val);
+[F39:424]|                   onUpdateSettings({ workDuration: val * 60 });
+[F39:425]|                 }}
+[F39:426]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+[F39:427]|                 min={1}
+[F39:428]|               />
+[F39:429]|             </div>
+[F39:430]|             <Slider
+[F39:431]|               value={[workMinutes]}
+[F39:432]|               onValueChange={handleWorkDurationChange}
+[F39:433]|               onValueCommit={handleWorkDurationCommit}
+[F39:434]|               min={1}
+[F39:435]|               max={120}
+[F39:436]|               step={1}
+[F39:437]|               className="setting-slider mt-2"
+[F39:438]|             />
+[F39:439]|           </div>
+[F39:440]| 
+[F39:441]|           {/* Break Duration */}
+[F39:442]|           <div className="setting-item">
+[F39:443]|             <div className="setting-label">
+[F39:444]|               <span>{t('settings.breakDuration')} {t('settings.workDurationMinutes')}</span>
+[F39:445]|               <Input
+[F39:446]|                 type="number"
+[F39:447]|                 value={breakMinutes}
+[F39:448]|                 onChange={(e) => {
+[F39:449]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
+[F39:450]|                   setBreakMinutes(val);
+[F39:451]|                   onUpdateSettings({ breakDuration: val * 60 });
+[F39:452]|                 }}
+[F39:453]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+[F39:454]|                 min={1}
+[F39:455]|               />
+[F39:456]|             </div>
+[F39:457]|             <Slider
+[F39:458]|               value={[breakMinutes]}
+[F39:459]|               onValueChange={handleBreakDurationChange}
+[F39:460]|               onValueCommit={handleBreakDurationCommit}
+[F39:461]|               min={1}
+[F39:462]|               max={60}
+[F39:463]|               step={1}
+[F39:464]|               className="setting-slider mt-2"
+[F39:465]|             />
+[F39:466]|           </div>
+[F39:467]| 
+[F39:468]|           {/* Long Break Duration */}
+[F39:469]|           <div className="setting-item">
+[F39:470]|             <div className="setting-label">
+[F39:471]|               <span>{t('settings.longBreakDuration')} {t('settings.workDurationMinutes')}</span>
+[F39:472]|               <Input
+[F39:473]|                 type="number"
+[F39:474]|                 value={longBreakMinutes}
+[F39:475]|                 onChange={(e) => {
+[F39:476]|                   const val = Math.max(1, parseInt(e.target.value) || 0);
+[F39:477]|                   setLongBreakMinutes(val);
+[F39:478]|                   onUpdateSettings({ longBreakDuration: val * 60 });
+[F39:479]|                 }}
+[F39:480]|                 className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+[F39:481]|                 min={1}
+[F39:482]|               />
+[F39:483]|             </div>
+[F39:484]|             <Slider
+[F39:485]|               value={[longBreakMinutes]}
+[F39:486]|               onValueChange={handleLongBreakDurationChange}
+[F39:487]|               onValueCommit={handleLongBreakDurationCommit}
+[F39:488]|               min={1}
+[F39:489]|               max={90}
+[F39:490]|               step={1}
+[F39:491]|               className="setting-slider mt-2"
+[F39:492]|             />
+[F39:493]|           </div>
+[F39:494]|         </div>
+[F39:495]| 
+[F39:496]|         {/* Weighted Sort Settings */}
+[F39:497]|         <div className="settings-section">
+[F39:498]|           <h3 className="settings-section-title">
+[F39:499]|             <Flag size={14} className="mr-2" />
+[F39:500]|             {t('settings.weightedSort')}
+[F39:501]|           </h3>
+[F39:502]|           <p className="settings-section-desc">
+[F39:503]|             {t('settings.weightedSortDesc')}
+[F39:504]|           </p>
+[F39:505]| 
+[F39:506]|           {/* Priority Weight */}
+[F39:507]|           <div className="setting-item">
+[F39:508]|             <div className="setting-label">
+[F39:509]|               <Flag size={14} className="mr-2 text-red-400" />
+[F39:510]|               <span>{t('settings.priorityWeight')}</span>
+[F39:511]|               <span className="setting-value">{priorityWeight}%</span>
+[F39:512]|             </div>
+[F39:513]|             <Slider
+[F39:514]|               value={[priorityWeight]}
+[F39:515]|               onValueChange={handlePriorityWeightChange}
+[F39:516]|               min={0}
+[F39:517]|               max={100}
+[F39:518]|               step={10}
+[F39:519]|               className="setting-slider mt-2"
+[F39:520]|             />
+[F39:521]|           </div>
+[F39:522]| 
+[F39:523]|           {/* Urgency Weight */}
+[F39:524]|           <div className="setting-item">
+[F39:525]|             <div className="setting-label">
+[F39:526]|               <Zap size={14} className="mr-2 text-orange-400" />
+[F39:527]|               <span>{t('settings.deadlineWeight')}</span>
+[F39:528]|               <span className="setting-value">{deadlineWeight}%</span>
+[F39:529]|             </div>
+[F39:530]|             <Slider
+[F39:531]|               value={[deadlineWeight]}
+[F39:532]|               onValueChange={handleDeadlineWeightChange}
+[F39:533]|               min={0}
+[F39:534]|               max={100}
+[F39:535]|               step={10}
+[F39:536]|               className="setting-slider mt-2"
+[F39:537]|             />
+[F39:538]|           </div>
+[F39:539]|         </div>
+[F39:540]| 
+[F39:541]|         {/* Other Settings */}
+[F39:542]|         <div className="settings-section">
+[F39:543]|           <h3 className="settings-section-title">
+[F39:544]|             <Volume2 size={14} className="mr-2" />
+[F39:545]|             {t('settings.otherSettings')}
+[F39:546]|           </h3>
+[F39:547]| 
+[F39:548]|           {/* Auto Start Break */}
+[F39:549]|           <div className="setting-item switch">
+[F39:550]|             <div className="setting-label">
+[F39:551]|               <span>{t('settings.autoStartBreak')}</span>
+[F39:552]|               <span className="setting-desc">{t('settings.autoStartBreakDesc')}</span>
+[F39:553]|             </div>
+[F39:554]|             <Switch
+[F39:555]|               checked={settings.autoStartBreak}
+[F39:556]|               onCheckedChange={(checked) => onUpdateSettings({ autoStartBreak: checked })}
+[F39:557]|             />
+[F39:558]|           </div>
+[F39:559]| 
+[F39:560]|           {/* Sound Enabled */}
+[F39:561]|           <div className="setting-item switch">
+[F39:562]|             <div className="setting-label">
+[F39:563]|               <span>{t('settings.soundEnabled')}</span>
+[F39:564]|               <span className="setting-desc">{t('settings.soundEnabledDesc')}</span>
+[F39:565]|             </div>
+[F39:566]|             <Switch
+[F39:567]|               checked={settings.soundEnabled}
+[F39:568]|               onCheckedChange={(checked) => onUpdateSettings({ soundEnabled: checked })}
+[F39:569]|             />
+[F39:570]|           </div>
+[F39:571]| 
+[F39:572]|           {/* Auto Save Enabled */}
+[F39:573]|           <div className="setting-item switch">
+[F39:574]|             <div className="setting-label">
+[F39:575]|               <span>{t('settings.autoSaveEnabled')}</span>
+[F39:576]|               <span className="setting-desc">{t('settings.autoSaveEnabledDesc')}</span>
+[F39:577]|             </div>
+[F39:578]|             <Switch
+[F39:579]|               checked={settings.autoSaveEnabled || false}
+[F39:580]|               onCheckedChange={(checked) => onUpdateSettings({ autoSaveEnabled: checked })}
+[F39:581]|             />
+[F39:582]|           </div>
+[F39:583]| 
+[F39:584]|           {/* Auto Save Interval */}
+[F39:585]|           {settings.autoSaveEnabled && (
+[F39:586]|             <div className="setting-item">
+[F39:587]|               <div className="setting-label">
+[F39:588]|                 <span>{t('settings.autoSaveInterval')} {t('settings.autoSaveIntervalSeconds')}</span>
+[F39:589]|                 <Input
+[F39:590]|                   type="number"
+[F39:591]|                   value={autoSaveInterval}
+[F39:592]|                   onChange={(e) => {
+[F39:593]|                     const val = Math.max(10, parseInt(e.target.value) || 60);
+[F39:594]|                     setAutoSaveInterval(val);
+[F39:595]|                     onUpdateSettings({ autoSaveInterval: val });
+[F39:596]|                   }}
+[F39:597]|                   className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+[F39:598]|                   min={10}
+[F39:599]|                 />
+[F39:600]|               </div>
+[F39:601]|               <Slider
+[F39:602]|                 value={[autoSaveInterval]}
+[F39:603]|                 onValueChange={(value) => {
+[F39:604]|                   setAutoSaveInterval(value[0]);
+[F39:605]|                 }}
+[F39:606]|                 onValueCommit={(value) => {
+[F39:607]|                   onUpdateSettings({ autoSaveInterval: value[0] });
+[F39:608]|                 }}
+[F39:609]|                 min={10}
+[F39:610]|                 max={300}
+[F39:611]|                 step={10}
+[F39:612]|                 className="setting-slider mt-2"
+[F39:613]|               />
+[F39:614]|             </div>
+[F39:615]|           )}
+[F39:616]|         </div>
+[F39:617]| 
+[F39:618]|         {/* Data Storage Settings */}
+[F39:619]|         <div className="settings-section">
+[F39:620]|           <h3 className="settings-section-title">
+[F39:621]|             <Database size={14} className="mr-2 text-emerald-400" />
+[F39:622]|             {t('settings.dataStorage') || 'Data Storage'}
+[F39:623]|           </h3>
+[F39:624]|           <p className="settings-section-desc">
+[F39:625]|             {t('settings.dataStorageDesc') || 'Change where your data is saved. Select a cloud drive folder (like OneDrive, iCloud, or Dropbox) to sync across devices.'}
+[F39:626]|           </p>
+[F39:627]| 
+[F39:628]|           <div className="setting-item flex flex-col gap-2">
+[F39:629]|             <div className="text-xs text-white/50 break-all bg-black/20 p-2 rounded border border-white/10 flex items-center justify-between">
+[F39:630]|               <span className="truncate">{currentDbPath || t('common.loading')}</span>
+[F39:631]|             </div>
+[F39:632]|             <Button
+[F39:633]|               variant="outline"
+[F39:634]|               size="sm"
+[F39:635]|               className="w-fit"
+[F39:636]|               onClick={handleChangeDbPath}
+[F39:637]|             >
+[F39:638]|               <FolderOpen size={14} className="mr-2" />
+[F39:639]|               {t('settings.changeLocation') || 'Change Location'}
+[F39:640]|             </Button>
+[F39:641]|           </div>
+[F39:642]|         </div>
+[F39:643]| 
+[F39:644]|         {/* Recurring Tasks Settings */}
+[F39:645]|         <div className="settings-section">
+[F39:646]|           <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
+[F39:647]|             <h3 className="flex items-center text-xs font-semibold text-white/70">
+[F39:648]|               <Repeat size={14} className="mr-2 text-green-400" />
+[F39:649]|               {t('settings.recurringTasks')}
+[F39:650]|             </h3>
+[F39:651]|             <Button size="sm" className="h-6 text-xs px-2 bg-blue-600 hover:bg-blue-500 text-white" onClick={() => setShowRecurringDialog(true)}>
+[F39:652]|               <Plus size={12} className="mr-1" />
+[F39:653]|               {t('settings.newRule')}
+[F39:654]|             </Button>
+[F39:655]|           </div>
+[F39:656]|           <p className="settings-section-desc mb-3">
+[F39:657]|             {t('settings.recurringTasksDesc')}
+[F39:658]|           </p>
+[F39:659]| 
+[F39:660]|           <div className="flex flex-col gap-2">
+[F39:661]|             {!recurringTemplates || recurringTemplates.length === 0 ? (
+[F39:662]|               <div className="text-center py-4 text-xs text-white/30 bg-black/10 rounded-md border border-dashed border-white/10">
+[F39:663]|                 {t('recurring.noRules')}
+[F39:664]|               </div>
+[F39:665]|             ) : (
+[F39:666]|               recurringTemplates.map(tpl => (
+[F39:667]|                 <div key={tpl.id} className="flex flex-col gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
+[F39:668]|                   <div className="flex items-center justify-between">
+[F39:669]|                     <span className="text-sm font-medium text-white/90">{tpl.title}</span>
+[F39:670]|                     <div className="flex items-center gap-2">
+[F39:671]|                       <Switch
+[F39:672]|                         checked={tpl.isActive}
+[F39:673]|                         onCheckedChange={(c) => onUpdateRecurringTemplate(tpl.id, { isActive: c })}
+[F39:674]|                       />
+[F39:675]|                       <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-blue-400 hover:bg-blue-400/10" onClick={() => handleEditTemplate(tpl)} title={t('settings.editRule')}>
+[F39:676]|                         <Edit2 size={12} />
+[F39:677]|                       </Button>
+[F39:678]|                       <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10" onClick={() => onDeleteRecurringTemplate(tpl.id)}>
+[F39:679]|                         <Trash2 size={12} />
+[F39:680]|                       </Button>
+[F39:681]|                     </div>
+[F39:682]|                   </div>
+[F39:683]|                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/50">
+[F39:684]|                     <span className="flex items-center">
+[F39:685]|                       <Repeat size={10} className="mr-1" />
+[F39:686]|                       {t('recurring.every')} {tpl.intervalMinutes >= 1440 ? `${tpl.intervalMinutes / 1440} ${t('recurring.days')}` : tpl.intervalMinutes >= 60 ? `${tpl.intervalMinutes / 60} ${t('recurring.hours')}` : `${tpl.intervalMinutes} ${t('recurring.minutes')}`}
+[F39:687]|                     </span>
+[F39:688]|                     <span className="flex items-center">
+[F39:689]|                       <Clock size={10} className="mr-1" />
+[F39:690]|                       {t('recurring.ddl')}: {t('recurring.afterGeneration')} {tpl.deadlineOffsetHours >= 24 ? `${tpl.deadlineOffsetHours / 24} ${t('recurring.days')}` : `${tpl.deadlineOffsetHours} ${t('recurring.hours')}`}
+[F39:691]|                     </span>
+[F39:692]|                     <span className="flex items-center">
+[F39:693]|                       <Flag size={10} className="mr-1" />
+[F39:694]|                       {t('recurring.targetZone')}: {zones.find(z => z.id === tpl.zoneId)?.name || t('recurring.unknownZone')}
+[F39:695]|                     </span>
+[F39:696]|                   </div>
+[F39:697]|                 </div>
+[F39:698]|               ))
+[F39:699]|             )}
+[F39:700]|           </div>
+[F39:701]|         </div>
+[F39:702]| 
+[F39:703]|         {/* 新建定时任务的弹窗 */}
+[F39:704]|         <Dialog open={showRecurringDialog} onOpenChange={setShowRecurringDialog}>
+[F39:705]|           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
+[F39:706]|             <DialogHeader>
+[F39:707]|               <DialogTitle>{editingTemplate ? t('recurring.editRule') : t('recurring.addRule')}</DialogTitle>
+[F39:708]|             </DialogHeader>
+[F39:709]|             <div className="flex flex-col gap-4 py-2">
+[F39:710]|               <div className="flex flex-col gap-2">
+[F39:711]|                 <label className="text-xs text-white/60">{t('recurring.ruleTitle')}</label>
+[F39:712]|                 <Input value={recTitle} onChange={e => setRecTitle(e.target.value)} className="bg-black/30 border-white/20" placeholder={t('recurring.ruleTitlePlaceholder')} />
+[F39:713]|               </div>
+[F39:714]| 
+[F39:715]|               <div className="flex flex-col gap-2">
+[F39:716]|                 <label className="text-xs text-white/60">{t('recurring.ruleDescription')}</label>
+[F39:717]|                 <Input value={recDesc} onChange={e => setRecDesc(e.target.value)} className="bg-black/30 border-white/20" placeholder={t('recurring.ruleDescriptionPlaceholder')} />
+[F39:718]|               </div>
+[F39:719]| 
+[F39:720]|               <div className="flex gap-4">
+[F39:721]|                 <div className="flex flex-col gap-2 flex-1">
+[F39:722]|                   <label className="text-xs text-white/60">{t('recurring.triggerInterval')} <span className="text-white/30 text-[10px]">{t('recurring.minInterval')}</span></label>
+[F39:723]|                   <div className="flex items-center gap-2">
+[F39:724]|                     <Input
+[F39:725]|                       type="number"
+[F39:726]|                       min={recIntervalUnit === 'minutes' ? 5 : 1}
+[F39:727]|                       value={recIntervalValue}
+[F39:728]|                       onChange={e => {
+[F39:729]|                         const val = Number(e.target.value);
+[F39:730]|                         // 如果单位是分钟，限制最低输入为5
+[F39:731]|                         if (recIntervalUnit === 'minutes' && val < 5 && val !== 0) {
+[F39:732]|                           setRecIntervalValue(5);
+[F39:733]|                         } else {
+[F39:734]|                           setRecIntervalValue(val);
+[F39:735]|                         }
+[F39:736]|                       }}
+[F39:737]|                       className="bg-black/30 border-white/20"
+[F39:738]|                     />
+[F39:739]|                     <Select value={recIntervalUnit} onValueChange={(v: 'minutes' | 'hours' | 'days') => {
+[F39:740]|                       setRecIntervalUnit(v);
+[F39:741]|                       if (v === 'minutes' && recIntervalValue < 5) {
+[F39:742]|                         setRecIntervalValue(5);
+[F39:743]|                       }
+[F39:744]|                     }}>
+[F39:745]|                       <SelectTrigger className="w-[80px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
+[F39:746]|                       <SelectContent><SelectItem value="minutes">{t('recurring.minutes')}</SelectItem><SelectItem value="hours">{t('recurring.hours')}</SelectItem><SelectItem value="days">{t('recurring.days')}</SelectItem></SelectContent>
+[F39:747]|                     </Select>
+[F39:748]|                   </div>
+[F39:749]|                 </div>
+[F39:750]|                 <div className="flex flex-col gap-2 flex-1">
+[F39:751]|                   <label className="text-xs text-white/60">{t('recurring.targetZone')}</label>
+[F39:752]|                   <Select value={recZoneId} onValueChange={setRecZoneId}>
+[F39:753]|                     <SelectTrigger className="bg-black/30 border-white/20"><SelectValue placeholder={t('recurring.selectZone')} /></SelectTrigger>
+[F39:754]|                     <SelectContent>
+[F39:755]|                       {zones.map(z => <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>)}
+[F39:756]|                     </SelectContent>
+[F39:757]|                   </Select>
 [F39:758]|                 </div>
-[F39:759]|                 <div className="flex flex-col gap-2 flex-1">
-[F39:760]|                   <label className="text-xs text-white/60">{t('recurring.priority')}</label>
-[F39:761]|                   <Select value={recPriority} onValueChange={(v: TaskPriority) => setRecPriority(v)}>
-[F39:762]|                     <SelectTrigger className="bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
-[F39:763]|                     <SelectContent>
-[F39:764]|                       <SelectItem value="high">{t('task.priorityHigh')}</SelectItem>
-[F39:765]|                       <SelectItem value="medium">{t('task.priorityMedium')}</SelectItem>
-[F39:766]|                       <SelectItem value="low">{t('task.priorityLow')}</SelectItem>
-[F39:767]|                     </SelectContent>
-[F39:768]|                   </Select>
-[F39:769]|                 </div>
-[F39:770]|               </div>
-[F39:771]|             </div>
-[F39:772]|             <div className="flex justify-end gap-2 mt-4">
-[F39:773]|               <Button variant="ghost" onClick={() => setShowRecurringDialog(false)}>{t('common.cancel')}</Button>
-[F39:774]|               <Button className="bg-blue-600 hover:bg-blue-500 text-white" onClick={handleSaveRecurring} disabled={!recTitle.trim()}>
-[F39:775]|                 {t('recurring.saveRule')}
-[F39:776]|               </Button>
-[F39:777]|             </div>
-[F39:778]|           </DialogContent>
-[F39:779]|         </Dialog>
-[F39:780]| 
-[F39:781]|         {/* Environment Profiles Section */}
-[F39:782]|         <div className="settings-section mt-6">
-[F39:783]|           <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
-[F39:784]|             <h3 className="flex items-center text-xs font-semibold text-white/70">
-[F39:785]|               <Bookmark size={14} className="mr-2 text-indigo-400" />
-[F39:786]|               {t('settings.environmentProfiles')}
-[F39:787]|             </h3>
-[F39:788]|             <div className="flex gap-2">
-[F39:789]|               <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleImportConfig}>
-[F39:790]|                 <Upload size={12} className="mr-1" /> {t('common.import')}
-[F39:791]|               </Button>
-[F39:792]|               <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleExportConfig}>
-[F39:793]|                 <Download size={12} className="mr-1" /> {t('common.export')}
-[F39:794]|               </Button>
-[F39:795]|             </div>
-[F39:796]|           </div>
-[F39:797]|           <p className="settings-section-desc mb-3">
-[F39:798]|             {t('settings.environmentProfilesDesc')}
-[F39:799]|           </p>
-[F39:800]| 
-[F39:801]|           <Button
-[F39:802]|             variant="outline"
-[F39:803]|             className="w-full mb-3 border-dashed border-indigo-500/50 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
-[F39:804]|             onClick={() => setShowSaveProfileDialog(true)}
-[F39:805]|           >
-[F39:806]|             <Save size={14} className="mr-2" /> {t('settings.saveAsSnapshot')}
-[F39:807]|           </Button>
-[F39:808]| 
-[F39:809]|           <div className="flex flex-col gap-2">
-[F39:810]|             {(!configProfiles || configProfiles.length === 0) && (
-[F39:811]|               <div className="text-center py-4 text-xs text-white/30 bg-black/10 rounded-md border border-white/5">
-[F39:812]|                 {t('profile.noProfiles')}
-[F39:813]|               </div>
-[F39:814]|             )}
-[F39:815]|             {(configProfiles || []).map(profile => (
-[F39:816]|               <div key={profile.id} className="flex flex-col gap-2 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-indigo-500/30 transition-colors">
-[F39:817]|                 <div className="flex items-center justify-between">
-[F39:818]|                   <span className="text-sm font-medium text-white/90">{profile.name}</span>
-[F39:819]|                   <div className="flex items-center gap-2">
-[F39:820]|                     <Button size="sm" className="h-6 text-xs px-2 bg-indigo-600 hover:bg-indigo-500 text-white" onClick={() => {
-[F39:821]|                       applyConfigProfile(profile.id);
-[F39:822]|                       toast.success(`${t('profile.profileApplied')}: ${profile.name}`);
-[F39:823]|                     }}>
-[F39:824]|                       {t('common.apply')}
-[F39:825]|                     </Button>
-[F39:826]|                     <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-blue-400 hover:bg-blue-400/10" onClick={() => {
-[F39:827]|                       setEditingProfile(profile);
-[F39:828]|                       setEditingProfileName(profile.name);
-[F39:829]|                     }}>
-[F39:830]|                       <Edit2 size={12} />
-[F39:831]|                     </Button>
-[F39:832]|                     <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10" onClick={() => deleteConfigProfile(profile.id)}>
-[F39:833]|                       <Trash2 size={12} />
-[F39:834]|                     </Button>
-[F39:835]|                   </div>
-[F39:836]|                 </div>
-[F39:837]|                 <div className="text-[10px] text-white/40">
-[F39:838]|                   {t('profile.createdAt')}: {new Date(profile.createdAt).toLocaleString()} · {t('profile.containsRules', { count: profile.recurringTemplates.length })}
-[F39:839]|                 </div>
-[F39:840]|               </div>
-[F39:841]|             ))}
-[F39:842]|           </div>
-[F39:843]|         </div>
-[F39:844]| 
-[F39:845]|         {/* Save Profile Dialog */}
-[F39:846]|         <Dialog open={showSaveProfileDialog} onOpenChange={setShowSaveProfileDialog}>
-[F39:847]|           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
-[F39:848]|             <DialogHeader>
-[F39:849]|               <DialogTitle>{t('profile.saveProfile')}</DialogTitle>
-[F39:850]|             </DialogHeader>
-[F39:851]|             <div className="flex flex-col gap-4 py-2">
-[F39:852]|               <Input
-[F39:853]|                 value={profileName}
-[F39:854]|                 onChange={e => setProfileName(e.target.value)}
-[F39:855]|                 placeholder={t('profile.exampleMode')}
-[F39:856]|                 className="bg-black/30 border-white/20"
-[F39:857]|                 autoFocus
-[F39:858]|               />
-[F39:859]|             </div>
-[F39:860]|             <div className="flex justify-end gap-2 mt-2">
-[F39:861]|               <Button variant="ghost" onClick={() => setShowSaveProfileDialog(false)}>{t('common.cancel')}</Button>
-[F39:862]|               <Button className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!profileName.trim()} onClick={() => {
-[F39:863]|                 saveConfigProfile(profileName.trim(), recurringTemplates.filter((r: RecurringTemplate) => r.scope === 'global' || !r.scope));
-[F39:864]|                 setProfileName('');
-[F39:865]|                 setShowSaveProfileDialog(false);
-[F39:866]|                 toast.success(t('profile.profileSaved'));
-[F39:867]|               }}>
-[F39:868]|                 {t('common.save')}
-[F39:869]|               </Button>
-[F39:870]|             </div>
-[F39:871]|           </DialogContent>
-[F39:872]|         </Dialog>
-[F39:873]| 
-[F39:874]|         {/* Edit Profile Dialog */}
-[F39:875]|         <Dialog open={!!editingProfile} onOpenChange={(open) => !open && setEditingProfile(null)}>
-[F39:876]|           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
-[F39:877]|             <DialogHeader>
-[F39:878]|               <DialogTitle>{t('profile.editProfile') || 'Edit Profile'}</DialogTitle>
-[F39:879]|             </DialogHeader>
-[F39:880]|             <div className="flex flex-col gap-4 py-2">
-[F39:881]|               <Input
-[F39:882]|                 value={editingProfileName}
-[F39:883]|                 onChange={e => setEditingProfileName(e.target.value)}
-[F39:884]|                 placeholder={t('profile.snapshotName')}
-[F39:885]|                 className="bg-black/30 border-white/20"
-[F39:886]|                 autoFocus
-[F39:887]|               />
-[F39:888]|             </div>
-[F39:889]|             <div className="flex justify-end gap-2 mt-2">
-[F39:890]|               <Button variant="ghost" onClick={() => setEditingProfile(null)}>{t('common.cancel')}</Button>
-[F39:891]|               <Button className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!editingProfileName.trim()} onClick={() => {
-[F39:892]|                 if (editingProfile) {
-[F39:893]|                   updateConfigProfile(editingProfile.id, { name: editingProfileName.trim() });
-[F39:894]|                   toast.success(t('profile.profileSaved'));
-[F39:895]|                 }
-[F39:896]|                 setEditingProfile(null);
-[F39:897]|                 setEditingProfileName('');
-[F39:898]|               }}>
-[F39:899]|                 {t('common.save')}
-[F39:900]|               </Button>
+[F39:759]|               </div>
+[F39:760]| 
+[F39:761]|               <div className="flex gap-4">
+[F39:762]|                 <div className="flex flex-col gap-2 flex-1">
+[F39:763]|                   <label className="text-xs text-white/60">{t('recurring.autoDeadline')} {t('recurring.afterGeneration')}</label>
+[F39:764]|                   <div className="flex items-center gap-2">
+[F39:765]|                     <Input type="number" min={0} value={recDeadlineValue} onChange={e => setRecDeadlineValue(Number(e.target.value))} className="bg-black/30 border-white/20" />
+[F39:766]|                     <Select value={recDeadlineUnit} onValueChange={(v: 'hours' | 'days') => setRecDeadlineUnit(v)}>
+[F39:767]|                       <SelectTrigger className="w-[80px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
+[F39:768]|                       <SelectContent><SelectItem value="hours">{t('recurring.hours')}</SelectItem><SelectItem value="days">{t('recurring.days')}</SelectItem></SelectContent>
+[F39:769]|                     </Select>
+[F39:770]|                   </div>
+[F39:771]|                 </div>
+[F39:772]|                 <div className="flex flex-col gap-2 flex-1">
+[F39:773]|                   <label className="text-xs text-white/60">{t('recurring.priority')}</label>
+[F39:774]|                   <Select value={recPriority} onValueChange={(v: TaskPriority) => setRecPriority(v)}>
+[F39:775]|                     <SelectTrigger className="bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
+[F39:776]|                     <SelectContent>
+[F39:777]|                       <SelectItem value="high">{t('task.priorityHigh')}</SelectItem>
+[F39:778]|                       <SelectItem value="medium">{t('task.priorityMedium')}</SelectItem>
+[F39:779]|                       <SelectItem value="low">{t('task.priorityLow')}</SelectItem>
+[F39:780]|                     </SelectContent>
+[F39:781]|                   </Select>
+[F39:782]|                 </div>
+[F39:783]|               </div>
+[F39:784]|             </div>
+[F39:785]|             <div className="flex justify-end gap-2 mt-4">
+[F39:786]|               <Button variant="ghost" onClick={() => setShowRecurringDialog(false)}>{t('common.cancel')}</Button>
+[F39:787]|               <Button className="bg-blue-600 hover:bg-blue-500 text-white" onClick={handleSaveRecurring} disabled={!recTitle.trim()}>
+[F39:788]|                 {t('recurring.saveRule')}
+[F39:789]|               </Button>
+[F39:790]|             </div>
+[F39:791]|           </DialogContent>
+[F39:792]|         </Dialog>
+[F39:793]| 
+[F39:794]|         {/* Environment Profiles Section */}
+[F39:795]|         <div className="settings-section mt-6">
+[F39:796]|           <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
+[F39:797]|             <h3 className="flex items-center text-xs font-semibold text-white/70">
+[F39:798]|               <Bookmark size={14} className="mr-2 text-indigo-400" />
+[F39:799]|               {t('settings.environmentProfiles')}
+[F39:800]|             </h3>
+[F39:801]|             <div className="flex gap-2">
+[F39:802]|               <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleImportConfig}>
+[F39:803]|                 <Upload size={12} className="mr-1" /> {t('common.import')}
+[F39:804]|               </Button>
+[F39:805]|               <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleExportConfig}>
+[F39:806]|                 <Download size={12} className="mr-1" /> {t('common.export')}
+[F39:807]|               </Button>
+[F39:808]|             </div>
+[F39:809]|           </div>
+[F39:810]|           <p className="settings-section-desc mb-3">
+[F39:811]|             {t('settings.environmentProfilesDesc')}
+[F39:812]|           </p>
+[F39:813]| 
+[F39:814]|           <Button
+[F39:815]|             variant="outline"
+[F39:816]|             className="w-full mb-3 border-dashed border-indigo-500/50 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
+[F39:817]|             onClick={() => setShowSaveProfileDialog(true)}
+[F39:818]|           >
+[F39:819]|             <Save size={14} className="mr-2" /> {t('settings.saveAsSnapshot')}
+[F39:820]|           </Button>
+[F39:821]| 
+[F39:822]|           <div className="flex flex-col gap-2">
+[F39:823]|             {(!configProfiles || configProfiles.length === 0) && (
+[F39:824]|               <div className="text-center py-4 text-xs text-white/30 bg-black/10 rounded-md border border-white/5">
+[F39:825]|                 {t('profile.noProfiles')}
+[F39:826]|               </div>
+[F39:827]|             )}
+[F39:828]|             {(configProfiles || []).map(profile => (
+[F39:829]|               <div key={profile.id} className="flex flex-col gap-2 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-indigo-500/30 transition-colors">
+[F39:830]|                 <div className="flex items-center justify-between">
+[F39:831]|                   <span className="text-sm font-medium text-white/90">{profile.name}</span>
+[F39:832]|                   <div className="flex items-center gap-2">
+[F39:833]|                     <Button size="sm" className="h-6 text-xs px-2 bg-indigo-600 hover:bg-indigo-500 text-white" onClick={() => {
+[F39:834]|                       applyConfigProfile(profile.id);
+[F39:835]|                       toast.success(`${t('profile.profileApplied')}: ${profile.name}`);
+[F39:836]|                     }}>
+[F39:837]|                       {t('common.apply')}
+[F39:838]|                     </Button>
+[F39:839]|                     <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-blue-400 hover:bg-blue-400/10" onClick={() => {
+[F39:840]|                       setEditingProfile(profile);
+[F39:841]|                       setEditingProfileName(profile.name);
+[F39:842]|                     }}>
+[F39:843]|                       <Edit2 size={12} />
+[F39:844]|                     </Button>
+[F39:845]|                     <Button size="icon" variant="ghost" className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10" onClick={() => deleteConfigProfile(profile.id)}>
+[F39:846]|                       <Trash2 size={12} />
+[F39:847]|                     </Button>
+[F39:848]|                   </div>
+[F39:849]|                 </div>
+[F39:850]|                 <div className="text-[10px] text-white/40">
+[F39:851]|                   {t('profile.createdAt')}: {new Date(profile.createdAt).toLocaleString()} · {t('profile.containsRules', { count: profile.recurringTemplates.length })}
+[F39:852]|                 </div>
+[F39:853]|               </div>
+[F39:854]|             ))}
+[F39:855]|           </div>
+[F39:856]|         </div>
+[F39:857]| 
+[F39:858]|         {/* Save Profile Dialog */}
+[F39:859]|         <Dialog open={showSaveProfileDialog} onOpenChange={setShowSaveProfileDialog}>
+[F39:860]|           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
+[F39:861]|             <DialogHeader>
+[F39:862]|               <DialogTitle>{t('profile.saveProfile')}</DialogTitle>
+[F39:863]|             </DialogHeader>
+[F39:864]|             <div className="flex flex-col gap-4 py-2">
+[F39:865]|               <Input
+[F39:866]|                 value={profileName}
+[F39:867]|                 onChange={e => setProfileName(e.target.value)}
+[F39:868]|                 placeholder={t('profile.exampleMode')}
+[F39:869]|                 className="bg-black/30 border-white/20"
+[F39:870]|                 autoFocus
+[F39:871]|               />
+[F39:872]|             </div>
+[F39:873]|             <div className="flex justify-end gap-2 mt-2">
+[F39:874]|               <Button variant="ghost" onClick={() => setShowSaveProfileDialog(false)}>{t('common.cancel')}</Button>
+[F39:875]|               <Button className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!profileName.trim()} onClick={() => {
+[F39:876]|                 saveConfigProfile(profileName.trim(), recurringTemplates.filter((r: RecurringTemplate) => r.scope === 'global' || !r.scope));
+[F39:877]|                 setProfileName('');
+[F39:878]|                 setShowSaveProfileDialog(false);
+[F39:879]|                 toast.success(t('profile.profileSaved'));
+[F39:880]|               }}>
+[F39:881]|                 {t('common.save')}
+[F39:882]|               </Button>
+[F39:883]|             </div>
+[F39:884]|           </DialogContent>
+[F39:885]|         </Dialog>
+[F39:886]| 
+[F39:887]|         {/* Edit Profile Dialog */}
+[F39:888]|         <Dialog open={!!editingProfile} onOpenChange={(open) => !open && setEditingProfile(null)}>
+[F39:889]|           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
+[F39:890]|             <DialogHeader>
+[F39:891]|               <DialogTitle>{t('profile.editProfile') || 'Edit Profile'}</DialogTitle>
+[F39:892]|             </DialogHeader>
+[F39:893]|             <div className="flex flex-col gap-4 py-2">
+[F39:894]|               <Input
+[F39:895]|                 value={editingProfileName}
+[F39:896]|                 onChange={e => setEditingProfileName(e.target.value)}
+[F39:897]|                 placeholder={t('profile.snapshotName')}
+[F39:898]|                 className="bg-black/30 border-white/20"
+[F39:899]|                 autoFocus
+[F39:900]|               />
 [F39:901]|             </div>
-[F39:902]|           </DialogContent>
-[F39:903]|         </Dialog>
-[F39:904]| 
-[F39:905]|         {/* Reset Button */}
-[F39:906]|         <div className="settings-footer">
-[F39:907]|           <Button
-[F39:908]|             variant="outline"
-[F39:909]|             size="sm"
-[F39:910]|             className="reset-btn"
-[F39:911]|             onClick={handleReset}
-[F39:912]|           >
-[F39:913]|             <RotateCcw size={14} className="mr-1" />
-[F39:914]|             {t('settings.resetSettings')}
-[F39:915]|           </Button>
-[F39:916]|         </div>
-[F39:917]|       </div>
-[F39:918]|     </div>
-[F39:919]|   );
-[F39:920]| }
+[F39:902]|             <div className="flex justify-end gap-2 mt-2">
+[F39:903]|               <Button variant="ghost" onClick={() => setEditingProfile(null)}>{t('common.cancel')}</Button>
+[F39:904]|               <Button className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!editingProfileName.trim()} onClick={() => {
+[F39:905]|                 if (editingProfile) {
+[F39:906]|                   updateConfigProfile(editingProfile.id, { name: editingProfileName.trim() });
+[F39:907]|                   toast.success(t('profile.profileSaved'));
+[F39:908]|                 }
+[F39:909]|                 setEditingProfile(null);
+[F39:910]|                 setEditingProfileName('');
+[F39:911]|               }}>
+[F39:912]|                 {t('common.save')}
+[F39:913]|               </Button>
+[F39:914]|             </div>
+[F39:915]|           </DialogContent>
+[F39:916]|         </Dialog>
+[F39:917]| 
+[F39:918]|         {/* Reset Button */}
+[F39:919]|         <div className="settings-footer">
+[F39:920]|           <Button
+[F39:921]|             variant="outline"
+[F39:922]|             size="sm"
+[F39:923]|             className="reset-btn"
+[F39:924]|             onClick={handleReset}
+[F39:925]|           >
+[F39:926]|             <RotateCcw size={14} className="mr-1" />
+[F39:927]|             {t('settings.resetSettings')}
+[F39:928]|           </Button>
+[F39:929]|         </div>
+[F39:930]|       </div>
+[F39:931]|     </div>
+[F39:932]|   );
+[F39:933]| }
 
 ================================================================================
 文件路径: src\components\TaskItem.tsx(F40) (约合大小: 27 KB)
@@ -9948,7 +10004,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F40:664]| }
 
 ================================================================================
-文件路径: src\components\TaskList.tsx(F41) (约合大小: 52 KB)
+文件路径: src\components\TaskList.tsx(F41) (约合大小: 53 KB)
 ================================================================================
 [F41:1]| import React, { useState, useRef, useMemo } from 'react';
 [F41:2]| import {
@@ -9980,7 +10036,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F41:28]| import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 [F41:29]| import { TaskItem } from './TaskItem';
 [F41:30]| import type { Task, TaskPriority, TaskUrgency, DeadlineType, Zone } from '@/types';
-[F41:31]| import { convertDeadlineType, getInheritedDeadline } from '@/lib/urgency-utils';
+[F41:31]| import { convertDeadlineType, getInheritedDeadline, calculateRankScores } from '@/lib/urgency-utils';
 [F41:32]| import { useAppStore } from '@/store';
 [F41:33]| import { getFlattenedTasks, calculateNewPosition, type FlattenedTask } from '@/lib/tree-utils';
 [F41:34]| import { useTranslation } from 'react-i18next';
@@ -10021,7 +10077,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F41:69]|   onSelectTask,
 [F41:70]|   onClearCompleted,
 [F41:71]| }: TaskListProps) {
-[F41:72]|   const { moveTaskNode, expandTask, getTotalWorkTime, getEstimatedTime } = useAppStore();
+[F41:72]|   const { moveTaskNode, expandTask, getTotalWorkTime, getEstimatedTime, settings, updateSettings } = useAppStore();
 [F41:73]|   const { t, i18n } = useTranslation();
 [F41:74]| 
 [F41:75]|   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -10045,1008 +10101,1036 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F41:93]|     }
 [F41:94]|   };
 [F41:95]| 
-[F41:96]|   // 新增：局部视图模式状态
-[F41:97]|   const [isLeafMode, setIsLeafMode] = useState(false);
-[F41:98]|   const [sortMode, setSortMode] = useState<'manual' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime'>('manual');
-[F41:99]|   const [addingSubtaskParentId, setAddingSubtaskParentId] = useState<string | null>(null);
-[F41:100]|   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
-[F41:101]|   const [newSubtaskDescription, setNewSubtaskDescription] = useState('');
-[F41:102]|   const [subtaskPriority, setSubtaskPriority] = useState<TaskPriority>('medium');
-[F41:103]|   const [subtaskUrgency, setSubtaskUrgency] = useState<TaskUrgency>('low');
-[F41:104]|   const [subtaskDeadline, setSubtaskDeadline] = useState<number | null>(null);
-[F41:105]|   const [subtaskDeadlineType, setSubtaskDeadlineType] = useState<DeadlineType>('none');
-[F41:106]|   const [subtaskDeadlineHour, setSubtaskDeadlineHour] = useState<number>(23);
-[F41:107]|   const [subtaskDeadlineMinute, setSubtaskDeadlineMinute] = useState<number>(59);
-[F41:108]|   const subtaskInputRef = useRef<HTMLInputElement>(null);
+[F41:96]|   // 从 settings 中获取视图模式状态
+[F41:97]|   const isLeafMode = settings.zoneViewLeafMode || false;
+[F41:98]|   const sortMode = settings.zoneViewSort?.mode || 'manual';
+[F41:99]| 
+[F41:100]|   const setIsLeafMode = (value: boolean) => {
+[F41:101]|     updateSettings({ zoneViewLeafMode: value });
+[F41:102]|   };
+[F41:103]| 
+[F41:104]|   const setSortMode = (val: 'manual' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime') => {
+[F41:105]|     updateSettings({
+[F41:106]|       zoneViewSort: { ...(settings.zoneViewSort || { priorityWeight: 0.6, deadlineWeight: 0.4 }), mode: val }
+[F41:107]|     });
+[F41:108]|   };
 [F41:109]| 
-[F41:110]|   const inputRef = useRef<HTMLInputElement>(null);
-[F41:111]| 
-[F41:112]|   const sensors = useSensors(
-[F41:113]|     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-[F41:114]|   );
-[F41:115]| 
-[F41:116]|   // 使用扁平化任务列表（支持聚焦模式）
-[F41:117]|   const flattenedTasks = useMemo(() =>
-[F41:118]|     getFlattenedTasks(tasks, zone?.id || null, focusedTaskId),
-[F41:119]|     [tasks, zone?.id, focusedTaskId]
-[F41:120]|   );
-[F41:121]| 
-[F41:122]|   // 分离未完成和已完成任务
-[F41:123]|   const incompleteTasks = useMemo(() =>
-[F41:124]|     flattenedTasks.filter(t => !t.completed),
-[F41:125]|     [flattenedTasks]
-[F41:126]|   );
-[F41:127]| 
-[F41:128]|   const completedTasks = useMemo(() =>
-[F41:129]|     flattenedTasks.filter(t => t.completed),
-[F41:130]|     [flattenedTasks]
+[F41:110]|   const [addingSubtaskParentId, setAddingSubtaskParentId] = useState<string | null>(null);
+[F41:111]|   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+[F41:112]|   const [newSubtaskDescription, setNewSubtaskDescription] = useState('');
+[F41:113]|   const [subtaskPriority, setSubtaskPriority] = useState<TaskPriority>('medium');
+[F41:114]|   const [subtaskUrgency, setSubtaskUrgency] = useState<TaskUrgency>('low');
+[F41:115]|   const [subtaskDeadline, setSubtaskDeadline] = useState<number | null>(null);
+[F41:116]|   const [subtaskDeadlineType, setSubtaskDeadlineType] = useState<DeadlineType>('none');
+[F41:117]|   const [subtaskDeadlineHour, setSubtaskDeadlineHour] = useState<number>(23);
+[F41:118]|   const [subtaskDeadlineMinute, setSubtaskDeadlineMinute] = useState<number>(59);
+[F41:119]|   const subtaskInputRef = useRef<HTMLInputElement>(null);
+[F41:120]| 
+[F41:121]|   const inputRef = useRef<HTMLInputElement>(null);
+[F41:122]| 
+[F41:123]|   const sensors = useSensors(
+[F41:124]|     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+[F41:125]|   );
+[F41:126]| 
+[F41:127]|   // 使用扁平化任务列表（支持聚焦模式）
+[F41:128]|   const flattenedTasks = useMemo(() =>
+[F41:129]|     getFlattenedTasks(tasks, zone?.id || null, focusedTaskId),
+[F41:130]|     [tasks, zone?.id, focusedTaskId]
 [F41:131]|   );
 [F41:132]| 
-[F41:133]|   const activeItem = activeId ? flattenedTasks.find(t => t.id === activeId) : null;
-[F41:134]| 
-[F41:135]|   const getZoneColor = (zoneId: string) => {
-[F41:136]|     const z = zones.find((z) => z.id === zoneId);
-[F41:137]|     return z?.color || '#6b7280';
-[F41:138]|   };
-[F41:139]| 
-[F41:140]|   const handleDragStart = (event: DragStartEvent) => {
-[F41:141]|     setActiveId(event.active.id as string);
-[F41:142]|   };
+[F41:133]|   // 分离未完成和已完成任务
+[F41:134]|   const incompleteTasks = useMemo(() =>
+[F41:135]|     flattenedTasks.filter(t => !t.completed),
+[F41:136]|     [flattenedTasks]
+[F41:137]|   );
+[F41:138]| 
+[F41:139]|   const completedTasks = useMemo(() =>
+[F41:140]|     flattenedTasks.filter(t => t.completed),
+[F41:141]|     [flattenedTasks]
+[F41:142]|   );
 [F41:143]| 
-[F41:144]|   const handleDragOver = (event: { over: { id: string | number } | null }) => {
-[F41:145]|     setOverId(event.over?.id as string | null);
-[F41:146]|   };
-[F41:147]| 
-[F41:148]|   const handleDragEnd = (event: DragEndEvent) => {
-[F41:149]|     const { active, over, delta } = event;
-[F41:150]|     setActiveId(null);
-[F41:151]|     setOverId(null);
-[F41:152]| 
-[F41:153]|     if (over && active.id !== over.id && zone) {
-[F41:154]|       // 计算新位置
-[F41:155]|       const result = calculateNewPosition(
-[F41:156]|         flattenedTasks,
-[F41:157]|         active.id as string,
-[F41:158]|         over.id as string,
-[F41:159]|         delta.x,
-[F41:160]|         focusedTaskId || null
-[F41:161]|       );
-[F41:162]|       if (result) {
-[F41:163]|         moveTaskNode(active.id as string, result.newParentId, result.anchorId, zone.id);
-[F41:164]|       }
-[F41:165]|     }
-[F41:166]|   };
-[F41:167]| 
-[F41:168]|   const handleAddTask = () => {
-[F41:169]|     if (newTaskTitle.trim() && zone) {
-[F41:170]|       onAddTask(zone.id, newTaskTitle.trim(), newTaskDescription.trim(), selectedPriority, selectedUrgency, selectedDeadline, selectedDeadlineType, focusedTaskId || null);
-[F41:171]|       setNewTaskTitle('');
-[F41:172]|       setNewTaskDescription('');
-[F41:173]|       setSelectedDeadline(null);
-[F41:174]|       setSelectedDeadlineType('none');
-[F41:175]|       inputRef.current?.focus();
+[F41:144]|   const activeItem = activeId ? flattenedTasks.find(t => t.id === activeId) : null;
+[F41:145]| 
+[F41:146]|   const getZoneColor = (zoneId: string) => {
+[F41:147]|     const z = zones.find((z) => z.id === zoneId);
+[F41:148]|     return z?.color || '#6b7280';
+[F41:149]|   };
+[F41:150]| 
+[F41:151]|   const handleDragStart = (event: DragStartEvent) => {
+[F41:152]|     setActiveId(event.active.id as string);
+[F41:153]|   };
+[F41:154]| 
+[F41:155]|   const handleDragOver = (event: { over: { id: string | number } | null }) => {
+[F41:156]|     setOverId(event.over?.id as string | null);
+[F41:157]|   };
+[F41:158]| 
+[F41:159]|   const handleDragEnd = (event: DragEndEvent) => {
+[F41:160]|     const { active, over, delta } = event;
+[F41:161]|     setActiveId(null);
+[F41:162]|     setOverId(null);
+[F41:163]| 
+[F41:164]|     if (over && active.id !== over.id && zone) {
+[F41:165]|       // 计算新位置
+[F41:166]|       const result = calculateNewPosition(
+[F41:167]|         flattenedTasks,
+[F41:168]|         active.id as string,
+[F41:169]|         over.id as string,
+[F41:170]|         delta.x,
+[F41:171]|         focusedTaskId || null
+[F41:172]|       );
+[F41:173]|       if (result) {
+[F41:174]|         moveTaskNode(active.id as string, result.newParentId, result.anchorId, zone.id);
+[F41:175]|       }
 [F41:176]|     }
 [F41:177]|   };
 [F41:178]| 
-[F41:179]|   const handleKeyDown = (e: React.KeyboardEvent) => {
-[F41:180]|     if (e.key === 'Enter' && !e.shiftKey) {
-[F41:181]|       e.preventDefault();
-[F41:182]|       handleAddTask();
-[F41:183]|     }
-[F41:184]|   };
-[F41:185]| 
-[F41:186]|   // 处理点击添加子任务按钮 - 展开父任务并显示输入框
-[F41:187]|   const handleAddSubtaskClick = (parentId: string) => {
-[F41:188]|     expandTask(parentId); // 展开父任务
-[F41:189]|     setAddingSubtaskParentId(parentId); // 显示添加子任务输入框
-[F41:190]|     setNewSubtaskTitle('');
-[F41:191]|     setNewSubtaskDescription('');
-[F41:192]|     setSubtaskPriority('medium'); // 重置优先级
-[F41:193]|     setSubtaskUrgency('low');     // 重置紧急度
-[F41:194]|     setTimeout(() => subtaskInputRef.current?.focus(), 0);
+[F41:179]|   const handleAddTask = () => {
+[F41:180]|     if (newTaskTitle.trim() && zone) {
+[F41:181]|       onAddTask(zone.id, newTaskTitle.trim(), newTaskDescription.trim(), selectedPriority, selectedUrgency, selectedDeadline, selectedDeadlineType, focusedTaskId || null);
+[F41:182]|       setNewTaskTitle('');
+[F41:183]|       setNewTaskDescription('');
+[F41:184]|       setSelectedDeadline(null);
+[F41:185]|       setSelectedDeadlineType('none');
+[F41:186]|       inputRef.current?.focus();
+[F41:187]|     }
+[F41:188]|   };
+[F41:189]| 
+[F41:190]|   const handleKeyDown = (e: React.KeyboardEvent) => {
+[F41:191]|     if (e.key === 'Enter' && !e.shiftKey) {
+[F41:192]|       e.preventDefault();
+[F41:193]|       handleAddTask();
+[F41:194]|     }
 [F41:195]|   };
 [F41:196]| 
-[F41:197]|   // 处理添加子任务
-[F41:198]|   const handleAddSubtask = () => {
-[F41:199]|     if (newSubtaskTitle.trim() && addingSubtaskParentId && zone) {
-[F41:200]|       onAddTask(zone.id, newSubtaskTitle.trim(), newSubtaskDescription.trim(), subtaskPriority, subtaskUrgency, subtaskDeadline, subtaskDeadlineType, addingSubtaskParentId);
-[F41:201]|       setNewSubtaskTitle('');
-[F41:202]|       setNewSubtaskDescription('');
-[F41:203]|       setSubtaskDeadline(null);
-[F41:204]|       setSubtaskDeadlineType('none');
-[F41:205]|       // 保持输入框焦点，方便连续添加
-[F41:206]|       setTimeout(() => subtaskInputRef.current?.focus(), 0);
-[F41:207]|     }
-[F41:208]|   };
-[F41:209]| 
-[F41:210]|   // 处理取消添加子任务
-[F41:211]|   const handleCancelAddSubtask = () => {
-[F41:212]|     setAddingSubtaskParentId(null);
-[F41:213]|     setNewSubtaskTitle('');
-[F41:214]|     setNewSubtaskDescription('');
-[F41:215]|     setSubtaskDeadline(null);
-[F41:216]|     setSubtaskDeadlineType('none');
-[F41:217]|   };
-[F41:218]| 
-[F41:219]|   // 处理子任务输入框按键事件
-[F41:220]|   const handleSubtaskKeyDown = (e: React.KeyboardEvent) => {
-[F41:221]|     if (e.key === 'Enter' && !e.shiftKey) {
-[F41:222]|       e.preventDefault();
-[F41:223]|       handleAddSubtask();
-[F41:224]|     } else if (e.key === 'Escape') {
-[F41:225]|       handleCancelAddSubtask();
-[F41:226]|     }
-[F41:227]|   };
-[F41:228]| 
-[F41:229]|   const stats = {
-[F41:230]|     total: tasks.filter((t) => t.zoneId === zone?.id).length,
-[F41:231]|     completed: completedTasks.length,
-[F41:232]|     pending: incompleteTasks.length,
-[F41:233]|     completionRate: 0,
-[F41:234]|   };
-[F41:235]|   stats.completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
-[F41:236]| 
-[F41:237]|   // 计算 breadcrumbs
-[F41:238]|   const breadcrumbs = useMemo(() => {
-[F41:239]|     if (!focusedTaskId) return [];
-[F41:240]|     const path: Task[] = [];
-[F41:241]|     let current = tasks.find((t) => t.id === focusedTaskId);
-[F41:242]|     while (current) {
-[F41:243]|       path.unshift(current);
-[F41:244]|       current = current.parentId ? tasks.find((t) => t.id === current!.parentId) : undefined;
-[F41:245]|     }
-[F41:246]|     return path;
-[F41:247]|   }, [tasks, focusedTaskId]);
-[F41:248]| 
-[F41:249]|   // --- Core logic: calculate display task list ---
-[F41:250]|   const processedDisplayTasks = useMemo(() => {
-[F41:251]|     // 1. Get base task set (if no focus, get all zone tasks; if focus, get all descendants)
-[F41:252]|     let baseTasks = tasks.filter(t => t.zoneId === zone?.id && !t.completed);
-[F41:253]| 
-[F41:254]|     if (focusedTaskId) {
-[F41:255]|       const getAllDescendants = (parentId: string): Task[] => {
-[F41:256]|         const children = tasks.filter(t => t.parentId === parentId && !t.completed);
-[F41:257]|         return [...children, ...children.flatMap(c => getAllDescendants(c.id))];
-[F41:258]|       };
-[F41:259]|       baseTasks = getAllDescendants(focusedTaskId);
-[F41:260]|     }
-[F41:261]| 
-[F41:262]|     // 2. Scenario A: Default tree manual sort mode
-[F41:263]|     if (sortMode === 'manual' && !isLeafMode) {
-[F41:264]|       return getFlattenedTasks(tasks, zone?.id || null, focusedTaskId).filter(t => !t.completed);
-[F41:265]|     }
-[F41:266]| 
-[F41:267]|     // Common sort function
-[F41:268]|     const applySort = (tasksToSort: Task[]) => {
-[F41:269]|       const priorityOrder: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
-[F41:270]| 
-[F41:271]|       tasksToSort.sort((a, b) => {
-[F41:272]|         switch (sortMode) {
-[F41:273]|           case 'priority':
-[F41:274]|             return priorityOrder[a.priority] - priorityOrder[b.priority];
-[F41:275]|           case 'urgency':
-[F41:276]|             const aDdl = getInheritedDeadline(a, tasks);
-[F41:277]|             const bDdl = getInheritedDeadline(b, tasks);
-[F41:278]|             if (!aDdl && !bDdl) return 0;
-[F41:279]|             if (!aDdl) return 1;
-[F41:280]|             if (!bDdl) return -1;
-[F41:281]|             return aDdl - bDdl;
-[F41:282]|           case 'workTime':
-[F41:283]|             return (b.totalWorkTime || 0) - (a.totalWorkTime || 0);
-[F41:284]|           case 'estimatedTime':
-[F41:285]|             return (b.estimatedTime || 0) - (a.estimatedTime || 0);
-[F41:286]|           case 'weighted': {
-[F41:287]|             const aTaskAny = tasks.find(t => t.id === a.id) as any || {priorityWeight: 50, deadlineWeight: 50};
-[F41:288]|             const bTaskAny = tasks.find(t => t.id === b.id) as any || {priorityWeight: 50, deadlineWeight: 50};
-[F41:289]|             const aScoreDdl = getInheritedDeadline(a, tasks) || 0;
-[F41:290]|             const bScoreDdl = getInheritedDeadline(b, tasks) || 0;
-[F41:291]|             const aScore = (priorityOrder[a.priority] * (aTaskAny.priorityWeight || 50)) + ((aScoreDdl ? 10000000000 - aScoreDdl : 0) * (aTaskAny.deadlineWeight || 50));
-[F41:292]|             const bScore = (priorityOrder[b.priority] * (bTaskAny.priorityWeight || 50)) + ((bScoreDdl ? 10000000000 - bScoreDdl : 0) * (bTaskAny.deadlineWeight || 50));
-[F41:293]|             return aScore - bScore;
-[F41:294]|           }
-[F41:295]|           default:
-[F41:296]|             return 0;
-[F41:297]|         }
-[F41:298]|       });
-[F41:299]|     };
-[F41:300]| 
-[F41:301]|     // 3. Scenario B: Pure leaf node mode (flatten all levels, only keep nodes without children)
-[F41:302]|     if (isLeafMode) {
-[F41:303]|       const parentIds = new Set(tasks.filter(t => !t.completed && t.parentId).map(t => t.parentId));
-[F41:304]|       // Filter from ALL baseTasks, not just topLevel, so deep nested leaves can be found
-[F41:305]|       const leafTasks = baseTasks.filter(t => !parentIds.has(t.id));
+[F41:197]|   // 处理点击添加子任务按钮 - 展开父任务并显示输入框
+[F41:198]|   const handleAddSubtaskClick = (parentId: string) => {
+[F41:199]|     expandTask(parentId); // 展开父任务
+[F41:200]|     setAddingSubtaskParentId(parentId); // 显示添加子任务输入框
+[F41:201]|     setNewSubtaskTitle('');
+[F41:202]|     setNewSubtaskDescription('');
+[F41:203]|     setSubtaskPriority('medium'); // 重置优先级
+[F41:204]|     setSubtaskUrgency('low');     // 重置紧急度
+[F41:205]|     setTimeout(() => subtaskInputRef.current?.focus(), 0);
+[F41:206]|   };
+[F41:207]| 
+[F41:208]|   // 处理添加子任务
+[F41:209]|   const handleAddSubtask = () => {
+[F41:210]|     if (newSubtaskTitle.trim() && addingSubtaskParentId && zone) {
+[F41:211]|       onAddTask(zone.id, newSubtaskTitle.trim(), newSubtaskDescription.trim(), subtaskPriority, subtaskUrgency, subtaskDeadline, subtaskDeadlineType, addingSubtaskParentId);
+[F41:212]|       setNewSubtaskTitle('');
+[F41:213]|       setNewSubtaskDescription('');
+[F41:214]|       setSubtaskDeadline(null);
+[F41:215]|       setSubtaskDeadlineType('none');
+[F41:216]|       // 保持输入框焦点，方便连续添加
+[F41:217]|       setTimeout(() => subtaskInputRef.current?.focus(), 0);
+[F41:218]|     }
+[F41:219]|   };
+[F41:220]| 
+[F41:221]|   // 处理取消添加子任务
+[F41:222]|   const handleCancelAddSubtask = () => {
+[F41:223]|     setAddingSubtaskParentId(null);
+[F41:224]|     setNewSubtaskTitle('');
+[F41:225]|     setNewSubtaskDescription('');
+[F41:226]|     setSubtaskDeadline(null);
+[F41:227]|     setSubtaskDeadlineType('none');
+[F41:228]|   };
+[F41:229]| 
+[F41:230]|   // 处理子任务输入框按键事件
+[F41:231]|   const handleSubtaskKeyDown = (e: React.KeyboardEvent) => {
+[F41:232]|     if (e.key === 'Enter' && !e.shiftKey) {
+[F41:233]|       e.preventDefault();
+[F41:234]|       handleAddSubtask();
+[F41:235]|     } else if (e.key === 'Escape') {
+[F41:236]|       handleCancelAddSubtask();
+[F41:237]|     }
+[F41:238]|   };
+[F41:239]| 
+[F41:240]|   const stats = {
+[F41:241]|     total: tasks.filter((t) => t.zoneId === zone?.id).length,
+[F41:242]|     completed: completedTasks.length,
+[F41:243]|     pending: incompleteTasks.length,
+[F41:244]|     completionRate: 0,
+[F41:245]|   };
+[F41:246]|   stats.completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+[F41:247]| 
+[F41:248]|   // 计算 breadcrumbs
+[F41:249]|   const breadcrumbs = useMemo(() => {
+[F41:250]|     if (!focusedTaskId) return [];
+[F41:251]|     const path: Task[] = [];
+[F41:252]|     let current = tasks.find((t) => t.id === focusedTaskId);
+[F41:253]|     while (current) {
+[F41:254]|       path.unshift(current);
+[F41:255]|       current = current.parentId ? tasks.find((t) => t.id === current!.parentId) : undefined;
+[F41:256]|     }
+[F41:257]|     return path;
+[F41:258]|   }, [tasks, focusedTaskId]);
+[F41:259]| 
+[F41:260]|   // --- Core logic: calculate display task list ---
+[F41:261]|   const processedDisplayTasks = useMemo(() => {
+[F41:262]|     // 1. Get base task set (if no focus, get all zone tasks; if focus, get all descendants)
+[F41:263]|     let baseTasks = tasks.filter(t => t.zoneId === zone?.id && !t.completed);
+[F41:264]| 
+[F41:265]|     if (focusedTaskId) {
+[F41:266]|       const getAllDescendants = (parentId: string): Task[] => {
+[F41:267]|         const children = tasks.filter(t => t.parentId === parentId && !t.completed);
+[F41:268]|         return [...children, ...children.flatMap(c => getAllDescendants(c.id))];
+[F41:269]|       };
+[F41:270]|       baseTasks = getAllDescendants(focusedTaskId);
+[F41:271]|     }
+[F41:272]| 
+[F41:273]|     // 2. Scenario A: Default tree manual sort mode
+[F41:274]|     if (sortMode === 'manual' && !isLeafMode) {
+[F41:275]|       return getFlattenedTasks(tasks, zone?.id || null, focusedTaskId).filter(t => !t.completed);
+[F41:276]|     }
+[F41:277]| 
+[F41:278]|     // Common sort function
+[F41:279]|     const applySort = (tasksToSort: Task[]) => {
+[F41:280]|       const priorityOrder: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
+[F41:281]| 
+[F41:282]|       tasksToSort.sort((a, b) => {
+[F41:283]|         switch (sortMode) {
+[F41:284]|           case 'priority':
+[F41:285]|             return priorityOrder[a.priority] - priorityOrder[b.priority];
+[F41:286]|           case 'urgency':
+[F41:287]|             const aDdl = getInheritedDeadline(a, tasks);
+[F41:288]|             const bDdl = getInheritedDeadline(b, tasks);
+[F41:289]|             if (!aDdl && !bDdl) return 0;
+[F41:290]|             if (!aDdl) return 1;
+[F41:291]|             if (!bDdl) return -1;
+[F41:292]|             return aDdl - bDdl;
+[F41:293]|           case 'workTime':
+[F41:294]|             return (b.totalWorkTime || 0) - (a.totalWorkTime || 0);
+[F41:295]|           case 'estimatedTime':
+[F41:296]|             return (b.estimatedTime || 0) - (a.estimatedTime || 0);
+[F41:297]|           case 'weighted': {
+[F41:298]|             // 获取最新的全局设置权重（适配本地模式，没有单设局部权重时使用全局）
+[F41:299]|             const state = useAppStore.getState();
+[F41:300]|             const pWeight = state.settings.zoneViewSort?.priorityWeight ?? state.settings.globalViewSort?.priorityWeight ?? 0.6;
+[F41:301]|             const dWeight = state.settings.zoneViewSort?.deadlineWeight ?? state.settings.globalViewSort?.deadlineWeight ?? 0.4;
+[F41:302]| 
+[F41:303]|             // 使用归一化的优先级分数：高=1, 中=0.5, 低=0
+[F41:304]|             const normPriorityA = (2 - priorityOrder[a.priority]) / 2;
+[F41:305]|             const normPriorityB = (2 - priorityOrder[b.priority]) / 2;
 [F41:306]| 
-[F41:307]|       applySort(leafTasks);
-[F41:308]|       return leafTasks.map(t => ({ ...t, depth: 0 } as FlattenedTask));
-[F41:309]|     }
-[F41:310]| 
-[F41:311]|     // 4. Scenario C: Tree structure + specified sort (only sort top level, recursively attach children)
-[F41:312]|     const topLevelTasks = baseTasks.filter(t => focusedTaskId ? t.parentId === focusedTaskId : !t.parentId);
-[F41:313]|     applySort(topLevelTasks);
+[F41:307]|             const aEffective = getInheritedDeadline(a, tasks);
+[F41:308]|             const bEffective = getInheritedDeadline(b, tasks);
+[F41:309]| 
+[F41:310]|             // 使用 calculateRankScores 计算排名分数
+[F41:311]|             const rankScores = calculateRankScores(tasks);
+[F41:312]|             const aScoreDdl = aEffective ? (rankScores[a.id] || 0) : 0;
+[F41:313]|             const bScoreDdl = bEffective ? (rankScores[b.id] || 0) : 0;
 [F41:314]| 
-[F41:315]|     const result: FlattenedTask[] = [];
-[F41:316]|     const appendChildren = (parentId: string, currentDepth: number) => {
-[F41:317]|       // Children keep original order sort, don't participate in advanced sorting
-[F41:318]|       const children = tasks.filter(t => t.parentId === parentId && !t.completed).sort((a, b) => a.order - b.order);
-[F41:319]|       for (const child of children) {
-[F41:320]|         result.push({ ...child, depth: currentDepth } as FlattenedTask);
-[F41:321]|         if (!child.isCollapsed) {
-[F41:322]|           appendChildren(child.id, currentDepth + 1);
-[F41:323]|         }
-[F41:324]|       }
-[F41:325]|     };
-[F41:326]| 
-[F41:327]|     for (const topTask of topLevelTasks) {
-[F41:328]|       result.push({ ...topTask, depth: 0 } as FlattenedTask);
-[F41:329]|       if (!topTask.isCollapsed) {
-[F41:330]|         appendChildren(topTask.id, 1);
-[F41:331]|       }
-[F41:332]|     }
-[F41:333]| 
-[F41:334]|     return result;
-[F41:335]|   }, [tasks, zone?.id, focusedTaskId, isLeafMode, sortMode]);
-[F41:336]| 
-[F41:337]|   // Derived state: whether in non-draggable special view
-[F41:338]|   const isSpecialView = isLeafMode || sortMode !== 'manual';
-[F41:339]| 
-[F41:340]|   // 检查任务是否有子任务
-[F41:341]|   const checkHasChildren = (taskId: string): boolean => {
-[F41:342]|     return tasks.some(t => t.parentId === taskId && !t.completed);
-[F41:343]|   };
-[F41:344]| 
-[F41:345]|   // 获取任务的面包屑路径（所有祖先任务）
-[F41:346]|   const getTaskBreadcrumbs = (taskId: string): Task[] => {
-[F41:347]|     const path: Task[] = [];
-[F41:348]|     let current = tasks.find(t => t.id === taskId);
-[F41:349]|     const visited = new Set<string>(); // 防止循环引用
-[F41:350]| 
-[F41:351]|     while (current?.parentId && !visited.has(current.id)) {
-[F41:352]|       visited.add(current.id);
-[F41:353]|       const parent = tasks.find(t => t.id === current!.parentId);
-[F41:354]|       if (parent) {
-[F41:355]|         path.unshift(parent);
-[F41:356]|         current = parent;
-[F41:357]|       } else break;
-[F41:358]|     }
-[F41:359]|     return path;
-[F41:360]|   };
+[F41:315]|             const aScore = normPriorityA * pWeight + aScoreDdl * dWeight;
+[F41:316]|             const bScore = normPriorityB * pWeight + bScoreDdl * dWeight;
+[F41:317]| 
+[F41:318]|             // 分数高的排在前面
+[F41:319]|             if (bScore !== aScore) return bScore - aScore;
+[F41:320]|             // 分数相同时，按实际 DDL（继承或自设）兜底
+[F41:321]|             return (aEffective || Infinity) - (bEffective || Infinity);
+[F41:322]|           }
+[F41:323]|           default:
+[F41:324]|             return 0;
+[F41:325]|         }
+[F41:326]|       });
+[F41:327]|     };
+[F41:328]| 
+[F41:329]|     // 3. Scenario B: Pure leaf node mode (flatten all levels, only keep nodes without children)
+[F41:330]|     if (isLeafMode) {
+[F41:331]|       const parentIds = new Set(tasks.filter(t => !t.completed && t.parentId).map(t => t.parentId));
+[F41:332]|       // Filter from ALL baseTasks, not just topLevel, so deep nested leaves can be found
+[F41:333]|       const leafTasks = baseTasks.filter(t => !parentIds.has(t.id));
+[F41:334]| 
+[F41:335]|       applySort(leafTasks);
+[F41:336]|       return leafTasks.map(t => ({ ...t, depth: 0 } as FlattenedTask));
+[F41:337]|     }
+[F41:338]| 
+[F41:339]|     // 4. Scenario C: Tree structure + specified sort (only sort top level, recursively attach children)
+[F41:340]|     const topLevelTasks = baseTasks.filter(t => focusedTaskId ? t.parentId === focusedTaskId : !t.parentId);
+[F41:341]|     applySort(topLevelTasks);
+[F41:342]| 
+[F41:343]|     const result: FlattenedTask[] = [];
+[F41:344]|     const appendChildren = (parentId: string, currentDepth: number) => {
+[F41:345]|       // Children keep original order sort, don't participate in advanced sorting
+[F41:346]|       const children = tasks.filter(t => t.parentId === parentId && !t.completed).sort((a, b) => a.order - b.order);
+[F41:347]|       for (const child of children) {
+[F41:348]|         result.push({ ...child, depth: currentDepth } as FlattenedTask);
+[F41:349]|         if (!child.isCollapsed) {
+[F41:350]|           appendChildren(child.id, currentDepth + 1);
+[F41:351]|         }
+[F41:352]|       }
+[F41:353]|     };
+[F41:354]| 
+[F41:355]|     for (const topTask of topLevelTasks) {
+[F41:356]|       result.push({ ...topTask, depth: 0 } as FlattenedTask);
+[F41:357]|       if (!topTask.isCollapsed) {
+[F41:358]|         appendChildren(topTask.id, 1);
+[F41:359]|       }
+[F41:360]|     }
 [F41:361]| 
-[F41:362]|   if (!zone) {
-[F41:363]|     return (
-[F41:364]|       <div className="task-list-empty">
-[F41:365]|         <p>{t('zone.noZones')}</p>
-[F41:366]|       </div>
-[F41:367]|     );
-[F41:368]|   }
-[F41:369]| 
-[F41:370]|   const dropAnimation = {
-[F41:371]|     sideEffects: defaultDropAnimationSideEffects({
-[F41:372]|       styles: {
-[F41:373]|         active: {
-[F41:374]|           opacity: '0.5',
-[F41:375]|         },
-[F41:376]|       },
-[F41:377]|     }),
-[F41:378]|   };
-[F41:379]| 
-[F41:380]|   return (
-[F41:381]|     <div className="task-list-container">
-[F41:382]|       {/* Header */}
-[F41:383]|       <div className="task-list-header flex items-center justify-between gap-2 pb-2 border-b border-white/5">
-[F41:384]|         <div className="task-list-title flex-1 min-w-0 flex items-center gap-2">
-[F41:385]|           <div className="zone-color-badge shrink-0" style={{ backgroundColor: zone.color }} />
-[F41:386]|           <span className="truncate" title={zone.name}>{zone.name}</span>
-[F41:387]|           <span className="task-count shrink-0 text-xs text-white/50">
-[F41:388]|             ({stats.completed}/{stats.total})
-[F41:389]|           </span>
-[F41:390]|         </div>
-[F41:391]|         <div className="flex items-center gap-1 shrink-0 ml-auto">
-[F41:392]|           <Button
-[F41:393]|             variant="ghost"
-[F41:394]|             size="sm"
-[F41:395]|             className={`h-7 px-2 ${isLeafMode ? 'bg-blue-500/10 text-blue-400' : 'text-white/40 hover:text-white'}`}
-[F41:396]|             onClick={() => {
-[F41:397]|               if (!isLeafMode) {
-[F41:398]|                 // 从树状切换到叶子模式：如果当前是手动排序，自动切换到加权排序
-[F41:399]|                 if (sortMode === 'manual') {
-[F41:400]|                   setSortMode('weighted');
-[F41:401]|                 }
-[F41:402]|               }
-[F41:403]|               setIsLeafMode(!isLeafMode);
-[F41:404]|             }}
-[F41:405]|           >
-[F41:406]|             <Network size={14} className={isLeafMode ? "" : "opacity-70"} />
-[F41:407]|           </Button>
-[F41:408]|           <Select value={sortMode} onValueChange={(val: any) => {
-[F41:409]|             // 如果切换到手动排序，自动退出叶子节点模式
-[F41:410]|             if (val === 'manual' && isLeafMode) {
-[F41:411]|               setIsLeafMode(false);
-[F41:412]|             }
-[F41:413]|             setSortMode(val);
-[F41:414]|           }}>
-[F41:415]|             <SelectTrigger className="h-7 px-2 min-w-[32px] border border-white/10 bg-black/40 text-white/60 hover:text-white">
-[F41:416]|               {sortMode === 'manual' ? <ArrowUpDown size={14} /> :
-[F41:417]|                sortMode === 'priority' ? <Flag size={14} className="text-red-400"/> :
-[F41:418]|                sortMode === 'urgency' ? <Zap size={14} className="text-orange-400" /> :
-[F41:419]|                sortMode === 'weighted' ? <><Flag size={14} className="text-red-400"/><Zap size={14} className="text-orange-400"/></> :
-[F41:420]|                <Clock size={14} className="text-blue-400" />}
-[F41:421]|             </SelectTrigger>
-[F41:422]|             <SelectContent position="popper">
-[F41:423]|               <SelectItem value="manual">
-[F41:424]|                 <div className="sort-option flex items-center gap-2">
-[F41:425]|                   <ArrowUpDown size={14} />
-[F41:426]|                   <span>{t('view.sortManual')}</span>
-[F41:427]|                 </div>
-[F41:428]|               </SelectItem>
-[F41:429]|               <SelectItem value="priority">
-[F41:430]|                 <div className="sort-option flex items-center gap-2">
-[F41:431]|                   <Flag size={14} className="text-red-400" />
-[F41:432]|                   <span>{t('view.sortByPriority')}</span>
-[F41:433]|                 </div>
-[F41:434]|               </SelectItem>
-[F41:435]|               <SelectItem value="urgency">
-[F41:436]|                 <div className="sort-option flex items-center gap-2">
-[F41:437]|                   <Zap size={14} className="text-orange-400" />
-[F41:438]|                   <span>{t('view.sortByUrgency')}</span>
-[F41:439]|                 </div>
-[F41:440]|               </SelectItem>
-[F41:441]|               <SelectItem value="weighted">
-[F41:442]|                 <div className="sort-option flex items-center gap-2">
-[F41:443]|                   <Flag size={14} className="text-red-400" />
-[F41:444]|                   <Zap size={14} className="text-orange-400" />
-[F41:445]|                   <span>{t('settings.weightedSort')}</span>
-[F41:446]|                 </div>
-[F41:447]|               </SelectItem>
-[F41:448]|               <SelectItem value="workTime">
-[F41:449]|                 <div className="sort-option flex items-center gap-2">
-[F41:450]|                   <Clock size={14} className="text-blue-400" />
-[F41:451]|                   <span>{t('view.sortByWorkTime')}</span>
-[F41:452]|                 </div>
-[F41:453]|               </SelectItem>
-[F41:454]|               <SelectItem value="estimatedTime">
-[F41:455]|                 <div className="sort-option flex items-center gap-2">
-[F41:456]|                   <Clock size={14} className="text-purple-400" />
-[F41:457]|                   <span>{t('view.sortByEstimatedTime')}</span>
-[F41:458]|                 </div>
-[F41:459]|               </SelectItem>
-[F41:460]|             </SelectContent>
-[F41:461]|           </Select>
-[F41:462]|         </div>
-[F41:463]|       </div>
-[F41:464]| 
-[F41:465]|       {/* Breadcrumb Navigation */}
-[F41:466]|       {focusedTaskId && (
-[F41:467]|         <div className="flex items-center gap-1.5 px-1 py-2 mb-2 text-xs text-white/50 overflow-x-auto whitespace-nowrap border-b border-white/5">
-[F41:468]|           <button
-[F41:469]|             onClick={() => setFocusedTaskId(null)}
-[F41:470]|             className="hover:text-white flex items-center gap-1 transition-colors"
-[F41:471]|           >
-[F41:472]|             <Home size={12} /> Root
-[F41:473]|           </button>
-[F41:474]|           {breadcrumbs.map((crumb) => (
-[F41:475]|             <React.Fragment key={crumb.id}>
-[F41:476]|               <ChevronRight size={12} className="opacity-50" />
-[F41:477]|               <button
-[F41:478]|                 onClick={() => setFocusedTaskId(crumb.id)}
-[F41:479]|                 className={`hover:text-white transition-colors ${crumb.id === focusedTaskId ? 'text-blue-400 font-medium' : ''}`}
-[F41:480]|               >
-[F41:481]|                 {crumb.title}
-[F41:482]|               </button>
-[F41:483]|             </React.Fragment>
-[F41:484]|           ))}
-[F41:485]|         </div>
-[F41:486]|       )}
-[F41:487]| 
-[F41:488]|       {/* Add Task */}
-[F41:489]|       {isAddingTask ? (
-[F41:490]|         <div className="add-task-container">
-[F41:491]|           <div className="priority-urgency-row">
-[F41:492]|             <div className="priority-selector">
-[F41:493]|               {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
-[F41:494]|                 <button
-[F41:495]|                   key={p}
-[F41:496]|                   className={`priority-btn ${selectedPriority === p ? 'active' : ''} priority-${p}`}
-[F41:497]|                   onClick={() => setSelectedPriority(p)}
-[F41:498]|                 >
-[F41:499]|                   <div className={`priority-dot ${p}`} />
-[F41:500]|                 </button>
-[F41:501]|               ))}
-[F41:502]|             </div>
-[F41:503]|             {/* Deadline Selector */}
-[F41:504]|             <div className="flex items-center gap-1">
-[F41:505]|               <Popover>
-[F41:506]|                 <PopoverTrigger asChild>
-[F41:507]|                   <Button
-[F41:508]|                     variant="outline"
-[F41:509]|                     size="sm"
-[F41:510]|                     className={`h-7 text-xs border-dashed ${selectedDeadlineType !== 'none' ? 'border-blue-500 text-blue-400' : ''}`}
-[F41:511]|                   >
-[F41:512]|                     <Calendar size={12} className="mr-1" />
-[F41:513]|                     {selectedDeadlineType === 'none' ? t('task.deadline') :
-[F41:514]|                       selectedDeadlineType === 'today' ? t('task.deadlineToday') :
-[F41:515]|                       selectedDeadlineType === 'tomorrow' ? t('task.deadlineTomorrow') :
-[F41:516]|                       selectedDeadlineType === 'week' ? t('task.deadlineWeek') :
-[F41:517]|                       selectedDeadline ? new Date(selectedDeadline).toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US', { month: 'numeric', day: 'numeric' }) : t('task.deadline')}
-[F41:518]|                   </Button>
-[F41:519]|                 </PopoverTrigger>
-[F41:520]|                 <PopoverContent className="w-auto p-2 bg-black border border-white/20 max-h-[90vh] overflow-y-auto z-[9999]" align="start" side="bottom" sideOffset={4} collisionPadding={20} onClick={(e) => e.stopPropagation()}>
-[F41:521]|                   <div className="flex gap-1 mb-2 border-b border-white/10 pb-2">
-[F41:522]|                     <Button
-[F41:523]|                       variant="ghost"
-[F41:524]|                       size="sm"
-[F41:525]|                       className={selectedDeadlineType === 'today' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
-[F41:526]|                       onClick={() => {
-[F41:527]|                         const result = convertDeadlineType('today');
-[F41:528]|                         setSelectedDeadline(result.deadline);
-[F41:529]|                         setSelectedDeadlineType(result.deadlineType);
-[F41:530]|                       }}
-[F41:531]|                     >
-[F41:532]|                       {t('task.deadlineToday')}
-[F41:533]|                     </Button>
-[F41:534]|                     <Button
-[F41:535]|                       variant="ghost"
-[F41:536]|                       size="sm"
-[F41:537]|                       className={selectedDeadlineType === 'tomorrow' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
-[F41:538]|                       onClick={() => {
-[F41:539]|                         const result = convertDeadlineType('tomorrow');
-[F41:540]|                         setSelectedDeadline(result.deadline);
-[F41:541]|                         setSelectedDeadlineType(result.deadlineType);
-[F41:542]|                       }}
-[F41:543]|                     >
-[F41:544]|                       {t('task.deadlineTomorrow')}
-[F41:545]|                     </Button>
-[F41:546]|                     <Button
-[F41:547]|                       variant="ghost"
-[F41:548]|                       size="sm"
-[F41:549]|                       className={selectedDeadlineType === 'week' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
-[F41:550]|                       onClick={() => {
-[F41:551]|                         const result = convertDeadlineType('week');
-[F41:552]|                         setSelectedDeadline(result.deadline);
-[F41:553]|                         setSelectedDeadlineType(result.deadlineType);
-[F41:554]|                       }}
-[F41:555]|                     >
-[F41:556]|                       {t('task.deadlineWeek')}
-[F41:557]|                     </Button>
-[F41:558]|                     <Button
-[F41:559]|                       variant="ghost"
-[F41:560]|                       size="sm"
-[F41:561]|                       className={selectedDeadlineType === 'none' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
-[F41:562]|                       onClick={() => {
-[F41:563]|                         setSelectedDeadline(null);
-[F41:564]|                         setSelectedDeadlineType('none');
-[F41:565]|                       }}
-[F41:566]|                     >
-[F41:567]|                       {t('task.deadlineNone')}
-[F41:568]|                     </Button>
-[F41:569]|                   </div>
-[F41:570]|                   <CalendarComponent
-[F41:571]|                     mode="single"
-[F41:572]|                     selected={selectedDeadline ? new Date(selectedDeadline) : undefined}
-[F41:573]|                     onSelect={(date) => {
-[F41:574]|                       if (date) {
-[F41:575]|                         date.setHours(selectedDeadlineHour, selectedDeadlineMinute, 0, 0);
-[F41:576]|                         setSelectedDeadline(date.getTime());
-[F41:577]|                         setSelectedDeadlineType('exact');
-[F41:578]|                       }
-[F41:579]|                     }}
-[F41:580]|                     className="rounded-md my-2"
-[F41:581]|                     classNames={{
-[F41:582]|                       root: "calendar-dark",
-[F41:583]|                       months: "flex flex-col gap-1 relative",
-[F41:584]|                       month: "flex flex-col",
-[F41:585]|                       caption: "flex justify-center items-center py-1 relative",
-[F41:586]|                       caption_label: "text-sm font-medium text-white",
-[F41:587]|                       nav: "absolute inset-x-0 top-1 flex items-center justify-between w-full z-10 px-1",
-[F41:588]|                       nav_button: "h-6 w-6 bg-black p-0 text-white hover:bg-white hover:text-black rounded flex items-center justify-center transition-colors text-xs border border-white/20",
-[F41:589]|                       nav_button_previous: "",
-[F41:590]|                       nav_button_next: "",
-[F41:591]|                       table: "w-full border-collapse space-y-1",
-[F41:592]|                       head_row: "flex",
-[F41:593]|                       head_cell: "text-white/50 rounded-md w-9 font-normal text-[0.8rem]",
-[F41:594]|                       row: "flex w-full mt-1",
-[F41:595]|                       cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-[F41:596]|                       day: "h-9 w-9 p-0 font-normal text-white bg-black hover:bg-white hover:text-black rounded-md transition-colors",
-[F41:597]|                       day_selected: "bg-white text-black hover:bg-white hover:text-black",
-[F41:598]|                       day_today: "border border-green-500 text-green-400",
-[F41:599]|                       day_outside: "text-white/30 opacity-50",
-[F41:600]|                       day_disabled: "text-white/30 opacity-50",
-[F41:601]|                       day_hidden: "invisible",
-[F41:602]|                     }}
-[F41:603]|                   />
-[F41:604]|                   {/* 时间选择器 */}
-[F41:605]|                   <div className="flex items-center gap-2 mb-2 px-1 flex-wrap">
-[F41:606]|                     <div className="flex items-center gap-1">
-[F41:607]|                       <span className="text-xs text-white/80">{t('task.time')}:</span>
-[F41:608]|                       <input
-[F41:609]|                         type="number"
-[F41:610]|                         min="0"
-[F41:611]|                         max="23"
-[F41:612]|                         value={selectedDeadlineHour}
-[F41:613]|                         onChange={(e) => {
-[F41:614]|                           const val = Math.max(0, Math.min(23, parseInt(e.target.value) || 0));
-[F41:615]|                           setSelectedDeadlineHour(val);
-[F41:616]|                           if (selectedDeadline) {
-[F41:617]|                             const date = new Date(selectedDeadline);
-[F41:618]|                             date.setHours(val, selectedDeadlineMinute, 0, 0);
-[F41:619]|                             setSelectedDeadline(date.getTime());
-[F41:620]|                           }
-[F41:621]|                         }}
-[F41:622]|                         className="w-10 h-6 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
-[F41:623]|                       />
-[F41:624]|                       <span className="text-white/80">:</span>
-[F41:625]|                       <input
-[F41:626]|                         type="number"
-[F41:627]|                         min="0"
-[F41:628]|                         max="59"
-[F41:629]|                         value={selectedDeadlineMinute}
-[F41:630]|                         onChange={(e) => {
-[F41:631]|                           const val = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
-[F41:632]|                           setSelectedDeadlineMinute(val);
-[F41:633]|                           if (selectedDeadline) {
-[F41:634]|                             const date = new Date(selectedDeadline);
-[F41:635]|                             date.setHours(selectedDeadlineHour, val, 0, 0);
-[F41:636]|                             setSelectedDeadline(date.getTime());
-[F41:637]|                           }
-[F41:638]|                         }}
-[F41:639]|                         className="w-10 h-6 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
-[F41:640]|                       />
-[F41:641]|                     </div>
-[F41:642]|                   </div>
-[F41:643]|                 </PopoverContent>
-[F41:644]|               </Popover>
-[F41:645]|             </div>
-[F41:646]|           </div>
-[F41:647]|           <div className="add-task-inputs">
-[F41:648]|             <Input
-[F41:649]|               ref={inputRef}
-[F41:650]|               value={newTaskTitle}
-[F41:651]|               onChange={(e) => setNewTaskTitle(e.target.value)}
-[F41:652]|               onKeyDown={handleKeyDown}
-[F41:653]|               placeholder={t('task.taskTitle') + '...'}
-[F41:654]|               className="add-task-title-input"
-[F41:655]|             />
-[F41:656]|             <Textarea
-[F41:657]|               value={newTaskDescription}
-[F41:658]|               onChange={(e) => setNewTaskDescription(e.target.value)}
-[F41:659]|               onKeyDown={handleKeyDown}
-[F41:660]|               placeholder={t('task.descriptionOptional')}
-[F41:661]|               className="add-task-desc-input min-h-[36px] py-2 resize-none"
-[F41:662]|               rows={1}
-[F41:663]|             />
-[F41:664]|           </div>
-[F41:665]|           <div className="add-task-actions">
-[F41:666]|             <Button
-[F41:667]|               size="icon"
-[F41:668]|               className="add-task-btn"
-[F41:669]|               onClick={() => {
-[F41:670]|                 handleAddTask();
-[F41:671]|                 setIsAddingTask(false);
-[F41:672]|               }}
-[F41:673]|               disabled={!newTaskTitle.trim()}
-[F41:674]|             >
-[F41:675]|               <Plus size={18} />
-[F41:676]|             </Button>
-[F41:677]|             <Button
-[F41:678]|               size="icon"
-[F41:679]|               variant="ghost"
-[F41:680]|               className="cancel-task-btn"
-[F41:681]|               onClick={() => {
-[F41:682]|                 setIsAddingTask(false);
-[F41:683]|                 setNewTaskTitle('');
-[F41:684]|                 setNewTaskDescription('');
-[F41:685]|                 setSelectedDeadline(null);
-[F41:686]|                 setSelectedDeadlineType('none');
-[F41:687]|               }}
-[F41:688]|             >
-[F41:689]|               <ChevronDown size={18} />
-[F41:690]|             </Button>
-[F41:691]|           </div>
-[F41:692]|         </div>
-[F41:693]|       ) : (
-[F41:694]|         <button
-[F41:695]|           className="add-task-collapsed"
-[F41:696]|           onClick={() => setIsAddingTask(true)}
-[F41:697]|         >
-[F41:698]|           <Plus size={16} />
-[F41:699]|           <span>{t('task.addTask')}</span>
-[F41:700]|         </button>
-[F41:701]|       )}
-[F41:702]| 
-[F41:703]|       {/* Task List */}
-[F41:704]|       <ScrollArea className="task-scroll-area">
-[F41:705]|         <div className="tasks-container">
-[F41:706]|           {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
-[F41:707]|             <div className="empty-state">
-[F41:708]|               <Circle size={48} className="empty-icon" />
-[F41:709]|               <p>{t('task.noTasks')}</p>
-[F41:710]|               <p className="empty-hint">{t('task.doubleClickHint')}</p>
-[F41:711]|             </div>
-[F41:712]|           ) : (
-[F41:713]|             <>
-[F41:714]|               {/* 特殊视图：禁用拖拽，添加面包屑上下文 */}
-[F41:715]|               {isSpecialView ? (
-[F41:716]|                 <div className="flex flex-col gap-1">
-[F41:717]|                   {processedDisplayTasks.map((task) => {
-[F41:718]|                     const breadcrumbs = getTaskBreadcrumbs(task.id);
-[F41:719]|                     return (
-[F41:720]|                     <div key={task.id} className="relative">
-[F41:721]|                       {/* 完整面包屑路径：父任务1 > 父任务2 > ... */}
-[F41:722]|                       {isLeafMode && breadcrumbs.length > 0 && (
-[F41:723]|                         <div className="flex items-center gap-1 pl-2 text-[10px] text-white/30 mb-0.5 leading-none">
-[F41:724]|                           {breadcrumbs.map((crumb, i) => (
-[F41:725]|                             <span key={crumb.id} className="flex items-center gap-1">
-[F41:726]|                               <span className="truncate max-w-[100px]" title={crumb.title}>
-[F41:727]|                                 {crumb.title}
-[F41:728]|                               </span>
-[F41:729]|                               {i < breadcrumbs.length - 1 && <ChevronRight size={10} />}
-[F41:730]|                             </span>
-[F41:731]|                           ))}
-[F41:732]|                         </div>
-[F41:733]|                       )}
-[F41:734]|                       <TaskItem
-[F41:735]|                         task={task}
-[F41:736]|                         zoneColor={getZoneColor(task.zoneId)}
-[F41:737]|                         isActive={task.id === activeTaskId}
-[F41:738]|                         isTimerRunning={isTimerRunning && task.id === activeTaskId}
-[F41:739]|                         isDragOver={task.id === overId}
-[F41:740]|                         onToggle={onToggleTask}
-[F41:741]|                         onDelete={onDeleteTask}
-[F41:742]|                         onUpdate={onUpdateTask}
-[F41:743]|                         onToggleExpanded={onToggleExpanded}
-[F41:744]|                         onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
-[F41:745]|                         onSelect={onSelectTask}
-[F41:746]|                         onZoomIn={(id) => setFocusedTaskId(id)}
-[F41:747]|                         hasChildren={!isLeafMode && tasks.some(t => t.parentId === task.id && !t.completed)}
-[F41:748]|                         depth={task.depth}
-[F41:749]|                         isDraggable={false}
-[F41:750]|                         getTotalWorkTime={getTotalWorkTime}
-[F41:751]|                         getEstimatedTime={getEstimatedTime}
-[F41:752]|                       />
-[F41:753]|                     </div>
-[F41:754]|                   );
-[F41:755]|                   })}
-[F41:756]|                 </div>
-[F41:757]|               ) : (
-[F41:758]|                 /* 默认视图：保留拖拽功能 */
-[F41:759]|                 <DndContext
-[F41:760]|                   sensors={sensors}
-[F41:761]|                   onDragStart={handleDragStart}
-[F41:762]|                   onDragOver={handleDragOver}
-[F41:763]|                   onDragEnd={handleDragEnd}
-[F41:764]|                 >
-[F41:765]|                   <SortableContext
-[F41:766]|                     items={processedDisplayTasks.map((t) => t.id)}
-[F41:767]|                     strategy={verticalListSortingStrategy}
-[F41:768]|                   >
-[F41:769]|                     {processedDisplayTasks.map((task) => (
-[F41:770]|                     <React.Fragment key={task.id}>
-[F41:771]|                       <TaskItem
-[F41:772]|                         task={task}
-[F41:773]|                         zoneColor={getZoneColor(task.zoneId)}
-[F41:774]|                         isActive={task.id === activeTaskId}
-[F41:775]|                         isTimerRunning={isTimerRunning && task.id === activeTaskId}
-[F41:776]|                         isDragOver={task.id === overId}
-[F41:777]|                         onToggle={onToggleTask}
-[F41:778]|                         onDelete={onDeleteTask}
-[F41:779]|                         onUpdate={onUpdateTask}
-[F41:780]|                         onToggleExpanded={onToggleExpanded}
-[F41:781]|                         onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
-[F41:782]|                         onAddSubtask={() => handleAddSubtaskClick(task.id)}
-[F41:783]|                         onZoomIn={(id) => setFocusedTaskId(id)}
-[F41:784]|                         onSelect={onSelectTask}
-[F41:785]|                         hasChildren={checkHasChildren(task.id)}
-[F41:786]|                         depth={(task as FlattenedTask).depth}
-[F41:787]|                         isDraggable={true}
-[F41:788]|                         getTotalWorkTime={getTotalWorkTime}
-[F41:789]|                         getEstimatedTime={getEstimatedTime}
-[F41:790]|                       />
-[F41:791]|                       {/* 添加子任务输入框 - 完整表单 */}
-[F41:792]|                       {addingSubtaskParentId === task.id && (
-[F41:793]|                         <div
-[F41:794]|                           className="relative mt-1 mb-2 pr-2"
-[F41:795]|                           style={{ paddingLeft: `${((task as FlattenedTask).depth + 1) * 24 + 8}px` }}
-[F41:796]|                         >
-[F41:797]|                           <div className="flex flex-col gap-2 p-3 rounded-lg border border-white/10 bg-white/5 shadow-inner">
-[F41:798]|                             <div className="flex items-center gap-2">
-[F41:799]|                               <div className="flex-1">
-[F41:800]|                                 <Input
-[F41:801]|                                   ref={subtaskInputRef}
-[F41:802]|                                   value={newSubtaskTitle}
-[F41:803]|                                   onChange={(e) => setNewSubtaskTitle(e.target.value)}
-[F41:804]|                                   onKeyDown={handleSubtaskKeyDown}
-[F41:805]|                                   placeholder={t('task.subtaskTitle')}
-[F41:806]|                                   className="h-8 text-sm text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30"
-[F41:807]|                                   autoFocus
-[F41:808]|                                 />
-[F41:809]|                               </div>
-[F41:810]|                               <Button
-[F41:811]|                                 size="icon"
-[F41:812]|                                 className="h-7 w-7 bg-blue-600 hover:bg-blue-500 text-white rounded-md shrink-0"
-[F41:813]|                                 onClick={handleAddSubtask}
-[F41:814]|                                 disabled={!newSubtaskTitle.trim()}
-[F41:815]|                               >
-[F41:816]|                                 <Plus size={14} />
-[F41:817]|                               </Button>
-[F41:818]|                             </div>
-[F41:819]|                             {/* 描述输入框 */}
-[F41:820]|                             <Textarea
-[F41:821]|                               value={newSubtaskDescription}
-[F41:822]|                               onChange={(e) => setNewSubtaskDescription(e.target.value)}
-[F41:823]|                               onKeyDown={handleSubtaskKeyDown}
-[F41:824]|                               placeholder={t('task.descriptionOptional')}
-[F41:825]|                               className="min-h-[28px] text-sm text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30 resize-none py-1"
-[F41:826]|                               rows={1}
-[F41:827]|                             />
-[F41:828]|                             {/* 子任务支持优先级和截止日期设置 */}
-[F41:829]|                             <div className="flex items-center justify-between">
-[F41:830]|                               <div className="flex items-center gap-2">
-[F41:831]|                                 <div className="priority-selector">
-[F41:832]|                                   {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
-[F41:833]|                                     <button
-[F41:834]|                                       key={p}
-[F41:835]|                                       className={`priority-btn ${subtaskPriority === p ? 'active' : ''} priority-${p}`}
-[F41:836]|                                       onClick={() => setSubtaskPriority(p)}
-[F41:837]|                                     >
-[F41:838]|                                       <div className={`priority-dot ${p}`} />
-[F41:839]|                                     </button>
-[F41:840]|                                   ))}
-[F41:841]|                                 </div>
-[F41:842]|                                 {/* 子任务截止日期选择器 */}
-[F41:843]|                                 <Popover>
-[F41:844]|                                   <PopoverTrigger asChild>
-[F41:845]|                                     <Button
-[F41:846]|                                       variant="outline"
-[F41:847]|                                       size="sm"
-[F41:848]|                                       className={`h-6 text-xs border-dashed ${subtaskDeadlineType !== 'none' ? 'border-blue-500 text-blue-400' : ''}`}
-[F41:849]|                                     >
-[F41:850]|                                       <Calendar size={10} className="mr-1" />
-[F41:851]|                                       {subtaskDeadlineType === 'none' ? t('recurring.ddl') :
-[F41:852]|                                         subtaskDeadlineType === 'today' ? t('task.deadlineToday') :
-[F41:853]|                                         subtaskDeadlineType === 'tomorrow' ? t('task.deadlineTomorrow') :
-[F41:854]|                                         subtaskDeadlineType === 'week' ? t('task.deadlineWeek') :
-[F41:855]|                                         subtaskDeadline ? new Date(subtaskDeadline).toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US', { month: 'numeric', day: 'numeric' }) : t('recurring.ddl')}
-[F41:856]|                                     </Button>
-[F41:857]|                                   </PopoverTrigger>
-[F41:858]|                                   <PopoverContent className="w-auto p-2 bg-black border border-white/20 max-h-[90vh] overflow-y-auto z-[9999]" align="start" side="bottom" sideOffset={4} collisionPadding={20} onClick={(e) => e.stopPropagation()}>
-[F41:859]|                                     <div className="flex gap-1 mb-2 border-b border-white/10 pb-2">
-[F41:860]|                                       <Button
-[F41:861]|                                         variant="ghost"
-[F41:862]|                                         size="sm"
-[F41:863]|                                         className={subtaskDeadlineType === 'today' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
-[F41:864]|                                         onClick={() => {
-[F41:865]|                                           const result = convertDeadlineType('today');
-[F41:866]|                                           setSubtaskDeadline(result.deadline);
-[F41:867]|                                           setSubtaskDeadlineType(result.deadlineType);
-[F41:868]|                                         }}
-[F41:869]|                                       >
-[F41:870]|                                         {t('task.deadlineToday')}
-[F41:871]|                                       </Button>
-[F41:872]|                                       <Button
-[F41:873]|                                         variant="ghost"
-[F41:874]|                                         size="sm"
-[F41:875]|                                         className={subtaskDeadlineType === 'tomorrow' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
-[F41:876]|                                         onClick={() => {
-[F41:877]|                                           const result = convertDeadlineType('tomorrow');
-[F41:878]|                                           setSubtaskDeadline(result.deadline);
-[F41:879]|                                           setSubtaskDeadlineType(result.deadlineType);
-[F41:880]|                                         }}
-[F41:881]|                                       >
-[F41:882]|                                         {t('task.deadlineTomorrow')}
-[F41:883]|                                       </Button>
-[F41:884]|                                       <Button
-[F41:885]|                                         variant="ghost"
-[F41:886]|                                         size="sm"
-[F41:887]|                                         className={subtaskDeadlineType === 'week' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
-[F41:888]|                                         onClick={() => {
-[F41:889]|                                           const result = convertDeadlineType('week');
-[F41:890]|                                           setSubtaskDeadline(result.deadline);
-[F41:891]|                                           setSubtaskDeadlineType(result.deadlineType);
-[F41:892]|                                         }}
-[F41:893]|                                       >
-[F41:894]|                                         {t('task.deadlineWeek')}
-[F41:895]|                                       </Button>
-[F41:896]|                                       <Button
-[F41:897]|                                         variant="ghost"
-[F41:898]|                                         size="sm"
-[F41:899]|                                         className={subtaskDeadlineType === 'none' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
-[F41:900]|                                         onClick={() => {
-[F41:901]|                                           setSubtaskDeadline(null);
-[F41:902]|                                           setSubtaskDeadlineType('none');
-[F41:903]|                                         }}
-[F41:904]|                                       >
-[F41:905]|                                         {t('task.deadlineNone')}
-[F41:906]|                                       </Button>
-[F41:907]|                                     </div>
-[F41:908]|                                     <CalendarComponent
-[F41:909]|                                       mode="single"
-[F41:910]|                                       selected={subtaskDeadline ? new Date(subtaskDeadline) : undefined}
-[F41:911]|                                       onSelect={(date) => {
-[F41:912]|                                         if (date) {
-[F41:913]|                                           date.setHours(subtaskDeadlineHour, subtaskDeadlineMinute, 0, 0);
-[F41:914]|                                           setSubtaskDeadline(date.getTime());
-[F41:915]|                                           setSubtaskDeadlineType('exact');
-[F41:916]|                                         }
-[F41:917]|                                       }}
-[F41:918]|                                       className="rounded-md my-2"
-[F41:919]|                                       classNames={{
-[F41:920]|                                         root: "calendar-dark",
-[F41:921]|                                         months: "flex flex-col gap-1 relative",
-[F41:922]|                                         month: "flex flex-col",
-[F41:923]|                                         caption: "flex justify-center items-center py-1 relative",
-[F41:924]|                                         caption_label: "text-sm font-medium text-white",
-[F41:925]|                                         nav: "absolute inset-x-0 top-1 flex items-center justify-between w-full z-10 px-1",
-[F41:926]|                                         nav_button: "h-6 w-6 bg-black p-0 text-white hover:bg-white hover:text-black rounded flex items-center justify-center transition-colors text-xs border border-white/20",
-[F41:927]|                                         nav_button_previous: "",
-[F41:928]|                                         nav_button_next: "",
-[F41:929]|                                         table: "w-full border-collapse space-y-1",
-[F41:930]|                                         head_row: "flex",
-[F41:931]|                                         head_cell: "text-white/50 rounded-md w-9 font-normal text-[0.8rem]",
-[F41:932]|                                         row: "flex w-full mt-1",
-[F41:933]|                                         cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-[F41:934]|                                         day: "h-9 w-9 p-0 font-normal text-white bg-black hover:bg-white hover:text-black rounded-md transition-colors",
-[F41:935]|                                         day_selected: "bg-white text-black hover:bg-white hover:text-black",
-[F41:936]|                                         day_today: "border border-green-500 text-green-400",
-[F41:937]|                                         day_outside: "text-white/30 opacity-50",
-[F41:938]|                                         day_disabled: "text-white/30 opacity-50",
-[F41:939]|                                         day_hidden: "invisible",
-[F41:940]|                                       }}
-[F41:941]|                                     />
-[F41:942]|                                     {/* 时间选择器 */}
-[F41:943]|                                     <div className="flex items-center gap-2 mb-2 px-1 flex-wrap">
-[F41:944]|                                       <div className="flex items-center gap-1">
-[F41:945]|                                         <span className="text-xs text-white/80">{t('task.time')}:</span>
-[F41:946]|                                         <input
-[F41:947]|                                           type="number"
-[F41:948]|                                           min="0"
-[F41:949]|                                           max="23"
-[F41:950]|                                           value={subtaskDeadlineHour}
-[F41:951]|                                           onChange={(e) => {
-[F41:952]|                                             const val = Math.max(0, Math.min(23, parseInt(e.target.value) || 0));
-[F41:953]|                                             setSubtaskDeadlineHour(val);
-[F41:954]|                                             if (subtaskDeadline) {
-[F41:955]|                                               const date = new Date(subtaskDeadline);
-[F41:956]|                                               date.setHours(val, subtaskDeadlineMinute, 0, 0);
-[F41:957]|                                               setSubtaskDeadline(date.getTime());
-[F41:958]|                                             }
-[F41:959]|                                           }}
-[F41:960]|                                           className="w-10 h-6 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
-[F41:961]|                                         />
-[F41:962]|                                         <span className="text-white/80">:</span>
-[F41:963]|                                         <input
-[F41:964]|                                           type="number"
-[F41:965]|                                           min="0"
-[F41:966]|                                           max="59"
-[F41:967]|                                           value={subtaskDeadlineMinute}
-[F41:968]|                                           onChange={(e) => {
-[F41:969]|                                             const val = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
-[F41:970]|                                             setSubtaskDeadlineMinute(val);
-[F41:971]|                                             if (subtaskDeadline) {
-[F41:972]|                                               const date = new Date(subtaskDeadline);
-[F41:973]|                                               date.setHours(subtaskDeadlineHour, val, 0, 0);
-[F41:974]|                                               setSubtaskDeadline(date.getTime());
-[F41:975]|                                             }
-[F41:976]|                                           }}
-[F41:977]|                                           className="w-10 h-6 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
-[F41:978]|                                         />
-[F41:979]|                                       </div>
-[F41:980]|                                     </div>
-[F41:981]|                                   </PopoverContent>
-[F41:982]|                                 </Popover>
-[F41:983]|                               </div>
-[F41:984]|                               <Button
-[F41:985]|                                 size="sm"
-[F41:986]|                                 variant="ghost"
-[F41:987]|                                 className="h-6 text-xs text-white/40 hover:text-white/80 px-2"
-[F41:988]|                                 onClick={handleCancelAddSubtask}
-[F41:989]|                               >
-[F41:990]|                                 {t('common.cancel')}
-[F41:991]|                               </Button>
-[F41:992]|                             </div>
-[F41:993]|                           </div>
-[F41:994]|                         </div>
-[F41:995]|                       )}
-[F41:996]|                     </React.Fragment>
-[F41:997]|                   ))}
-[F41:998]|                 </SortableContext>
-[F41:999]| 
-[F41:1000]|                 <DragOverlay dropAnimation={dropAnimation}>
-[F41:1001]|                   {activeItem ? (
-[F41:1002]|                     <TaskItem
-[F41:1003]|                       task={activeItem}
-[F41:1004]|                       zoneColor={getZoneColor(activeItem.zoneId)}
-[F41:1005]|                       isActive={false}
-[F41:1006]|                       isTimerRunning={false}
-[F41:1007]|                       isDragOver={false}
-[F41:1008]|                       onToggle={() => {}}
-[F41:1009]|                       onDelete={() => {}}
-[F41:1010]|                       onUpdate={() => {}}
-[F41:1011]|                       onToggleExpanded={() => {}}
-[F41:1012]|                       onSelect={() => {}}
-[F41:1013]|                       hasChildren={false}
-[F41:1014]|                       depth={(activeItem as FlattenedTask).depth}
-[F41:1015]|                       isDraggable={true}
-[F41:1016]|                       getTotalWorkTime={getTotalWorkTime}
-[F41:1017]|                       getEstimatedTime={getEstimatedTime}
-[F41:1018]|                     />
-[F41:1019]|                   ) : null}
-[F41:1020]|                 </DragOverlay>
-[F41:1021]|               </DndContext>
-[F41:1022]|               )}
-[F41:1023]| 
-[F41:1024]|               {/* Completed Tasks */}
-[F41:1025]|               {completedTasks.length > 0 && (
-[F41:1026]|                 <div className="completed-section">
-[F41:1027]|                   <button
-[F41:1028]|                     className="completed-toggle"
-[F41:1029]|                     onClick={() => setShowCompleted(!showCompleted)}
-[F41:1030]|                   >
-[F41:1031]|                     <CheckCircle2 size={14} className="text-green-400" />
-[F41:1032]|                     <span>{t('task.completed')} ({completedTasks.length})</span>
-[F41:1033]|                     <span className={`toggle-arrow ${showCompleted ? 'open' : ''}`}>
-[F41:1034]|                       ▼
-[F41:1035]|                     </span>
-[F41:1036]|                   </button>
-[F41:1037]| 
-[F41:1038]|                   {showCompleted && (
-[F41:1039]|                     <div className="completed-tasks">
-[F41:1040]|                       {completedTasks.map((task) => (
-[F41:1041]|                         <div key={task.id} className="task-tree-item relative mb-1">
-[F41:1042]|                           {/* 添加父级任务标题提示，防止打平后不知道是哪个任务的子项 */}
-[F41:1043]|                           {task.parentId && (
-[F41:1044]|                             <div className="flex items-center gap-1 pl-7 pr-2 text-[10px] text-white/40 mb-0.5 leading-none">
-[F41:1045]|                               <span className="truncate max-w-[150px]">{tasks.find(t => t.id === task.parentId)?.title || '...'}</span>
-[F41:1046]|                             </div>
-[F41:1047]|                           )}
-[F41:1048]|                           <TaskItem
-[F41:1049]|                             task={task}
-[F41:1050]|                             zoneColor={getZoneColor(task.zoneId)}
-[F41:1051]|                             isActive={false}
-[F41:1052]|                             isTimerRunning={false}
-[F41:1053]|                             onToggle={onToggleTask}
-[F41:1054]|                             onDelete={onDeleteTask}
-[F41:1055]|                             onUpdate={onUpdateTask}
-[F41:1056]|                             onToggleExpanded={onToggleExpanded}
-[F41:1057]|                             onSelect={onSelectTask}
-[F41:1058]|                             hasChildren={false}
-[F41:1059]|                             depth={0}
-[F41:1060]|                             isDraggable={false}
-[F41:1061]|                             getTotalWorkTime={getTotalWorkTime}
-[F41:1062]|                             getEstimatedTime={getEstimatedTime}
-[F41:1063]|                           />
-[F41:1064]|                         </div>
-[F41:1065]|                       ))}
-[F41:1066]|                       <Button
-[F41:1067]|                         variant="ghost"
-[F41:1068]|                         size="sm"
-[F41:1069]|                         className="clear-completed-btn"
-[F41:1070]|                         onClick={onClearCompleted}
-[F41:1071]|                       >
-[F41:1072]|                         <Trash2 size={14} className="mr-1" />
-[F41:1073]|                         {t('task.clearCompleted')}
-[F41:1074]|                       </Button>
-[F41:1075]|                     </div>
-[F41:1076]|                   )}
-[F41:1077]|                 </div>
-[F41:1078]|               )}
-[F41:1079]|             </>
-[F41:1080]|           )}
-[F41:1081]|         </div>
-[F41:1082]|       </ScrollArea>
-[F41:1083]| 
-[F41:1084]|       {/* Footer Stats */}
-[F41:1085]|       <div className="task-list-footer">
-[F41:1086]|         <div className="footer-stat">
-[F41:1087]|           <span className="stat-label">{t('task.completionRate')}</span>
-[F41:1088]|           <span className="stat-value">{stats.completionRate}%</span>
-[F41:1089]|         </div>
-[F41:1090]|         <div className="footer-stat">
-[F41:1091]|           <span className="stat-label">{t('task.pending')}</span>
-[F41:1092]|           <span className="stat-value">{stats.pending}</span>
-[F41:1093]|         </div>
-[F41:1094]|       </div>
-[F41:1095]|     </div>
-[F41:1096]|   );
-[F41:1097]| }
+[F41:362]|     return result;
+[F41:363]|   }, [tasks, zone?.id, focusedTaskId, isLeafMode, sortMode]);
+[F41:364]| 
+[F41:365]|   // Derived state: whether in non-draggable special view
+[F41:366]|   const isSpecialView = isLeafMode || sortMode !== 'manual';
+[F41:367]| 
+[F41:368]|   // 检查任务是否有子任务
+[F41:369]|   const checkHasChildren = (taskId: string): boolean => {
+[F41:370]|     return tasks.some(t => t.parentId === taskId && !t.completed);
+[F41:371]|   };
+[F41:372]| 
+[F41:373]|   // 获取任务的面包屑路径（所有祖先任务）
+[F41:374]|   const getTaskBreadcrumbs = (taskId: string): Task[] => {
+[F41:375]|     const path: Task[] = [];
+[F41:376]|     let current = tasks.find(t => t.id === taskId);
+[F41:377]|     const visited = new Set<string>(); // 防止循环引用
+[F41:378]| 
+[F41:379]|     while (current?.parentId && !visited.has(current.id)) {
+[F41:380]|       visited.add(current.id);
+[F41:381]|       const parent = tasks.find(t => t.id === current!.parentId);
+[F41:382]|       if (parent) {
+[F41:383]|         path.unshift(parent);
+[F41:384]|         current = parent;
+[F41:385]|       } else break;
+[F41:386]|     }
+[F41:387]|     return path;
+[F41:388]|   };
+[F41:389]| 
+[F41:390]|   if (!zone) {
+[F41:391]|     return (
+[F41:392]|       <div className="task-list-empty">
+[F41:393]|         <p>{t('zone.noZones')}</p>
+[F41:394]|       </div>
+[F41:395]|     );
+[F41:396]|   }
+[F41:397]| 
+[F41:398]|   const dropAnimation = {
+[F41:399]|     sideEffects: defaultDropAnimationSideEffects({
+[F41:400]|       styles: {
+[F41:401]|         active: {
+[F41:402]|           opacity: '0.5',
+[F41:403]|         },
+[F41:404]|       },
+[F41:405]|     }),
+[F41:406]|   };
+[F41:407]| 
+[F41:408]|   return (
+[F41:409]|     <div className="task-list-container">
+[F41:410]|       {/* Header */}
+[F41:411]|       <div className="task-list-header flex items-center justify-between gap-2 pb-2 border-b border-white/5">
+[F41:412]|         <div className="task-list-title flex-1 min-w-0 flex items-center gap-2">
+[F41:413]|           <div className="zone-color-badge shrink-0" style={{ backgroundColor: zone.color }} />
+[F41:414]|           <span className="truncate" title={zone.name}>{zone.name}</span>
+[F41:415]|           <span className="task-count shrink-0 text-xs text-white/50">
+[F41:416]|             ({stats.completed}/{stats.total})
+[F41:417]|           </span>
+[F41:418]|         </div>
+[F41:419]|         <div className="flex items-center gap-1 shrink-0 ml-auto">
+[F41:420]|           <Button
+[F41:421]|             variant="ghost"
+[F41:422]|             size="sm"
+[F41:423]|             className={`h-7 px-2 ${isLeafMode ? 'bg-blue-500/10 text-blue-400' : 'text-white/40 hover:text-white'}`}
+[F41:424]|             onClick={() => {
+[F41:425]|               if (!isLeafMode) {
+[F41:426]|                 // 从树状切换到叶子模式：如果当前是手动排序，自动切换到加权排序
+[F41:427]|                 if (sortMode === 'manual') {
+[F41:428]|                   setSortMode('weighted');
+[F41:429]|                 }
+[F41:430]|               }
+[F41:431]|               setIsLeafMode(!isLeafMode);
+[F41:432]|             }}
+[F41:433]|           >
+[F41:434]|             <Network size={14} className={isLeafMode ? "" : "opacity-70"} />
+[F41:435]|           </Button>
+[F41:436]|           <Select value={sortMode} onValueChange={(val: any) => {
+[F41:437]|             // 如果切换到手动排序，自动退出叶子节点模式
+[F41:438]|             if (val === 'manual' && isLeafMode) {
+[F41:439]|               setIsLeafMode(false);
+[F41:440]|             }
+[F41:441]|             setSortMode(val);
+[F41:442]|           }}>
+[F41:443]|             <SelectTrigger className="h-7 px-2 min-w-[32px] border border-white/10 bg-black/40 text-white/60 hover:text-white">
+[F41:444]|               {sortMode === 'manual' ? <ArrowUpDown size={14} /> :
+[F41:445]|                sortMode === 'priority' ? <Flag size={14} className="text-red-400"/> :
+[F41:446]|                sortMode === 'urgency' ? <Zap size={14} className="text-orange-400" /> :
+[F41:447]|                sortMode === 'weighted' ? <><Flag size={14} className="text-red-400"/><Zap size={14} className="text-orange-400"/></> :
+[F41:448]|                <Clock size={14} className="text-blue-400" />}
+[F41:449]|             </SelectTrigger>
+[F41:450]|             <SelectContent position="popper">
+[F41:451]|               <SelectItem value="manual">
+[F41:452]|                 <div className="sort-option flex items-center gap-2">
+[F41:453]|                   <ArrowUpDown size={14} />
+[F41:454]|                   <span>{t('view.sortManual')}</span>
+[F41:455]|                 </div>
+[F41:456]|               </SelectItem>
+[F41:457]|               <SelectItem value="priority">
+[F41:458]|                 <div className="sort-option flex items-center gap-2">
+[F41:459]|                   <Flag size={14} className="text-red-400" />
+[F41:460]|                   <span>{t('view.sortByPriority')}</span>
+[F41:461]|                 </div>
+[F41:462]|               </SelectItem>
+[F41:463]|               <SelectItem value="urgency">
+[F41:464]|                 <div className="sort-option flex items-center gap-2">
+[F41:465]|                   <Zap size={14} className="text-orange-400" />
+[F41:466]|                   <span>{t('view.sortByUrgency')}</span>
+[F41:467]|                 </div>
+[F41:468]|               </SelectItem>
+[F41:469]|               <SelectItem value="weighted">
+[F41:470]|                 <div className="sort-option flex items-center gap-2">
+[F41:471]|                   <Flag size={14} className="text-red-400" />
+[F41:472]|                   <Zap size={14} className="text-orange-400" />
+[F41:473]|                   <span>{t('settings.weightedSort')}</span>
+[F41:474]|                 </div>
+[F41:475]|               </SelectItem>
+[F41:476]|               <SelectItem value="workTime">
+[F41:477]|                 <div className="sort-option flex items-center gap-2">
+[F41:478]|                   <Clock size={14} className="text-blue-400" />
+[F41:479]|                   <span>{t('view.sortByWorkTime')}</span>
+[F41:480]|                 </div>
+[F41:481]|               </SelectItem>
+[F41:482]|               <SelectItem value="estimatedTime">
+[F41:483]|                 <div className="sort-option flex items-center gap-2">
+[F41:484]|                   <Clock size={14} className="text-purple-400" />
+[F41:485]|                   <span>{t('view.sortByEstimatedTime')}</span>
+[F41:486]|                 </div>
+[F41:487]|               </SelectItem>
+[F41:488]|             </SelectContent>
+[F41:489]|           </Select>
+[F41:490]|         </div>
+[F41:491]|       </div>
+[F41:492]| 
+[F41:493]|       {/* Breadcrumb Navigation */}
+[F41:494]|       {focusedTaskId && (
+[F41:495]|         <div className="flex items-center gap-1.5 px-1 py-2 mb-2 text-xs text-white/50 overflow-x-auto whitespace-nowrap border-b border-white/5">
+[F41:496]|           <button
+[F41:497]|             onClick={() => setFocusedTaskId(null)}
+[F41:498]|             className="hover:text-white flex items-center gap-1 transition-colors"
+[F41:499]|           >
+[F41:500]|             <Home size={12} /> Root
+[F41:501]|           </button>
+[F41:502]|           {breadcrumbs.map((crumb) => (
+[F41:503]|             <React.Fragment key={crumb.id}>
+[F41:504]|               <ChevronRight size={12} className="opacity-50" />
+[F41:505]|               <button
+[F41:506]|                 onClick={() => setFocusedTaskId(crumb.id)}
+[F41:507]|                 className={`hover:text-white transition-colors ${crumb.id === focusedTaskId ? 'text-blue-400 font-medium' : ''}`}
+[F41:508]|               >
+[F41:509]|                 {crumb.title}
+[F41:510]|               </button>
+[F41:511]|             </React.Fragment>
+[F41:512]|           ))}
+[F41:513]|         </div>
+[F41:514]|       )}
+[F41:515]| 
+[F41:516]|       {/* Add Task */}
+[F41:517]|       {isAddingTask ? (
+[F41:518]|         <div className="add-task-container">
+[F41:519]|           <div className="priority-urgency-row">
+[F41:520]|             <div className="priority-selector">
+[F41:521]|               {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
+[F41:522]|                 <button
+[F41:523]|                   key={p}
+[F41:524]|                   className={`priority-btn ${selectedPriority === p ? 'active' : ''} priority-${p}`}
+[F41:525]|                   onClick={() => setSelectedPriority(p)}
+[F41:526]|                 >
+[F41:527]|                   <div className={`priority-dot ${p}`} />
+[F41:528]|                 </button>
+[F41:529]|               ))}
+[F41:530]|             </div>
+[F41:531]|             {/* Deadline Selector */}
+[F41:532]|             <div className="flex items-center gap-1">
+[F41:533]|               <Popover>
+[F41:534]|                 <PopoverTrigger asChild>
+[F41:535]|                   <Button
+[F41:536]|                     variant="outline"
+[F41:537]|                     size="sm"
+[F41:538]|                     className={`h-7 text-xs border-dashed ${selectedDeadlineType !== 'none' ? 'border-blue-500 text-blue-400' : ''}`}
+[F41:539]|                   >
+[F41:540]|                     <Calendar size={12} className="mr-1" />
+[F41:541]|                     {selectedDeadlineType === 'none' ? t('task.deadline') :
+[F41:542]|                       selectedDeadlineType === 'today' ? t('task.deadlineToday') :
+[F41:543]|                       selectedDeadlineType === 'tomorrow' ? t('task.deadlineTomorrow') :
+[F41:544]|                       selectedDeadlineType === 'week' ? t('task.deadlineWeek') :
+[F41:545]|                       selectedDeadline ? new Date(selectedDeadline).toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US', { month: 'numeric', day: 'numeric' }) : t('task.deadline')}
+[F41:546]|                   </Button>
+[F41:547]|                 </PopoverTrigger>
+[F41:548]|                 <PopoverContent className="w-auto p-2 bg-black border border-white/20 max-h-[90vh] overflow-y-auto z-[9999]" align="start" side="bottom" sideOffset={4} collisionPadding={20} onClick={(e) => e.stopPropagation()}>
+[F41:549]|                   <div className="flex gap-1 mb-2 border-b border-white/10 pb-2">
+[F41:550]|                     <Button
+[F41:551]|                       variant="ghost"
+[F41:552]|                       size="sm"
+[F41:553]|                       className={selectedDeadlineType === 'today' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
+[F41:554]|                       onClick={() => {
+[F41:555]|                         const result = convertDeadlineType('today');
+[F41:556]|                         setSelectedDeadline(result.deadline);
+[F41:557]|                         setSelectedDeadlineType(result.deadlineType);
+[F41:558]|                       }}
+[F41:559]|                     >
+[F41:560]|                       {t('task.deadlineToday')}
+[F41:561]|                     </Button>
+[F41:562]|                     <Button
+[F41:563]|                       variant="ghost"
+[F41:564]|                       size="sm"
+[F41:565]|                       className={selectedDeadlineType === 'tomorrow' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
+[F41:566]|                       onClick={() => {
+[F41:567]|                         const result = convertDeadlineType('tomorrow');
+[F41:568]|                         setSelectedDeadline(result.deadline);
+[F41:569]|                         setSelectedDeadlineType(result.deadlineType);
+[F41:570]|                       }}
+[F41:571]|                     >
+[F41:572]|                       {t('task.deadlineTomorrow')}
+[F41:573]|                     </Button>
+[F41:574]|                     <Button
+[F41:575]|                       variant="ghost"
+[F41:576]|                       size="sm"
+[F41:577]|                       className={selectedDeadlineType === 'week' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
+[F41:578]|                       onClick={() => {
+[F41:579]|                         const result = convertDeadlineType('week');
+[F41:580]|                         setSelectedDeadline(result.deadline);
+[F41:581]|                         setSelectedDeadlineType(result.deadlineType);
+[F41:582]|                       }}
+[F41:583]|                     >
+[F41:584]|                       {t('task.deadlineWeek')}
+[F41:585]|                     </Button>
+[F41:586]|                     <Button
+[F41:587]|                       variant="ghost"
+[F41:588]|                       size="sm"
+[F41:589]|                       className={selectedDeadlineType === 'none' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
+[F41:590]|                       onClick={() => {
+[F41:591]|                         setSelectedDeadline(null);
+[F41:592]|                         setSelectedDeadlineType('none');
+[F41:593]|                       }}
+[F41:594]|                     >
+[F41:595]|                       {t('task.deadlineNone')}
+[F41:596]|                     </Button>
+[F41:597]|                   </div>
+[F41:598]|                   <CalendarComponent
+[F41:599]|                     mode="single"
+[F41:600]|                     selected={selectedDeadline ? new Date(selectedDeadline) : undefined}
+[F41:601]|                     onSelect={(date) => {
+[F41:602]|                       if (date) {
+[F41:603]|                         date.setHours(selectedDeadlineHour, selectedDeadlineMinute, 0, 0);
+[F41:604]|                         setSelectedDeadline(date.getTime());
+[F41:605]|                         setSelectedDeadlineType('exact');
+[F41:606]|                       }
+[F41:607]|                     }}
+[F41:608]|                     className="rounded-md my-2"
+[F41:609]|                     classNames={{
+[F41:610]|                       root: "calendar-dark",
+[F41:611]|                       months: "flex flex-col gap-1 relative",
+[F41:612]|                       month: "flex flex-col",
+[F41:613]|                       caption: "flex justify-center items-center py-1 relative",
+[F41:614]|                       caption_label: "text-sm font-medium text-white",
+[F41:615]|                       nav: "absolute inset-x-0 top-1 flex items-center justify-between w-full z-10 px-1",
+[F41:616]|                       nav_button: "h-6 w-6 bg-black p-0 text-white hover:bg-white hover:text-black rounded flex items-center justify-center transition-colors text-xs border border-white/20",
+[F41:617]|                       nav_button_previous: "",
+[F41:618]|                       nav_button_next: "",
+[F41:619]|                       table: "w-full border-collapse space-y-1",
+[F41:620]|                       head_row: "flex",
+[F41:621]|                       head_cell: "text-white/50 rounded-md w-9 font-normal text-[0.8rem]",
+[F41:622]|                       row: "flex w-full mt-1",
+[F41:623]|                       cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+[F41:624]|                       day: "h-9 w-9 p-0 font-normal text-white bg-black hover:bg-white hover:text-black rounded-md transition-colors",
+[F41:625]|                       day_selected: "bg-white text-black hover:bg-white hover:text-black",
+[F41:626]|                       day_today: "border border-green-500 text-green-400",
+[F41:627]|                       day_outside: "text-white/30 opacity-50",
+[F41:628]|                       day_disabled: "text-white/30 opacity-50",
+[F41:629]|                       day_hidden: "invisible",
+[F41:630]|                     }}
+[F41:631]|                   />
+[F41:632]|                   {/* 时间选择器 */}
+[F41:633]|                   <div className="flex items-center gap-2 mb-2 px-1 flex-wrap">
+[F41:634]|                     <div className="flex items-center gap-1">
+[F41:635]|                       <span className="text-xs text-white/80">{t('task.time')}:</span>
+[F41:636]|                       <input
+[F41:637]|                         type="number"
+[F41:638]|                         min="0"
+[F41:639]|                         max="23"
+[F41:640]|                         value={selectedDeadlineHour}
+[F41:641]|                         onChange={(e) => {
+[F41:642]|                           const val = Math.max(0, Math.min(23, parseInt(e.target.value) || 0));
+[F41:643]|                           setSelectedDeadlineHour(val);
+[F41:644]|                           if (selectedDeadline) {
+[F41:645]|                             const date = new Date(selectedDeadline);
+[F41:646]|                             date.setHours(val, selectedDeadlineMinute, 0, 0);
+[F41:647]|                             setSelectedDeadline(date.getTime());
+[F41:648]|                           }
+[F41:649]|                         }}
+[F41:650]|                         className="w-10 h-6 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
+[F41:651]|                       />
+[F41:652]|                       <span className="text-white/80">:</span>
+[F41:653]|                       <input
+[F41:654]|                         type="number"
+[F41:655]|                         min="0"
+[F41:656]|                         max="59"
+[F41:657]|                         value={selectedDeadlineMinute}
+[F41:658]|                         onChange={(e) => {
+[F41:659]|                           const val = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
+[F41:660]|                           setSelectedDeadlineMinute(val);
+[F41:661]|                           if (selectedDeadline) {
+[F41:662]|                             const date = new Date(selectedDeadline);
+[F41:663]|                             date.setHours(selectedDeadlineHour, val, 0, 0);
+[F41:664]|                             setSelectedDeadline(date.getTime());
+[F41:665]|                           }
+[F41:666]|                         }}
+[F41:667]|                         className="w-10 h-6 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
+[F41:668]|                       />
+[F41:669]|                     </div>
+[F41:670]|                   </div>
+[F41:671]|                 </PopoverContent>
+[F41:672]|               </Popover>
+[F41:673]|             </div>
+[F41:674]|           </div>
+[F41:675]|           <div className="add-task-inputs">
+[F41:676]|             <Input
+[F41:677]|               ref={inputRef}
+[F41:678]|               value={newTaskTitle}
+[F41:679]|               onChange={(e) => setNewTaskTitle(e.target.value)}
+[F41:680]|               onKeyDown={handleKeyDown}
+[F41:681]|               placeholder={t('task.taskTitle') + '...'}
+[F41:682]|               className="add-task-title-input"
+[F41:683]|             />
+[F41:684]|             <Textarea
+[F41:685]|               value={newTaskDescription}
+[F41:686]|               onChange={(e) => setNewTaskDescription(e.target.value)}
+[F41:687]|               onKeyDown={handleKeyDown}
+[F41:688]|               placeholder={t('task.descriptionOptional')}
+[F41:689]|               className="add-task-desc-input min-h-[36px] py-2 resize-none"
+[F41:690]|               rows={1}
+[F41:691]|             />
+[F41:692]|           </div>
+[F41:693]|           <div className="add-task-actions">
+[F41:694]|             <Button
+[F41:695]|               size="icon"
+[F41:696]|               className="add-task-btn"
+[F41:697]|               onClick={() => {
+[F41:698]|                 handleAddTask();
+[F41:699]|                 setIsAddingTask(false);
+[F41:700]|               }}
+[F41:701]|               disabled={!newTaskTitle.trim()}
+[F41:702]|             >
+[F41:703]|               <Plus size={18} />
+[F41:704]|             </Button>
+[F41:705]|             <Button
+[F41:706]|               size="icon"
+[F41:707]|               variant="ghost"
+[F41:708]|               className="cancel-task-btn"
+[F41:709]|               onClick={() => {
+[F41:710]|                 setIsAddingTask(false);
+[F41:711]|                 setNewTaskTitle('');
+[F41:712]|                 setNewTaskDescription('');
+[F41:713]|                 setSelectedDeadline(null);
+[F41:714]|                 setSelectedDeadlineType('none');
+[F41:715]|               }}
+[F41:716]|             >
+[F41:717]|               <ChevronDown size={18} />
+[F41:718]|             </Button>
+[F41:719]|           </div>
+[F41:720]|         </div>
+[F41:721]|       ) : (
+[F41:722]|         <button
+[F41:723]|           className="add-task-collapsed"
+[F41:724]|           onClick={() => setIsAddingTask(true)}
+[F41:725]|         >
+[F41:726]|           <Plus size={16} />
+[F41:727]|           <span>{t('task.addTask')}</span>
+[F41:728]|         </button>
+[F41:729]|       )}
+[F41:730]| 
+[F41:731]|       {/* Task List */}
+[F41:732]|       <ScrollArea className="task-scroll-area">
+[F41:733]|         <div className="tasks-container">
+[F41:734]|           {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
+[F41:735]|             <div className="empty-state">
+[F41:736]|               <Circle size={48} className="empty-icon" />
+[F41:737]|               <p>{t('task.noTasks')}</p>
+[F41:738]|               <p className="empty-hint">{t('task.doubleClickHint')}</p>
+[F41:739]|             </div>
+[F41:740]|           ) : (
+[F41:741]|             <>
+[F41:742]|               {/* 特殊视图：禁用拖拽，添加面包屑上下文 */}
+[F41:743]|               {isSpecialView ? (
+[F41:744]|                 <div className="flex flex-col gap-1">
+[F41:745]|                   {processedDisplayTasks.map((task) => {
+[F41:746]|                     const breadcrumbs = getTaskBreadcrumbs(task.id);
+[F41:747]|                     return (
+[F41:748]|                     <div key={task.id} className="relative">
+[F41:749]|                       {/* 完整面包屑路径：父任务1 > 父任务2 > ... */}
+[F41:750]|                       {isLeafMode && breadcrumbs.length > 0 && (
+[F41:751]|                         <div className="flex items-center gap-1 pl-2 text-[10px] text-white/30 mb-0.5 leading-none">
+[F41:752]|                           {breadcrumbs.map((crumb, i) => (
+[F41:753]|                             <span key={crumb.id} className="flex items-center gap-1">
+[F41:754]|                               <span className="truncate max-w-[100px]" title={crumb.title}>
+[F41:755]|                                 {crumb.title}
+[F41:756]|                               </span>
+[F41:757]|                               {i < breadcrumbs.length - 1 && <ChevronRight size={10} />}
+[F41:758]|                             </span>
+[F41:759]|                           ))}
+[F41:760]|                         </div>
+[F41:761]|                       )}
+[F41:762]|                       <TaskItem
+[F41:763]|                         task={task}
+[F41:764]|                         zoneColor={getZoneColor(task.zoneId)}
+[F41:765]|                         isActive={task.id === activeTaskId}
+[F41:766]|                         isTimerRunning={isTimerRunning && task.id === activeTaskId}
+[F41:767]|                         isDragOver={task.id === overId}
+[F41:768]|                         onToggle={onToggleTask}
+[F41:769]|                         onDelete={onDeleteTask}
+[F41:770]|                         onUpdate={onUpdateTask}
+[F41:771]|                         onToggleExpanded={onToggleExpanded}
+[F41:772]|                         onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
+[F41:773]|                         onSelect={onSelectTask}
+[F41:774]|                         onZoomIn={(id) => setFocusedTaskId(id)}
+[F41:775]|                         hasChildren={!isLeafMode && tasks.some(t => t.parentId === task.id && !t.completed)}
+[F41:776]|                         depth={task.depth}
+[F41:777]|                         isDraggable={false}
+[F41:778]|                         getTotalWorkTime={getTotalWorkTime}
+[F41:779]|                         getEstimatedTime={getEstimatedTime}
+[F41:780]|                       />
+[F41:781]|                     </div>
+[F41:782]|                   );
+[F41:783]|                   })}
+[F41:784]|                 </div>
+[F41:785]|               ) : (
+[F41:786]|                 /* 默认视图：保留拖拽功能 */
+[F41:787]|                 <DndContext
+[F41:788]|                   sensors={sensors}
+[F41:789]|                   onDragStart={handleDragStart}
+[F41:790]|                   onDragOver={handleDragOver}
+[F41:791]|                   onDragEnd={handleDragEnd}
+[F41:792]|                 >
+[F41:793]|                   <SortableContext
+[F41:794]|                     items={processedDisplayTasks.map((t) => t.id)}
+[F41:795]|                     strategy={verticalListSortingStrategy}
+[F41:796]|                   >
+[F41:797]|                     {processedDisplayTasks.map((task) => (
+[F41:798]|                     <React.Fragment key={task.id}>
+[F41:799]|                       <TaskItem
+[F41:800]|                         task={task}
+[F41:801]|                         zoneColor={getZoneColor(task.zoneId)}
+[F41:802]|                         isActive={task.id === activeTaskId}
+[F41:803]|                         isTimerRunning={isTimerRunning && task.id === activeTaskId}
+[F41:804]|                         isDragOver={task.id === overId}
+[F41:805]|                         onToggle={onToggleTask}
+[F41:806]|                         onDelete={onDeleteTask}
+[F41:807]|                         onUpdate={onUpdateTask}
+[F41:808]|                         onToggleExpanded={onToggleExpanded}
+[F41:809]|                         onToggleSubtasksCollapsed={onToggleSubtasksCollapsed}
+[F41:810]|                         onAddSubtask={() => handleAddSubtaskClick(task.id)}
+[F41:811]|                         onZoomIn={(id) => setFocusedTaskId(id)}
+[F41:812]|                         onSelect={onSelectTask}
+[F41:813]|                         hasChildren={checkHasChildren(task.id)}
+[F41:814]|                         depth={(task as FlattenedTask).depth}
+[F41:815]|                         isDraggable={true}
+[F41:816]|                         getTotalWorkTime={getTotalWorkTime}
+[F41:817]|                         getEstimatedTime={getEstimatedTime}
+[F41:818]|                       />
+[F41:819]|                       {/* 添加子任务输入框 - 完整表单 */}
+[F41:820]|                       {addingSubtaskParentId === task.id && (
+[F41:821]|                         <div
+[F41:822]|                           className="relative mt-1 mb-2 pr-2"
+[F41:823]|                           style={{ paddingLeft: `${((task as FlattenedTask).depth + 1) * 24 + 8}px` }}
+[F41:824]|                         >
+[F41:825]|                           <div className="flex flex-col gap-2 p-3 rounded-lg border border-white/10 bg-white/5 shadow-inner">
+[F41:826]|                             <div className="flex items-center gap-2">
+[F41:827]|                               <div className="flex-1">
+[F41:828]|                                 <Input
+[F41:829]|                                   ref={subtaskInputRef}
+[F41:830]|                                   value={newSubtaskTitle}
+[F41:831]|                                   onChange={(e) => setNewSubtaskTitle(e.target.value)}
+[F41:832]|                                   onKeyDown={handleSubtaskKeyDown}
+[F41:833]|                                   placeholder={t('task.subtaskTitle')}
+[F41:834]|                                   className="h-8 text-sm text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30"
+[F41:835]|                                   autoFocus
+[F41:836]|                                 />
+[F41:837]|                               </div>
+[F41:838]|                               <Button
+[F41:839]|                                 size="icon"
+[F41:840]|                                 className="h-7 w-7 bg-blue-600 hover:bg-blue-500 text-white rounded-md shrink-0"
+[F41:841]|                                 onClick={handleAddSubtask}
+[F41:842]|                                 disabled={!newSubtaskTitle.trim()}
+[F41:843]|                               >
+[F41:844]|                                 <Plus size={14} />
+[F41:845]|                               </Button>
+[F41:846]|                             </div>
+[F41:847]|                             {/* 描述输入框 */}
+[F41:848]|                             <Textarea
+[F41:849]|                               value={newSubtaskDescription}
+[F41:850]|                               onChange={(e) => setNewSubtaskDescription(e.target.value)}
+[F41:851]|                               onKeyDown={handleSubtaskKeyDown}
+[F41:852]|                               placeholder={t('task.descriptionOptional')}
+[F41:853]|                               className="min-h-[28px] text-sm text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30 resize-none py-1"
+[F41:854]|                               rows={1}
+[F41:855]|                             />
+[F41:856]|                             {/* 子任务支持优先级和截止日期设置 */}
+[F41:857]|                             <div className="flex items-center justify-between">
+[F41:858]|                               <div className="flex items-center gap-2">
+[F41:859]|                                 <div className="priority-selector">
+[F41:860]|                                   {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
+[F41:861]|                                     <button
+[F41:862]|                                       key={p}
+[F41:863]|                                       className={`priority-btn ${subtaskPriority === p ? 'active' : ''} priority-${p}`}
+[F41:864]|                                       onClick={() => setSubtaskPriority(p)}
+[F41:865]|                                     >
+[F41:866]|                                       <div className={`priority-dot ${p}`} />
+[F41:867]|                                     </button>
+[F41:868]|                                   ))}
+[F41:869]|                                 </div>
+[F41:870]|                                 {/* 子任务截止日期选择器 */}
+[F41:871]|                                 <Popover>
+[F41:872]|                                   <PopoverTrigger asChild>
+[F41:873]|                                     <Button
+[F41:874]|                                       variant="outline"
+[F41:875]|                                       size="sm"
+[F41:876]|                                       className={`h-6 text-xs border-dashed ${subtaskDeadlineType !== 'none' ? 'border-blue-500 text-blue-400' : ''}`}
+[F41:877]|                                     >
+[F41:878]|                                       <Calendar size={10} className="mr-1" />
+[F41:879]|                                       {subtaskDeadlineType === 'none' ? t('recurring.ddl') :
+[F41:880]|                                         subtaskDeadlineType === 'today' ? t('task.deadlineToday') :
+[F41:881]|                                         subtaskDeadlineType === 'tomorrow' ? t('task.deadlineTomorrow') :
+[F41:882]|                                         subtaskDeadlineType === 'week' ? t('task.deadlineWeek') :
+[F41:883]|                                         subtaskDeadline ? new Date(subtaskDeadline).toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US', { month: 'numeric', day: 'numeric' }) : t('recurring.ddl')}
+[F41:884]|                                     </Button>
+[F41:885]|                                   </PopoverTrigger>
+[F41:886]|                                   <PopoverContent className="w-auto p-2 bg-black border border-white/20 max-h-[90vh] overflow-y-auto z-[9999]" align="start" side="bottom" sideOffset={4} collisionPadding={20} onClick={(e) => e.stopPropagation()}>
+[F41:887]|                                     <div className="flex gap-1 mb-2 border-b border-white/10 pb-2">
+[F41:888]|                                       <Button
+[F41:889]|                                         variant="ghost"
+[F41:890]|                                         size="sm"
+[F41:891]|                                         className={subtaskDeadlineType === 'today' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
+[F41:892]|                                         onClick={() => {
+[F41:893]|                                           const result = convertDeadlineType('today');
+[F41:894]|                                           setSubtaskDeadline(result.deadline);
+[F41:895]|                                           setSubtaskDeadlineType(result.deadlineType);
+[F41:896]|                                         }}
+[F41:897]|                                       >
+[F41:898]|                                         {t('task.deadlineToday')}
+[F41:899]|                                       </Button>
+[F41:900]|                                       <Button
+[F41:901]|                                         variant="ghost"
+[F41:902]|                                         size="sm"
+[F41:903]|                                         className={subtaskDeadlineType === 'tomorrow' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
+[F41:904]|                                         onClick={() => {
+[F41:905]|                                           const result = convertDeadlineType('tomorrow');
+[F41:906]|                                           setSubtaskDeadline(result.deadline);
+[F41:907]|                                           setSubtaskDeadlineType(result.deadlineType);
+[F41:908]|                                         }}
+[F41:909]|                                       >
+[F41:910]|                                         {t('task.deadlineTomorrow')}
+[F41:911]|                                       </Button>
+[F41:912]|                                       <Button
+[F41:913]|                                         variant="ghost"
+[F41:914]|                                         size="sm"
+[F41:915]|                                         className={subtaskDeadlineType === 'week' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
+[F41:916]|                                         onClick={() => {
+[F41:917]|                                           const result = convertDeadlineType('week');
+[F41:918]|                                           setSubtaskDeadline(result.deadline);
+[F41:919]|                                           setSubtaskDeadlineType(result.deadlineType);
+[F41:920]|                                         }}
+[F41:921]|                                       >
+[F41:922]|                                         {t('task.deadlineWeek')}
+[F41:923]|                                       </Button>
+[F41:924]|                                       <Button
+[F41:925]|                                         variant="ghost"
+[F41:926]|                                         size="sm"
+[F41:927]|                                         className={subtaskDeadlineType === 'none' ? 'bg-white text-black hover:bg-white/90' : 'text-white hover:bg-white hover:text-black'}
+[F41:928]|                                         onClick={() => {
+[F41:929]|                                           setSubtaskDeadline(null);
+[F41:930]|                                           setSubtaskDeadlineType('none');
+[F41:931]|                                         }}
+[F41:932]|                                       >
+[F41:933]|                                         {t('task.deadlineNone')}
+[F41:934]|                                       </Button>
+[F41:935]|                                     </div>
+[F41:936]|                                     <CalendarComponent
+[F41:937]|                                       mode="single"
+[F41:938]|                                       selected={subtaskDeadline ? new Date(subtaskDeadline) : undefined}
+[F41:939]|                                       onSelect={(date) => {
+[F41:940]|                                         if (date) {
+[F41:941]|                                           date.setHours(subtaskDeadlineHour, subtaskDeadlineMinute, 0, 0);
+[F41:942]|                                           setSubtaskDeadline(date.getTime());
+[F41:943]|                                           setSubtaskDeadlineType('exact');
+[F41:944]|                                         }
+[F41:945]|                                       }}
+[F41:946]|                                       className="rounded-md my-2"
+[F41:947]|                                       classNames={{
+[F41:948]|                                         root: "calendar-dark",
+[F41:949]|                                         months: "flex flex-col gap-1 relative",
+[F41:950]|                                         month: "flex flex-col",
+[F41:951]|                                         caption: "flex justify-center items-center py-1 relative",
+[F41:952]|                                         caption_label: "text-sm font-medium text-white",
+[F41:953]|                                         nav: "absolute inset-x-0 top-1 flex items-center justify-between w-full z-10 px-1",
+[F41:954]|                                         nav_button: "h-6 w-6 bg-black p-0 text-white hover:bg-white hover:text-black rounded flex items-center justify-center transition-colors text-xs border border-white/20",
+[F41:955]|                                         nav_button_previous: "",
+[F41:956]|                                         nav_button_next: "",
+[F41:957]|                                         table: "w-full border-collapse space-y-1",
+[F41:958]|                                         head_row: "flex",
+[F41:959]|                                         head_cell: "text-white/50 rounded-md w-9 font-normal text-[0.8rem]",
+[F41:960]|                                         row: "flex w-full mt-1",
+[F41:961]|                                         cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+[F41:962]|                                         day: "h-9 w-9 p-0 font-normal text-white bg-black hover:bg-white hover:text-black rounded-md transition-colors",
+[F41:963]|                                         day_selected: "bg-white text-black hover:bg-white hover:text-black",
+[F41:964]|                                         day_today: "border border-green-500 text-green-400",
+[F41:965]|                                         day_outside: "text-white/30 opacity-50",
+[F41:966]|                                         day_disabled: "text-white/30 opacity-50",
+[F41:967]|                                         day_hidden: "invisible",
+[F41:968]|                                       }}
+[F41:969]|                                     />
+[F41:970]|                                     {/* 时间选择器 */}
+[F41:971]|                                     <div className="flex items-center gap-2 mb-2 px-1 flex-wrap">
+[F41:972]|                                       <div className="flex items-center gap-1">
+[F41:973]|                                         <span className="text-xs text-white/80">{t('task.time')}:</span>
+[F41:974]|                                         <input
+[F41:975]|                                           type="number"
+[F41:976]|                                           min="0"
+[F41:977]|                                           max="23"
+[F41:978]|                                           value={subtaskDeadlineHour}
+[F41:979]|                                           onChange={(e) => {
+[F41:980]|                                             const val = Math.max(0, Math.min(23, parseInt(e.target.value) || 0));
+[F41:981]|                                             setSubtaskDeadlineHour(val);
+[F41:982]|                                             if (subtaskDeadline) {
+[F41:983]|                                               const date = new Date(subtaskDeadline);
+[F41:984]|                                               date.setHours(val, subtaskDeadlineMinute, 0, 0);
+[F41:985]|                                               setSubtaskDeadline(date.getTime());
+[F41:986]|                                             }
+[F41:987]|                                           }}
+[F41:988]|                                           className="w-10 h-6 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
+[F41:989]|                                         />
+[F41:990]|                                         <span className="text-white/80">:</span>
+[F41:991]|                                         <input
+[F41:992]|                                           type="number"
+[F41:993]|                                           min="0"
+[F41:994]|                                           max="59"
+[F41:995]|                                           value={subtaskDeadlineMinute}
+[F41:996]|                                           onChange={(e) => {
+[F41:997]|                                             const val = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
+[F41:998]|                                             setSubtaskDeadlineMinute(val);
+[F41:999]|                                             if (subtaskDeadline) {
+[F41:1000]|                                               const date = new Date(subtaskDeadline);
+[F41:1001]|                                               date.setHours(subtaskDeadlineHour, val, 0, 0);
+[F41:1002]|                                               setSubtaskDeadline(date.getTime());
+[F41:1003]|                                             }
+[F41:1004]|                                           }}
+[F41:1005]|                                           className="w-10 h-6 text-xs bg-black/60 border border-green-500/50 rounded px-1 text-center text-green-400 focus:border-green-400 focus:outline-none"
+[F41:1006]|                                         />
+[F41:1007]|                                       </div>
+[F41:1008]|                                     </div>
+[F41:1009]|                                   </PopoverContent>
+[F41:1010]|                                 </Popover>
+[F41:1011]|                               </div>
+[F41:1012]|                               <Button
+[F41:1013]|                                 size="sm"
+[F41:1014]|                                 variant="ghost"
+[F41:1015]|                                 className="h-6 text-xs text-white/40 hover:text-white/80 px-2"
+[F41:1016]|                                 onClick={handleCancelAddSubtask}
+[F41:1017]|                               >
+[F41:1018]|                                 {t('common.cancel')}
+[F41:1019]|                               </Button>
+[F41:1020]|                             </div>
+[F41:1021]|                           </div>
+[F41:1022]|                         </div>
+[F41:1023]|                       )}
+[F41:1024]|                     </React.Fragment>
+[F41:1025]|                   ))}
+[F41:1026]|                 </SortableContext>
+[F41:1027]| 
+[F41:1028]|                 <DragOverlay dropAnimation={dropAnimation}>
+[F41:1029]|                   {activeItem ? (
+[F41:1030]|                     <TaskItem
+[F41:1031]|                       task={activeItem}
+[F41:1032]|                       zoneColor={getZoneColor(activeItem.zoneId)}
+[F41:1033]|                       isActive={false}
+[F41:1034]|                       isTimerRunning={false}
+[F41:1035]|                       isDragOver={false}
+[F41:1036]|                       onToggle={() => {}}
+[F41:1037]|                       onDelete={() => {}}
+[F41:1038]|                       onUpdate={() => {}}
+[F41:1039]|                       onToggleExpanded={() => {}}
+[F41:1040]|                       onSelect={() => {}}
+[F41:1041]|                       hasChildren={false}
+[F41:1042]|                       depth={(activeItem as FlattenedTask).depth}
+[F41:1043]|                       isDraggable={true}
+[F41:1044]|                       getTotalWorkTime={getTotalWorkTime}
+[F41:1045]|                       getEstimatedTime={getEstimatedTime}
+[F41:1046]|                     />
+[F41:1047]|                   ) : null}
+[F41:1048]|                 </DragOverlay>
+[F41:1049]|               </DndContext>
+[F41:1050]|               )}
+[F41:1051]| 
+[F41:1052]|               {/* Completed Tasks */}
+[F41:1053]|               {completedTasks.length > 0 && (
+[F41:1054]|                 <div className="completed-section">
+[F41:1055]|                   <button
+[F41:1056]|                     className="completed-toggle"
+[F41:1057]|                     onClick={() => setShowCompleted(!showCompleted)}
+[F41:1058]|                   >
+[F41:1059]|                     <CheckCircle2 size={14} className="text-green-400" />
+[F41:1060]|                     <span>{t('task.completed')} ({completedTasks.length})</span>
+[F41:1061]|                     <span className={`toggle-arrow ${showCompleted ? 'open' : ''}`}>
+[F41:1062]|                       ▼
+[F41:1063]|                     </span>
+[F41:1064]|                   </button>
+[F41:1065]| 
+[F41:1066]|                   {showCompleted && (
+[F41:1067]|                     <div className="completed-tasks">
+[F41:1068]|                       {completedTasks.map((task) => (
+[F41:1069]|                         <div key={task.id} className="task-tree-item relative mb-1">
+[F41:1070]|                           {/* 添加父级任务标题提示，防止打平后不知道是哪个任务的子项 */}
+[F41:1071]|                           {task.parentId && (
+[F41:1072]|                             <div className="flex items-center gap-1 pl-7 pr-2 text-[10px] text-white/40 mb-0.5 leading-none">
+[F41:1073]|                               <span className="truncate max-w-[150px]">{tasks.find(t => t.id === task.parentId)?.title || '...'}</span>
+[F41:1074]|                             </div>
+[F41:1075]|                           )}
+[F41:1076]|                           <TaskItem
+[F41:1077]|                             task={task}
+[F41:1078]|                             zoneColor={getZoneColor(task.zoneId)}
+[F41:1079]|                             isActive={false}
+[F41:1080]|                             isTimerRunning={false}
+[F41:1081]|                             onToggle={onToggleTask}
+[F41:1082]|                             onDelete={onDeleteTask}
+[F41:1083]|                             onUpdate={onUpdateTask}
+[F41:1084]|                             onToggleExpanded={onToggleExpanded}
+[F41:1085]|                             onSelect={onSelectTask}
+[F41:1086]|                             hasChildren={false}
+[F41:1087]|                             depth={0}
+[F41:1088]|                             isDraggable={false}
+[F41:1089]|                             getTotalWorkTime={getTotalWorkTime}
+[F41:1090]|                             getEstimatedTime={getEstimatedTime}
+[F41:1091]|                           />
+[F41:1092]|                         </div>
+[F41:1093]|                       ))}
+[F41:1094]|                       <Button
+[F41:1095]|                         variant="ghost"
+[F41:1096]|                         size="sm"
+[F41:1097]|                         className="clear-completed-btn"
+[F41:1098]|                         onClick={onClearCompleted}
+[F41:1099]|                       >
+[F41:1100]|                         <Trash2 size={14} className="mr-1" />
+[F41:1101]|                         {t('task.clearCompleted')}
+[F41:1102]|                       </Button>
+[F41:1103]|                     </div>
+[F41:1104]|                   )}
+[F41:1105]|                 </div>
+[F41:1106]|               )}
+[F41:1107]|             </>
+[F41:1108]|           )}
+[F41:1109]|         </div>
+[F41:1110]|       </ScrollArea>
+[F41:1111]| 
+[F41:1112]|       {/* Footer Stats */}
+[F41:1113]|       <div className="task-list-footer">
+[F41:1114]|         <div className="footer-stat">
+[F41:1115]|           <span className="stat-label">{t('task.completionRate')}</span>
+[F41:1116]|           <span className="stat-value">{stats.completionRate}%</span>
+[F41:1117]|         </div>
+[F41:1118]|         <div className="footer-stat">
+[F41:1119]|           <span className="stat-label">{t('task.pending')}</span>
+[F41:1120]|           <span className="stat-value">{stats.pending}</span>
+[F41:1121]|         </div>
+[F41:1122]|       </div>
+[F41:1123]|     </div>
+[F41:1124]|   );
+[F41:1125]| }
 
 ================================================================================
 文件路径: src\components\ZoneManager.tsx(F42) (约合大小: 16 KB)
@@ -20604,288 +20688,290 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F108:25]|   const scores: Record<string, number> = {};
 [F108:26]|   const count = withDeadline.length;
 [F108:27]| 
-[F108:28]|   withDeadline.forEach((task, index) => {
-[F108:29]|     // 排名越靠前分数越高。如果只有1个任务，分数为 1
-[F108:30]|     // 分数公式：(count - 1 - index) / (count - 1)
-[F108:31]|     // 这样最早截止的（index=0）得到最高分 1
-[F108:32]|     scores[task.id] = count > 1 ? (count - 1 - index) / (count - 1) : 1;
-[F108:33]|   });
-[F108:34]| 
-[F108:35]|   return scores;
-[F108:36]| }
-[F108:37]| 
-[F108:38]| /**
-[F108:39]|  * 将排位分数映射为 Urgency 级别
-[F108:40]|  * - 前 25% → urgent
-[F108:41]|  * - 25%-50% → high
-[F108:42]|  * - 50%-75% → medium
-[F108:43]|  * - 75%-100% → low
-[F108:44]|  * - 无 DDL → low (默认)
-[F108:45]|  */
-[F108:46]| export function mapRankToUrgency(score: number, hasDeadline: boolean): TaskUrgency {
-[F108:47]|   if (!hasDeadline || score === 0) return 'low';
-[F108:48]|   if (score >= 0.75) return 'urgent';
-[F108:49]|   if (score >= 0.5) return 'high';
-[F108:50]|   if (score >= 0.25) return 'medium';
-[F108:51]|   return 'low';
-[F108:52]| }
-[F108:53]| 
-[F108:54]| /**
-[F108:55]|  * 根据紧迫程度分数生成 HSL 颜色
-[F108:56]|  * 0.0 (不紧急) -> 绿色 (120), 1.0 (极度紧急) -> 红色 (0)
-[F108:57]|  */
-[F108:58]| export function getUrgencyColor(score: number, isOverdue: boolean = false): string {
-[F108:59]|   if (isOverdue) return 'hsl(0, 85%, 50%)'; // 逾期直接纯红
-[F108:60]| 
-[F108:61]|   // 限制分值范围
-[F108:62]|   const clamped = Math.max(0, Math.min(1, score));
-[F108:63]|   const hue = (1 - clamped) * 120;
-[F108:64]|   return `hsl(${Math.round(hue)}, 80%, 50%)`;
-[F108:65]| }
-[F108:66]| 
-[F108:67]| /**
-[F108:68]|  * 根据绝对 deadline 时间获取紧迫性颜色
-[F108:69]|  * 7 档位：赤橙黄绿青蓝紫 + 灰（未定义）+ 深红（逾期）
-[F108:70]|  * - 赤：5小时以内
-[F108:71]|  * - 橙：12小时以内
-[F108:72]|  * - 黄：24小时以内
-[F108:73]|  * - 绿：2天以内
-[F108:74]|  * - 青：一周以内
-[F108:75]|  * - 蓝：一个月以内
-[F108:76]|  * - 紫：一个月以后
-[F108:77]|  * - 灰：未定义
-[F108:78]|  * - 深红：已逾期
-[F108:79]|  *
-[F108:80]|  * @param deadline 任务的截止时间戳（毫秒）
-[F108:81]|  * @param isOverdue 是否已逾期
-[F108:82]|  * @returns 颜色值
-[F108:83]|  */
-[F108:84]| export function getAbsoluteUrgencyColor(deadline: number | null, isOverdue: boolean = false): string {
-[F108:85]|   // 逾期优先显示深红
-[F108:86]|   if (isOverdue) {
-[F108:87]|     return 'hsl(0, 80%, 35%)'; // 深红 - 逾期
-[F108:88]|   }
-[F108:89]| 
-[F108:90]|   // 未定义 deadline 显示灰色
-[F108:91]|   if (!deadline || deadline <= 0) {
-[F108:92]|     return 'hsl(0, 0%, 50%)'; // 灰色 - 未定义
-[F108:93]|   }
-[F108:94]| 
-[F108:95]|   const now = Date.now();
-[F108:96]|   const diff = deadline - now; // 剩余毫秒数
-[F108:97]|   const hours = diff / (1000 * 60 * 60); // 转换为小时
-[F108:98]| 
-[F108:99]|   if (hours <= 5) {
-[F108:100]|     return 'hsl(0, 85%, 50%)'; // 赤 - 5小时以内（红色）
-[F108:101]|   } else if (hours <= 12) {
-[F108:102]|     return 'hsl(25, 90%, 50%)'; // 橙 - 12小时以内（橙色）
-[F108:103]|   } else if (hours <= 24) {
-[F108:104]|     return 'hsl(50, 90%, 50%)'; // 黄 - 24小时以内（黄色）
-[F108:105]|   } else if (hours <= 48) {
-[F108:106]|     return 'hsl(120, 70%, 45%)'; // 绿 - 2天以内（绿色）
-[F108:107]|   } else if (hours <= 168) { // 7天 = 168小时
-[F108:108]|     return 'hsl(170, 80%, 45%)'; // 青 - 一周以内（青色）
-[F108:109]|   } else if (hours <= 720) { // 30天 = 720小时
-[F108:110]|     return 'hsl(210, 80%, 50%)'; // 蓝 - 一个月以内（蓝色）
-[F108:111]|   } else {
-[F108:112]|     return 'hsl(270, 60%, 50%)'; // 紫 - 一个月以后（紫色）
-[F108:113]|   }
-[F108:114]| }
-[F108:115]| 
-[F108:116]| /**
-[F108:117]|  * 获取继承后的截止日期
-[F108:118]|  * 如果任务本身没有设置截止日期，但父任务有，则返回父任务的截止日期
-[F108:119]|  * @param task 当前任务
-[F108:120]|  * @param allTasks 所有任务列表
-[F108:121]|  * @returns 继承后的截止日期时间戳，如果没有则返回 null
-[F108:122]|  */
-[F108:123]| export function getInheritedDeadline(task: Task, allTasks: Task[], visited: Set<string> = new Set()): number | null {
-[F108:124]|   // 防止循环引用导致无限递归
-[F108:125]|   if (visited.has(task.id)) {
-[F108:126]|     return null;
-[F108:127]|   }
-[F108:128]|   visited.add(task.id);
-[F108:129]| 
-[F108:130]|   // 如果任务本身有截止日期，直接返回
-[F108:131]|   if (task.deadline && task.deadline > 0) {
-[F108:132]|     return task.deadline;
-[F108:133]|   }
-[F108:134]| 
-[F108:135]|   // 如果没有父任务，返回 null
-[F108:136]|   if (!task.parentId) {
-[F108:137]|     return null;
-[F108:138]|   }
-[F108:139]| 
-[F108:140]|   // 查找父任务
-[F108:141]|   const parent = allTasks.find(t => t.id === task.parentId);
-[F108:142]|   if (!parent) {
-[F108:143]|     return null;
-[F108:144]|   }
-[F108:145]| 
-[F108:146]|   // 递归获取父任务的截止日期（可能父任务也是继承的）
-[F108:147]|   return getInheritedDeadline(parent, allTasks, visited);
-[F108:148]| }
-[F108:149]| 
-[F108:150]| /**
-[F108:151]|  * 格式化倒计时文案
-[F108:152]|  * @param deadline 截止时间戳（毫秒）
-[F108:153]|  * @returns 格式化后的文本和是否逾期
-[F108:154]|  */
-[F108:155]| export function getDeadlineStatus(deadline: number | null | undefined): { text: string; isOverdue: boolean } {
-[F108:156]|   if (!deadline || deadline <= 0) return { text: '', isOverdue: false };
-[F108:157]| 
-[F108:158]|   const now = Date.now();
-[F108:159]|   const diff = deadline - now;
-[F108:160]|   const isOverdue = diff < 0;
-[F108:161]|   const absDiff = Math.abs(diff);
-[F108:162]| 
-[F108:163]|   const days = Math.floor(absDiff / (24 * 3600 * 1000));
-[F108:164]|   const hours = Math.floor((absDiff % (24 * 3600 * 1000)) / (3600 * 1000));
-[F108:165]|   const mins = Math.floor((absDiff % (3600 * 1000)) / (60 * 1000));
-[F108:166]| 
-[F108:167]|   let text = isOverdue ? i18n.t('urgency.overduePrefix') : i18n.t('urgency.remainingPrefix');
-[F108:168]|   if (days > 0) text += i18n.t('urgency.daysHours', { days, hours });
-[F108:169]|   else if (hours > 0) text += i18n.t('urgency.hoursMins', { hours, mins });
-[F108:170]|   else text += i18n.t('urgency.mins', { mins });
-[F108:171]| 
-[F108:172]|   return { text, isOverdue };
-[F108:173]| }
-[F108:174]| 
-[F108:175]| /**
-[F108:176]|  * 获取截止日期的友好显示
-[F108:177]|  * @param deadline 截止时间戳
-[F108:178]|  * @param deadlineType 截止日期类型
-[F108:179]|  */
-[F108:180]| export function getDeadlineDisplay(deadline: number | null | undefined, deadlineType: DeadlineType | undefined): string {
-[F108:181]|   if (!deadline || deadline <= 0) return '';
-[F108:182]| 
-[F108:183]|   const now = Date.now();
-[F108:184]|   const isOverdue = deadline < now;
-[F108:185]| 
-[F108:186]|   if (deadlineType === 'today') {
-[F108:187]|     return isOverdue ? i18n.t('urgency.todayOverdue') : i18n.t('task.deadlineToday');
-[F108:188]|   }
-[F108:189]|   if (deadlineType === 'tomorrow') {
-[F108:190]|     return isOverdue ? i18n.t('urgency.tomorrowOverdue') : i18n.t('task.deadlineTomorrow');
-[F108:191]|   }
-[F108:192]|   if (deadlineType === 'week') {
-[F108:193]|     return isOverdue ? i18n.t('urgency.weekOverdue') : i18n.t('task.deadlineWeek');
-[F108:194]|   }
-[F108:195]| 
-[F108:196]|   // exact 类型
-[F108:197]|   const date = new Date(deadline);
-[F108:198]|   const month = date.getMonth() + 1;
-[F108:199]|   const day = date.getDate();
-[F108:200]|   const hour = date.getHours();
-[F108:201]|   const min = date.getMinutes();
-[F108:202]|   const dateStr = `${month}/${day} ${hour}:${min.toString().padStart(2, '0')}`;
-[F108:203]| 
-[F108:204]|   return isOverdue
-[F108:205]|     ? i18n.t('urgency.exactOverdue', { date: dateStr })
-[F108:206]|     : dateStr;
-[F108:207]| }
-[F108:208]| 
-[F108:209]| // 优先级分数映射
-[F108:210]| const PRIORITY_MAP: Record<TaskPriority, number> = {
-[F108:211]|   high: 1.0,
-[F108:212]|   medium: 0.5,
-[F108:213]|   low: 0,
-[F108:214]| };
-[F108:215]| 
-[F108:216]| /**
-[F108:217]|  * 加权排序算法
-[F108:218]|  * @param tasks 待排序任务列表（应传入未完成的任务）
-[F108:219]|  * @param pWeight 优先级权重
-[F108:220]|  * @param dWeight 截止日期权重（由排名分数计算得出）
-[F108:221]|  * @param rankScores 预计算的排名分数
-[F108:222]|  */
-[F108:223]| export function sortTasks(
-[F108:224]|   tasks: Task[],
-[F108:225]|   pWeight: number,
-[F108:226]|   dWeight: number,
-[F108:227]|   rankScores: Record<string, number>
-[F108:228]| ): Task[] {
-[F108:229]|   // 先将任务分为有 DDL 和无 DDL 两组
-[F108:230]|   const withDeadline = tasks.filter(t => t.deadline && t.deadline > 0 && !t.completed);
-[F108:231]|   const withoutDeadline = tasks.filter(t => !t.deadline || t.deadline <= 0 || t.completed);
-[F108:232]| 
-[F108:233]|   // 对有 DDL 的任务进行加权排序
-[F108:234]|   const sortedWithDeadline = [...withDeadline].sort((a, b) => {
-[F108:235]|     const rankA = rankScores[a.id] || 0;
-[F108:236]|     const rankB = rankScores[b.id] || 0;
-[F108:237]| 
-[F108:238]|     const priorityA = PRIORITY_MAP[a.priority];
-[F108:239]|     const priorityB = PRIORITY_MAP[b.priority];
-[F108:240]| 
-[F108:241]|     const scoreA = (priorityA * pWeight) + (rankA * dWeight);
-[F108:242]|     const scoreB = (priorityB * pWeight) + (rankB * dWeight);
-[F108:243]| 
-[F108:244]|     if (scoreA !== scoreB) return scoreB - scoreA; // 分数高的排前面
-[F108:245]|     return (a.deadline || Infinity) - (b.deadline || Infinity); // 同分按 DDL 先后排
-[F108:246]|   });
-[F108:247]| 
-[F108:248]|   // 无 DDL 的任务排在后面，保持原有顺序
-[F108:249]|   return [...sortedWithDeadline, ...withoutDeadline];
-[F108:250]| }
-[F108:251]| 
-[F108:252]| /**
-[F108:253]|  * 转换快捷设置为实际截止时间戳
-[F108:254]|  * @param type 'today' | 'tomorrow' | 'week' | 'exact' | 'none'
-[F108:255]|  * @param customDate 自定义日期（当 type 为 'exact' 时使用）
-[F108:256]|  */
-[F108:257]| export function convertDeadlineType(
-[F108:258]|   type: DeadlineType,
-[F108:259]|   customDate?: Date
-[F108:260]| ): { deadline: number | null; deadlineType: DeadlineType } {
-[F108:261]|   const now = new Date();
-[F108:262]| 
-[F108:263]|   switch (type) {
-[F108:264]|     case 'today': {
-[F108:265]|       const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-[F108:266]|       return { deadline: endOfToday.getTime(), deadlineType: 'today' };
-[F108:267]|     }
-[F108:268]|     case 'tomorrow': {
-[F108:269]|       const tomorrow = new Date(now);
-[F108:270]|       tomorrow.setDate(tomorrow.getDate() + 1);
-[F108:271]|       const endOfTomorrow = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 23, 59, 59, 999);
-[F108:272]|       return { deadline: endOfTomorrow.getTime(), deadlineType: 'tomorrow' };
-[F108:273]|     }
-[F108:274]|     case 'week': {
-[F108:275]|       const endOfWeek = new Date(now);
-[F108:276]|       // 星期天为 0，星期六为 6
-[F108:277]|       const dayOfWeek = endOfWeek.getDay();
-[F108:278]|       const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-[F108:279]|       endOfWeek.setDate(endOfWeek.getDate() + daysUntilSunday);
-[F108:280]|       const endOfWeekDay = new Date(endOfWeek.getFullYear(), endOfWeek.getMonth(), endOfWeek.getDate(), 23, 59, 59, 999);
-[F108:281]|       return { deadline: endOfWeekDay.getTime(), deadlineType: 'week' };
-[F108:282]|     }
-[F108:283]|     case 'exact': {
-[F108:284]|       if (customDate) {
-[F108:285]|         return { deadline: customDate.getTime(), deadlineType: 'exact' };
-[F108:286]|       }
-[F108:287]|       return { deadline: null, deadlineType: 'none' };
-[F108:288]|     }
-[F108:289]|     case 'none':
-[F108:290]|     default:
-[F108:291]|       return { deadline: null, deadlineType: 'none' };
-[F108:292]|   }
-[F108:293]| }
-[F108:294]| 
-[F108:295]| /**
-[F108:296]|  * 获取当前任务的 urgency 值（用于显示）
-[F108:297]|  * 根据 deadline 排名自动计算
-[F108:298]|  */
-[F108:299]| export function calculateUrgencyForTask(
-[F108:300]|   task: Task,
-[F108:301]|   _allTasks: Task[],
-[F108:302]|   rankScores: Record<string, number>
-[F108:303]| ): TaskUrgency {
-[F108:304]|   if (task.completed) return 'low';
-[F108:305]|   if (!task.deadline || task.deadline <= 0) return 'low';
-[F108:306]| 
-[F108:307]|   const score = rankScores[task.id] || 0;
-[F108:308]|   return mapRankToUrgency(score, true);
-[F108:309]| }
+[F108:28]|   let currentRankIndex = 0;
+[F108:29]|   withDeadline.forEach((task, index) => {
+[F108:30]|     // 排名越靠前分数越高，对于有同等实际截止日期（如继承）的任务，给予完全相同的排位分数
+[F108:31]|     if (index > 0 && task.effectiveDeadline !== withDeadline[index - 1].effectiveDeadline) {
+[F108:32]|       currentRankIndex = index;
+[F108:33]|     }
+[F108:34]|     scores[task.id] = count > 1 ? (count - 1 - currentRankIndex) / (count - 1) : 1;
+[F108:35]|   });
+[F108:36]| 
+[F108:37]|   return scores;
+[F108:38]| }
+[F108:39]| 
+[F108:40]| /**
+[F108:41]|  * 将排位分数映射为 Urgency 级别
+[F108:42]|  * - 前 25% → urgent
+[F108:43]|  * - 25%-50% → high
+[F108:44]|  * - 50%-75% → medium
+[F108:45]|  * - 75%-100% → low
+[F108:46]|  * - 无 DDL → low (默认)
+[F108:47]|  */
+[F108:48]| export function mapRankToUrgency(score: number, hasDeadline: boolean): TaskUrgency {
+[F108:49]|   if (!hasDeadline || score === 0) return 'low';
+[F108:50]|   if (score >= 0.75) return 'urgent';
+[F108:51]|   if (score >= 0.5) return 'high';
+[F108:52]|   if (score >= 0.25) return 'medium';
+[F108:53]|   return 'low';
+[F108:54]| }
+[F108:55]| 
+[F108:56]| /**
+[F108:57]|  * 根据紧迫程度分数生成 HSL 颜色
+[F108:58]|  * 0.0 (不紧急) -> 绿色 (120), 1.0 (极度紧急) -> 红色 (0)
+[F108:59]|  */
+[F108:60]| export function getUrgencyColor(score: number, isOverdue: boolean = false): string {
+[F108:61]|   if (isOverdue) return 'hsl(0, 85%, 50%)'; // 逾期直接纯红
+[F108:62]| 
+[F108:63]|   // 限制分值范围
+[F108:64]|   const clamped = Math.max(0, Math.min(1, score));
+[F108:65]|   const hue = (1 - clamped) * 120;
+[F108:66]|   return `hsl(${Math.round(hue)}, 80%, 50%)`;
+[F108:67]| }
+[F108:68]| 
+[F108:69]| /**
+[F108:70]|  * 根据绝对 deadline 时间获取紧迫性颜色
+[F108:71]|  * 7 档位：赤橙黄绿青蓝紫 + 灰（未定义）+ 深红（逾期）
+[F108:72]|  * - 赤：5小时以内
+[F108:73]|  * - 橙：12小时以内
+[F108:74]|  * - 黄：24小时以内
+[F108:75]|  * - 绿：2天以内
+[F108:76]|  * - 青：一周以内
+[F108:77]|  * - 蓝：一个月以内
+[F108:78]|  * - 紫：一个月以后
+[F108:79]|  * - 灰：未定义
+[F108:80]|  * - 深红：已逾期
+[F108:81]|  *
+[F108:82]|  * @param deadline 任务的截止时间戳（毫秒）
+[F108:83]|  * @param isOverdue 是否已逾期
+[F108:84]|  * @returns 颜色值
+[F108:85]|  */
+[F108:86]| export function getAbsoluteUrgencyColor(deadline: number | null, isOverdue: boolean = false): string {
+[F108:87]|   // 逾期优先显示深红
+[F108:88]|   if (isOverdue) {
+[F108:89]|     return 'hsl(0, 80%, 35%)'; // 深红 - 逾期
+[F108:90]|   }
+[F108:91]| 
+[F108:92]|   // 未定义 deadline 显示灰色
+[F108:93]|   if (!deadline || deadline <= 0) {
+[F108:94]|     return 'hsl(0, 0%, 50%)'; // 灰色 - 未定义
+[F108:95]|   }
+[F108:96]| 
+[F108:97]|   const now = Date.now();
+[F108:98]|   const diff = deadline - now; // 剩余毫秒数
+[F108:99]|   const hours = diff / (1000 * 60 * 60); // 转换为小时
+[F108:100]| 
+[F108:101]|   if (hours <= 5) {
+[F108:102]|     return 'hsl(0, 85%, 50%)'; // 赤 - 5小时以内（红色）
+[F108:103]|   } else if (hours <= 12) {
+[F108:104]|     return 'hsl(25, 90%, 50%)'; // 橙 - 12小时以内（橙色）
+[F108:105]|   } else if (hours <= 24) {
+[F108:106]|     return 'hsl(50, 90%, 50%)'; // 黄 - 24小时以内（黄色）
+[F108:107]|   } else if (hours <= 48) {
+[F108:108]|     return 'hsl(120, 70%, 45%)'; // 绿 - 2天以内（绿色）
+[F108:109]|   } else if (hours <= 168) { // 7天 = 168小时
+[F108:110]|     return 'hsl(170, 80%, 45%)'; // 青 - 一周以内（青色）
+[F108:111]|   } else if (hours <= 720) { // 30天 = 720小时
+[F108:112]|     return 'hsl(210, 80%, 50%)'; // 蓝 - 一个月以内（蓝色）
+[F108:113]|   } else {
+[F108:114]|     return 'hsl(270, 60%, 50%)'; // 紫 - 一个月以后（紫色）
+[F108:115]|   }
+[F108:116]| }
+[F108:117]| 
+[F108:118]| /**
+[F108:119]|  * 获取继承后的截止日期
+[F108:120]|  * 如果任务本身没有设置截止日期，但父任务有，则返回父任务的截止日期
+[F108:121]|  * @param task 当前任务
+[F108:122]|  * @param allTasks 所有任务列表
+[F108:123]|  * @returns 继承后的截止日期时间戳，如果没有则返回 null
+[F108:124]|  */
+[F108:125]| export function getInheritedDeadline(task: Task, allTasks: Task[], visited: Set<string> = new Set()): number | null {
+[F108:126]|   // 防止循环引用导致无限递归
+[F108:127]|   if (visited.has(task.id)) {
+[F108:128]|     return null;
+[F108:129]|   }
+[F108:130]|   visited.add(task.id);
+[F108:131]| 
+[F108:132]|   // 如果任务本身有截止日期，直接返回
+[F108:133]|   if (task.deadline && task.deadline > 0) {
+[F108:134]|     return task.deadline;
+[F108:135]|   }
+[F108:136]| 
+[F108:137]|   // 如果没有父任务，返回 null
+[F108:138]|   if (!task.parentId) {
+[F108:139]|     return null;
+[F108:140]|   }
+[F108:141]| 
+[F108:142]|   // 查找父任务
+[F108:143]|   const parent = allTasks.find(t => t.id === task.parentId);
+[F108:144]|   if (!parent) {
+[F108:145]|     return null;
+[F108:146]|   }
+[F108:147]| 
+[F108:148]|   // 递归获取父任务的截止日期（可能父任务也是继承的）
+[F108:149]|   return getInheritedDeadline(parent, allTasks, visited);
+[F108:150]| }
+[F108:151]| 
+[F108:152]| /**
+[F108:153]|  * 格式化倒计时文案
+[F108:154]|  * @param deadline 截止时间戳（毫秒）
+[F108:155]|  * @returns 格式化后的文本和是否逾期
+[F108:156]|  */
+[F108:157]| export function getDeadlineStatus(deadline: number | null | undefined): { text: string; isOverdue: boolean } {
+[F108:158]|   if (!deadline || deadline <= 0) return { text: '', isOverdue: false };
+[F108:159]| 
+[F108:160]|   const now = Date.now();
+[F108:161]|   const diff = deadline - now;
+[F108:162]|   const isOverdue = diff < 0;
+[F108:163]|   const absDiff = Math.abs(diff);
+[F108:164]| 
+[F108:165]|   const days = Math.floor(absDiff / (24 * 3600 * 1000));
+[F108:166]|   const hours = Math.floor((absDiff % (24 * 3600 * 1000)) / (3600 * 1000));
+[F108:167]|   const mins = Math.floor((absDiff % (3600 * 1000)) / (60 * 1000));
+[F108:168]| 
+[F108:169]|   let text = isOverdue ? i18n.t('urgency.overduePrefix') : i18n.t('urgency.remainingPrefix');
+[F108:170]|   if (days > 0) text += i18n.t('urgency.daysHours', { days, hours });
+[F108:171]|   else if (hours > 0) text += i18n.t('urgency.hoursMins', { hours, mins });
+[F108:172]|   else text += i18n.t('urgency.mins', { mins });
+[F108:173]| 
+[F108:174]|   return { text, isOverdue };
+[F108:175]| }
+[F108:176]| 
+[F108:177]| /**
+[F108:178]|  * 获取截止日期的友好显示
+[F108:179]|  * @param deadline 截止时间戳
+[F108:180]|  * @param deadlineType 截止日期类型
+[F108:181]|  */
+[F108:182]| export function getDeadlineDisplay(deadline: number | null | undefined, deadlineType: DeadlineType | undefined): string {
+[F108:183]|   if (!deadline || deadline <= 0) return '';
+[F108:184]| 
+[F108:185]|   const now = Date.now();
+[F108:186]|   const isOverdue = deadline < now;
+[F108:187]| 
+[F108:188]|   if (deadlineType === 'today') {
+[F108:189]|     return isOverdue ? i18n.t('urgency.todayOverdue') : i18n.t('task.deadlineToday');
+[F108:190]|   }
+[F108:191]|   if (deadlineType === 'tomorrow') {
+[F108:192]|     return isOverdue ? i18n.t('urgency.tomorrowOverdue') : i18n.t('task.deadlineTomorrow');
+[F108:193]|   }
+[F108:194]|   if (deadlineType === 'week') {
+[F108:195]|     return isOverdue ? i18n.t('urgency.weekOverdue') : i18n.t('task.deadlineWeek');
+[F108:196]|   }
+[F108:197]| 
+[F108:198]|   // exact 类型
+[F108:199]|   const date = new Date(deadline);
+[F108:200]|   const month = date.getMonth() + 1;
+[F108:201]|   const day = date.getDate();
+[F108:202]|   const hour = date.getHours();
+[F108:203]|   const min = date.getMinutes();
+[F108:204]|   const dateStr = `${month}/${day} ${hour}:${min.toString().padStart(2, '0')}`;
+[F108:205]| 
+[F108:206]|   return isOverdue
+[F108:207]|     ? i18n.t('urgency.exactOverdue', { date: dateStr })
+[F108:208]|     : dateStr;
+[F108:209]| }
+[F108:210]| 
+[F108:211]| // 优先级分数映射
+[F108:212]| const PRIORITY_MAP: Record<TaskPriority, number> = {
+[F108:213]|   high: 1.0,
+[F108:214]|   medium: 0.5,
+[F108:215]|   low: 0,
+[F108:216]| };
+[F108:217]| 
+[F108:218]| /**
+[F108:219]|  * 加权排序算法
+[F108:220]|  * @param tasks 待排序任务列表（应传入未完成的任务）
+[F108:221]|  * @param pWeight 优先级权重
+[F108:222]|  * @param dWeight 截止日期权重（由排名分数计算得出）
+[F108:223]|  * @param rankScores 预计算的排名分数
+[F108:224]|  */
+[F108:225]| export function sortTasks(
+[F108:226]|   tasks: Task[],
+[F108:227]|   pWeight: number,
+[F108:228]|   dWeight: number,
+[F108:229]|   rankScores: Record<string, number>
+[F108:230]| ): Task[] {
+[F108:231]|   // 先将任务分为有 DDL 和无 DDL 两组
+[F108:232]|   const withDeadline = tasks.filter(t => t.deadline && t.deadline > 0 && !t.completed);
+[F108:233]|   const withoutDeadline = tasks.filter(t => !t.deadline || t.deadline <= 0 || t.completed);
+[F108:234]| 
+[F108:235]|   // 对有 DDL 的任务进行加权排序
+[F108:236]|   const sortedWithDeadline = [...withDeadline].sort((a, b) => {
+[F108:237]|     const rankA = rankScores[a.id] || 0;
+[F108:238]|     const rankB = rankScores[b.id] || 0;
+[F108:239]| 
+[F108:240]|     const priorityA = PRIORITY_MAP[a.priority];
+[F108:241]|     const priorityB = PRIORITY_MAP[b.priority];
+[F108:242]| 
+[F108:243]|     const scoreA = (priorityA * pWeight) + (rankA * dWeight);
+[F108:244]|     const scoreB = (priorityB * pWeight) + (rankB * dWeight);
+[F108:245]| 
+[F108:246]|     if (scoreA !== scoreB) return scoreB - scoreA; // 分数高的排前面
+[F108:247]|     return (getInheritedDeadline(a, tasks) || Infinity) - (getInheritedDeadline(b, tasks) || Infinity); // 同分按实际 DDL（继承或自设）先后排
+[F108:248]|   });
+[F108:249]| 
+[F108:250]|   // 无 DDL 的任务排在后面，保持原有顺序
+[F108:251]|   return [...sortedWithDeadline, ...withoutDeadline];
+[F108:252]| }
+[F108:253]| 
+[F108:254]| /**
+[F108:255]|  * 转换快捷设置为实际截止时间戳
+[F108:256]|  * @param type 'today' | 'tomorrow' | 'week' | 'exact' | 'none'
+[F108:257]|  * @param customDate 自定义日期（当 type 为 'exact' 时使用）
+[F108:258]|  */
+[F108:259]| export function convertDeadlineType(
+[F108:260]|   type: DeadlineType,
+[F108:261]|   customDate?: Date
+[F108:262]| ): { deadline: number | null; deadlineType: DeadlineType } {
+[F108:263]|   const now = new Date();
+[F108:264]| 
+[F108:265]|   switch (type) {
+[F108:266]|     case 'today': {
+[F108:267]|       const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+[F108:268]|       return { deadline: endOfToday.getTime(), deadlineType: 'today' };
+[F108:269]|     }
+[F108:270]|     case 'tomorrow': {
+[F108:271]|       const tomorrow = new Date(now);
+[F108:272]|       tomorrow.setDate(tomorrow.getDate() + 1);
+[F108:273]|       const endOfTomorrow = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 23, 59, 59, 999);
+[F108:274]|       return { deadline: endOfTomorrow.getTime(), deadlineType: 'tomorrow' };
+[F108:275]|     }
+[F108:276]|     case 'week': {
+[F108:277]|       const endOfWeek = new Date(now);
+[F108:278]|       // 星期天为 0，星期六为 6
+[F108:279]|       const dayOfWeek = endOfWeek.getDay();
+[F108:280]|       const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+[F108:281]|       endOfWeek.setDate(endOfWeek.getDate() + daysUntilSunday);
+[F108:282]|       const endOfWeekDay = new Date(endOfWeek.getFullYear(), endOfWeek.getMonth(), endOfWeek.getDate(), 23, 59, 59, 999);
+[F108:283]|       return { deadline: endOfWeekDay.getTime(), deadlineType: 'week' };
+[F108:284]|     }
+[F108:285]|     case 'exact': {
+[F108:286]|       if (customDate) {
+[F108:287]|         return { deadline: customDate.getTime(), deadlineType: 'exact' };
+[F108:288]|       }
+[F108:289]|       return { deadline: null, deadlineType: 'none' };
+[F108:290]|     }
+[F108:291]|     case 'none':
+[F108:292]|     default:
+[F108:293]|       return { deadline: null, deadlineType: 'none' };
+[F108:294]|   }
+[F108:295]| }
+[F108:296]| 
+[F108:297]| /**
+[F108:298]|  * 获取当前任务的 urgency 值（用于显示）
+[F108:299]|  * 根据 deadline 排名自动计算
+[F108:300]|  */
+[F108:301]| export function calculateUrgencyForTask(
+[F108:302]|   task: Task,
+[F108:303]|   _allTasks: Task[],
+[F108:304]|   rankScores: Record<string, number>
+[F108:305]| ): TaskUrgency {
+[F108:306]|   if (task.completed) return 'low';
+[F108:307]|   if (!task.deadline || task.deadline <= 0) return 'low';
+[F108:308]| 
+[F108:309]|   const score = rankScores[task.id] || 0;
+[F108:310]|   return mapRankToUrgency(score, true);
+[F108:311]| }
 
 ================================================================================
 文件路径: src\lib\utils.ts(F109) (约合大小: 0 KB)
@@ -22088,151 +22174,153 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F114:16]|     collapsePosition: { x: number; y: number };
 [F114:17]|     globalViewSort: SortConfig;
 [F114:18]|     globalViewLeafMode: boolean;
-[F114:19]|     autoSaveEnabled: boolean;
-[F114:20]|     autoSaveInterval: number;
-[F114:21]|   };
-[F114:22]|   customTemplates: Template[];
-[F114:23]|   configProfiles: ConfigProfile[];
-[F114:24]| }
-[F114:25]| 
-[F114:26]| export interface SettingsActions {
-[F114:27]|   updateSettings: (settings: Partial<SettingsState['settings']>) => void;
-[F114:28]|   saveCustomTemplate: (name: string) => void;
-[F114:29]|   deleteCustomTemplate: (id: string) => void;
-[F114:30]|   renameCustomTemplate: (id: string, newName: string) => void;
-[F114:31]|   applyTemplate: (templateId: string) => void;
-[F114:32]|   saveConfigProfile: (name: string, globalRules: RecurringTemplate[]) => void;
-[F114:33]|   applyConfigProfile: (profileId: string) => void;
-[F114:34]|   deleteConfigProfile: (id: string) => void;
-[F114:35]|   updateConfigProfile: (id: string, updates: Partial<ConfigProfile>) => void;
-[F114:36]|   importConfigProfile: (importedData: Partial<ConfigProfile>) => boolean;
-[F114:37]| }
-[F114:38]| 
-[F114:39]| export type SettingsSlice = SettingsState & SettingsActions;
+[F114:19]|     zoneViewSort: SortConfig;
+[F114:20]|     zoneViewLeafMode: boolean;
+[F114:21]|     autoSaveEnabled: boolean;
+[F114:22]|     autoSaveInterval: number;
+[F114:23]|   };
+[F114:24]|   customTemplates: Template[];
+[F114:25]|   configProfiles: ConfigProfile[];
+[F114:26]| }
+[F114:27]| 
+[F114:28]| export interface SettingsActions {
+[F114:29]|   updateSettings: (settings: Partial<SettingsState['settings']>) => void;
+[F114:30]|   saveCustomTemplate: (name: string) => void;
+[F114:31]|   deleteCustomTemplate: (id: string) => void;
+[F114:32]|   renameCustomTemplate: (id: string, newName: string) => void;
+[F114:33]|   applyTemplate: (templateId: string) => void;
+[F114:34]|   saveConfigProfile: (name: string, globalRules: RecurringTemplate[]) => void;
+[F114:35]|   applyConfigProfile: (profileId: string) => void;
+[F114:36]|   deleteConfigProfile: (id: string) => void;
+[F114:37]|   updateConfigProfile: (id: string, updates: Partial<ConfigProfile>) => void;
+[F114:38]|   importConfigProfile: (importedData: Partial<ConfigProfile>) => boolean;
+[F114:39]| }
 [F114:40]| 
-[F114:41]| export const createSettingsSlice: StateCreator<SettingsSlice & ZoneSlice & TaskSlice, [], [], SettingsSlice> = (set, get) => ({
-[F114:42]|   settings: DEFAULT_SETTINGS,
-[F114:43]|   customTemplates: [],
-[F114:44]|   configProfiles: [],
-[F114:45]| 
-[F114:46]|   updateSettings: (newSettings) => set((state) => ({
-[F114:47]|     settings: { ...state.settings, ...newSettings }
-[F114:48]|   })),
-[F114:49]| 
-[F114:50]|   saveCustomTemplate: (name) => set((state) => {
-[F114:51]|     const zones = get().zones.map(z => ({
-[F114:52]|       name: z.name,
-[F114:53]|       color: z.color,
-[F114:54]|       order: z.order,
-[F114:55]|     }));
-[F114:56]| 
-[F114:57]|     const newTemplate: Template = {
-[F114:58]|       id: `template-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-[F114:59]|       name,
-[F114:60]|       description: `自定义模板 - ${zones.length} 个分区`,
-[F114:61]|       icon: 'User',
-[F114:62]|       zones,
-[F114:63]|     };
-[F114:64]| 
-[F114:65]|     return { customTemplates: [...state.customTemplates, newTemplate] };
-[F114:66]|   }),
-[F114:67]| 
-[F114:68]|   deleteCustomTemplate: (id) => set((state) => ({
-[F114:69]|     customTemplates: state.customTemplates.filter(t => t.id !== id)
-[F114:70]|   })),
-[F114:71]| 
-[F114:72]|   renameCustomTemplate: (id, newName) => set((state) => ({
-[F114:73]|     customTemplates: state.customTemplates.map(t =>
-[F114:74]|       t.id === id ? { ...t, name: newName } : t
-[F114:75]|     )
-[F114:76]|   })),
-[F114:77]| 
-[F114:78]|   applyTemplate: (templateId) => set((state) => {
-[F114:79]|     const predefined = PREDEFINED_TEMPLATES.find(t => t.id === templateId);
-[F114:80]|     const custom = state.customTemplates.find(t => t.id === templateId);
-[F114:81]|     const template = predefined || custom;
-[F114:82]| 
-[F114:83]|     if (!template) return state;
+[F114:41]| export type SettingsSlice = SettingsState & SettingsActions;
+[F114:42]| 
+[F114:43]| export const createSettingsSlice: StateCreator<SettingsSlice & ZoneSlice & TaskSlice, [], [], SettingsSlice> = (set, get) => ({
+[F114:44]|   settings: DEFAULT_SETTINGS,
+[F114:45]|   customTemplates: [],
+[F114:46]|   configProfiles: [],
+[F114:47]| 
+[F114:48]|   updateSettings: (newSettings) => set((state) => ({
+[F114:49]|     settings: { ...state.settings, ...newSettings }
+[F114:50]|   })),
+[F114:51]| 
+[F114:52]|   saveCustomTemplate: (name) => set((state) => {
+[F114:53]|     const zones = get().zones.map(z => ({
+[F114:54]|       name: z.name,
+[F114:55]|       color: z.color,
+[F114:56]|       order: z.order,
+[F114:57]|     }));
+[F114:58]| 
+[F114:59]|     const newTemplate: Template = {
+[F114:60]|       id: `template-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+[F114:61]|       name,
+[F114:62]|       description: `自定义模板 - ${zones.length} 个分区`,
+[F114:63]|       icon: 'User',
+[F114:64]|       zones,
+[F114:65]|     };
+[F114:66]| 
+[F114:67]|     return { customTemplates: [...state.customTemplates, newTemplate] };
+[F114:68]|   }),
+[F114:69]| 
+[F114:70]|   deleteCustomTemplate: (id) => set((state) => ({
+[F114:71]|     customTemplates: state.customTemplates.filter(t => t.id !== id)
+[F114:72]|   })),
+[F114:73]| 
+[F114:74]|   renameCustomTemplate: (id, newName) => set((state) => ({
+[F114:75]|     customTemplates: state.customTemplates.map(t =>
+[F114:76]|       t.id === id ? { ...t, name: newName } : t
+[F114:77]|     )
+[F114:78]|   })),
+[F114:79]| 
+[F114:80]|   applyTemplate: (templateId) => set((state) => {
+[F114:81]|     const predefined = PREDEFINED_TEMPLATES.find(t => t.id === templateId);
+[F114:82]|     const custom = state.customTemplates.find(t => t.id === templateId);
+[F114:83]|     const template = predefined || custom;
 [F114:84]| 
-[F114:85]|     const newZones = template.zones.map((z, index) => ({
-[F114:86]|       id: `zone-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
-[F114:87]|       name: z.name,
-[F114:88]|       color: z.color,
-[F114:89]|       order: z.order,
-[F114:90]|       createdAt: Date.now(),
-[F114:91]|     }));
-[F114:92]| 
-[F114:93]|     return { zones: newZones, tasks: [] };
-[F114:94]|   }),
-[F114:95]| 
-[F114:96]|   saveConfigProfile: (name, globalRules) => set((state) => {
-[F114:97]|     const newProfile: ConfigProfile = {
-[F114:98]|       id: `profile-${Date.now()}`,
-[F114:99]|       name,
-[F114:100]|       createdAt: Date.now(),
-[F114:101]|       settings: JSON.parse(JSON.stringify(state.settings)),
-[F114:102]|       customTemplates: JSON.parse(JSON.stringify(state.customTemplates)),
-[F114:103]|       recurringTemplates: JSON.parse(JSON.stringify(globalRules)),
-[F114:104]|     };
-[F114:105]|     return { configProfiles: [newProfile, ...(state.configProfiles || [])] };
-[F114:106]|   }),
-[F114:107]| 
-[F114:108]|   applyConfigProfile: (profileId) => set((state) => {
-[F114:109]|     const profile = state.configProfiles?.find(p => p.id === profileId);
-[F114:110]|     if (!profile) return state;
-[F114:111]| 
-[F114:112]|     // 智能回退防崩：如果规则的 zoneId 当前工作区没有，降级到第一个可用分区
-[F114:113]|     const currentZones = get().zones;
-[F114:114]|     const fallbackZoneId = currentZones.length > 0 ? currentZones[0].id : '';
-[F114:115]|     const validRules = profile.recurringTemplates.map(rule => ({
-[F114:116]|       ...rule,
-[F114:117]|       zoneId: currentZones.some(z => z.id === rule.zoneId) ? rule.zoneId : fallbackZoneId
-[F114:118]|     }));
-[F114:119]| 
-[F114:120]|     // 合并逻辑：保留当前的局部规则，替换全局规则为快照中的全局规则
-[F114:121]|     const allCurrentRules = (state as any).recurringTemplates || [];
-[F114:122]|     const localRules = allCurrentRules.filter((r: RecurringTemplate) => r.scope === 'workspace');
-[F114:123]|     const mergedRules = [...localRules, ...validRules];
-[F114:124]| 
-[F114:125]|     return {
-[F114:126]|       settings: profile.settings,
-[F114:127]|       customTemplates: profile.customTemplates,
-[F114:128]|       recurringTemplates: mergedRules,
-[F114:129]|     } as SettingsState & { recurringTemplates: RecurringTemplate[] };
-[F114:130]|   }),
-[F114:131]| 
-[F114:132]|   deleteConfigProfile: (id) => set((state) => ({
-[F114:133]|     configProfiles: (state.configProfiles || []).filter(p => p.id !== id)
-[F114:134]|   })),
-[F114:135]| 
-[F114:136]|   updateConfigProfile: (id, updates) => set((state) => ({
-[F114:137]|     configProfiles: (state.configProfiles || []).map(p =>
-[F114:138]|       p.id === id ? { ...p, ...updates } : p
-[F114:139]|     )
-[F114:140]|   })),
-[F114:141]| 
-[F114:142]|   importConfigProfile: (parsed) => {
-[F114:143]|     try {
-[F114:144]|       if (!parsed || !parsed.settings) return false;
-[F114:145]| 
-[F114:146]|       const newProfile: ConfigProfile = {
-[F114:147]|         id: `profile-imported-${Date.now()}`,
-[F114:148]|         name: parsed.name || `导入配置 ${new Date().toLocaleDateString()}`,
-[F114:149]|         createdAt: Date.now(),
-[F114:150]|         settings: parsed.settings,
-[F114:151]|         customTemplates: parsed.customTemplates || [],
-[F114:152]|         recurringTemplates: parsed.recurringTemplates || [],
-[F114:153]|       };
-[F114:154]| 
-[F114:155]|       set((state) => ({
-[F114:156]|         configProfiles: [newProfile, ...(state.configProfiles || [])]
-[F114:157]|       }));
-[F114:158]|       return true;
-[F114:159]|     } catch {
-[F114:160]|       return false;
-[F114:161]|     }
-[F114:162]|   },
-[F114:163]| });
+[F114:85]|     if (!template) return state;
+[F114:86]| 
+[F114:87]|     const newZones = template.zones.map((z, index) => ({
+[F114:88]|       id: `zone-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
+[F114:89]|       name: z.name,
+[F114:90]|       color: z.color,
+[F114:91]|       order: z.order,
+[F114:92]|       createdAt: Date.now(),
+[F114:93]|     }));
+[F114:94]| 
+[F114:95]|     return { zones: newZones, tasks: [] };
+[F114:96]|   }),
+[F114:97]| 
+[F114:98]|   saveConfigProfile: (name, globalRules) => set((state) => {
+[F114:99]|     const newProfile: ConfigProfile = {
+[F114:100]|       id: `profile-${Date.now()}`,
+[F114:101]|       name,
+[F114:102]|       createdAt: Date.now(),
+[F114:103]|       settings: JSON.parse(JSON.stringify(state.settings)),
+[F114:104]|       customTemplates: JSON.parse(JSON.stringify(state.customTemplates)),
+[F114:105]|       recurringTemplates: JSON.parse(JSON.stringify(globalRules)),
+[F114:106]|     };
+[F114:107]|     return { configProfiles: [newProfile, ...(state.configProfiles || [])] };
+[F114:108]|   }),
+[F114:109]| 
+[F114:110]|   applyConfigProfile: (profileId) => set((state) => {
+[F114:111]|     const profile = state.configProfiles?.find(p => p.id === profileId);
+[F114:112]|     if (!profile) return state;
+[F114:113]| 
+[F114:114]|     // 智能回退防崩：如果规则的 zoneId 当前工作区没有，降级到第一个可用分区
+[F114:115]|     const currentZones = get().zones;
+[F114:116]|     const fallbackZoneId = currentZones.length > 0 ? currentZones[0].id : '';
+[F114:117]|     const validRules = profile.recurringTemplates.map(rule => ({
+[F114:118]|       ...rule,
+[F114:119]|       zoneId: currentZones.some(z => z.id === rule.zoneId) ? rule.zoneId : fallbackZoneId
+[F114:120]|     }));
+[F114:121]| 
+[F114:122]|     // 合并逻辑：保留当前的局部规则，替换全局规则为快照中的全局规则
+[F114:123]|     const allCurrentRules = (state as any).recurringTemplates || [];
+[F114:124]|     const localRules = allCurrentRules.filter((r: RecurringTemplate) => r.scope === 'workspace');
+[F114:125]|     const mergedRules = [...localRules, ...validRules];
+[F114:126]| 
+[F114:127]|     return {
+[F114:128]|       settings: profile.settings,
+[F114:129]|       customTemplates: profile.customTemplates,
+[F114:130]|       recurringTemplates: mergedRules,
+[F114:131]|     } as SettingsState & { recurringTemplates: RecurringTemplate[] };
+[F114:132]|   }),
+[F114:133]| 
+[F114:134]|   deleteConfigProfile: (id) => set((state) => ({
+[F114:135]|     configProfiles: (state.configProfiles || []).filter(p => p.id !== id)
+[F114:136]|   })),
+[F114:137]| 
+[F114:138]|   updateConfigProfile: (id, updates) => set((state) => ({
+[F114:139]|     configProfiles: (state.configProfiles || []).map(p =>
+[F114:140]|       p.id === id ? { ...p, ...updates } : p
+[F114:141]|     )
+[F114:142]|   })),
+[F114:143]| 
+[F114:144]|   importConfigProfile: (parsed) => {
+[F114:145]|     try {
+[F114:146]|       if (!parsed || !parsed.settings) return false;
+[F114:147]| 
+[F114:148]|       const newProfile: ConfigProfile = {
+[F114:149]|         id: `profile-imported-${Date.now()}`,
+[F114:150]|         name: parsed.name || `导入配置 ${new Date().toLocaleDateString()}`,
+[F114:151]|         createdAt: Date.now(),
+[F114:152]|         settings: parsed.settings,
+[F114:153]|         customTemplates: parsed.customTemplates || [],
+[F114:154]|         recurringTemplates: parsed.recurringTemplates || [],
+[F114:155]|       };
+[F114:156]| 
+[F114:157]|       set((state) => ({
+[F114:158]|         configProfiles: [newProfile, ...(state.configProfiles || [])]
+[F114:159]|       }));
+[F114:160]|       return true;
+[F114:161]|     } catch {
+[F114:162]|       return false;
+[F114:163]|     }
+[F114:164]|   },
+[F114:165]| });
 
 ================================================================================
 文件路径: src\store\slices\taskSlice.ts(F115) (约合大小: 17 KB)
@@ -22961,13 +23049,13 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F118:61]| });
 
 ================================================================================
-文件路径: src\types\index.ts(F119) (约合大小: 7 KB)
+文件路径: src\types\index.ts(F119) (约合大小: 8 KB)
 ================================================================================
 [F119:1]| export type TaskPriority = 'low' | 'medium' | 'high';
 [F119:2]| export type TaskUrgency = 'low' | 'medium' | 'high' | 'urgent';
 [F119:3]| export type DeadlineType = 'exact' | 'today' | 'tomorrow' | 'week' | 'none';
 [F119:4]| export type TimerMode = 'work' | 'break' | 'longBreak' | 'idle';
-[F119:5]| export type GlobalViewSortMode = 'zone' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime' | 'timeDiff' | 'deadline';
+[F119:5]| export type GlobalViewSortMode = 'manual' | 'zone' | 'priority' | 'urgency' | 'weighted' | 'workTime' | 'estimatedTime' | 'timeDiff' | 'deadline';
 [F119:6]| 
 [F119:7]| export interface SortConfig {
 [F119:8]|   mode: GlobalViewSortMode;
@@ -23103,133 +23191,141 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 [F119:138]|     collapsePosition: { x: number; y: number };
 [F119:139]|     globalViewSort: SortConfig;
 [F119:140]|     globalViewLeafMode: boolean; // 叶子节点模式状态
-[F119:141]|     autoSaveEnabled: boolean;
-[F119:142]|     autoSaveInterval: number;
-[F119:143]|   };
-[F119:144]|   // 定时任务模板列表
-[F119:145]|   recurringTemplates: RecurringTemplate[];
-[F119:146]|   // 配置环境包列表
-[F119:147]|   configProfiles: ConfigProfile[];
-[F119:148]| }
-[F119:149]| 
-[F119:150]| export interface TimerState {
-[F119:151]|   mode: TimerMode;
-[F119:152]|   timeRemaining: number;
-[F119:153]|   isRunning: boolean;
-[F119:154]|   currentTaskId: string | null;
-[F119:155]|   currentSessionStartTime?: number; // 当前专注会话开始时间
-[F119:156]|   pausedTimeRemaining?: number;     // 暂停时的剩余时间（秒）
-[F119:157]| }
-[F119:158]| 
-[F119:159]| // Predefined templates
-[F119:160]| export const PREDEFINED_TEMPLATES: Template[] = [
-[F119:161]|   {
-[F119:162]|     id: 'general',
-[F119:163]|     nameKey: 'template.templateGeneral',
-[F119:164]|     descKey: 'template.templateGeneralDesc',
-[F119:165]|     icon: 'LayoutGrid',
-[F119:166]|     zones: [
-[F119:167]|       { nameKey: 'zone.workZone', color: '#3b82f6', order: 0 },
-[F119:168]|       { nameKey: 'zone.studyZone', color: '#8b5cf6', order: 1 },
-[F119:169]|       { nameKey: 'zone.lifeZone', color: '#22c55e', order: 2 },
-[F119:170]|     ],
-[F119:171]|   },
-[F119:172]|   {
-[F119:173]|     id: 'project',
-[F119:174]|     nameKey: 'template.templateProject',
-[F119:175]|     descKey: 'template.templateProjectDesc',
-[F119:176]|     icon: 'FolderKanban',
-[F119:177]|     zones: [
-[F119:178]|       { nameKey: 'zone.projectA', color: '#f59e0b', order: 0 },
-[F119:179]|       { nameKey: 'zone.projectB', color: '#ec4899', order: 1 },
-[F119:180]|       { nameKey: 'zone.projectC', color: '#06b6d4', order: 2 },
-[F119:181]|       { nameKey: 'zone.other', color: '#6b7280', order: 3 },
-[F119:182]|     ],
-[F119:183]|   },
-[F119:184]|   {
-[F119:185]|     id: 'dev',
-[F119:186]|     nameKey: 'template.templateDev',
-[F119:187]|     descKey: 'template.templateDevDesc',
-[F119:188]|     icon: 'Code',
-[F119:189]|     zones: [
-[F119:190]|       { nameKey: 'zone.devZone', color: '#3b82f6', order: 0 },
-[F119:191]|       { nameKey: 'zone.testZone', color: '#22c55e', order: 1 },
-[F119:192]|       { nameKey: 'zone.docZone', color: '#f59e0b', order: 2 },
-[F119:193]|       { nameKey: 'zone.bugFix', color: '#ef4444', order: 3 },
-[F119:194]|     ],
-[F119:195]|   },
-[F119:196]|   {
-[F119:197]|     id: 'blank',
-[F119:198]|     nameKey: 'template.templateBlank',
-[F119:199]|     descKey: 'template.templateBlankDesc',
-[F119:200]|     icon: 'FileX',
-[F119:201]|     zones: [],
-[F119:202]|   },
-[F119:203]| ];
-[F119:204]| 
-[F119:205]| // Predefined colors for zones
-[F119:206]| export const ZONE_COLORS = [
-[F119:207]|   '#3b82f6', // blue
-[F119:208]|   '#22c55e', // green
-[F119:209]|   '#f59e0b', // yellow
-[F119:210]|   '#ef4444', // red
-[F119:211]|   '#8b5cf6', // purple
-[F119:212]|   '#ec4899', // pink
-[F119:213]|   '#06b6d4', // cyan
-[F119:214]|   '#f97316', // orange
-[F119:215]|   '#6366f1', // indigo
-[F119:216]|   '#14b8a6', // teal
-[F119:217]|   '#84cc16', // lime
-[F119:218]|   '#6b7280', // gray
-[F119:219]| ];
-[F119:220]| 
-[F119:221]| // 默认设置（正常值）
-[F119:222]| export const DEFAULT_SETTINGS = {
-[F119:223]|   language: 'zh', // 默认语言
-[F119:224]|   workDuration: 25 * 60, // 25分钟
-[F119:225]|   breakDuration: 5 * 60, // 5分钟
-[F119:226]|   longBreakDuration: 15 * 60, // 15分钟
-[F119:227]|   autoStartBreak: false,
-[F119:228]|   soundEnabled: true,
-[F119:229]|   collapsed: false,
-[F119:230]|   collapsePosition: { x: 100, y: 100 },
-[F119:231]|   globalViewSort: {
-[F119:232]|     mode: 'zone' as GlobalViewSortMode,
-[F119:233]|     priorityWeight: 0.6, // 60%
-[F119:234]|     deadlineWeight: 0.4, // 40%
-[F119:235]|   },
-[F119:236]|   globalViewLeafMode: false,
-[F119:237]|   autoSaveEnabled: true, // 默认开启自动保存
-[F119:238]|   autoSaveInterval: 120, // 自动保存间隔（秒），默认120秒
-[F119:239]|   recurringTemplates: [], // 定时任务模板列表
-[F119:240]| };
-[F119:241]| 
-[F119:242]| // 格式化时间为可读字符串
-[F119:243]| export function formatDuration(seconds: number): string {
-[F119:244]|   const hours = Math.floor(seconds / 3600);
-[F119:245]|   const mins = Math.floor((seconds % 3600) / 60);
-[F119:246]|   
-[F119:247]|   if (hours > 0) {
-[F119:248]|     return `${hours}h ${mins}m`;
-[F119:249]|   }
-[F119:250]|   return `${mins}m`;
-[F119:251]| }
-[F119:252]| 
-[F119:253]| // 格式化时间为详细字符串
-[F119:254]| export function formatDurationDetailed(seconds: number): string {
-[F119:255]|   const hours = Math.floor(seconds / 3600);
-[F119:256]|   const mins = Math.floor((seconds % 3600) / 60);
-[F119:257]|   const secs = seconds % 60;
-[F119:258]|   
-[F119:259]|   if (hours > 0) {
-[F119:260]|     return `${hours}小时 ${mins}分 ${secs}秒`;
-[F119:261]|   }
-[F119:262]|   if (mins > 0) {
-[F119:263]|     return `${mins}分 ${secs}秒`;
-[F119:264]|   }
-[F119:265]|   return `${secs}秒`;
-[F119:266]| }
+[F119:141]|     zoneViewSort: SortConfig;    // 新增：局部视图排序状态
+[F119:142]|     zoneViewLeafMode: boolean;   // 新增：局部视图叶子模式状态
+[F119:143]|     autoSaveEnabled: boolean;
+[F119:144]|     autoSaveInterval: number;
+[F119:145]|   };
+[F119:146]|   // 定时任务模板列表
+[F119:147]|   recurringTemplates: RecurringTemplate[];
+[F119:148]|   // 配置环境包列表
+[F119:149]|   configProfiles: ConfigProfile[];
+[F119:150]| }
+[F119:151]| 
+[F119:152]| export interface TimerState {
+[F119:153]|   mode: TimerMode;
+[F119:154]|   timeRemaining: number;
+[F119:155]|   isRunning: boolean;
+[F119:156]|   currentTaskId: string | null;
+[F119:157]|   currentSessionStartTime?: number; // 当前专注会话开始时间
+[F119:158]|   pausedTimeRemaining?: number;     // 暂停时的剩余时间（秒）
+[F119:159]| }
+[F119:160]| 
+[F119:161]| // Predefined templates
+[F119:162]| export const PREDEFINED_TEMPLATES: Template[] = [
+[F119:163]|   {
+[F119:164]|     id: 'general',
+[F119:165]|     nameKey: 'template.templateGeneral',
+[F119:166]|     descKey: 'template.templateGeneralDesc',
+[F119:167]|     icon: 'LayoutGrid',
+[F119:168]|     zones: [
+[F119:169]|       { nameKey: 'zone.workZone', color: '#3b82f6', order: 0 },
+[F119:170]|       { nameKey: 'zone.studyZone', color: '#8b5cf6', order: 1 },
+[F119:171]|       { nameKey: 'zone.lifeZone', color: '#22c55e', order: 2 },
+[F119:172]|     ],
+[F119:173]|   },
+[F119:174]|   {
+[F119:175]|     id: 'project',
+[F119:176]|     nameKey: 'template.templateProject',
+[F119:177]|     descKey: 'template.templateProjectDesc',
+[F119:178]|     icon: 'FolderKanban',
+[F119:179]|     zones: [
+[F119:180]|       { nameKey: 'zone.projectA', color: '#f59e0b', order: 0 },
+[F119:181]|       { nameKey: 'zone.projectB', color: '#ec4899', order: 1 },
+[F119:182]|       { nameKey: 'zone.projectC', color: '#06b6d4', order: 2 },
+[F119:183]|       { nameKey: 'zone.other', color: '#6b7280', order: 3 },
+[F119:184]|     ],
+[F119:185]|   },
+[F119:186]|   {
+[F119:187]|     id: 'dev',
+[F119:188]|     nameKey: 'template.templateDev',
+[F119:189]|     descKey: 'template.templateDevDesc',
+[F119:190]|     icon: 'Code',
+[F119:191]|     zones: [
+[F119:192]|       { nameKey: 'zone.devZone', color: '#3b82f6', order: 0 },
+[F119:193]|       { nameKey: 'zone.testZone', color: '#22c55e', order: 1 },
+[F119:194]|       { nameKey: 'zone.docZone', color: '#f59e0b', order: 2 },
+[F119:195]|       { nameKey: 'zone.bugFix', color: '#ef4444', order: 3 },
+[F119:196]|     ],
+[F119:197]|   },
+[F119:198]|   {
+[F119:199]|     id: 'blank',
+[F119:200]|     nameKey: 'template.templateBlank',
+[F119:201]|     descKey: 'template.templateBlankDesc',
+[F119:202]|     icon: 'FileX',
+[F119:203]|     zones: [],
+[F119:204]|   },
+[F119:205]| ];
+[F119:206]| 
+[F119:207]| // Predefined colors for zones
+[F119:208]| export const ZONE_COLORS = [
+[F119:209]|   '#3b82f6', // blue
+[F119:210]|   '#22c55e', // green
+[F119:211]|   '#f59e0b', // yellow
+[F119:212]|   '#ef4444', // red
+[F119:213]|   '#8b5cf6', // purple
+[F119:214]|   '#ec4899', // pink
+[F119:215]|   '#06b6d4', // cyan
+[F119:216]|   '#f97316', // orange
+[F119:217]|   '#6366f1', // indigo
+[F119:218]|   '#14b8a6', // teal
+[F119:219]|   '#84cc16', // lime
+[F119:220]|   '#6b7280', // gray
+[F119:221]| ];
+[F119:222]| 
+[F119:223]| // 默认设置（正常值）
+[F119:224]| export const DEFAULT_SETTINGS = {
+[F119:225]|   language: 'zh', // 默认语言
+[F119:226]|   workDuration: 25 * 60, // 25分钟
+[F119:227]|   breakDuration: 5 * 60, // 5分钟
+[F119:228]|   longBreakDuration: 15 * 60, // 15分钟
+[F119:229]|   autoStartBreak: false,
+[F119:230]|   soundEnabled: true,
+[F119:231]|   collapsed: false,
+[F119:232]|   collapsePosition: { x: 100, y: 100 },
+[F119:233]|   globalViewSort: {
+[F119:234]|     mode: 'zone' as GlobalViewSortMode,
+[F119:235]|     priorityWeight: 0.6, // 60%
+[F119:236]|     deadlineWeight: 0.4, // 40%
+[F119:237]|   },
+[F119:238]|   globalViewLeafMode: false,
+[F119:239]|   zoneViewSort: {
+[F119:240]|     mode: 'manual' as GlobalViewSortMode,
+[F119:241]|     priorityWeight: 0.6,
+[F119:242]|     deadlineWeight: 0.4,
+[F119:243]|   },
+[F119:244]|   zoneViewLeafMode: false,
+[F119:245]|   autoSaveEnabled: true, // 默认开启自动保存
+[F119:246]|   autoSaveInterval: 120, // 自动保存间隔（秒），默认120秒
+[F119:247]|   recurringTemplates: [], // 定时任务模板列表
+[F119:248]| };
+[F119:249]| 
+[F119:250]| // 格式化时间为可读字符串
+[F119:251]| export function formatDuration(seconds: number): string {
+[F119:252]|   const hours = Math.floor(seconds / 3600);
+[F119:253]|   const mins = Math.floor((seconds % 3600) / 60);
+[F119:254]|   
+[F119:255]|   if (hours > 0) {
+[F119:256]|     return `${hours}h ${mins}m`;
+[F119:257]|   }
+[F119:258]|   return `${mins}m`;
+[F119:259]| }
+[F119:260]| 
+[F119:261]| // 格式化时间为详细字符串
+[F119:262]| export function formatDurationDetailed(seconds: number): string {
+[F119:263]|   const hours = Math.floor(seconds / 3600);
+[F119:264]|   const mins = Math.floor((seconds % 3600) / 60);
+[F119:265]|   const secs = seconds % 60;
+[F119:266]|   
+[F119:267]|   if (hours > 0) {
+[F119:268]|     return `${hours}小时 ${mins}分 ${secs}秒`;
+[F119:269]|   }
+[F119:270]|   if (mins > 0) {
+[F119:271]|     return `${mins}分 ${secs}秒`;
+[F119:272]|   }
+[F119:273]|   return `${secs}秒`;
+[F119:274]| }
 
 ## 统计信息
 - 包含文件数: 119
-- 总大小: 1935 KB
+- 总大小: 1939 KB

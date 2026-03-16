@@ -4,7 +4,7 @@
   "identifier": "com.focusflow.app",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://localhost:3000",
+    "devUrl": "http://localhost:8088",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
   },

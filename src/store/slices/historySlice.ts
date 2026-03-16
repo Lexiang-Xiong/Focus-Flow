@@ -137,7 +137,7 @@ export const createHistorySlice: StateCreator<HistorySlice & TaskSlice & ZoneSli
     }
 
     set({
-      historyWorkspaces: newHistories.slice(0, 100),
+      historyWorkspaces: newHistories.slice(0, 20),
     });
 
     return AUTO_SAVE_ID;
