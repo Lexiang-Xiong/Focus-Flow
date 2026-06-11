@@ -35,6 +35,14 @@
     "fs:allow-exists",
     "fs:allow-mkdir",
     "fs:allow-copy-file",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        { "path": "$APPDATA" },
+        { "path": "$APPDATA/*" },
+        { "path": "$APPDATA/**" }
+      ]
+    },
     "core:path:default"
   ]
 }
