@@ -760,6 +760,8 @@ function App() {
                     sortConfig={settings.globalViewSort}
                     isLeafMode={settings.globalViewLeafMode}
                     onLeafModeChange={(isLeaf) => updateSettings({ globalViewLeafMode: isLeaf })}
+                    isGroupByZone={settings.globalViewGroupByZone}
+                    onGroupByZoneChange={(isGroup) => updateSettings({ globalViewGroupByZone: isGroup })}
                     onBack={() => {
                       setCurrentView('zones');
                       if (zones.length > 0) {

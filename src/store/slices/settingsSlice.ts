@@ -16,6 +16,7 @@ export interface SettingsState {
     collapsePosition: { x: number; y: number };
     globalViewSort: SortConfig;
     globalViewLeafMode: boolean;
+    globalViewGroupByZone: boolean;
     zoneViewSort: SortConfig;
     zoneViewLeafMode: boolean;
     autoSaveEnabled: boolean;
