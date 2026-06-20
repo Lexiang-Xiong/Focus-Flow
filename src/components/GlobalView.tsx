@@ -17,6 +17,7 @@ import {
 import React from 'react';
 import { ArrowLeft, CheckCircle2, Globe, ArrowUpDown, Zap, Flag, ChevronDown, ChevronRight, ChevronUp, ArrowUp, Layers, Home, Clock, CircleX, Network } from 'lucide-react';
 import { getFlattenedTasks } from '@/lib/tree-utils';
+import { groupTasksByZone } from '@/lib/global-view-utils';
 import { calculateRankScores, mapRankToUrgency, getInheritedDeadline } from '@/lib/urgency-utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -40,6 +41,8 @@ interface GlobalViewProps {
   sortConfig: SortConfig;
   isLeafMode?: boolean; // 叶子节点模式状态（可选，用于外部控制）
   onLeafModeChange?: (isLeaf: boolean) => void; // 叶子节点模式变化回调
+  isGroupByZone?: boolean; // 是否按工作区分组（可选，用于外部控制）
+  onGroupByZoneChange?: (isGroup: boolean) => void; // 分组模式变化回调
   onBack: () => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
@@ -64,6 +67,8 @@ export function GlobalView({
   sortConfig,
   isLeafMode: externalLeafMode,
   onLeafModeChange,
+  isGroupByZone: externalGroupByZone,
+  onGroupByZoneChange,
   onBack,
   onToggleTask,
   onDeleteTask,
@@ -94,6 +99,16 @@ export function GlobalView({
     }
   };
 
+  const [internalGroupByZone, setInternalGroupByZone] = useState(false);
+  const isGroupByZone = externalGroupByZone !== undefined ? externalGroupByZone : internalGroupByZone;
+  const setIsGroupByZone = (value: boolean) => {
+    if (onGroupByZoneChange) {
+      onGroupByZoneChange(value);
+    } else {
+      setInternalGroupByZone(value);
+    }
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -102,7 +117,7 @@ export function GlobalView({
   );
 
   // Helper functions for sorting
-  const priorityOrder: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
+  const priorityOrder: Record<TaskPriority, number> = { critical: 0, heavy: 1, high: 2, medium: 3, low: 4 };
 
   // 计算所有任务的排名分数
   const rankScores = useMemo(() => calculateRankScores(tasks), [tasks]);
@@ -110,7 +125,7 @@ export function GlobalView({
   const calculateWeightedScore = (task: Task): number => {
     const pWeight = sortConfig.priorityWeight ?? 0.6;
     const dWeight = sortConfig.deadlineWeight ?? 0.4;
-    const normalizedPriority = (2 - priorityOrder[task.priority]) / 2; // 0-1, high=1
+    const normalizedPriority = (4 - priorityOrder[task.priority]) / 4; // 0-1, critical=1
     // 使用继承的截止日期计算分数
     const effectiveDeadline = getInheritedDeadline(task, tasks);
     const deadlineScore = effectiveDeadline ? (leafModeRankScores[task.id] || 0) : 0;
@@ -279,6 +294,11 @@ export function GlobalView({
   const taskGroups = useMemo(() => {
     const groups: { title: string; color: string; tasks: Task[]; zoneId?: string }[] = [];
 
+    // Group by zone override - when enabled, intercept sorting at zone level
+    if (isGroupByZone && sortConfig.mode !== 'zone') {
+      return groupTasksByZone(sortedRootTasks, zones);
+    }
+
     // Zone mode: create groups by zone
     if (sortConfig.mode === 'zone') {
       zones.forEach((zone) => {
@@ -296,16 +316,18 @@ export function GlobalView({
     }
 
     if (sortConfig.mode === 'priority') {
-      const priorityGroups: Record<TaskPriority, Task[]> = { high: [], medium: [], low: [] };
+      const priorityGroups: Record<TaskPriority, Task[]> = { critical: [], heavy: [], high: [], medium: [], low: [] };
       sortedRootTasks.forEach((t) => priorityGroups[t.priority].push(t));
 
       const priorityLabels: Record<TaskPriority, { title: string; color: string }> = {
-        high: { title: t('task.priorityHigh'), color: '#ef4444' },
+        critical: { title: t('task.priorityCritical'), color: '#9f1239' },
+        heavy: { title: t('task.priorityHeavy'), color: '#ef4444' },
+        high: { title: t('task.priorityHigh'), color: '#f97316' },
         medium: { title: t('task.priorityMedium'), color: '#eab308' },
         low: { title: t('task.priorityLow'), color: '#22c55e' },
       };
 
-      (['high', 'medium', 'low'] as TaskPriority[]).forEach((p) => {
+      (['critical', 'heavy', 'high', 'medium', 'low'] as TaskPriority[]).forEach((p) => {
         if (priorityGroups[p].length > 0) {
           groups.push({
             title: priorityLabels[p].title,
@@ -408,7 +430,7 @@ export function GlobalView({
     }
 
     return groups;
-  }, [sortedRootTasks, sortConfig.mode, zones]);
+  }, [sortedRootTasks, sortConfig.mode, zones, isGroupByZone]);
 
   const completedTasks = tasks.filter((t) => t.completed);
 
@@ -706,15 +728,22 @@ export function GlobalView({
           <Button
             variant="outline"
             size="sm"
-            className={`h-8 px-2 border flex-shrink-0 ${isLeafMode ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-gray-800 text-gray-200 border-gray-600'}`}
+            className={`h-8 w-8 p-0 border flex-shrink-0 ${isLeafMode ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-gray-800 text-gray-200 border-gray-600'}`}
             onClick={() => setIsLeafMode(!isLeafMode)}
             title={isLeafMode ? t('view.leafMode') : t('view.treeView')}
           >
             <Network size={14} className={isLeafMode ? "" : "opacity-70"} />
-            {/* 核心修复：为文字添加 span 并根据需要处理 */}
-            <span className="ml-1 whitespace-nowrap">
-              {isLeafMode ? t('view.leafMode') : t('view.treeView')}
-            </span>
+          </Button>
+
+          {/* 按工作区分组开关 */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={`h-8 w-8 p-0 border flex-shrink-0 ${isGroupByZone ? 'bg-purple-500/20 text-purple-400 border-purple-500/50' : 'bg-gray-800 text-gray-200 border-gray-600'}`}
+            onClick={() => setIsGroupByZone(!isGroupByZone)}
+            title={t('view.groupByZone')}
+          >
+            <Layers size={14} className={isGroupByZone ? "" : "opacity-70"} />
           </Button>
 
           <div className="sort-mode-selector m-0">

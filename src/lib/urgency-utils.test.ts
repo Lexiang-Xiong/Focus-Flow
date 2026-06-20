@@ -307,13 +307,15 @@ describe('calculateUrgencyForTask（任务显示用紧急度）', () => {
 describe('sortTasksByMode（按模式排序）', () => {
   const ids = (arr: Task[]) => arr.map(t => t.id);
 
-  it('priority：高 → 中 → 低', () => {
+  it('priority：critical > heavy > high > medium > low', () => {
     const list = [
       task('low', { priority: 'low' }),
       task('high', { priority: 'high' }),
       task('mid', { priority: 'medium' }),
+      task('heavy', { priority: 'heavy' }),
+      task('critical', { priority: 'critical' }),
     ];
-    expect(ids(sortTasksByMode(list, 'priority', list))).toEqual(['high', 'mid', 'low']);
+    expect(ids(sortTasksByMode(list, 'priority', list))).toEqual(['critical', 'heavy', 'high', 'mid', 'low']);
   });
 
   it('urgency：截止越早越前，无截止排最后', () => {
@@ -361,6 +363,19 @@ describe('sortTasksByMode（按模式排序）', () => {
       task('highSoon', { priority: 'high', deadline: now + 1 * HOUR }),
     ];
     expect(ids(sortTasksByMode(list, 'weighted', list))[0]).toBe('highSoon');
+  });
+
+  it('weighted：critical 优先级得分高于 heavy/high/medium/low', () => {
+    const now = 1_000_000;
+    // 同截止情况下，critical 应排最前
+    const list = [
+      task('low', { priority: 'low', deadline: now + 1 * HOUR }),
+      task('medium', { priority: 'medium', deadline: now + 1 * HOUR }),
+      task('high', { priority: 'high', deadline: now + 1 * HOUR }),
+      task('heavy', { priority: 'heavy', deadline: now + 1 * HOUR }),
+      task('critical', { priority: 'critical', deadline: now + 1 * HOUR }),
+    ];
+    expect(ids(sortTasksByMode(list, 'weighted', list))).toEqual(['critical', 'heavy', 'high', 'medium', 'low']);
   });
 
   it('manual / 未覆盖模式：保持传入顺序', () => {

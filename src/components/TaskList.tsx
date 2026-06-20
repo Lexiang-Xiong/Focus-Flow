@@ -476,7 +476,7 @@ export function TaskList({
         <div className="add-task-container">
           <div className="priority-urgency-row">
             <div className="priority-selector">
-              {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
+              {(['critical', 'heavy', 'high', 'medium', 'low'] as TaskPriority[]).map((p) => (
                 <button
                   key={p}
                   className={`priority-btn ${selectedPriority === p ? 'active' : ''} priority-${p}`}
@@ -815,7 +815,7 @@ export function TaskList({
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <div className="priority-selector">
-                                  {(['high', 'medium', 'low'] as TaskPriority[]).map((p) => (
+                                  {(['critical', 'heavy', 'high', 'medium', 'low'] as TaskPriority[]).map((p) => (
                                     <button
                                       key={p}
                                       className={`priority-btn ${subtaskPriority === p ? 'active' : ''} priority-${p}`}

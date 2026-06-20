@@ -208,10 +208,12 @@ export function getDeadlineDisplay(deadline: number | null | undefined, deadline
     : dateStr;
 }
 
-// 优先级分数映射
+// 优先级分数映射（五级优先级，值域 [0, 1]）
 const PRIORITY_MAP: Record<TaskPriority, number> = {
-  high: 1.0,
-  medium: 0.5,
+  critical: 1.0,
+  heavy: 0.75,
+  high: 0.5,
+  medium: 0.25,
   low: 0,
 };
 
@@ -273,7 +275,7 @@ export function sortTasksByMode(
   allTasks: Task[],
   weights?: { priorityWeight?: number; deadlineWeight?: number }
 ): Task[] {
-  const priorityOrder: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
+  const priorityOrder: Record<TaskPriority, number> = { critical: 0, heavy: 1, high: 2, medium: 3, low: 4 };
   const pWeight = weights?.priorityWeight ?? 0.6;
   const dWeight = weights?.deadlineWeight ?? 0.4;
 
@@ -294,8 +296,8 @@ export function sortTasksByMode(
       case 'estimatedTime':
         return (b.estimatedTime || 0) - (a.estimatedTime || 0);
       case 'weighted': {
-        const normPriorityA = (2 - priorityOrder[a.priority]) / 2;
-        const normPriorityB = (2 - priorityOrder[b.priority]) / 2;
+        const normPriorityA = PRIORITY_MAP[a.priority];
+        const normPriorityB = PRIORITY_MAP[b.priority];
         const aEffective = getInheritedDeadline(a, allTasks);
         const bEffective = getInheritedDeadline(b, allTasks);
         const rankScores = calculateRankScores(allTasks);

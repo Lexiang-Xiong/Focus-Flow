@@ -1,4 +1,4 @@
-export type TaskPriority = 'low' | 'medium' | 'high';
+export type TaskPriority = 'critical' | 'heavy' | 'high' | 'medium' | 'low';
 export type TaskUrgency = 'low' | 'medium' | 'high' | 'urgent';
 export type DeadlineType = 'exact' | 'today' | 'tomorrow' | 'week' | 'none';
 export type TimerMode = 'work' | 'break' | 'longBreak' | 'idle';
@@ -138,6 +138,7 @@ export interface AppState {
     collapsePosition: { x: number; y: number };
     globalViewSort: SortConfig;
     globalViewLeafMode: boolean; // 叶子节点模式状态
+    globalViewGroupByZone: boolean; // 全局视图是否按工作区分组
     zoneViewSort: SortConfig;    // 新增：局部视图排序状态
     zoneViewLeafMode: boolean;   // 新增：局部视图叶子模式状态
     autoSaveEnabled: boolean;
@@ -236,6 +237,7 @@ export const DEFAULT_SETTINGS = {
     deadlineWeight: 0.4, // 40%
   },
   globalViewLeafMode: false,
+  globalViewGroupByZone: false, // 默认关闭按工作区分组
   zoneViewSort: {
     mode: 'manual' as GlobalViewSortMode,
     priorityWeight: 0.6,
