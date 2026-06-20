@@ -15,7 +15,7 @@ vi.mock('react-i18next', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
 import { NlpEditDialog } from './NlpEditDialog';
-import type { NlpProvider, RequestOpsResult } from '@/lib/nlp-edit/provider';
+import type { NlpProvider, RequestOpsResult, ByokConfig } from '@/lib/nlp-edit/provider';
 import type { Task, Zone } from '@/types';
 
 // jsdom 缺的几个 DOM API（radix Dialog/ScrollArea/Checkbox 需要），补桩。
@@ -95,13 +95,54 @@ describe('NlpEditDialog', () => {
     expect(onApply).toHaveBeenCalledTimes(1);
   });
 
-  it('未配置 byok_v1 → 显示配置提示', async () => {
+  it('未配置 → 显示配置表单；填写保存 → 调 saveConfig 并进入输入态', async () => {
     const user = userEvent.setup();
-    const provider = makeProvider({ kind: 'error', error: { code: 'NOT_CONFIGURED', message: 'x' } }, false);
-    render(<NlpEditDialog zones={[zone('z1')]} tasks={[]} onApply={vi.fn()} providerFactory={() => provider} />);
+    let configured = false;
+    const saveConfig = vi.fn<(c: ByokConfig) => void>(() => {
+      configured = true;
+    });
+    const provider: NlpProvider = {
+      readConfig: () =>
+        configured
+          ? { ok: true, config: { base: 'https://x/v1', key: 'k', model: 'm' } }
+          : { ok: false, code: 'NOT_CONFIGURED', message: 'x' },
+      requestOps: async () => ({ kind: 'ops', ops: [], rawArguments: '' }),
+    };
+    render(
+      <NlpEditDialog zones={[zone('z1')]} tasks={[]} onApply={vi.fn()} providerFactory={() => provider} saveConfig={saveConfig} />,
+    );
 
     await user.click(screen.getByTestId('nlp-trigger'));
-    expect(await screen.findByText('nlp.notConfigured')).toBeInTheDocument();
+    // 未配置 → 配置表单出现（不再是只读提示），普通用户可在应用内填，不必开 DevTools
+    expect(await screen.findByTestId('nlp-config')).toBeInTheDocument();
+    await user.type(screen.getByTestId('cfg-base'), 'https://x/v1');
+    await user.type(screen.getByTestId('cfg-key'), 'sk-abc');
+    await user.type(screen.getByTestId('cfg-model'), 'm');
+    await user.click(screen.getByTestId('cfg-save'));
+
+    expect(saveConfig).toHaveBeenCalledTimes(1);
+    expect(saveConfig.mock.calls[0][0]).toMatchObject({ base: 'https://x/v1', key: 'sk-abc', model: 'm' });
+    // 保存后配置变 ok → 自动进入输入态（表单消失、textarea 出现）
+    expect(await screen.findByTestId('nlp-input')).toBeInTheDocument();
+    expect(screen.queryByTestId('nlp-config')).not.toBeInTheDocument();
+  });
+
+  it('配置表单字段不全 → 提示且不调 saveConfig', async () => {
+    const user = userEvent.setup();
+    const saveConfig = vi.fn();
+    const provider: NlpProvider = {
+      readConfig: () => ({ ok: false, code: 'NOT_CONFIGURED', message: 'x' }),
+      requestOps: async () => ({ kind: 'ops', ops: [], rawArguments: '' }),
+    };
+    render(
+      <NlpEditDialog zones={[zone('z1')]} tasks={[]} onApply={vi.fn()} providerFactory={() => provider} saveConfig={saveConfig} />,
+    );
+    await user.click(screen.getByTestId('nlp-trigger'));
+    await screen.findByTestId('nlp-config');
+    await user.type(screen.getByTestId('cfg-base'), 'https://x/v1'); // 缺 key/model
+    await user.click(screen.getByTestId('cfg-save'));
+    expect(saveConfig).not.toHaveBeenCalled();
+    expect(screen.getByTestId('nlp-error')).toHaveTextContent('nlp.cfgIncomplete');
   });
 
   it('provider 报错 → 显示错误信息（不进预览态）', async () => {

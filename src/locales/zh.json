@@ -23,7 +23,18 @@
     "applied": "已应用 AI 编辑（{{count}} 项）",
     "nothingToApply": "没有可应用的操作",
     "emptyInput": "请先输入要做的修改",
-    "errorTitle": "无法生成"
+    "errorTitle": "无法生成",
+    "configTitle": "BYOK 配置（base / key / model）",
+    "cfgBase": "API 地址（base，以 /v1 结尾）",
+    "cfgKey": "API Key",
+    "cfgModel": "模型（model）",
+    "cfgProvider": "Provider（可选）",
+    "save": "保存",
+    "cancel": "取消",
+    "editConfig": "改配置",
+    "plaintextWarn": "Key 明文存在本浏览器 localStorage，仅供自用；公用电脑请谨慎。",
+    "cfgSaved": "已保存 BYOK 配置",
+    "cfgIncomplete": "请填写 base / key / model"
   },
   "app": {
     "name": "Focus Flow"

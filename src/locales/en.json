@@ -23,7 +23,18 @@
     "applied": "Applied AI edits ({{count}})",
     "nothingToApply": "Nothing to apply",
     "emptyInput": "Type the change you want first",
-    "errorTitle": "Could not generate"
+    "errorTitle": "Could not generate",
+    "configTitle": "BYOK config (base / key / model)",
+    "cfgBase": "API base URL (ends with /v1)",
+    "cfgKey": "API Key",
+    "cfgModel": "Model",
+    "cfgProvider": "Provider (optional)",
+    "save": "Save",
+    "cancel": "Cancel",
+    "editConfig": "Edit config",
+    "plaintextWarn": "Key is stored in plaintext in this browser's localStorage — personal use only; be careful on shared machines.",
+    "cfgSaved": "BYOK config saved",
+    "cfgIncomplete": "Fill in base / key / model"
   },
   "app": {
     "name": "Focus Flow"

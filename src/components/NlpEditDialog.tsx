@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Wand2, Loader2, AlertTriangle, Plus, Pencil, Trash2, SkipForward, CornerDownRight } from 'lucide-react';
+import { Wand2, Loader2, AlertTriangle, Plus, Pencil, Trash2, SkipForward, CornerDownRight, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -16,7 +17,7 @@ import {
 import { toast } from 'sonner';
 import type { Task, Zone } from '@/types';
 import { planOps, type PlanResult, type Snapshot, type PlannedAction } from '@/lib/nlp-edit/apply-core';
-import type { NlpProvider, ProviderError } from '@/lib/nlp-edit/provider';
+import { writeByokConfig, type NlpProvider, type ProviderError, type ByokConfig } from '@/lib/nlp-edit/provider';
 import { createAppNlpProvider } from '@/lib/nlp-edit/runtime';
 
 type PlanOk = Extract<PlanResult, { kind: 'plan' }>;
@@ -27,6 +28,8 @@ interface NlpEditDialogProps {
   onApply: (actions: PlannedAction[]) => unknown;
   /** 注入点：测试喂 mock provider；默认接真实浏览器运行时（dev 经 vite 代理）。 */
   providerFactory?: () => NlpProvider;
+  /** 注入点：保存 BYOK 配置；默认写入 localStorage['byok_v1']。 */
+  saveConfig?: (cfg: ByokConfig) => void;
 }
 
 function formatProviderError(e: ProviderError, t: (k: string, o?: Record<string, unknown>) => string): string {
@@ -44,7 +47,13 @@ function changeSummary(changes: Partial<Task>): string {
     .join('，');
 }
 
-export function NlpEditDialog({ zones, tasks, onApply, providerFactory = createAppNlpProvider }: NlpEditDialogProps) {
+export function NlpEditDialog({
+  zones,
+  tasks,
+  onApply,
+  providerFactory = createAppNlpProvider,
+  saveConfig = writeByokConfig,
+}: NlpEditDialogProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<'input' | 'preview'>('input');
@@ -54,14 +63,21 @@ export function NlpEditDialog({ zones, tasks, onApply, providerFactory = createA
   const [plan, setPlan] = useState<PlanOk | null>(null);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
 
+  // BYOK 配置态
+  const [configMode, setConfigMode] = useState(false);
+  // 仅用于「保存配置后强制重渲染」→ 重读 localStorage（首配时表单是靠 !config.ok 显示的，
+  // configMode 本就是 false，单 setConfigMode(false) 不会触发重渲染，故需显式 tick）。
+  const [, bumpCfg] = useState(0);
+  const [cfgBase, setCfgBase] = useState('');
+  const [cfgKey, setCfgKey] = useState('');
+  const [cfgModel, setCfgModel] = useState('');
+  const [cfgProvider, setCfgProvider] = useState('');
+
   const titleById = useMemo(() => new Map(tasks.map((x) => [x.id, x.title] as [string, string])), [tasks]);
 
-  // 打开时检测 BYOK 配置，缺失则提示去 localStorage 填 byok_v1（不回显 key）。
-  const configHint = useMemo(() => {
-    if (!open) return null;
-    const cfg = providerFactory().readConfig();
-    return cfg.ok ? null : t('nlp.notConfigured');
-  }, [open, providerFactory, t]);
+  // 按需读 BYOK 配置（localStorage 读很轻）；保存后 setConfigMode 触发重渲染即自动刷新。缺失/损坏则进配置态。
+  const config = open ? providerFactory().readConfig() : null;
+  const showConfig = configMode || (config != null && !config.ok);
 
   const reset = useCallback(() => {
     setStep('input');
@@ -70,6 +86,7 @@ export function NlpEditDialog({ zones, tasks, onApply, providerFactory = createA
     setError(null);
     setPlan(null);
     setDeleteConfirmed(false);
+    setConfigMode(false);
   }, []);
 
   const handleOpenChange = useCallback(
@@ -79,6 +96,33 @@ export function NlpEditDialog({ zones, tasks, onApply, providerFactory = createA
     },
     [reset],
   );
+
+  const openConfig = useCallback(() => {
+    const c = providerFactory().readConfig();
+    if (c.ok) {
+      setCfgBase(c.config.base);
+      setCfgKey(c.config.key);
+      setCfgModel(c.config.model);
+      setCfgProvider(c.config.provider ?? '');
+    }
+    setError(null);
+    setConfigMode(true);
+  }, [providerFactory]);
+
+  const handleSaveConfig = useCallback(() => {
+    const base = cfgBase.trim();
+    const key = cfgKey.trim();
+    const model = cfgModel.trim();
+    if (!base || !key || !model) {
+      setError(t('nlp.cfgIncomplete'));
+      return;
+    }
+    saveConfig({ provider: cfgProvider.trim() || undefined, base, key, model });
+    setConfigMode(false);
+    bumpCfg((n) => n + 1); // 强制重渲染 → 重读配置（首配时 configMode 已是 false，否则不会刷新）
+    setError(null);
+    toast.success(t('nlp.cfgSaved'));
+  }, [cfgBase, cfgKey, cfgModel, cfgProvider, saveConfig, t]);
 
   const handleGenerate = useCallback(async () => {
     const text = input.trim();
@@ -129,20 +173,67 @@ export function NlpEditDialog({ zones, tasks, onApply, providerFactory = createA
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wand2 size={16} /> {t('nlp.title')}
+            {config?.ok && !showConfig && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="ml-auto h-7 w-7"
+                data-testid="nlp-config-edit"
+                title={t('nlp.editConfig')}
+                onClick={openConfig}
+              >
+                <Settings size={14} />
+              </Button>
+            )}
           </DialogTitle>
           <DialogDescription>
-            {step === 'input' ? t('nlp.inputLabel') : t('nlp.previewTitle')}
+            {showConfig ? t('nlp.configTitle') : step === 'input' ? t('nlp.inputLabel') : t('nlp.previewTitle')}
           </DialogDescription>
         </DialogHeader>
 
-        {step === 'input' && (
-          <div className="flex flex-col gap-3">
-            {configHint && (
-              <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-50/60 p-2 text-sm text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
-                <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-                <span>{configHint}</span>
-              </div>
+        {/* BYOK 配置表单（未配置 / 点改配置时） */}
+        {showConfig && (
+          <div className="flex flex-col gap-3" data-testid="nlp-config">
+            <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-50/60 p-2 text-xs text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+              <span>{t('nlp.plaintextWarn')}</span>
+            </div>
+            <label className="flex flex-col gap-1 text-sm">
+              {t('nlp.cfgBase')}
+              <Input data-testid="cfg-base" value={cfgBase} onChange={(e) => setCfgBase(e.target.value)} placeholder="https://.../v1" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              {t('nlp.cfgKey')}
+              <Input data-testid="cfg-key" type="password" value={cfgKey} onChange={(e) => setCfgKey(e.target.value)} placeholder="sk-… / tp-…" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              {t('nlp.cfgModel')}
+              <Input data-testid="cfg-model" value={cfgModel} onChange={(e) => setCfgModel(e.target.value)} placeholder="model" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              {t('nlp.cfgProvider')}
+              <Input data-testid="cfg-provider" value={cfgProvider} onChange={(e) => setCfgProvider(e.target.value)} placeholder="(optional)" />
+            </label>
+            {error && (
+              <p data-testid="nlp-error" className="text-sm text-destructive">
+                {error}
+              </p>
             )}
+            <div className="flex justify-end gap-2">
+              {config?.ok && (
+                <Button variant="outline" onClick={() => { setConfigMode(false); setError(null); }}>
+                  {t('nlp.cancel')}
+                </Button>
+              )}
+              <Button data-testid="cfg-save" onClick={handleSaveConfig}>
+                {t('nlp.save')}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {!showConfig && step === 'input' && (
+          <div className="flex flex-col gap-3">
             <Textarea
               data-testid="nlp-input"
               value={input}
@@ -165,7 +256,7 @@ export function NlpEditDialog({ zones, tasks, onApply, providerFactory = createA
           </div>
         )}
 
-        {step === 'preview' && plan && (
+        {!showConfig && step === 'preview' && plan && (
           <div className="flex flex-col gap-3">
             <ScrollArea className="max-h-[46vh] pr-3">
               <div className="flex flex-col gap-3 text-sm">
@@ -180,9 +271,7 @@ export function NlpEditDialog({ zones, tasks, onApply, providerFactory = createA
                         <span className="font-medium">{a.title}</span>
                         <span className="flex items-center gap-1 text-muted-foreground">
                           <CornerDownRight size={12} />
-                          {a.parentLabel
-                            ? t('nlp.attachTo', { parent: a.parentLabel })
-                            : t('nlp.topLevel')}
+                          {a.parentLabel ? t('nlp.attachTo', { parent: a.parentLabel }) : t('nlp.topLevel')}
                         </span>
                       </div>
                     ))}
@@ -241,9 +330,7 @@ export function NlpEditDialog({ zones, tasks, onApply, providerFactory = createA
                   </section>
                 )}
 
-                {plan.actions.length === 0 && (
-                  <p className="text-muted-foreground">{t('nlp.nothingToApply')}</p>
-                )}
+                {plan.actions.length === 0 && <p className="text-muted-foreground">{t('nlp.nothingToApply')}</p>}
               </div>
             </ScrollArea>
 

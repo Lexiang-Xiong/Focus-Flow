@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   readByokConfig,
+  writeByokConfig,
   summarizeSnapshot,
   buildSystemPrompt,
   buildRequestBody,
@@ -68,6 +69,18 @@ describe('readByokConfig', () => {
     const r = readByokConfig(memStorage({ [BYOK_STORAGE_KEY]: GOOD_CFG }));
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.config).toMatchObject({ base: 'https://gw.example/v1', key: 'sk-SECRET-123', model: 'Qwen' });
+  });
+});
+
+describe('writeByokConfig', () => {
+  it('写入后能被 readByokConfig 读回（round-trip）', () => {
+    const m: Record<string, string> = {};
+    const store = { getItem: (k: string) => (k in m ? m[k] : null), setItem: (k: string, v: string) => { m[k] = v; } };
+    const ok = writeByokConfig({ provider: 'p', base: 'https://x/v1', key: 'sk-1', model: 'mm' }, store);
+    expect(ok).toBe(true);
+    const r = readByokConfig(store);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.config).toMatchObject({ base: 'https://x/v1', key: 'sk-1', model: 'mm' });
   });
 });
 

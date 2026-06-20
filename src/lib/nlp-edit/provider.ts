@@ -33,9 +33,24 @@ export type ConfigResult =
 
 // 只读接口，便于单测注入假 storage；真实运行用 window.localStorage。
 type ReadableStorage = Pick<Storage, 'getItem'>;
+type WritableStorage = Pick<Storage, 'setItem'>;
 
 function defaultStorage(): ReadableStorage | undefined {
   return typeof localStorage !== 'undefined' ? localStorage : undefined;
+}
+
+/**
+ * 把 BYOK 配置写回 localStorage['byok_v1']（应用内配置表单用）。
+ * 可注入 storage 便于单测。返回是否写成功（无 storage = false）。
+ * 注意：key 明文存浏览器 localStorage —— 个人自用取舍，UI 须标注风险。
+ */
+export function writeByokConfig(
+  config: ByokConfig,
+  storage: WritableStorage | undefined = (typeof localStorage !== 'undefined' ? localStorage : undefined),
+): boolean {
+  if (!storage) return false;
+  storage.setItem(BYOK_STORAGE_KEY, JSON.stringify(config));
+  return true;
 }
 
 /**
