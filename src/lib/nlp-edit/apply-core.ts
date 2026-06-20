@@ -77,6 +77,7 @@ export type PlanErrorCode =
   | 'UNKNOWN_ZONE_ID'
   | 'UNKNOWN_PARENT_ID'
   | 'DUPLICATE_TEMP_ID'
+  | 'CYCLE'
   | 'INVALID_OP';
 
 export interface PlanError {
@@ -198,6 +199,16 @@ export function planOps(snapshot: Snapshot, ops: EditOp[]): PlanResult {
         !tempTitles.has(u.parentId)
       ) {
         return err('UNKNOWN_PARENT_ID', `未知父任务 id：${u.parentId}`, i);
+      }
+      // 环守护：把任务挂到自身或自身子孙下 → 成环，报错而非静默。
+      // （tempId 父是本批新建的叶子，不可能与既有结构成环，故只查既有 id。）
+      if (u.parentId != null && taskIds.has(u.parentId)) {
+        if (
+          u.parentId === u.id ||
+          collectDescendantIds(u.id, snapshot.tasks).includes(u.parentId)
+        ) {
+          return err('CYCLE', `不能把「${titleById.get(u.id) ?? u.id}」挂到它自己或其子孙下`, i);
+        }
       }
       // 只取 op 携带的可改字段，剥掉 op / id。
       const { op: _op, id: _id, ...rest } = u;

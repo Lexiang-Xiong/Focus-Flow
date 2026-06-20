@@ -299,6 +299,33 @@ describe('planOps · 建新树 tempId + parentLabel', () => {
     if (r.kind === 'error') expect(r.error.code).toBe('DUPLICATE_TEMP_ID');
   });
 
-  // T3 仍未做：re-parent 环检测
-  it.todo('TP9/T3: update_task.parentId 指向自身子孙 → CYCLE 错误，而非成环');
+  it('TP9/T3: re-parent 到自身子孙 → CYCLE', () => {
+    const s = snap([zone('z1')], [task('a'), task('b', { parentId: 'a' }), task('c', { parentId: 'b' })]);
+    const r = planOps(s, [{ op: 'update_task', id: 'a', parentId: 'c' }]); // a 挂到它孙子 c 下
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.error.code).toBe('CYCLE');
+  });
+
+  it('TP9: re-parent 到自身 → CYCLE', () => {
+    const s = snap([zone('z1')], [task('a')]);
+    const r = planOps(s, [{ op: 'update_task', id: 'a', parentId: 'a' }]);
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.error.code).toBe('CYCLE');
+  });
+
+  it('re-parent 到非子孙 → 合法', () => {
+    const s = snap([zone('z1')], [task('a'), task('b', { parentId: 'a' }), task('x')]);
+    const r = planOps(s, [{ op: 'update_task', id: 'b', parentId: 'x' }]); // b 从 a 挪到 x，无环
+    expect(r.kind).toBe('plan');
+  });
+});
+
+// ============ 护栏：未知 op 类型（防御分支） ============
+describe('planOps · 护栏 · 非法 op 类型', () => {
+  it('未知 op.op → INVALID_OP', () => {
+    const s = snap([zone('z1')], []);
+    const r = planOps(s, [{ op: 'frobnicate' } as unknown as EditOp]);
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.error.code).toBe('INVALID_OP');
+  });
 });
