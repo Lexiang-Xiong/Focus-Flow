@@ -67,8 +67,10 @@ describe('EDIT_OPS_PARAMETERS（function parameters 契约）', () => {
       (s) => s.properties.op.const === 'add_task',
     )!;
     expect(add.required).toEqual(expect.arrayContaining(['op', 'zoneId', 'title']));
-    expect(add.properties.priority.enum).toEqual([...PRIORITY_VALUES]);
-    expect(add.properties.deadlineType.enum).toEqual([...DEADLINE_TYPE_VALUES]);
+    // oneOf 分支是联合类型，TS 无法据运行时 find 收窄到 add 分支；这里断言 schema 形态故按 add 取属性。
+    const addProps = add.properties as Record<string, { enum?: readonly string[] }>;
+    expect(addProps.priority.enum).toEqual([...PRIORITY_VALUES]);
+    expect(addProps.deadlineType.enum).toEqual([...DEADLINE_TYPE_VALUES]);
   });
 
   it('update_task：仅 id 必填（partial 更新）', () => {

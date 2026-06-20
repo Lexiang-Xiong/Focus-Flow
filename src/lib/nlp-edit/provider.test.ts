@@ -140,7 +140,7 @@ describe('createProvider.requestOps（mock 网关）', () => {
     });
     await p.requestOps('x', snap);
     expect(fetchFn).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchFn.mock.calls[0] as [string, RequestInit];
+    const [url, init] = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('/__byok/v1/chat/completions');
     const headers = init.headers as Record<string, string>;
     expect(headers['x-byok-base']).toBe('https://gw.example/v1');
@@ -302,7 +302,7 @@ describe('createProvider · 网关变体 + 凭据安全', () => {
     const fetchFn = vi.fn(async () => toolCallRes([]));
     const p = createProvider({ storage, fetchFn: fetchFn as unknown as typeof fetch });
     await p.requestOps('x', snap);
-    const [, init] = fetchFn.mock.calls[0] as [string, RequestInit];
+    const [, init] = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
     expect(String(init.body)).not.toContain('sk-SECRET-123');
   });
 
@@ -327,7 +327,7 @@ describe('createProvider · 网关变体 + 凭据安全', () => {
       resolveEndpoint: () => ({ url: '/__byok/chat/completions', headers: { Authorization: 'Bearer CLOBBERED' } }),
     });
     await p.requestOps('x', snap);
-    const [, init] = fetchFn.mock.calls[0] as [string, RequestInit];
+    const [, init] = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer sk-SECRET-123');
   });
 });

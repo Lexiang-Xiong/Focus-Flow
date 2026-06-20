@@ -249,8 +249,8 @@ export interface NlpProvider {
 export function createProvider(opts: CreateProviderOptions = {}): NlpProvider {
   const fetchFn = opts.fetchFn ?? (typeof fetch !== 'undefined' ? fetch.bind(globalThis) : undefined);
   const nowFn = opts.now ?? (() => Date.now());
-  const resolveEndpoint =
-    opts.resolveEndpoint ?? ((base: string) => ({ url: chatCompletionsUrl(base) }));
+  const resolveEndpoint: NonNullable<CreateProviderOptions['resolveEndpoint']> =
+    opts.resolveEndpoint ?? ((base) => ({ url: chatCompletionsUrl(base) }));
 
   const readConfig = () => readByokConfig(opts.storage);
 
