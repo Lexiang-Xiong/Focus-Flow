@@ -441,3 +441,86 @@ describe('planOps · invalidPolicy=skip（部分应用）', () => {
     if (r.kind === 'plan') expect(r.skipped).toEqual([]);
   });
 });
+
+// ============ 评审补强：update re-parent parentLabel（TP8 扩到 update） ============
+describe('planOps · update re-parent parentLabel', () => {
+  it('re-parent 到已有父 → parentLabel 显示已有父名', () => {
+    const s = snap([zone('z1')], [task('a', { title: '项目A' }), task('b')]);
+    const r = planOps(s, [{ op: 'update_task', id: 'b', parentId: 'a' }]);
+    expect(r.kind).toBe('plan');
+    if (r.kind === 'plan') expect(r.diff.updated[0].parentLabel).toBe('项目A');
+  });
+
+  it('re-parent 到批内新建父(tempId) → 「新建:标题」', () => {
+    const s = snap([zone('z1')], [task('b')]);
+    const r = planOps(s, [
+      { op: 'add_task', zoneId: 'z1', title: '新父', tempId: 't1' },
+      { op: 'update_task', id: 'b', parentId: 't1' },
+    ]);
+    expect(r.kind).toBe('plan');
+    if (r.kind === 'plan') {
+      const upd = r.diff.updated.find((u) => u.id === 'b');
+      expect(upd?.parentLabel).toBe('新建:新父');
+    }
+  });
+
+  it('升为顶级 parentId:null → parentLabel null；未改父 → 字段缺省', () => {
+    const s = snap([zone('z1')], [task('a'), task('b', { parentId: 'a' })]);
+    const r1 = planOps(s, [{ op: 'update_task', id: 'b', parentId: null }]);
+    if (r1.kind === 'plan') expect(r1.diff.updated[0].parentLabel).toBeNull();
+    const r2 = planOps(s, [{ op: 'update_task', id: 'b', title: 'x' }]);
+    if (r2.kind === 'plan') expect(r2.diff.updated[0].parentLabel).toBeUndefined();
+  });
+});
+
+// ============ 评审补强：update_task MALFORMED 枚举（Episode#3 防线扩到 update） ============
+describe('planOps · update_task MALFORMED 枚举', () => {
+  const s = snap([zone('z1')], [task('a')]);
+  it('update 非法 priority → MALFORMED_OP', () => {
+    const r = planOps(s, [{ op: 'update_task', id: 'a', priority: 'urgent' } as unknown as EditOp]);
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.error.code).toBe('MALFORMED_OP');
+  });
+  it('update 非法 deadlineType → MALFORMED_OP', () => {
+    const r = planOps(s, [{ op: 'update_task', id: 'a', deadlineType: 'someday' } as unknown as EditOp]);
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.error.code).toBe('MALFORMED_OP');
+  });
+  it('skip：坏 update（枚举越界）跳过、好 update 落地', () => {
+    const r = planOps(
+      s,
+      [
+        { op: 'update_task', id: 'a', priority: 'urgent' } as unknown as EditOp,
+        { op: 'update_task', id: 'a', title: 'ok' },
+      ],
+      { invalidPolicy: 'skip' },
+    );
+    expect(r.kind).toBe('plan');
+    if (r.kind !== 'plan') return;
+    expect(r.actions).toHaveLength(1);
+    expect(r.skipped[0].code).toBe('MALFORMED_OP');
+  });
+});
+
+// ============ 评审补强：skip 模式删除级联 + 跳过兄弟（账目不串） ============
+describe('planOps · skip 删除级联 + 跳过兄弟', () => {
+  it('删父(级联 a,b,c)+跳过未知删除 → 计数正确，被跳 id 不混入删除集', () => {
+    const s = snap([zone('z1')], [task('a'), task('b', { parentId: 'a' }), task('c', { parentId: 'b' })]);
+    const r = planOps(
+      s,
+      [
+        { op: 'delete_task', id: 'a' },
+        { op: 'delete_task', id: 'ghost' },
+      ],
+      { invalidPolicy: 'skip' },
+    );
+    expect(r.kind).toBe('plan');
+    if (r.kind !== 'plan') return;
+    expect([...r.diff.deleted.removedIds].sort()).toEqual(['a', 'b', 'c']);
+    expect(r.diff.deleted.cascadeCount).toBe(2);
+    expect(r.deleteCount).toBe(3);
+    expect(r.hasDeletes).toBe(true);
+    expect(r.skipped).toEqual([{ opIndex: 1, code: 'UNKNOWN_TASK_ID', message: expect.any(String) }]);
+    expect(r.diff.deleted.removedIds).not.toContain('ghost');
+  });
+});

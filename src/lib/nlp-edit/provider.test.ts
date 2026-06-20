@@ -200,3 +200,134 @@ describe('createProvider.requestOps（mock 网关）', () => {
     if (r.kind === 'error') expect(r.error.code).toBe('BAD_TOOL_ARGS');
   });
 });
+
+// ============ 评审补强：网关变体 + 凭据安全（§4 不变量） ============
+describe('createProvider · 网关变体 + 凭据安全', () => {
+  const storage = memStorage({ [BYOK_STORAGE_KEY]: GOOD_CFG });
+
+  it('arguments 为【对象】而非字符串 → 正常解析（Ollama/vLLM/LiteLLM 等）', async () => {
+    const fetchFn = vi.fn(async () =>
+      res({ choices: [{ message: { tool_calls: [{ function: { name: EDIT_OPS_TOOL_NAME, arguments: { ops: [{ op: 'add_task', zoneId: 'z1', title: 'x' }] } } }] } }] }),
+    );
+    const p = createProvider({ storage, fetchFn: fetchFn as unknown as typeof fetch });
+    const r = await p.requestOps('x', snap);
+    expect(r.kind).toBe('ops');
+    if (r.kind === 'ops') expect(r.ops).toHaveLength(1);
+  });
+
+  it('多个 tool_call、编辑工具不在首位 → 按名选中、聚合其 ops', async () => {
+    const fetchFn = vi.fn(async () =>
+      res({ choices: [{ message: { tool_calls: [
+        { function: { name: 'some_other_tool', arguments: '{"foo":1}' } },
+        { function: { name: EDIT_OPS_TOOL_NAME, arguments: JSON.stringify({ ops: [{ op: 'add_task', zoneId: 'z1', title: '被选中' }] }) } },
+      ] } }] }),
+    );
+    const p = createProvider({ storage, fetchFn: fetchFn as unknown as typeof fetch });
+    const r = await p.requestOps('x', snap);
+    expect(r.kind).toBe('ops');
+    if (r.kind === 'ops') {
+      expect(r.ops).toHaveLength(1);
+      expect((r.ops[0] as { title: string }).title).toBe('被选中');
+    }
+  });
+
+  it('ops 被拆到多个编辑 tool_call → 聚合不丢', async () => {
+    const fetchFn = vi.fn(async () =>
+      res({ choices: [{ message: { tool_calls: [
+        { function: { name: EDIT_OPS_TOOL_NAME, arguments: JSON.stringify({ ops: [{ op: 'add_task', zoneId: 'z1', title: 'A' }] }) } },
+        { function: { name: EDIT_OPS_TOOL_NAME, arguments: JSON.stringify({ ops: [{ op: 'add_task', zoneId: 'z1', title: 'B' }] }) } },
+      ] } }] }),
+    );
+    const p = createProvider({ storage, fetchFn: fetchFn as unknown as typeof fetch });
+    const r = await p.requestOps('x', snap);
+    expect(r.kind).toBe('ops');
+    if (r.kind === 'ops') expect(r.ops).toHaveLength(2);
+  });
+
+  it('只调用了别的工具（无编辑工具）→ NO_TOOL_CALL（带工具名）', async () => {
+    const fetchFn = vi.fn(async () =>
+      res({ choices: [{ message: { tool_calls: [{ function: { name: 'web_search', arguments: '{}' } }] } }] }),
+    );
+    const p = createProvider({ storage, fetchFn: fetchFn as unknown as typeof fetch });
+    const r = await p.requestOps('x', snap);
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') {
+      expect(r.error.code).toBe('NO_TOOL_CALL');
+      expect(r.error.message).toContain('web_search');
+    }
+  });
+
+  it('空 ops 全链路 → kind:ops ops:[] → planOps noop', async () => {
+    const fetchFn = vi.fn(async () => toolCallRes([]));
+    const p = createProvider({ storage, fetchFn: fetchFn as unknown as typeof fetch });
+    const r = await p.requestOps('x', snap);
+    expect(r.kind).toBe('ops');
+    if (r.kind !== 'ops') return;
+    expect(r.ops).toEqual([]);
+    expect(planOps(snap, r.ops, { invalidPolicy: 'skip' }).kind).toBe('noop');
+  });
+
+  it('非 JSON 200（HTML/流）→ BAD_RESPONSE（区别于 BAD_TOOL_ARGS）', async () => {
+    const fetchFn = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => {
+        throw new Error('not json');
+      },
+      text: async () => '<html>error</html>',
+    } as unknown as Response));
+    const p = createProvider({ storage, fetchFn: fetchFn as unknown as typeof fetch });
+    const r = await p.requestOps('x', snap);
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.error.code).toBe('BAD_RESPONSE');
+  });
+
+  it('结构性空响应 {choices:[]} → NO_TOOL_CALL（不抛异常）', async () => {
+    const fetchFn = vi.fn(async () => res({ choices: [] }));
+    const p = createProvider({ storage, fetchFn: fetchFn as unknown as typeof fetch });
+    const r = await p.requestOps('x', snap);
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.error.code).toBe('NO_TOOL_CALL');
+  });
+
+  it('网关在 401 体里反射 Authorization → 错误信息脱敏，绝不含 key', async () => {
+    const fetchFn = vi.fn(async () => res('401 unauthorized for header: Bearer sk-SECRET-123', { ok: false, status: 401 }));
+    const p = createProvider({ storage, fetchFn: fetchFn as unknown as typeof fetch });
+    const r = await p.requestOps('x', snap);
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.error.message).not.toContain('sk-SECRET-123');
+  });
+
+  it('请求体不含 key（key 只在 Authorization 头）', async () => {
+    const fetchFn = vi.fn(async () => toolCallRes([]));
+    const p = createProvider({ storage, fetchFn: fetchFn as unknown as typeof fetch });
+    await p.requestOps('x', snap);
+    const [, init] = fetchFn.mock.calls[0] as [string, RequestInit];
+    expect(String(init.body)).not.toContain('sk-SECRET-123');
+  });
+
+  it('NETWORK：注入 fetch 抛出含 key 的错误 → 信息脱敏', async () => {
+    const fetchFn = vi.fn(async () => {
+      throw new Error('failed sending Bearer sk-SECRET-123');
+    });
+    const p = createProvider({ storage, fetchFn: fetchFn as unknown as typeof fetch });
+    const r = await p.requestOps('x', snap);
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') {
+      expect(r.error.code).toBe('NETWORK');
+      expect(r.error.message).not.toContain('sk-SECRET-123');
+    }
+  });
+
+  it('resolveEndpoint 自带 Authorization → 不能覆盖真 Bearer key', async () => {
+    const fetchFn = vi.fn(async () => toolCallRes([]));
+    const p = createProvider({
+      storage,
+      fetchFn: fetchFn as unknown as typeof fetch,
+      resolveEndpoint: () => ({ url: '/__byok/chat/completions', headers: { Authorization: 'Bearer CLOBBERED' } }),
+    });
+    await p.requestOps('x', snap);
+    const [, init] = fetchFn.mock.calls[0] as [string, RequestInit];
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer sk-SECRET-123');
+  });
+});

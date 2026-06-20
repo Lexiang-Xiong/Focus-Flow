@@ -37,6 +37,10 @@ export interface UpdatedPreview {
   id: string;
   // 仅 op 携带的、要改的字段（不含 id / op）。
   changes: Partial<Omit<Task, 'id'>>;
+  /** 当本次 update 重挂父任务（changes 含 parentId）时，父任务可读名（同 AddedPreview.parentLabel 规则）：
+   *  已有父 = 其标题；批内新父 = 「新建:标题」；改为顶级(null) = null。供 diff 显「挂到 X 下」，
+   *  把 re-parent 错挂也纳入父名预览防线（TP8）。未改父时字段缺省(undefined)。 */
+  parentLabel?: string | null;
 }
 
 // deleted：删除任务。requested 是用户/LLM 显式点名的 id；
@@ -268,7 +272,16 @@ export function planOps(
       const { op: _op, id: _id, ...rest } = u;
       const changes = rest as Partial<Omit<Task, 'id'>>;
       actions.push({ kind: 'update', id: u.id, updates: changes as Partial<Task> });
-      updated.push({ id: u.id, changes });
+      const preview: UpdatedPreview = { id: u.id, changes };
+      // 重挂父：解析父任务可读名（含批内 tempId 新父），让预览能看出挂到谁下（TP8 扩到 update）。
+      if ('parentId' in changes) {
+        const pid = u.parentId ?? null;
+        preview.parentLabel =
+          pid == null
+            ? null
+            : titleById.get(pid) ?? (tempTitles.has(pid) ? `新建:${tempTitles.get(pid)}` : pid);
+      }
+      updated.push(preview);
       return null;
     }
 
