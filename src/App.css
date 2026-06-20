@@ -954,11 +954,15 @@
   border-radius: 50%;
 }
 
-.priority-dot.high { background: #ef4444; }
+.priority-dot.critical { background: #9f1239; }
+.priority-dot.heavy { background: #ef4444; }
+.priority-dot.high { background: #f97316; }
 .priority-dot.medium { background: #eab308; }
 .priority-dot.low { background: #22c55e; }
 
-.priority-btn.priority-high.active { color: #ef4444; border-color: #ef4444; }
+.priority-btn.priority-critical.active { color: #9f1239; border-color: #9f1239; }
+.priority-btn.priority-heavy.active { color: #ef4444; border-color: #ef4444; }
+.priority-btn.priority-high.active { color: #f97316; border-color: #f97316; }
 .priority-btn.priority-medium.active { color: #eab308; border-color: #eab308; }
 .priority-btn.priority-low.active { color: #22c55e; border-color: #22c55e; }
 
