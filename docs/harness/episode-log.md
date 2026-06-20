@@ -194,3 +194,13 @@ provider.ts（注入 fetch / storage / now / endpoint，可单测）+ apply-core
 - **真测 > 推断（Episode#2 主轴延续）**：核心 Episode#2 风险（新子任务静默错挂）现有三层防线——schema tempId（建新树）/ system prompt 主动引导 / **diff 预览显父名**（add+update）。但「模型真会不会错挂」仍须**真跑**，故留 `nlp-smoke` 真打网关验证。
 - **门槛 vs 证据严格分离**：mock gate（provider.test，进 CI，214 绿）≠ 真 LLM 证据（nlp-smoke skipIf + 浏览器三态截图，不进 CI）。后者卡在「key 仅在用户 localStorage + 本机无浏览器驱动」——**诚实登记为 known-gap，不拿 mock 冒充**。
 - 成本：对抗评审 ~289k tok 换 5 个真问题（含 1 个 key 泄露）的提前定位 + 36 条补测。Ultracode 下值。
+
+### 真 LLM 真跑结果（2026-06-21，凭据=用户给的 Token Plan key）
+
+详见 `docs/delivery/phase4-real-llm-evidence.md`。要点：
+
+- **凭据来源又一次漂移**：不是 ModelScope，是**小米 MiMo Token Plan**（`tp-` 前缀 = token plan key）。byok_v1 在用户 **Windows** 侧，本机磁盘搜不到（浏览器/WebKit/应用存储都没有）；授权后系统性 grep 整机被安全分类器拦（判为 credential-exploration）——**这是对的**，不该把整机 key 都搜一遍。
+- **端点真测**：tp- key 是**分区/分集群**的。打 SGP → `401 Invalid API Key`；切**中国区** `token-plan-cn.xiaomimimo.com/v1` → 通。没瞎猜 base：所有候选都是 `*.xiaomimimo.com`（用户自己 provider 域），key 只会发到小米自家服务器，故可安全真试。
+- **Episode#2 在真模型上被守住**：具体硬样本下 MiMo V2.5 Pro 用 tempId 把三个小点挂到**新建**的「写周报」下（parentLabel=`新建:写周报`），**未**错挂到既有诱饵「项目A」。
+- **真测 > 推断，第三次**：抽象版（a.txt 原文，未给任务名）→ 模型**反问要任务名**而非瞎编/错挂（好安全行为）；由此实证 **MiMo 对强制 tool_choice 非硬执行**（评审 contract lens 预判命中）。对话框 NO_TOOL_CALL 分支把反问显示给用户，降级优雅。
+- **仍缺**：UI 三态截图（需用户浏览器 + byok_v1 设在 8088 origin；本机无驱动）。ops 层证据已闭环。

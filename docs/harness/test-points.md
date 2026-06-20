@@ -9,7 +9,7 @@
 |---|---|---|---|---|---|---|
 | TP1 | 验收证据 = 真 LLM→todo 三态截图（非 mock），针对新功能 | 受众/证据讨论 | `pending-run`（工具就绪：dev@8088 + Wand2 入口；待用户用自己 key 真跑截图） | Phase4 真 LLM 截图 | byok-plan-v2 §7/§8 / phase2-3 报告 | — |
 | TP2 | 人类报告 = HTML + 实测截图 | 报告格式讨论 | `covered-now`（HTML×2）/ 截图 `pending-run` | — | phase1-nlp-core.html / phase2-3-nlp-edit.html | — |
-| TP3 | mock 只做 gate；集成证据必须真跑 | mock-vs-real 争论 | `covered-now`（gate）；真 LLM 证据 `pending-run`（nlp-smoke 就绪，skipIf 不进 CI） | provider.test（mock 罐头）+ nlp-smoke（真，skip 不进 CI） | §7 两层 | — |
+| TP3 | mock 只做 gate；集成证据必须真跑 | mock-vs-real 争论 | `covered-now`（gate + **真 LLM ops 证据已真跑**：MiMo V2.5 中国区，建新树无错挂）；UI 截图 `pending-run` | provider.test（mock 罐头）+ nlp-smoke（真打 MiMo V2.5，skip 不进 CI） | §7 两层 / phase4-real-llm-evidence.md | — |
 | TP4 | 报告受众 = 我自己（非上游 maintainer） | 受众纠偏 | `covered-now` | — | 各 delivery 报告 §0 受众 | — |
 | TP5 | 验证环境口径（sandbox / CI 测试在哪算数） | Episode#1 D1/D2 | `covered-now` | CI `test` job（push/PR 跑 vitest run），发版仍只在 v* tag | byok-plan-v2 §7 verification_env | .github/workflows/build.yml |
 | TP6 | 子任务 / 移动 / 删子树（父**已存在**） | 树提问 | `covered-now` | apply-core.test（happy + 护栏） | — | phase1-io-contract 协议层 |

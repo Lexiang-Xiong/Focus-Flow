@@ -58,7 +58,7 @@
     <span class="icon">✅</span>
     <div>
       <b>Phase 2+3 完成，门槛全绿（214/215，1 为真 LLM smoke 自跳过）</b>
-      <div class="muted">5-lens 对抗评审 25 findings 已修 · 真 LLM 三态证据 = 待用户用自己 key 真跑（工具就绪）</div>
+      <div class="muted">5-lens 对抗评审 25 findings 已修 · <b class="ok">真 LLM ops 证据已真跑捕获</b>（MiMo V2.5 中国区，建新树无错挂）· UI 三态截图待补</div>
     </div>
   </div>
   <p class="note">与 <code>episode-log.md</code>（方法论 Episode #4）/ <code>phase1-nlp-core.html</code>（Phase 1 verdict）分工：本份是 Phase 2+3 的交付判断。</p>
@@ -98,8 +98,15 @@
     <div class="lens"><b>方法论</b> · spec lens 的 summary 返回乱码 probe（结构化输出异常），但 findings 正常 → <b>取 findings，不取自证 summary</b>。</div>
   </div>
 
-  <h2>真 LLM 三态（§7 证据头条 · 待用户真跑）</h2>
-  <p class="note">证据 = 真 key + 真 LLM 的真实「自然语言 → todo」运行，替代真人冒烟。本机<b>无浏览器驱动 + key 仅在用户 localStorage</b>，故由用户在 <code>localhost:8088</code> 真跑：硬样本 <code>下午要干三件事，其中第二件下面有三个小点</code>。①③ 待填真图（不放假图）；同时 <code>nlp-smoke</code> 可出「真模型 ops + plan diff」文本证据。</p>
+  <h2>真 LLM 证据 · ops 层已真跑捕获 ✅（§7 头条）</h2>
+  <div class="ev">
+    <div class="big" style="color:var(--green);">真跑</div>
+    <div>
+      <div><b class="ok">MiMo V2.5 Pro（中国区 Token Plan）真打网关</b>：具体硬样本 → 模型用 <code>tempId</code> 把「收集数据/写初稿/改定稿」挂到<b>新建</b>的「写周报」下（parentLabel=<code>新建:写周报</code>），<b class="ok">没有</b>静默错挂到既有诱饵「项目A」——Episode#2 危险点在真模型上被守住。</div>
+      <div><a href="./phase4-real-llm-evidence.md">→ 完整真 ops + plan diff + 端点排查 + 真测发现 phase4-real-llm-evidence.md</a></div>
+    </div>
+  </div>
+  <p class="note">真测两点：① 抽象版（未给任务名）→ 模型不瞎编不错挂，<b>反问要任务名</b>（好安全行为，对话框走 NO_TOOL_CALL 显示其文本）；② 故 MiMo 对强制 <code>tool_choice</code> 非硬执行（评审 contract lens 预判命中）。<b>UI 三态截图</b>（①输入 ②diff 预览含父名 ③落地树）仍待用户在 <code>localhost:8088</code> 真跑补图（本机无浏览器驱动 + key 仅用户侧）。</p>
   <div class="shots">
     <div class="shot"><div class="ph">① 对话框输入态</div><div class="when">待用户真跑截图</div></div>
     <div class="shot"><div class="ph">② diff 预览（含父任务名 TP8）</div><div class="when">待用户真跑截图</div></div>
