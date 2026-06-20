@@ -1,4 +1,30 @@
 {
+  "nlp": {
+    "title": "AI Edit Tasks",
+    "trigger": "Edit tasks with natural language",
+    "inputLabel": "Describe the change in one sentence",
+    "placeholder": "e.g. This afternoon I have three things to do; the second one has three sub-points",
+    "generate": "Preview changes",
+    "generating": "Generating…",
+    "notConfigured": "No BYOK config found. Set localStorage key byok_v1 (JSON: {provider, base, key, model}) in your browser, then retry.",
+    "previewTitle": "Preview changes · applied only after you confirm",
+    "added": "Add",
+    "updated": "Update",
+    "deleted": "Delete",
+    "skipped": "Skipped (cannot apply)",
+    "attachTo": "under \"{{parent}}\"",
+    "topLevel": "top-level",
+    "cascadeNote": "incl. {{count}} cascaded subtask(s)",
+    "deleteWarn": "Will delete {{count}} task(s) (undoable in one step)",
+    "confirmDelete": "I confirm deleting these {{count}} task(s)",
+    "apply": "Apply",
+    "back": "Back",
+    "noChanges": "The model proposed no changes.",
+    "applied": "Applied AI edits ({{count}})",
+    "nothingToApply": "Nothing to apply",
+    "emptyInput": "Type the change you want first",
+    "errorTitle": "Could not generate"
+  },
   "app": {
     "name": "Focus Flow"
   },

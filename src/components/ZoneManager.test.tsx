@@ -10,7 +10,7 @@ vi.mock('react-i18next', () => ({
 }));
 
 import { ZoneManager } from './ZoneManager';
-import type { Zone } from '@/types';
+import type { Zone, Task } from '@/types';
 
 // jsdom 没有 ResizeObserver（radix ScrollArea 需要），补个空实现。
 class RO { observe() {} unobserve() {} disconnect() {} }
@@ -21,9 +21,11 @@ afterEach(cleanup);
 function baseProps() {
   return {
     zones: [] as Zone[],
+    tasks: [] as Task[],
     activeZoneId: null as string | null,
     templates: [],
     customTemplates: [],
+    onNlpApply: vi.fn(),
     onSelectZone: vi.fn(),
     onAddZone: vi.fn(),
     onUpdateZone: vi.fn(),

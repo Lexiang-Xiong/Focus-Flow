@@ -22,14 +22,18 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { Zone, Template } from '@/types';
+import { NlpEditDialog } from '@/components/NlpEditDialog';
+import type { Zone, Template, Task } from '@/types';
+import type { PlannedAction } from '@/lib/nlp-edit/apply-core';
 import { ZONE_COLORS } from '@/types';
 
 interface ZoneManagerProps {
   zones: Zone[];
+  tasks: Task[];
   activeZoneId: string | null;
   templates: Template[];
   customTemplates?: Template[];
+  onNlpApply: (actions: PlannedAction[]) => unknown;
   onSelectZone: (zoneId: string | null) => void;
   onAddZone: (name: string, color: string) => void;
   onUpdateZone: (id: string, updates: Partial<Omit<Zone, 'id'>>) => void;
@@ -120,9 +124,11 @@ function SortableZoneItem({
 
 export function ZoneManager({
   zones,
+  tasks,
   activeZoneId,
   templates,
   customTemplates = [],
+  onNlpApply,
   onSelectZone,
   onAddZone,
   onUpdateZone,
@@ -202,6 +208,7 @@ export function ZoneManager({
           {t('zone.zones')}
         </span>
         <div className="zone-manager-actions">
+          <NlpEditDialog zones={zones} tasks={tasks} onApply={onNlpApply} />
           <Button
             size="icon"
             variant="ghost"
