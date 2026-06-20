@@ -153,3 +153,44 @@ LLM 层（R3「新建项目上线，下面加三个子任务」）：模型**没
 
 **新增测试点**：
 - TP10：priority 与上游对齐（3→5 级）；`PRIORITY_VALUES` 单一真相源（从 `TaskPriority` 派生，杜绝手抄漂移）。
+
+---
+
+## Episode #4 · byok-phase2-3（provider + UI 落地 + 对抗评审）｜Mac 续作
+
+`episode_type: code`｜锚：分支 `feat/byok-nlp-edit`（Mac 端续 Windows 工作）｜2026-06-20-21
+
+### 派活前：环境漂移核对（harness grounding）
+
+接手时 working copy 在 `local` 分支（QA/sort/file-mirror 另一条线，**无 nlp-edit 地基**），而 a.txt 假设的 Phase 1 地基只在 fork 的 `feat/byok-nlp-edit`（diverged at c7c58b2，两线各有独立 commit）。→ **surface 给人拍板**，不自行 merge；人选「切到 feat/byok-nlp-edit 建，local 保留」。教训：a.txt 写的「clone 后 checkout」与真实 working copy 状态可能不符，**起手先核 branch/remote 真相**。
+
+### 派活前：人机对齐口径（3 条，人 ratify）
+
+- **update 范围**：可 re-parent，不可换 zone（沿用 Phase 1 默认）。
+- **坏 op**：**partial-apply**（跳过坏的、应用好的），不再 fail-fast——人的理由「保留预览模式即可」：预览展示「应用什么 + 跳过什么及原因」，确认才落地，预览即闸门。→ `planOps(opts.invalidPolicy: 'reject'|'skip')`，默认 reject 保 160 锁测；UI 用 skip。
+- **凭据**：人中途改口径——key 不走 env/.env，而是复用浏览器 `localStorage['byok_v1']`（OpenAI 兼容，Authorization: Bearer）。运行时 = 浏览器 `localhost:8088` + dev 代理绕 CORS。
+
+### 实现（harness 亲自实现 + 对抗验证，非纯子 agent）
+
+provider.ts（注入 fetch / storage / now / endpoint，可单测）+ apply-core skip 模式 + `taskSlice.applyNlpActions`（单步撤销 wiring，TP7 落地）+ NlpEditDialog（prop-driven，匹配仓库惯例）+ ZoneManager/App 接线 + dev `/__byok` 代理 + i18n + `nlp-smoke`（真 LLM 证据，skipIf 不进 CI）。
+
+### 对抗评审 workflow（5 lens，~289k tok，~9min，25 findings）
+
+派 5 个对抗 lens（boundary / keyleak / contract / tests / spec）独立审 Phase 2 代码。**自证抓不到、对抗抓到的真问题**：
+
+| # | lens | findings | 处置 |
+|---|---|---|---|
+| 1 | keyleak | HTTP_ERROR 把网关响应体逐字拼进 error.message——若网关回显 Authorization 头则 **key 泄露**（探针实证 `Bearer sk-…` 进了 message） | 修：所有 error 文本前 `redact(key)`；+对抗 no-leak 测试 |
+| 2 | keyleak | `ep.headers` 在 Authorization **之后**展开 → resolveEndpoint hook 可**覆盖** Bearer | 修：Authorization 末位写 |
+| 3 | contract | `tool_call.arguments` 硬要求 string，但 Ollama/vLLM/LiteLLM 等**直接给对象** → 整类网关全 BAD_TOOL_ARGS | 修：兼收对象/字符串；并**聚合多 call 的 ops**防拆分丢失 |
+| 4 | spec | parentLabel 只给 add，**update re-parent 的错挂逃过父名预览**（TP8 缺口） | 修：UpdatedPreview 加 parentLabel |
+| 5 | tests | 多处真空覆盖（空 ops 全链路 / 多 tool_call 选择 / update MALFORMED 枚举 / skip 删除级联）+ key-leak 断言只覆盖一条路径且空跑 | 修：+36 测试补真 |
+
+注：spec lens 的 summary 字段返回了一段「probe」乱码（结构化输出异常），但其 findings 数组正常可用——**取 findings，不取自证 summary**，与「结果不能自称完成」一致。
+
+### harness 评估（第 4 次）
+
+- **对抗评审 > 自证，再次实证**：单写单测会自认「52 绿收工」；5 lens 把 key 泄露、网关变体、TP8 缺口逼出来——其中 keyleak 用探针**真复现**了泄露，不是推断。**验证多样性（不同 lens）> 冗余**。
+- **真测 > 推断（Episode#2 主轴延续）**：核心 Episode#2 风险（新子任务静默错挂）现有三层防线——schema tempId（建新树）/ system prompt 主动引导 / **diff 预览显父名**（add+update）。但「模型真会不会错挂」仍须**真跑**，故留 `nlp-smoke` 真打网关验证。
+- **门槛 vs 证据严格分离**：mock gate（provider.test，进 CI，214 绿）≠ 真 LLM 证据（nlp-smoke skipIf + 浏览器三态截图，不进 CI）。后者卡在「key 仅在用户 localStorage + 本机无浏览器驱动」——**诚实登记为 known-gap，不拿 mock 冒充**。
+- 成本：对抗评审 ~289k tok 换 5 个真问题（含 1 个 key 泄露）的提前定位 + 36 条补测。Ultracode 下值。

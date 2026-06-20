@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>交付报告 · BYOK NLP 编辑 Phase 2+3</title>
+<style>
+  :root {
+    --bg:#0f1117; --card:#171a23; --card2:#1d212c; --line:#272c3a;
+    --txt:#e6e8ee; --muted:#9aa3b2; --green:#34d399; --red:#f87171; --amber:#fbbf24;
+    --accent:#818cf8;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt);
+    font:14px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+  .wrap { max-width:1040px; margin:0 auto; padding:32px 20px 64px; }
+  h1 { font-size:24px; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 24px; font-size:13px; }
+  h2 { font-size:16px; margin:30px 0 12px; padding-bottom:6px; border-bottom:1px solid var(--line); }
+  .banner { display:flex; align-items:center; gap:14px; padding:18px 22px; border-radius:14px;
+    background:linear-gradient(135deg,#0c2e23,#10241f); border:1px solid #1f5e49; margin-bottom:8px; }
+  .banner .icon { font-size:30px; }
+  .banner b { font-size:18px; color:var(--green); }
+  .banner .muted { color:var(--muted); }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line);
+    border-radius:12px; overflow:hidden; }
+  th,td { text-align:left; padding:11px 14px; border-bottom:1px solid var(--line); vertical-align:top; font-size:13px; }
+  th { color:#c7cdda; width:140px; background:var(--card2); white-space:nowrap; }
+  tr:last-child td { border-bottom:none; }
+  code { background:var(--card2); padding:1px 6px; border-radius:5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px; }
+  .ok { color:var(--green); } .warn { color:var(--amber); } .bad { color:var(--red); } .muted { color:var(--muted); }
+  .ev { display:flex; align-items:center; gap:16px; background:var(--card); border:1px solid #1f5e49;
+    border-radius:12px; padding:16px 20px; }
+  .ev .big { font-size:30px; font-weight:700; color:var(--green); }
+  .ev a { color:var(--accent); }
+  .shots { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:6px; }
+  .shot { border:1.5px dashed var(--line); border-radius:12px; min-height:150px; display:flex;
+    flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:14px;
+    color:var(--muted); background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,255,255,.012) 10px,rgba(255,255,255,.012) 20px); }
+  .shot .ph { font-size:13px; color:#c7cdda; margin-bottom:6px; }
+  .shot .when { font-size:11.5px; }
+  .note { color:var(--muted); font-size:12.5px; margin:10px 0; }
+  ul { margin:8px 0; padding-left:20px; } li { margin:4px 0; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .lens { background:var(--card); border:1px solid var(--line); border-left:3px solid var(--accent);
+    border-radius:10px; padding:12px 14px; font-size:12.5px; }
+  .lens b { color:var(--accent); }
+  footer { color:var(--muted); font-size:12px; text-align:center; margin-top:36px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>交付报告 · BYOK NLP 编辑 Phase 2+3（provider + UI 落地）</h1>
+  <p class="sub">给人类的 Change Verdict（受众=我自己，拍 go/no-go 的人）· 按 byok-plan-v2 §8 · 分支 <code>feat/byok-nlp-edit</code> · 2026-06-21</p>
+
+  <div class="banner">
+    <span class="icon">✅</span>
+    <div>
+      <b>Phase 2+3 完成，门槛全绿（214/215，1 为真 LLM smoke 自跳过）</b>
+      <div class="muted">5-lens 对抗评审 25 findings 已修 · 真 LLM 三态证据 = 待用户用自己 key 真跑（工具就绪）</div>
+    </div>
+  </div>
+  <p class="note">与 <code>episode-log.md</code>（方法论 Episode #4）/ <code>phase1-nlp-core.html</code>（Phase 1 verdict）分工：本份是 Phase 2+3 的交付判断。</p>
+
+  <h2>Intent → Change → Boundary → Evidence → Verdict → Residual</h2>
+  <table>
+    <tr><th>Intent</th><td>把 Phase 1 纯逻辑地基接成可用功能：自然语言 → 真 LLM → 受 schema 约束的 ops → 校验 → 预览 → 落地 store。普通用户在应用内用一句话编辑任务（BYOK）。</td></tr>
+    <tr><th>Change</th><td>新增 <code>provider.ts</code>（OpenAI 兼容 function-calling，可注入 fetch）、<code>runtime.ts</code>（浏览器适配 + dev 代理路由）、<code>NlpEditDialog.tsx</code>（输入→预览→应用）、<code>nlp-smoke.test.ts</code>（真 LLM 证据）；<code>apply-core</code> 加 <b>partial-apply（skip）</b>模式；<code>taskSlice.applyNlpActions</code>（单步撤销落地 wiring，TP7）；<code>vite.config</code> dev <code>/__byok</code> 代理；ZoneManager/App 接线 + i18n。</td></tr>
+    <tr><th>Boundary impact</th><td><b class="warn">新依赖边：app → 外部 LLM 网关（https）</b>。两条有意取舍，显式上报：<br>① <b>凭据来源改为浏览器 <code>localStorage['byok_v1']</code></b>（非 plan 原定的「明文存 settings」——人中途改口径，复用既有 BYOK 配置，不让用户重填）。key <b class="ok">只从 localStorage 读</b>，绝不硬编码/入仓/日志。<br>② <b>dev 用 vite <code>/__byok</code> 代理</b>服务端转发绕浏览器 CORS（<code>apply:'serve'</code> 仅 dev，不入生产包；不打印 Authorization）。<br>③ <b class="ok">key 永不泄露已加固（TP11）</b>：脱敏所有 error 文本 + Authorization 末位写防 hook 覆盖 + 对抗 no-leak 测试。</td></tr>
+    <tr><th>Evidence</th><td><b>门槛（gate，进 CI）</b>：<code>vitest</code> <b class="ok">214 真绿 + 1 skip</b>，<code>tsc --noEmit</code> 干净。provider mock 罐头响应全链路、apply-core skip、store 单步撤销、UI 预览显父名 + 删除强制确认，均有真断言。<br><b>证据（evidence，不进 CI）</b>：真 LLM 三态截图 + <code>nlp-smoke</code> 真打网关 —— <b class="warn">待用户真跑</b>（见下「真 LLM 三态」节）。</td></tr>
+    <tr><th>Verdict</th><td><b class="ok">门槛 Ready</b>，可日常本地用。真功能 go/no-go 待真 LLM 证据补齐后下定论——但管道（解析/校验/落地/预览/撤销）已被 mock gate 锁死，真跑只验「模型措辞 → ops 质量」。</td></tr>
+    <tr><th>Residual risk</th><td>① 真 LLM 实调不进 CI（设计如此）；② <code>temperature:0</code> + 强制 <code>tool_choice</code> 对个别网关可能被拒（ModelScope 支持）；③ base 缺 <code>/v1</code> 仅弱提示；④ strict structured-output 与 schema 的 <code>oneOf</code> 不兼容（当前未启用，apply-core 运行时兜底）。</td></tr>
+  </table>
+
+  <h2>已拍板的 2 条口径（Phase 1 遗留 → 本期人 ratify）</h2>
+  <ul>
+    <li><b>update 范围</b>：可 re-parent（<code>parentId</code>），<b>不可换分区</b>（<code>zoneId</code> 不暴露）。已沿用。</li>
+    <li><b>坏 op</b>：<b>partial-apply</b>（跳过坏的、应用好的），<b>非</b> fail-fast。人的理由「保留预览模式即可」——预览展示「应用什么 + 跳过什么及原因」，确认才落地，<b>预览即闸门</b>。落地为 <code>planOps(invalidPolicy:'reject'|'skip')</code>：默认 reject 保 Phase 1 锁测；UI 用 skip；批级错误（op 超限/空）两模式都硬停。</li>
+  </ul>
+
+  <h2>门槛证据（mock gate · 进 CI）</h2>
+  <div class="ev">
+    <div class="big">214/215</div>
+    <div>
+      <div>vitest 真实管线 · 0 失败 · 1 skip（<code>nlp-smoke</code> 无 key 自跳过，不卡 CI）。nlp-edit 模块从 38 → 82。</div>
+      <div class="muted">apply-core skip（部分应用 + 跳过项进预览）· provider mock 全链路 + 网关变体 + 凭据 no-leak · store applyNlpActions 单步撤销 + tempId→真 id · NlpEditDialog 预览显父名 + 删除强制确认。</div>
+    </div>
+  </div>
+
+  <h2>对抗评审（5 lens workflow · 25 findings · 自证抓不到、对抗抓到）</h2>
+  <div class="grid2">
+    <div class="lens"><b>keyleak</b> · HTTP_ERROR 把网关响应体逐字拼进 error.message → 若网关回显 Authorization 头则 <b class="bad">key 泄露</b>（探针实证）。<br>修：所有 error 文本 <code>redact(key)</code> + Authorization 末位写防覆盖 + 对抗测试。</div>
+    <div class="lens"><b>contract</b> · <code>tool_call.arguments</code> 硬要求 string，但 Ollama/vLLM/LiteLLM 等<b>直接给对象</b> → 整类网关全挂。<br>修：兼收对象/字符串 + <b>聚合多 call 的 ops</b> 防拆分丢失 + NO_TOOL_CALL 带工具名 + BAD_RESPONSE。</div>
+    <div class="lens"><b>spec</b> · parentLabel 只给 add，<b>update re-parent 错挂逃过父名预览</b>（TP8 缺口）。<br>修：UpdatedPreview 加 parentLabel，diff 显「挂到 X 下」覆盖 re-parent。</div>
+    <div class="lens"><b>tests</b> · 多处真空覆盖（空 ops 全链路 / 多 tool_call 选择 / update MALFORMED 枚举 / skip 删除级联）。<br>修：+36 测试补真。</div>
+    <div class="lens"><b>boundary</b> · 无违规：provider 唯一触网且 fetch 可注入；apply-core/schema 纯；key 仅 Authorization 头。1 nit：ops 是未校验 LLM 输出 → 已加注释「必须经 planOps」。</div>
+    <div class="lens"><b>方法论</b> · spec lens 的 summary 返回乱码 probe（结构化输出异常），但 findings 正常 → <b>取 findings，不取自证 summary</b>。</div>
+  </div>
+
+  <h2>真 LLM 三态（§7 证据头条 · 待用户真跑）</h2>
+  <p class="note">证据 = 真 key + 真 LLM 的真实「自然语言 → todo」运行，替代真人冒烟。本机<b>无浏览器驱动 + key 仅在用户 localStorage</b>，故由用户在 <code>localhost:8088</code> 真跑：硬样本 <code>下午要干三件事，其中第二件下面有三个小点</code>。①③ 待填真图（不放假图）；同时 <code>nlp-smoke</code> 可出「真模型 ops + plan diff」文本证据。</p>
+  <div class="shots">
+    <div class="shot"><div class="ph">① 对话框输入态</div><div class="when">待用户真跑截图</div></div>
+    <div class="shot"><div class="ph">② diff 预览（含父任务名 TP8）</div><div class="when">待用户真跑截图</div></div>
+    <div class="shot"><div class="ph">③ 落地后任务树</div><div class="when">待用户真跑截图</div></div>
+  </div>
+  <p class="note">真跑命令（CLI ops 证据，key 从 env，不入仓）：<code>BYOK_KEY=… BYOK_MODEL=… npx vitest run src/lib/nlp-edit/nlp-smoke.test.ts</code>。断言：无新子任务被静默错挂到既有诱饵任务、且用 tempId 建新树。</p>
+
+  <h2>不在本期 / 后续</h2>
+  <p class="note">Tauri 原生 http（生产/打包态直连，替代 dev 代理）· keychain/stronghold 加密 key（MVP 明文）· 多轮对话 / 对话记忆 · 推上游（pull-only，需作者合 PR）。</p>
+
+  <footer>BYOK NLP 编辑 Phase 2+3 交付报告 · 受众=自己 · 与 episode-log（Episode #4）/ test-points（TP1-12）分工 · 2026-06-21</footer>
+</div>
+</body>
+</html>
