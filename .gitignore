@@ -57,3 +57,7 @@ coverage/
 test-report.html
 test-results.json
 AGENTS.md
+
+# BYOK local credentials (never commit) — for nlp-smoke evidence run
+.byok.local.json
+.env.local
