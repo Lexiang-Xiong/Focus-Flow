@@ -92,7 +92,7 @@
     "taskDescription": "Task Description",
     "priority": "Priority",
     "priorityCritical": "Critical",
-    "priorityUrgent": "Urgent",
+    "priorityHeavy": "Heavy",
     "priorityHigh": "High",
     "priorityMedium": "Medium",
     "priorityLow": "Low",

@@ -1,4 +1,4 @@
-export type TaskPriority = 'critical' | 'urgent' | 'high' | 'medium' | 'low';
+export type TaskPriority = 'critical' | 'heavy' | 'high' | 'medium' | 'low';
 export type TaskUrgency = 'low' | 'medium' | 'high' | 'urgent';
 export type DeadlineType = 'exact' | 'today' | 'tomorrow' | 'week' | 'none';
 export type TimerMode = 'work' | 'break' | 'longBreak' | 'idle';

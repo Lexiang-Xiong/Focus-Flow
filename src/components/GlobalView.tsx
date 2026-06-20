@@ -117,7 +117,7 @@ export function GlobalView({
   );
 
   // Helper functions for sorting
-  const priorityOrder: Record<TaskPriority, number> = { critical: 0, urgent: 1, high: 2, medium: 3, low: 4 };
+  const priorityOrder: Record<TaskPriority, number> = { critical: 0, heavy: 1, high: 2, medium: 3, low: 4 };
 
   // 计算所有任务的排名分数
   const rankScores = useMemo(() => calculateRankScores(tasks), [tasks]);
@@ -316,18 +316,18 @@ export function GlobalView({
     }
 
     if (sortConfig.mode === 'priority') {
-      const priorityGroups: Record<TaskPriority, Task[]> = { critical: [], urgent: [], high: [], medium: [], low: [] };
+      const priorityGroups: Record<TaskPriority, Task[]> = { critical: [], heavy: [], high: [], medium: [], low: [] };
       sortedRootTasks.forEach((t) => priorityGroups[t.priority].push(t));
 
       const priorityLabels: Record<TaskPriority, { title: string; color: string }> = {
         critical: { title: t('task.priorityCritical'), color: '#9f1239' },
-        urgent: { title: t('task.priorityUrgent'), color: '#ef4444' },
+        heavy: { title: t('task.priorityHeavy'), color: '#ef4444' },
         high: { title: t('task.priorityHigh'), color: '#f97316' },
         medium: { title: t('task.priorityMedium'), color: '#eab308' },
         low: { title: t('task.priorityLow'), color: '#22c55e' },
       };
 
-      (['critical', 'urgent', 'high', 'medium', 'low'] as TaskPriority[]).forEach((p) => {
+      (['critical', 'heavy', 'high', 'medium', 'low'] as TaskPriority[]).forEach((p) => {
         if (priorityGroups[p].length > 0) {
           groups.push({
             title: priorityLabels[p].title,

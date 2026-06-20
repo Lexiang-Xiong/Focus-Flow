@@ -211,7 +211,7 @@ export function getDeadlineDisplay(deadline: number | null | undefined, deadline
 // 优先级分数映射（五级优先级，值域 [0, 1]）
 const PRIORITY_MAP: Record<TaskPriority, number> = {
   critical: 1.0,
-  urgent: 0.75,
+  heavy: 0.75,
   high: 0.5,
   medium: 0.25,
   low: 0,
@@ -275,7 +275,7 @@ export function sortTasksByMode(
   allTasks: Task[],
   weights?: { priorityWeight?: number; deadlineWeight?: number }
 ): Task[] {
-  const priorityOrder: Record<TaskPriority, number> = { critical: 0, urgent: 1, high: 2, medium: 3, low: 4 };
+  const priorityOrder: Record<TaskPriority, number> = { critical: 0, heavy: 1, high: 2, medium: 3, low: 4 };
   const pWeight = weights?.priorityWeight ?? 0.6;
   const dWeight = weights?.deadlineWeight ?? 0.4;
 
