@@ -329,3 +329,115 @@ describe('planOps · 护栏 · 非法 op 类型', () => {
     if (r.kind === 'error') expect(r.error.code).toBe('INVALID_OP');
   });
 });
+
+// ============ 形状校验：MALFORMED_OP（真实 LLM 输出的现实失败面） ============
+describe('planOps · 形状校验 · MALFORMED_OP', () => {
+  const s = snap([zone('z1')], [task('a')]);
+
+  it('add 缺非空 title → MALFORMED_OP', () => {
+    const r = planOps(s, [{ op: 'add_task', zoneId: 'z1', title: '   ' } as EditOp]);
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.error.code).toBe('MALFORMED_OP');
+  });
+
+  it('add 非法 priority → MALFORMED_OP（防 Episode#3 档位漂移混入）', () => {
+    const r = planOps(s, [
+      { op: 'add_task', zoneId: 'z1', title: 't', priority: 'urgent' } as unknown as EditOp,
+    ]);
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.error.code).toBe('MALFORMED_OP');
+  });
+
+  it('update 缺 id → MALFORMED_OP', () => {
+    const r = planOps(s, [{ op: 'update_task', title: 'x' } as unknown as EditOp]);
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.error.code).toBe('MALFORMED_OP');
+  });
+
+  it('合法 priority（5 级任一）→ 不报 MALFORMED', () => {
+    const r = planOps(s, [{ op: 'add_task', zoneId: 'z1', title: 't', priority: 'critical' }]);
+    expect(r.kind).toBe('plan');
+  });
+});
+
+// ============ invalidPolicy='skip'：部分应用 + 跳过项进预览（不静默） ============
+describe('planOps · invalidPolicy=skip（部分应用）', () => {
+  const s = snap([zone('z1')], [task('a')]);
+
+  it('坏 op 被跳过、好 op 仍编入计划，skipped 带原因+下标', () => {
+    const r = planOps(
+      s,
+      [
+        { op: 'add_task', zoneId: 'z1', title: '好任务' },
+        { op: 'delete_task', id: 'ghost' }, // 未知 id
+        { op: 'update_task', id: 'a', title: 'X' },
+      ],
+      { invalidPolicy: 'skip' },
+    );
+    expect(r.kind).toBe('plan');
+    if (r.kind !== 'plan') return;
+    // 两个好 op 落地（add + update），坏 op 不进 actions
+    expect(r.actions.map((x) => x.kind)).toEqual(['add', 'update']);
+    expect(r.skipped).toHaveLength(1);
+    expect(r.skipped[0]).toEqual({ opIndex: 1, code: 'UNKNOWN_TASK_ID', message: expect.any(String) });
+  });
+
+  it('reject（默认）下同样输入 → 整批否决（对照）', () => {
+    const r = planOps(s, [
+      { op: 'add_task', zoneId: 'z1', title: '好任务' },
+      { op: 'delete_task', id: 'ghost' },
+    ]);
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.error.code).toBe('UNKNOWN_TASK_ID');
+  });
+
+  it('tempId 级联：父 op 因坏 zone 被跳 → 引用它的子 op 也被跳（不会错挂）', () => {
+    const r = planOps(
+      s,
+      [
+        { op: 'add_task', zoneId: 'BAD', title: '新父', tempId: 't1' }, // 坏 zone → 跳
+        { op: 'add_task', zoneId: 'z1', title: '新子', parentId: 't1' }, // 父没注册 → 跳
+        { op: 'add_task', zoneId: 'z1', title: '独立任务' }, // 好 op
+      ],
+      { invalidPolicy: 'skip' },
+    );
+    expect(r.kind).toBe('plan');
+    if (r.kind !== 'plan') return;
+    expect(r.actions).toHaveLength(1);
+    expect(r.diff.added[0].title).toBe('独立任务');
+    expect(r.skipped.map((x) => x.opIndex)).toEqual([0, 1]);
+    expect(r.skipped[1].code).toBe('UNKNOWN_PARENT_ID');
+  });
+
+  it('全部 op 非法 → plan（actions 空）+ skipped 全列出（预览据此提示无可应用）', () => {
+    const r = planOps(
+      s,
+      [
+        { op: 'delete_task', id: 'x' },
+        { op: 'update_task', id: 'y', title: 'z' },
+      ],
+      { invalidPolicy: 'skip' },
+    );
+    expect(r.kind).toBe('plan');
+    if (r.kind !== 'plan') return;
+    expect(r.actions).toHaveLength(0);
+    expect(r.skipped).toHaveLength(2);
+  });
+
+  it('skip 模式下 op 数量超上限仍硬停（批级错误不被吞）', () => {
+    const ops: EditOp[] = Array.from({ length: OP_LIMIT + 1 }, () => ({
+      op: 'add_task' as const,
+      zoneId: 'z1',
+      title: 't',
+    }));
+    const r = planOps(s, ops, { invalidPolicy: 'skip' });
+    expect(r.kind).toBe('error');
+    if (r.kind === 'error') expect(r.error.code).toBe('OP_LIMIT_EXCEEDED');
+  });
+
+  it('reject 模式 plan 的 skipped 恒为空数组', () => {
+    const r = planOps(s, [{ op: 'add_task', zoneId: 'z1', title: 't' }]);
+    expect(r.kind).toBe('plan');
+    if (r.kind === 'plan') expect(r.skipped).toEqual([]);
+  });
+});
