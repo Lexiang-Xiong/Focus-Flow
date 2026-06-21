@@ -53,6 +53,15 @@ export function writeByokConfig(
   return true;
 }
 
+/** 清除 localStorage['byok_v1']（设置页「清除配置」用）。返回是否成功。 */
+export function clearByokConfig(
+  storage: Pick<Storage, 'removeItem'> | undefined = (typeof localStorage !== 'undefined' ? localStorage : undefined),
+): boolean {
+  if (!storage) return false;
+  storage.removeItem(BYOK_STORAGE_KEY);
+  return true;
+}
+
 /**
  * 从 localStorage['byok_v1'] 读取并校验 BYOK 配置。
  * 缺失 → NOT_CONFIGURED（提示用户去填）；格式错 / 缺字段 → BAD_CONFIG。

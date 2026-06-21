@@ -34,7 +34,13 @@
     "editConfig": "Edit config",
     "plaintextWarn": "Key is stored in plaintext in this browser's localStorage — personal use only; be careful on shared machines.",
     "cfgSaved": "BYOK config saved",
-    "cfgIncomplete": "Fill in base / key / model"
+    "cfgIncomplete": "Fill in base / key / model",
+    "settingsTitle": "AI Editing (BYOK)",
+    "settingsDesc": "Configure an OpenAI-compatible gateway to edit tasks in natural language.",
+    "clear": "Clear",
+    "cleared": "BYOK config cleared",
+    "statusOk": "Configured",
+    "statusNone": "Not configured"
   },
   "app": {
     "name": "Focus Flow"

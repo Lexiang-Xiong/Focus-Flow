@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ByokSettingsSection } from '@/components/ByokSettingsSection';
 import type { AppState, TimerMode, GlobalViewSortMode, Zone, RecurringTemplate, TaskPriority, ConfigProfile } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
 import { useAppStore } from '@/store';
@@ -403,6 +404,9 @@ export function SettingsPanel({
             </div>
           </div>
         </div>
+
+        {/* BYOK / AI 编辑配置 */}
+        <ByokSettingsSection />
 
         {/* Timer Settings */}
         <div className="settings-section">

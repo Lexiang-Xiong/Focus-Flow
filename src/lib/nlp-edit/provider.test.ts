@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import {
   readByokConfig,
   writeByokConfig,
+  clearByokConfig,
   summarizeSnapshot,
   buildSystemPrompt,
   buildRequestBody,
@@ -81,6 +82,21 @@ describe('writeByokConfig', () => {
     const r = readByokConfig(store);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.config).toMatchObject({ base: 'https://x/v1', key: 'sk-1', model: 'mm' });
+  });
+
+  it('clearByokConfig 清除后 readByokConfig → NOT_CONFIGURED', () => {
+    const m: Record<string, string> = {};
+    const store = {
+      getItem: (k: string) => (k in m ? m[k] : null),
+      setItem: (k: string, v: string) => { m[k] = v; },
+      removeItem: (k: string) => { delete m[k]; },
+    };
+    writeByokConfig({ base: 'https://x/v1', key: 'sk-1', model: 'mm' }, store);
+    expect(readByokConfig(store).ok).toBe(true);
+    expect(clearByokConfig(store)).toBe(true);
+    const r = readByokConfig(store);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.code).toBe('NOT_CONFIGURED');
   });
 });
 
