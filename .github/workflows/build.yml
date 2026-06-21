@@ -2,16 +2,49 @@ name: Build and Release
 
 on:
   push:
+    branches:
+      - main
+      - 'feat/**'
+      - 'fix/**'
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - main
+      - 'feat/**'
+      - 'fix/**'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Typecheck & build (tsc -b + vite build)
+        run: npm run build
+
   build-windows:
+    needs: test
     runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/v')
 
     steps:
       - name: Checkout repository
@@ -60,7 +93,9 @@ jobs:
           prerelease: false
 
   build-ubuntu:
+    needs: test
     runs-on: ubuntu-22.04
+    if: startsWith(github.ref, 'refs/tags/v')
 
     steps:
       - name: Checkout repository
@@ -114,7 +149,9 @@ jobs:
           prerelease: false
 
   build-macos:
+    needs: test
     runs-on: macos-latest
+    if: startsWith(github.ref, 'refs/tags/v')
 
     steps:
       - name: Checkout repository

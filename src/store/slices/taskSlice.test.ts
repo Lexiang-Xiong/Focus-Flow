@@ -225,3 +225,85 @@ describe('moveTaskNode（拖拽落位重排 order）', () => {
     expect(find(childId).parentId).toBeNull();
   });
 });
+
+// ============ applyNlpActions（TP7 落地 wiring：建新树 + 单步撤销） ============
+describe('applyNlpActions（NLP 编辑批量落地）', () => {
+  const byTitle = (t: string) => store.getState().tasks.find(x => x.title === t)!;
+
+  it('TP7: 批内 tempId 建新多层树 → 子任务挂到刚新建父的【真实 id】上', () => {
+    const { tempIdMap, createdIds } = store.getState().applyNlpActions([
+      { kind: 'add', zoneId: 'z1', title: '上线', parentId: null, tempId: 't1' },
+      { kind: 'add', zoneId: 'z1', title: '部署', parentId: 't1' },
+      { kind: 'add', zoneId: 'z1', title: '回归测试', parentId: 't1' },
+    ]);
+    const parent = byTitle('上线');
+    const deploy = byTitle('部署');
+    const regress = byTitle('回归测试');
+    // tempId 解析为真实父 id（不是 't1' 字面量，也不是错挂到别处）
+    expect(deploy.parentId).toBe(parent.id);
+    expect(regress.parentId).toBe(parent.id);
+    expect(tempIdMap['t1']).toBe(parent.id);
+    expect(createdIds).toHaveLength(3);
+    // 同父下子任务 order 独立递增
+    expect([deploy.order, regress.order]).toEqual([0, 1]);
+  });
+
+  it('add 到【已存在】真实父 id → 直接挂上', () => {
+    store.getState().addTask('z1', '项目A', '');
+    const realParent = store.getState().tasks[0].id;
+    store.getState().applyNlpActions([
+      { kind: 'add', zoneId: 'z1', title: '子', parentId: realParent },
+    ]);
+    expect(byTitle('子').parentId).toBe(realParent);
+  });
+
+  it('update re-parent：把已存在任务挂到另一父下，order 排到新同级末尾', () => {
+    store.getState().addTask('z1', 'A', '');
+    store.getState().addTask('z1', 'B', '');
+    const A = byTitle('A').id;
+    const B = byTitle('B').id;
+    store.getState().applyNlpActions([{ kind: 'update', id: B, updates: { parentId: A } }]);
+    expect(find(B).parentId).toBe(A);
+    expect(find(B).order).toBe(0); // A 下首个子任务
+  });
+
+  it('delete 级联删整棵子树', () => {
+    store.getState().applyNlpActions([
+      { kind: 'add', zoneId: 'z1', title: 'p', parentId: null, tempId: 't1' },
+      { kind: 'add', zoneId: 'z1', title: 'c', parentId: 't1', tempId: 't2' },
+      { kind: 'add', zoneId: 'z1', title: 'g', parentId: 't2' },
+    ]);
+    const pId = byTitle('p').id;
+    store.getState().applyNlpActions([{ kind: 'delete', id: pId }]);
+    expect(store.getState().tasks).toHaveLength(0);
+  });
+
+  it('单步撤销：整批多 action 只触发一次 saveSnapshot', () => {
+    const snap = vi.fn();
+    store.setState({ saveSnapshot: snap } as unknown as Partial<TaskSlice>);
+    store.getState().applyNlpActions([
+      { kind: 'add', zoneId: 'z1', title: 'a', parentId: null, tempId: 't1' },
+      { kind: 'add', zoneId: 'z1', title: 'b', parentId: 't1' },
+      { kind: 'add', zoneId: 'z1', title: 'c', parentId: 't1' },
+    ]);
+    expect(snap).toHaveBeenCalledTimes(1);
+  });
+
+  it('混合 add+update+delete 同批，computedTimes 重算', () => {
+    store.getState().addTask('z1', '旧', '');
+    const oldId = byTitle('旧').id;
+    store.getState().addTask('z1', '待删', '');
+    const delId = byTitle('待删').id;
+    const r = store.getState().applyNlpActions([
+      { kind: 'add', zoneId: 'z1', title: '新', parentId: null },
+      { kind: 'update', id: oldId, updates: { title: '旧改' } },
+      { kind: 'delete', id: delId },
+    ]);
+    expect(byTitle('新')).toBeTruthy();
+    expect(find(oldId).title).toBe('旧改');
+    expect(store.getState().tasks.find(t => t.id === delId)).toBeUndefined();
+    expect(r.createdIds).toHaveLength(1);
+    // computedTimes 覆盖现存任务
+    expect(store.getState().taskComputedTimes[byTitle('新').id]).toBeTruthy();
+  });
+});

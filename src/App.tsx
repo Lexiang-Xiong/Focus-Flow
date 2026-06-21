@@ -683,9 +683,11 @@ function App() {
             <ResizablePanel defaultSize="40%" minSize="5%" maxSize="95%">
               <ZoneManager
                 zones={zones}
+                tasks={tasks}
                 activeZoneId={activeZoneId}
                 templates={PREDEFINED_TEMPLATES}
                 customTemplates={customTemplates}
+                onNlpApply={useAppStore.getState().applyNlpActions}
                 onSelectZone={(zoneId) => {
                   setActiveZoneId(zoneId);
                   setCurrentView(zoneId === null ? 'global' : 'zones');

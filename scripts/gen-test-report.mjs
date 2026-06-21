@@ -17,6 +17,8 @@ const FEATURE_NOTES = {
   'migration': '数据迁移：DB 设置 → 应用设置的字段映射与布尔/默认值回退',
   'file-mirror-core': '文件镜像内核：回声锁不变量（canonical）、镜像解析、启动/轮询动作决策',
   'file-mirror-engine': '文件镜像引擎：IO 编排与锁行为',
+  'apply-core': 'BYOK NLP 编辑内核：op 校验 + action 计划 + diff 预览（增/改/删）、未知 id/zoneId/parentId 拦截、删除级联展开、op 上限、坏 op 全否决（fail-fast）',
+  'schema': 'BYOK NLP 编辑 op 的 JSON Schema：add/update/delete 三类，priority/deadlineType 枚举锁死、additionalProperties:false 防越权、urgency 不可设（派生量）',
 };
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -24,7 +26,7 @@ const fmtMs = (ms) => (ms == null ? '–' : ms < 1 ? '<1ms' : ms < 1000 ? `${ms.
 
 const files = data.testResults.map((f) => {
   const rel = relative(root, f.name);
-  const base = rel.split('/').pop().replace(/\.test\.tsx?$/, '');
+  const base = rel.split(/[\\/]/).pop().replace(/\.test\.tsx?$/, '');
   const assertions = f.assertionResults || [];
   const passed = assertions.filter((a) => a.status === 'passed').length;
   const failed = assertions.filter((a) => a.status === 'failed').length;

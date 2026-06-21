@@ -1,6 +1,7 @@
 import type { StateCreator } from 'zustand';
 import type { Task, TaskPriority, TaskUrgency, DeadlineType, RecurringTemplate } from '@/types';
 import type { UndoSlice } from './undoSlice';
+import type { PlannedAction } from '@/lib/nlp-edit/apply-core';
 import i18n from '@/lib/i18n';
 
 export interface TaskComputedTime {
@@ -21,6 +22,10 @@ export interface TaskActions {
   updateTask: (id: string, updates: Partial<Task>) => void;
   toggleTask: (id: string) => void;
   deleteTask: (id: string) => void;
+  // 批量落地 NLP 编辑计划：一次 saveSnapshot + 单 setState（单步撤销）。
+  // 把批内 add 的 tempId 解析成真实 id，引用它的子任务挂到真实父 id 上（TP7 落地 wiring）。
+  // 返回 tempId→真实 id 映射 + 本批新建的真实 id 列表。
+  applyNlpActions: (actions: PlannedAction[]) => { tempIdMap: Record<string, string>; createdIds: string[] };
   reorderTasks: (zoneId: string, newTasks: Task[]) => void;
   clearCompleted: (zoneId?: string) => void;
   toggleExpanded: (id: string) => void;
@@ -312,6 +317,88 @@ export const createTaskSlice: StateCreator<TaskSlice & UndoSlice, [], [], TaskSl
 
     return { tasks: newTasks };
     });
+  },
+
+  // 批量落地 NLP 编辑计划（apply-core.planOps 产出的 actions）。
+  // 关键：整批只 saveSnapshot 一次 + 单次 setState → 单步撤销（不是每 op 一步）。
+  applyNlpActions: (actions) => {
+    get().saveSnapshot?.();
+    const tempIdMap: Record<string, string> = {};
+    const createdIds: string[] = [];
+
+    set((state) => {
+      let tasks = [...state.tasks];
+      const now = Date.now();
+      let seq = 0;
+      // 批内唯一 id（同毫秒多次新建也不撞：附加自增序号）。
+      const genId = () => `task-${now}-${seq++}-${Math.random().toString(36).slice(2, 11)}`;
+
+      // tempId 引用 → 映射到本批已建的真实 id；否则视为已存在的真实 id。
+      const resolveParent = (parentId: string | null | undefined): string | null => {
+        if (parentId == null) return null;
+        return tempIdMap[parentId] ?? parentId;
+      };
+
+      // 目标父/分区下新同级的下一个 order（追加到末尾）。
+      const nextOrder = (zoneId: string, parentId: string | null): number => {
+        const siblings = tasks.filter(t =>
+          parentId ? t.parentId === parentId : t.zoneId === zoneId && !t.parentId
+        );
+        return siblings.length ? Math.max(...siblings.map(t => t.order)) + 1 : 0;
+      };
+
+      const collectDescendantIds = (pid: string): string[] => {
+        const kids = tasks.filter(t => t.parentId === pid);
+        return kids.flatMap(k => [k.id, ...collectDescendantIds(k.id)]);
+      };
+
+      for (const a of actions) {
+        if (a.kind === 'add') {
+          const parentId = resolveParent(a.parentId);
+          const id = genId();
+          const newTask: Task = {
+            id,
+            zoneId: a.zoneId,
+            parentId,
+            isCollapsed: false,
+            title: a.title,
+            description: a.description ?? '',
+            completed: false,
+            priority: a.priority ?? 'medium',
+            urgency: 'low', // 派生显示值；落地侧默认 low，与 addTask 一致
+            deadline: a.deadline ?? null,
+            deadlineType: a.deadlineType ?? 'none',
+            order: nextOrder(a.zoneId, parentId),
+            createdAt: now,
+            expanded: false,
+            totalWorkTime: 0,
+            ownTime: 0,
+          };
+          tasks.push(newTask);
+          if (a.tempId != null) tempIdMap[a.tempId] = id;
+          createdIds.push(id);
+        } else if (a.kind === 'update') {
+          const idx = tasks.findIndex(t => t.id === a.id);
+          if (idx === -1) continue;
+          const updates: Partial<Task> = { ...a.updates };
+          // 携带 parentId（re-parent）：解析 tempId 引用，并把 order 排到新同级末尾，避免冲突。
+          if ('parentId' in updates) {
+            const newParent = resolveParent(updates.parentId as string | null);
+            updates.parentId = newParent;
+            updates.order = nextOrder(tasks[idx].zoneId, newParent);
+          }
+          tasks[idx] = { ...tasks[idx], ...updates };
+        } else if (a.kind === 'delete') {
+          const ids = new Set([a.id, ...collectDescendantIds(a.id)]);
+          tasks = tasks.filter(t => !ids.has(t.id));
+        }
+      }
+
+      const taskComputedTimes = computeAllTaskTimes(tasks);
+      return { tasks, taskComputedTimes };
+    });
+
+    return { tempIdMap, createdIds };
   },
 
   reorderTasks: (zoneId, newTasks) => set((state) => {

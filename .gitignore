@@ -57,3 +57,13 @@ coverage/
 test-report.html
 test-results.json
 AGENTS.md
+
+# BYOK local credentials (never commit) — for nlp-smoke evidence run
+.byok.local.json
+.env.local
+
+# personal harness docs + demo + e2e tooling (kept local, not released)
+docs/
+scripts/e2e-shots.mjs
+scripts/e2e-scenarios.mjs
+scripts/gen-demo-html.mjs

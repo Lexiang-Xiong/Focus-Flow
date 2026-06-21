@@ -2,7 +2,7 @@
   "name": "focus-flow",
   "description": "A floating todo app with Pomodoro timer - stay focused and organized",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.3.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
