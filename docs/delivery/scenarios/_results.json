@@ -1,0 +1,152 @@
+[
+  {
+    "key": "01-add-flat",
+    "kind": "新增·多个顶级任务",
+    "ok": true,
+    "preview": {
+      "added": [
+        "晨跑顶级任务",
+        "读论文顶级任务",
+        "写代码顶级任务"
+      ],
+      "updated": [],
+      "skipped": []
+    }
+  },
+  {
+    "key": "02-add-tree",
+    "kind": "新增·建新多层树",
+    "ok": true,
+    "preview": {
+      "added": [
+        "发布 v2顶级任务",
+        "写 changelog挂到「新建:发布 v2」下",
+        "打 tag挂到「新建:发布 v2」下",
+        "发公告挂到「新建:发布 v2」下"
+      ],
+      "updated": [],
+      "skipped": []
+    }
+  },
+  {
+    "key": "03-sub-existing",
+    "kind": "加子任务·到已有任务",
+    "ok": true,
+    "preview": {
+      "added": [
+        "需求评审挂到「项目A」下",
+        "技术方案挂到「项目A」下"
+      ],
+      "updated": [],
+      "skipped": []
+    }
+  },
+  {
+    "key": "04-sub-existing2",
+    "kind": "加子任务·到已有任务",
+    "ok": true,
+    "preview": {
+      "added": [
+        "写测试挂到「项目A」下"
+      ],
+      "updated": [],
+      "skipped": []
+    }
+  },
+  {
+    "key": "05-update-priority",
+    "kind": "更新·优先级",
+    "ok": true,
+    "preview": {
+      "added": [],
+      "updated": [
+        "买菜：priority = high"
+      ],
+      "skipped": []
+    }
+  },
+  {
+    "key": "06-update-complete",
+    "kind": "更新·标记完成",
+    "ok": true,
+    "preview": {
+      "added": [],
+      "updated": [
+        "写报告：completed = true"
+      ],
+      "skipped": []
+    }
+  },
+  {
+    "key": "07-reparent",
+    "kind": "重挂父·re-parent",
+    "ok": true,
+    "preview": {
+      "added": [],
+      "updated": [
+        "子任务X挂到「项目A」下"
+      ],
+      "skipped": []
+    }
+  },
+  {
+    "key": "08-reparent2",
+    "kind": "重挂父·re-parent",
+    "ok": true,
+    "preview": {
+      "added": [],
+      "updated": [
+        "写初稿挂到「写周报」下"
+      ],
+      "skipped": []
+    }
+  },
+  {
+    "key": "09-delete-cascade",
+    "kind": "删除·级联子树",
+    "ok": true,
+    "preview": {
+      "added": [],
+      "updated": [],
+      "skipped": []
+    }
+  },
+  {
+    "key": "10-delete-leaf",
+    "kind": "删除·单个",
+    "ok": true,
+    "preview": {
+      "added": [],
+      "updated": [],
+      "skipped": []
+    }
+  },
+  {
+    "key": "11-mixed",
+    "kind": "混合·增+改+删",
+    "ok": true,
+    "preview": {
+      "added": [
+        "今天复盘顶级任务"
+      ],
+      "updated": [
+        "写周报：priority = high"
+      ],
+      "skipped": []
+    }
+  },
+  {
+    "key": "12-mixed2",
+    "kind": "混合·加子任务+改优先级",
+    "ok": true,
+    "preview": {
+      "added": [
+        "联调挂到「项目A」下"
+      ],
+      "updated": [
+        "项目A：priority = critical"
+      ],
+      "skipped": []
+    }
+  }
+]
