@@ -207,18 +207,28 @@ export interface ChatRequestBody {
   temperature: number;
 }
 
-/** 构造 OpenAI 兼容 /chat/completions 的请求体（强制单工具调用）。纯函数。 */
-export function buildRequestBody(config: ByokConfig, userText: string, snapshot: Snapshot, now: number): ChatRequestBody {
-  return {
+/** 构造 OpenAI 兼容 /chat/completions 的请求体。纯函数。
+ * 部分网关（如 DeepSeek reasoning）不支持 tool_choice，可通过 useToolChoice=false 降级。 */
+export function buildRequestBody(
+  config: ByokConfig,
+  userText: string,
+  snapshot: Snapshot,
+  now: number,
+  useToolChoice = true,
+): ChatRequestBody {
+  const body: ChatRequestBody = {
     model: config.model,
     messages: [
       { role: 'system', content: buildSystemPrompt(snapshot, now) },
       { role: 'user', content: userText },
     ],
     tools: [{ type: 'function', function: EDIT_OPS_FUNCTION }],
-    tool_choice: { type: 'function', function: { name: EDIT_OPS_TOOL_NAME } },
     temperature: 0,
   };
+  if (useToolChoice) {
+    body.tool_choice = { type: 'function', function: { name: EDIT_OPS_TOOL_NAME } };
+  }
+  return body;
 }
 
 /** 拼出 chat/completions 端点（容忍 base 结尾是否带斜杠）。 */
@@ -289,107 +299,134 @@ export function createProvider(opts: CreateProviderOptions = {}): NlpProvider {
     const { config } = cfg;
     // 凭据脱敏：任何要回流进 error.message 的外部文本，先抹掉 key（防网关把 Authorization 反射进错误体）。
     const redact = (s: string): string => (config.key ? s.split(config.key).join('[REDACTED]') : s);
-    const body = buildRequestBody(config, userText, snapshot, nowFn());
     const ep = resolveEndpoint(config.base);
 
-    let res: Response;
-    try {
-      res = await fetchFn(ep.url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(ep.headers ?? {}),
-          // Authorization 放最后：唯一用到 key 的地方，且不可被 resolveEndpoint 的 header 覆盖；绝不进日志/错误信息。
-          Authorization: `Bearer ${config.key}`,
-        },
-        body: JSON.stringify(body),
-      });
-    } catch (e) {
-      return {
-        kind: 'error',
-        error: { code: 'NETWORK', message: redact(`网络请求失败：${e instanceof Error ? e.message : String(e)}`) },
-      };
-    }
+    const doFetch = async (useToolChoice: boolean): Promise<RequestOpsResult> => {
+      const body = buildRequestBody(config, userText, snapshot, nowFn(), useToolChoice);
 
-    if (!res.ok) {
-      let detail = '';
+      let res: Response;
       try {
-        detail = redact(truncate(await res.text(), 300));
-      } catch {
-        /* 忽略读 body 失败 */
+        res = await fetchFn(ep.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(ep.headers ?? {}),
+            // Authorization 放最后：唯一用到 key 的地方，且不可被 resolveEndpoint 的 header 覆盖；绝不进日志/错误信息。
+            Authorization: `Bearer ${config.key}`,
+          },
+          body: JSON.stringify(body),
+        });
+      } catch (e) {
+        return {
+          kind: 'error',
+          error: { code: 'NETWORK', message: redact(`网络请求失败：${e instanceof Error ? e.message : String(e)}`) },
+        };
       }
-      return {
-        kind: 'error',
-        error: { code: 'HTTP_ERROR', message: `网关返回 ${res.status}${detail ? `：${detail}` : ''}`, status: res.status },
-      };
-    }
 
-    let data: unknown;
-    try {
-      data = await res.json();
-    } catch {
-      return {
-        kind: 'error',
-        error: { code: 'BAD_RESPONSE', message: '网关响应不是合法 JSON（可能是 HTML 错误页或流式响应）。' },
-      };
-    }
-
-    const msg = (data as { choices?: { message?: Record<string, unknown> }[] })?.choices?.[0]?.message;
-    const toolCalls = msg?.tool_calls as
-      | { function?: { name?: string; arguments?: unknown } }[]
-      | undefined;
-
-    if (!Array.isArray(toolCalls) || toolCalls.length === 0) {
-      const content = typeof msg?.content === 'string' ? msg.content : '';
-      return {
-        kind: 'error',
-        error: {
-          code: 'NO_TOOL_CALL',
-          message: `模型没有调用编辑工具${content ? `，而是回了文本：${redact(truncate(content, 300))}` : '（也没有返回内容）'}。`,
-        },
-      };
-    }
-
-    // 只认调用了本工具的 call，并【聚合】所有这类 call 的 ops（防网关把 ops 拆到多个 call 里静默丢失）。
-    const editCalls = toolCalls.filter((c) => c?.function?.name === EDIT_OPS_TOOL_NAME);
-    if (editCalls.length === 0) {
-      const names = toolCalls.map((c) => c?.function?.name).filter(Boolean).join(', ');
-      return {
-        kind: 'error',
-        error: { code: 'NO_TOOL_CALL', message: `模型调用了其它工具${names ? `：${names}` : ''}，未调用编辑工具。` },
-      };
-    }
-
-    const allOps: unknown[] = [];
-    const rawParts: string[] = [];
-    for (const c of editCalls) {
-      const argRaw = c.function?.arguments;
-      let argObj: unknown;
-      if (typeof argRaw === 'string') {
+      if (!res.ok) {
+        let detail = '';
         try {
-          argObj = JSON.parse(argRaw);
+          detail = redact(truncate(await res.text(), 300));
         } catch {
-          return { kind: 'error', error: { code: 'BAD_TOOL_ARGS', message: 'tool_call.arguments 不是合法 JSON。' } };
+          /* 忽略读 body 失败 */
         }
-        rawParts.push(argRaw);
-      } else if (argRaw !== null && typeof argRaw === 'object') {
-        // 部分 OpenAI 兼容网关（Ollama /v1、部分 vLLM / LiteLLM）直接给已解析的对象，而非 JSON 字符串。
-        argObj = argRaw;
-        rawParts.push(JSON.stringify(argRaw));
-      } else {
-        return { kind: 'error', error: { code: 'BAD_TOOL_ARGS', message: 'tool_call.arguments 缺失。' } };
+        return {
+          kind: 'error',
+          error: { code: 'HTTP_ERROR', message: `网关返回 ${res.status}${detail ? `：${detail}` : ''}`, status: res.status },
+        };
       }
-      const ops = (argObj as { ops?: unknown })?.ops;
-      if (!Array.isArray(ops)) {
-        return { kind: 'error', error: { code: 'BAD_TOOL_ARGS', message: '返回缺少 ops 数组。' } };
+
+      let data: unknown;
+      try {
+        data = await res.json();
+      } catch {
+        return {
+          kind: 'error',
+          error: { code: 'BAD_RESPONSE', message: '网关响应不是合法 JSON（可能是 HTML 错误页或流式响应）。' },
+        };
       }
-      allOps.push(...ops);
+
+      return parseToolCallResponse(data, redact);
+    };
+
+    // 第一次尝试：强制 tool_choice（OpenAI / 多数兼容网关推荐）。
+    const first = await doFetch(true);
+    if (first.kind === 'ops') return first;
+
+    // 特定网关（DeepSeek reasoning 等）不支持 tool_choice，错误信息里会提示。
+    // 自动降级重试一次：保留 tools，但移除 tool_choice。
+    const mayRetry =
+      first.error.code === 'HTTP_ERROR' &&
+      first.error.status === 400 &&
+      /tool_choice|thinking mode/i.test(first.error.message);
+    if (mayRetry) {
+      const second = await doFetch(false);
+      if (second.kind === 'ops') return second;
+      // 降级也失败时，返回第二次的错误（更贴近真实原因）。
+      return second;
     }
 
-    // ⚠ 这些 ops 是【未校验】的 LLM 原始输出，仅保证是数组。调用方【必须】先经 apply-core.planOps
-    //   校验，才能落地 store —— 不要绕过 planOps 直接改库（绕过 = 绕掉全部 schema 护栏）。
-    return { kind: 'ops', ops: allOps as EditOp[], rawArguments: rawParts.join('\n') };
+    return first;
   };
 
   return { readConfig, requestOps };
+}
+
+/** 从 /chat/completions 响应中解析编辑工具的 tool_calls。 */
+function parseToolCallResponse(data: unknown, redact: (s: string) => string): RequestOpsResult {
+  const msg = (data as { choices?: { message?: Record<string, unknown> }[] })?.choices?.[0]?.message;
+  const toolCalls = msg?.tool_calls as
+    | { function?: { name?: string; arguments?: unknown } }[]
+    | undefined;
+
+  if (!Array.isArray(toolCalls) || toolCalls.length === 0) {
+    const content = typeof msg?.content === 'string' ? msg.content : '';
+    return {
+      kind: 'error',
+      error: {
+        code: 'NO_TOOL_CALL',
+        message: `模型没有调用编辑工具${content ? `，而是回了文本：${redact(truncate(content, 300))}` : '（也没有返回内容）'}。`,
+      },
+    };
+  }
+
+  // 只认调用了本工具的 call，并【聚合】所有这类 call 的 ops（防网关把 ops 拆到多个 call 里静默丢失）。
+  const editCalls = toolCalls.filter((c) => c?.function?.name === EDIT_OPS_TOOL_NAME);
+  if (editCalls.length === 0) {
+    const names = toolCalls.map((c) => c?.function?.name).filter(Boolean).join(', ');
+    return {
+      kind: 'error',
+      error: { code: 'NO_TOOL_CALL', message: `模型调用了其它工具${names ? `：${names}` : ''}，未调用编辑工具。` },
+    };
+  }
+
+  const allOps: unknown[] = [];
+  const rawParts: string[] = [];
+  for (const c of editCalls) {
+    const argRaw = c.function?.arguments;
+    let argObj: unknown;
+    if (typeof argRaw === 'string') {
+      try {
+        argObj = JSON.parse(argRaw);
+      } catch {
+        return { kind: 'error', error: { code: 'BAD_TOOL_ARGS', message: 'tool_call.arguments 不是合法 JSON。' } };
+      }
+      rawParts.push(argRaw);
+    } else if (argRaw !== null && typeof argRaw === 'object') {
+      // 部分 OpenAI 兼容网关（Ollama /v1、部分 vLLM / LiteLLM）直接给已解析的对象，而非 JSON 字符串。
+      argObj = argRaw;
+      rawParts.push(JSON.stringify(argRaw));
+    } else {
+      return { kind: 'error', error: { code: 'BAD_TOOL_ARGS', message: 'tool_call.arguments 缺失。' } };
+    }
+    const ops = (argObj as { ops?: unknown })?.ops;
+    if (!Array.isArray(ops)) {
+      return { kind: 'error', error: { code: 'BAD_TOOL_ARGS', message: '返回缺少 ops 数组。' } };
+    }
+    allOps.push(...ops);
+  }
+
+  // ⚠ 这些 ops 是【未校验】的 LLM 原始输出，仅保证是数组。调用方【必须】先经 apply-core.planOps
+  //   校验，才能落地 store —— 不要绕过 planOps 直接改库（绕过 = 绕掉全部 schema 护栏）。
+  return { kind: 'ops', ops: allOps as EditOp[], rawArguments: rawParts.join('\n') };
 }

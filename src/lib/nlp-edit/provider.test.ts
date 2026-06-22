@@ -199,6 +199,28 @@ describe('createProvider.requestOps（mock 网关）', () => {
     }
   });
 
+  it('DeepSeek reasoning 400 tool_choice → 自动降级重试并返回 ops', async () => {
+    const ops = [{ op: 'add_task', zoneId: 'z1', title: '学习' }];
+    const fetchFn = vi.fn()
+      // 第一次：DeepSeek reasoning 不支持 tool_choice
+      .mockResolvedValueOnce(res({ error: { message: 'Thinking mode does not support tool_choice', type: 'invalid_request_error' } }, { ok: false, status: 400 }))
+      // 第二次：不带 tool_choice 后成功
+      .mockResolvedValueOnce(toolCallRes(ops));
+
+    const p = createProvider({ storage, fetchFn: fetchFn as unknown as typeof fetch });
+    const r = await p.requestOps('要学习', snap);
+
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    expect(r.kind).toBe('ops');
+    if (r.kind === 'ops') expect(r.ops).toHaveLength(1);
+
+    // 第二次请求体不应包含 tool_choice
+    const [, secondInit] = fetchFn.mock.calls[1] as unknown as [string, RequestInit];
+    const secondBody = JSON.parse(secondInit.body as string);
+    expect(secondBody.tool_choice).toBeUndefined();
+    expect(secondBody.tools).toHaveLength(1);
+  });
+
   it('fetch 抛错 → NETWORK', async () => {
     const fetchFn = vi.fn(async () => {
       throw new Error('ECONNREFUSED');
