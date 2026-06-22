@@ -58,7 +58,7 @@ export function ByokSettingsSection() {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={opts.placeholder}
-        className="bg-black/30 border-white/20"
+        className="bg-black/30 border-white/20 text-white placeholder:text-white/50"
       />
     </div>
   );
