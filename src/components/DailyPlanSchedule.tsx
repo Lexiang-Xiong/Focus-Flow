@@ -156,7 +156,7 @@ export function DailyPlanSchedule({
         >
           <TimeRuler hourHeight={hourHeight} className="absolute left-0 right-0 top-0" />
 
-          <div className="absolute left-14 right-2 top-0" style={{ height: `${24 * hourHeight}px` }}>
+          <div className="absolute left-12 right-2 top-0" style={{ height: `${24 * hourHeight}px` }}>
             {spans.map(span => (
               <div key={span.id} data-span-area>
                 <TimeSpan
@@ -175,7 +175,7 @@ export function DailyPlanSchedule({
 
           {isDraggingTime && dragStartY !== null && dragCurrentY !== null && (
             <div
-              className="absolute left-14 right-2 bg-white/10 border border-white/30 rounded-md pointer-events-none"
+              className="absolute left-12 right-2 bg-white/10 border border-white/30 rounded-md pointer-events-none"
               style={{
                 top: `${Math.min(dragStartY, dragCurrentY)}px`,
                 height: `${Math.abs(dragCurrentY - dragStartY)}px`,
