@@ -23,6 +23,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { NlpEditDialog } from '@/components/NlpEditDialog';
+import { WeeklyPlanBar } from '@/components/WeeklyPlanBar';
 import type { Zone, Template, Task } from '@/types';
 import type { PlannedAction } from '@/lib/nlp-edit/apply-core';
 import { ZONE_COLORS } from '@/types';
@@ -41,6 +42,7 @@ interface ZoneManagerProps {
   onReorderZones?: (zones: Zone[]) => void;
   onApplyTemplate: (templateId: string) => void;
   onViewChange: (view: 'zones' | 'global' | 'executionPlan' | 'history') => void;
+  onOpenExecutionPlan?: (date: string) => void;
   onOpenHistory: () => void;
   onOpenSettings: () => void;
   onSaveAsTemplate?: (name: string) => void;
@@ -136,6 +138,7 @@ export function ZoneManager({
   onReorderZones,
   onApplyTemplate,
   onViewChange,
+  onOpenExecutionPlan,
   onOpenHistory,
   onOpenSettings,
   onSaveAsTemplate,
@@ -367,6 +370,11 @@ export function ZoneManager({
           </Button>
         </div>
       </div>
+
+      {/* Weekly Plan Bar */}
+      {onOpenExecutionPlan && (
+        <WeeklyPlanBar tasks={tasks} onDayClick={onOpenExecutionPlan} />
+      )}
 
       {/* Zone List */}
       <ScrollArea className="zone-list-scroll">

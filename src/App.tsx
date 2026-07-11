@@ -744,6 +744,10 @@ function App() {
                   setCurrentView(view);
                   if (view === 'global') setActiveZoneId(null);
                 }}
+                onOpenExecutionPlan={(date) => {
+                  setExecutionPlanDate(date);
+                  setCurrentView('executionPlan');
+                }}
                 onOpenHistory={() => setCurrentView('history')}
                 onOpenSettings={() => setCurrentView('settings')}
                 onSaveAsTemplate={saveCustomTemplate}
