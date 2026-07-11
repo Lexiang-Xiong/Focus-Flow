@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 import { TimeRuler } from './TimeRuler';
 import { TimeSpan } from './TimeSpan';
 import type { DailyPlanSpan, Task, Zone } from '@/types';
@@ -11,7 +12,10 @@ interface DailyPlanScheduleProps {
   spans: DailyPlanSpan[];
   tasks: Task[];
   zones: Zone[];
+  expanded: boolean;
+  onToggleExpanded: () => void;
   hourHeight?: number;
+  onHourHeightChange?: (value: number) => void;
   onToggleTask: (taskId: string) => void;
   onNavigateToZone: (zoneId: string, taskId?: string) => void;
   onRemoveTaskFromDailyPlan: (taskId: string, date: string) => void;
@@ -24,7 +28,10 @@ export function DailyPlanSchedule({
   spans,
   tasks,
   zones,
+  expanded,
+  onToggleExpanded,
   hourHeight = 48,
+  onHourHeightChange,
   onToggleTask,
   onNavigateToZone,
   onRemoveTaskFromDailyPlan,
@@ -76,53 +83,107 @@ export function DailyPlanSchedule({
     setDragCurrentY(null);
   };
 
+  const handleZoomOut = () => {
+    onHourHeightChange?.(Math.max(24, hourHeight - 8));
+  };
+
+  const handleZoomIn = () => {
+    onHourHeightChange?.(Math.min(96, hourHeight + 8));
+  };
+
   return (
-    <div className="flex-1 flex flex-col min-h-0">
+    <div className={`flex flex-col ${expanded ? 'flex-1 min-h-0' : 'shrink-0'}`}>
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
-        <span className="text-sm font-medium text-white/80">{t('view.schedule')}</span>
-        <Button size="sm" variant="outline" onClick={() => onOpenSpanDialog()}>
-          <Plus size={14} className="mr-1" />
-          {t('view.createSpan')}
-        </Button>
-      </div>
-
-      <div
-        ref={containerRef}
-        className="flex-1 overflow-y-auto relative select-none"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-      >
-        <TimeRuler hourHeight={hourHeight} className="absolute inset-0" />
-
-        <div className="absolute left-14 right-2" style={{ height: `${24 * hourHeight}px` }}>
-          {spans.map(span => (
-            <div key={span.id} data-span-area>
-              <TimeSpan
-                span={span}
-                tasks={tasks.filter(t => t.dailyPlanSpanIds?.[date] === span.id)}
-                zones={zones}
-                hourHeight={hourHeight}
-                onToggleTask={onToggleTask}
-                onNavigateToZone={onNavigateToZone}
-                onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
-                onDeleteSpan={onDeleteSpan}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-white/80">{t('view.schedule')}</span>
+          {expanded && (
+            <div className="flex items-center gap-1 ml-2">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 text-white/50 hover:text-white/80 hover:bg-white/10"
+                onClick={handleZoomOut}
+                title={t('common.zoomOut')}
+              >
+                <ZoomOut size={14} />
+              </Button>
+              <Slider
+                value={[hourHeight]}
+                min={24}
+                max={96}
+                step={8}
+                onValueChange={([v]) => onHourHeightChange?.(v)}
+                className="w-24"
               />
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 text-white/50 hover:text-white/80 hover:bg-white/10"
+                onClick={handleZoomIn}
+                title={t('common.zoomIn')}
+              >
+                <ZoomIn size={14} />
+              </Button>
             </div>
-          ))}
+          )}
         </div>
 
-        {isDraggingTime && dragStartY !== null && dragCurrentY !== null && (
-          <div
-            className="absolute left-14 right-2 bg-white/10 border border-white/30 rounded-md pointer-events-none"
-            style={{
-              top: `${Math.min(dragStartY, dragCurrentY)}px`,
-              height: `${Math.abs(dragCurrentY - dragStartY)}px`,
-            }}
-          />
-        )}
+        <div className="flex items-center gap-1">
+          <Button size="sm" variant="outline" onClick={() => onOpenSpanDialog()}>
+            <Plus size={14} className="mr-1" />
+            {t('view.createSpan')}
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6 text-white/50 hover:text-white/80 hover:bg-white/10"
+            onClick={onToggleExpanded}
+            title={expanded ? t('common.collapse') : t('common.expand')}
+          >
+            {expanded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+          </Button>
+        </div>
       </div>
+
+      {expanded && (
+        <div
+          ref={containerRef}
+          className="flex-1 overflow-y-auto relative select-none"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
+          <TimeRuler hourHeight={hourHeight} className="absolute inset-0" />
+
+          <div className="absolute left-14 right-2" style={{ height: `${24 * hourHeight}px` }}>
+            {spans.map(span => (
+              <div key={span.id} data-span-area>
+                <TimeSpan
+                  span={span}
+                  tasks={tasks.filter(t => t.dailyPlanSpanIds?.[date] === span.id)}
+                  zones={zones}
+                  hourHeight={hourHeight}
+                  onToggleTask={onToggleTask}
+                  onNavigateToZone={onNavigateToZone}
+                  onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
+                  onDeleteSpan={onDeleteSpan}
+                />
+              </div>
+            ))}
+          </div>
+
+          {isDraggingTime && dragStartY !== null && dragCurrentY !== null && (
+            <div
+              className="absolute left-14 right-2 bg-white/10 border border-white/30 rounded-md pointer-events-none"
+              style={{
+                top: `${Math.min(dragStartY, dragCurrentY)}px`,
+                height: `${Math.abs(dragCurrentY - dragStartY)}px`,
+              }}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }

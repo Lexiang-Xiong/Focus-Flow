@@ -67,7 +67,9 @@
     "copyData": "Copy Data",
     "exportAsFile": "Export as File",
     "unnamed": "Untitled",
-    "copySuffix": "(Copy)"
+    "copySuffix": "(Copy)",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out"
   },
   "settings": {
     "title": "Settings",

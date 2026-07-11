@@ -209,6 +209,9 @@ export function DailyPlanView({
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showSpanDialog, setShowSpanDialog] = useState(false);
   const [spanDialogInitial, setSpanDialogInitial] = useState<{ startHour?: number; endHour?: number }>({});
+  const [backlogExpanded, setBacklogExpanded] = useState(true);
+  const [scheduleExpanded, setScheduleExpanded] = useState(true);
+  const [hourHeight, setHourHeight] = useState(48);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -429,6 +432,8 @@ export function DailyPlanView({
               date={selectedDate}
               tasks={backlogTasks}
               zones={zones}
+              expanded={backlogExpanded}
+              onToggleExpanded={() => setBacklogExpanded(v => !v)}
               onToggleTask={onToggleTask}
               onNavigateToZone={onNavigateToZone}
               onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
@@ -439,6 +444,10 @@ export function DailyPlanView({
               spans={dateSpans}
               tasks={dailyTasks}
               zones={zones}
+              expanded={scheduleExpanded}
+              onToggleExpanded={() => setScheduleExpanded(v => !v)}
+              hourHeight={hourHeight}
+              onHourHeightChange={setHourHeight}
               onToggleTask={onToggleTask}
               onNavigateToZone={onNavigateToZone}
               onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}

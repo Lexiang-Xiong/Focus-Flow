@@ -67,7 +67,9 @@
     "copyData": "复制数据",
     "exportAsFile": "导出为文件",
     "unnamed": "未命名",
-    "copySuffix": "(副本)"
+    "copySuffix": "(副本)",
+    "zoomIn": "放大",
+    "zoomOut": "缩小"
   },
   "settings": {
     "title": "设置",

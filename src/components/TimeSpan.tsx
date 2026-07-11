@@ -57,12 +57,14 @@ export function TimeSpan({
   return (
     <div
       ref={setNodeRef}
-      className="absolute inset-x-0 rounded-md border px-2 py-1.5 flex flex-col gap-1 overflow-hidden"
+      className="absolute inset-x-0 rounded-md px-2 py-1 flex flex-col gap-1 overflow-hidden"
       style={{
         top: `${span.startHour * hourHeight}px`,
-        height: `${Math.max(duration * hourHeight - 4, 32)}px`,
-        backgroundColor: `${color}20`,
-        borderColor: `${color}80`,
+        height: `${Math.max(duration * hourHeight, 24)}px`,
+        backgroundColor: `${color}15`,
+        border: `1px solid ${color}80`,
+        borderLeftWidth: '3px',
+        borderLeftColor: color,
         boxShadow: isOver ? `0 0 0 2px ${color}` : undefined,
       }}
     >

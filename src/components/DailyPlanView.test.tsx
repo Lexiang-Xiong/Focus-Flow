@@ -145,4 +145,31 @@ describe('DailyPlanView', () => {
     await user.click(createBtn);
     expect(screen.getByRole('heading', { name: /view\.createSpan/i })).toBeInTheDocument();
   });
+
+  it('可收起和展开缓存区与日程区域', async () => {
+    const user = userEvent.setup();
+    renderDailyPlanView({
+      tasks: [makeTask('t1', 'z1', { plannedDates: ['2026-07-12'] })],
+    });
+
+    // 默认展开：缓存区任务和日程刻度都存在
+    expect(screen.getByText('t1')).toBeInTheDocument();
+    expect(screen.getByText('00:00')).toBeInTheDocument();
+
+    // 收起缓存区
+    const collapseBacklog = screen.getAllByTitle('common.collapse')[0];
+    await user.click(collapseBacklog);
+    expect(screen.queryByText('t1')).not.toBeInTheDocument();
+    expect(screen.getByText('00:00')).toBeInTheDocument();
+
+    // 收起日程
+    const collapseSchedule = screen.getAllByTitle('common.collapse')[0];
+    await user.click(collapseSchedule);
+    expect(screen.queryByText('00:00')).not.toBeInTheDocument();
+
+    // 展开缓存区
+    const expandBacklog = screen.getAllByTitle('common.expand')[0];
+    await user.click(expandBacklog);
+    expect(screen.getByText('t1')).toBeInTheDocument();
+  });
 });
