@@ -11,6 +11,7 @@ interface DailyPlanBacklogProps {
   tasks: Task[];
   zones: Zone[];
   expanded: boolean;
+  style?: React.CSSProperties;
   onToggleExpanded: () => void;
   onToggleTask: (taskId: string) => void;
   onNavigateToZone: (zoneId: string, taskId?: string) => void;
@@ -26,6 +27,7 @@ export function DailyPlanBacklog({
   tasks,
   zones,
   expanded,
+  style,
   onToggleExpanded,
   onToggleTask,
   onNavigateToZone,
@@ -37,9 +39,10 @@ export function DailyPlanBacklog({
   return (
     <div
       ref={setNodeRef}
-      className={`shrink-0 border-b border-white/10 bg-black/10 transition-all ${
+      style={style}
+      className={`shrink-0 border-b border-white/10 bg-black/10 transition-all flex flex-col ${
         isOver ? 'bg-white/5' : ''
-      } ${expanded ? 'flex-grow min-h-[120px] max-h-[70%]' : ''}`}
+      }`}
     >
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
         <span className="text-sm font-medium text-white/80">

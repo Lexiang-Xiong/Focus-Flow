@@ -13,6 +13,7 @@ interface DailyPlanScheduleProps {
   tasks: Task[];
   zones: Zone[];
   expanded: boolean;
+  style?: React.CSSProperties;
   onToggleExpanded: () => void;
   hourHeight?: number;
   onHourHeightChange?: (value: number) => void;
@@ -29,6 +30,7 @@ export function DailyPlanSchedule({
   tasks,
   zones,
   expanded,
+  style,
   onToggleExpanded,
   hourHeight = 48,
   onHourHeightChange,
@@ -92,7 +94,7 @@ export function DailyPlanSchedule({
   };
 
   return (
-    <div className={`flex flex-col ${expanded ? 'flex-1 min-h-0' : 'shrink-0 mt-auto'}`}>
+    <div className="shrink-0 flex flex-col" style={style}>
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-white/80">{t('view.schedule')}</span>

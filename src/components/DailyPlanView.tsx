@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, CalendarDays, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -212,6 +212,108 @@ export function DailyPlanView({
   const [backlogExpanded, setBacklogExpanded] = useState(true);
   const [scheduleExpanded, setScheduleExpanded] = useState(true);
   const [hourHeight, setHourHeight] = useState(48);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerHeight, setContainerHeight] = useState(0);
+  const [splitRatio, setSplitRatio] = useState(0.5);
+  const [isDraggingSplitter, setIsDraggingSplitter] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setContainerHeight(entry.contentRect.height);
+    });
+    observer.observe(el);
+    setContainerHeight(el.getBoundingClientRect().height);
+    return () => observer.disconnect();
+  }, []);
+
+  const TITLE_HEIGHT = 40;
+  const SPLITTER_HEIGHT = 4;
+  const MIN_CONTENT_HEIGHT = 60;
+
+  const panelHeights = useMemo(() => {
+    const h = containerHeight;
+    if (h <= 0) return { backlog: undefined, schedule: undefined };
+
+    if (!backlogExpanded && !scheduleExpanded) {
+      const half = Math.max(TITLE_HEIGHT, (h - SPLITTER_HEIGHT) / 2);
+      return { backlog: half, schedule: half };
+    }
+    if (backlogExpanded && !scheduleExpanded) {
+      return {
+        backlog: Math.max(TITLE_HEIGHT + MIN_CONTENT_HEIGHT, h - SPLITTER_HEIGHT - TITLE_HEIGHT),
+        schedule: TITLE_HEIGHT,
+      };
+    }
+    if (!backlogExpanded && scheduleExpanded) {
+      return {
+        backlog: TITLE_HEIGHT,
+        schedule: Math.max(TITLE_HEIGHT + MIN_CONTENT_HEIGHT, h - SPLITTER_HEIGHT - TITLE_HEIGHT),
+      };
+    }
+
+    const available = h - 2 * TITLE_HEIGHT - SPLITTER_HEIGHT;
+    if (available < 2 * MIN_CONTENT_HEIGHT) {
+      const half = Math.max(MIN_CONTENT_HEIGHT, available / 2);
+      return {
+        backlog: TITLE_HEIGHT + half,
+        schedule: TITLE_HEIGHT + half,
+      };
+    }
+    const backlogContent = Math.max(
+      MIN_CONTENT_HEIGHT,
+      Math.min(available - MIN_CONTENT_HEIGHT, available * splitRatio)
+    );
+    return {
+      backlog: TITLE_HEIGHT + backlogContent,
+      schedule: h - TITLE_HEIGHT - backlogContent - SPLITTER_HEIGHT,
+    };
+  }, [containerHeight, backlogExpanded, scheduleExpanded, splitRatio]);
+
+  const handleToggleBacklog = () => {
+    setBacklogExpanded(prev => {
+      if (!prev) return true;
+      if (!scheduleExpanded) setScheduleExpanded(true);
+      return false;
+    });
+  };
+
+  const handleToggleSchedule = () => {
+    setScheduleExpanded(prev => {
+      if (!prev) return true;
+      if (!backlogExpanded) setBacklogExpanded(true);
+      return false;
+    });
+  };
+
+  const handleSplitterMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!backlogExpanded || !scheduleExpanded) return;
+    setIsDraggingSplitter(true);
+    const container = containerRef.current;
+    if (!container) return;
+    const startY = e.clientY;
+    const startRatio = splitRatio;
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      const rect = container.getBoundingClientRect();
+      const available = rect.height - 2 * TITLE_HEIGHT - SPLITTER_HEIGHT;
+      const deltaY = ev.clientY - startY;
+      const nextRatio = startRatio + deltaY / available;
+      setSplitRatio(Math.max(0.15, Math.min(0.85, nextRatio)));
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingSplitter(false);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -427,17 +529,30 @@ export function DailyPlanView({
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex flex-col h-full">
+          <div ref={containerRef} className="flex flex-col h-full overflow-hidden">
             <DailyPlanBacklog
               date={selectedDate}
               tasks={backlogTasks}
               zones={zones}
               expanded={backlogExpanded}
-              onToggleExpanded={() => setBacklogExpanded(v => !v)}
+              style={{ height: panelHeights.backlog }}
+              onToggleExpanded={handleToggleBacklog}
               onToggleTask={onToggleTask}
               onNavigateToZone={onNavigateToZone}
               onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
             />
+
+            {backlogExpanded && scheduleExpanded && (
+              <div
+                role="separator"
+                aria-orientation="horizontal"
+                onMouseDown={handleSplitterMouseDown}
+                className={`shrink-0 w-full bg-white/10 hover:bg-white/30 transition-colors ${
+                  isDraggingSplitter ? 'bg-white/40' : ''
+                }`}
+                style={{ height: SPLITTER_HEIGHT, cursor: 'row-resize' }}
+              />
+            )}
 
             <DailyPlanSchedule
               date={selectedDate}
@@ -445,7 +560,8 @@ export function DailyPlanView({
               tasks={dailyTasks}
               zones={zones}
               expanded={scheduleExpanded}
-              onToggleExpanded={() => setScheduleExpanded(v => !v)}
+              style={{ height: panelHeights.schedule }}
+              onToggleExpanded={handleToggleSchedule}
               hourHeight={hourHeight}
               onHourHeightChange={setHourHeight}
               onToggleTask={onToggleTask}
