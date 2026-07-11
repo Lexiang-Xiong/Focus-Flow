@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -16,7 +17,7 @@ interface SpanFormDialogProps {
   onOpenChange: (open: boolean) => void;
   initialStartHour?: number;
   initialEndHour?: number;
-  onSubmit: (startHour: number, endHour: number) => void;
+  onSubmit: (startHour: number, endHour: number, description?: string) => void;
 }
 
 const HOUR_OPTIONS = Array.from({ length: 49 }, (_, i) => i * 0.5);
@@ -37,6 +38,7 @@ export function SpanFormDialog({
   const { t } = useTranslation();
   const [startHour, setStartHour] = useState<number>(initialStartHour ?? 9);
   const [endHour, setEndHour] = useState<number>(initialEndHour ?? 10);
+  const [description, setDescription] = useState('');
 
   const error = useMemo(() => {
     if (startHour >= endHour) return t('view.spanStartBeforeEnd');
@@ -45,7 +47,8 @@ export function SpanFormDialog({
 
   const handleSubmit = () => {
     if (error) return;
-    onSubmit(startHour, endHour);
+    onSubmit(startHour, endHour, description.trim() || undefined);
+    setDescription('');
     onOpenChange(false);
   };
 
@@ -88,6 +91,16 @@ export function SpanFormDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-white/70">{t('view.spanDescription')}</Label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder={t('view.spanDescriptionPlaceholder')}
+              className="bg-black/30 border-white/20 text-white placeholder:text-white/30 resize-none min-h-[72px]"
+            />
           </div>
 
           {error && <div className="text-sm text-red-400">{error}</div>}

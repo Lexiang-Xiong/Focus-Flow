@@ -8,7 +8,8 @@ import { DatePickerPopover } from './DatePickerPopover';
 import { SpanFormDialog } from './SpanFormDialog';
 import { DailyPlanBacklog } from './DailyPlanBacklog';
 import { DailyPlanSchedule } from './DailyPlanSchedule';
-import type { PlanGroup, Task, Zone } from '@/types';
+import { DailyPlanSpanFocus } from './DailyPlanSpanFocus';
+import type { PlanGroup, Task, Zone, DailyPlanSpan } from '@/types';
 import { isDateInPlanGroupRange } from '@/store/slices/executionPlanSlice';
 import {
   DndContext,
@@ -33,11 +34,12 @@ interface DailyPlanViewProps {
   onAddTasksToDailyPlan: (taskIds: string[], date: string) => void;
   onSetDailyPlanOrder: (taskId: string, date: string, order: number) => void;
   onMoveTaskToSpan: (taskId: string, date: string, spanId: string, order?: number) => void;
-  onMoveTaskOutOfSpan: (taskId: string, date: string) => void;
-  onSetDailyPlanSpanOrder: (taskId: string, spanId: string, order: number) => void;
-  onCreateSpan: (date: string, startHour: number, endHour: number) => string | null;
+  onMoveTaskOutOfSpan: (taskId: string, date: string, spanId: string) => void;
+  onSetDailyPlanSpanOrder: (taskId: string, date: string, spanId: string, order: number) => void;
+  onCreateSpan: (date: string, startHour: number, endHour: number, description?: string) => string | null;
+  onUpdateSpan: (spanId: string, updates: Partial<Omit<DailyPlanSpan, 'id'>>) => boolean;
   onDeleteSpan: (spanId: string) => void;
-  spans: { id: string; date: string; startHour: number; endHour: number; createdAt: number }[];
+  spans: DailyPlanSpan[];
 }
 
 function getZoneById(zones: Zone[], zoneId: string): Zone | undefined {
@@ -202,6 +204,7 @@ export function DailyPlanView({
   onMoveTaskOutOfSpan,
   onSetDailyPlanSpanOrder,
   onCreateSpan,
+  onUpdateSpan,
   onDeleteSpan,
   spans,
 }: DailyPlanViewProps) {
@@ -210,8 +213,9 @@ export function DailyPlanView({
   const [showSpanDialog, setShowSpanDialog] = useState(false);
   const [spanDialogInitial, setSpanDialogInitial] = useState<{ startHour?: number; endHour?: number }>({});
   const [backlogExpanded, setBacklogExpanded] = useState(true);
-  const [scheduleExpanded, setScheduleExpanded] = useState(true);
+  const [scheduleExpanded, setScheduleExpanded] = useState(false);
   const [hourHeight, setHourHeight] = useState(48);
+  const [focusedSpanId, setFocusedSpanId] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(0);
@@ -331,7 +335,6 @@ export function DailyPlanView({
 
   const backlogTasks = useMemo(
     () => dailyTasks
-      .filter(t => !t.dailyPlanSpanIds?.[selectedDate])
       .sort((a, b) => (a.dailyPlanOrder?.[selectedDate] ?? Infinity) - (b.dailyPlanOrder?.[selectedDate] ?? Infinity)),
     [dailyTasks, selectedDate]
   );
@@ -343,18 +346,18 @@ export function DailyPlanView({
     [spans, selectedDate]
   );
 
-  const getTaskLocation = (taskId: string): { type: 'backlog' | 'span'; spanId?: string } => {
+  const getTaskLocation = (taskId: string): { type: 'backlog' | 'span'; spanIds: string[] } => {
     const task = dailyTasks.find(t => t.id === taskId);
-    if (!task) return { type: 'backlog' };
-    const spanId = task.dailyPlanSpanIds?.[selectedDate];
-    return spanId ? { type: 'span', spanId } : { type: 'backlog' };
+    if (!task) return { type: 'backlog', spanIds: [] };
+    const spanIds = task.dailyPlanSpanIds?.[selectedDate] || [];
+    return spanIds.length > 0 ? { type: 'span', spanIds } : { type: 'backlog', spanIds: [] };
   };
 
   const getTaskListForReorder = (spanId?: string): Task[] => {
     if (!spanId) return backlogTasks;
     return dailyTasks
-      .filter(t => t.dailyPlanSpanIds?.[selectedDate] === spanId)
-      .sort((a, b) => (a.dailyPlanSpanOrder?.[spanId] ?? Infinity) - (b.dailyPlanSpanOrder?.[spanId] ?? Infinity));
+      .filter(t => t.dailyPlanSpanIds?.[selectedDate]?.includes(spanId))
+      .sort((a, b) => (a.dailyPlanSpanOrder?.[selectedDate]?.[spanId] ?? Infinity) - (b.dailyPlanSpanOrder?.[selectedDate]?.[spanId] ?? Infinity));
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -364,31 +367,38 @@ export function DailyPlanView({
     const activeId = String(active.id);
     const overId = String(over.id);
     const activeLocation = getTaskLocation(activeId);
-
-    // 1. 拖到缓存区 drop target
-    if (overId === 'daily-plan-backlog') {
-      if (activeLocation.type === 'span' && activeLocation.spanId) {
-        onMoveTaskOutOfSpan(activeId, selectedDate);
-      }
-      return;
-    }
-
-    // 2. 拖到 span drop target
-    if (overId.startsWith('span-')) {
-      const spanId = overId.replace('span-', '');
-      if (activeLocation.type === 'backlog') {
-        onMoveTaskToSpan(activeId, selectedDate, spanId);
-      } else if (activeLocation.type === 'span' && activeLocation.spanId !== spanId) {
-        onMoveTaskToSpan(activeId, selectedDate, spanId);
-      }
-      return;
-    }
-
-    // 3. over 是某个任务
     const overLocation = getTaskLocation(overId);
 
-    // 3a. 都在缓存区：排序
-    if (activeLocation.type === 'backlog' && overLocation.type === 'backlog') {
+    // 1. 拖到单日任务栏 drop target：从所有 span 中移除（保留在单日计划中）
+    if (overId === 'daily-plan-backlog') {
+      activeLocation.spanIds.forEach(spanId => {
+        onMoveTaskOutOfSpan(activeId, selectedDate, spanId);
+      });
+      return;
+    }
+
+    // 2. 拖到 span drop target（日程中的 TimeSpan）
+    if (overId.startsWith('span-') && !overId.startsWith('span-focus-')) {
+      const spanId = overId.replace('span-', '');
+      if (!activeLocation.spanIds.includes(spanId)) {
+        onMoveTaskToSpan(activeId, selectedDate, spanId);
+      }
+      return;
+    }
+
+    // 3. 拖到 Focus 子页面的 span drop target
+    if (overId.startsWith('span-focus-')) {
+      const spanId = overId.replace('span-focus-', '');
+      if (!activeLocation.spanIds.includes(spanId)) {
+        onMoveTaskToSpan(activeId, selectedDate, spanId);
+      }
+      return;
+    }
+
+    // 4. over 是某个任务
+
+    // 4a. 都在单日任务栏：排序
+    if (activeLocation.spanIds.length === 0 && overLocation.spanIds.length === 0) {
       const oldIndex = backlogTasks.findIndex(t => t.id === activeId);
       const newIndex = backlogTasks.findIndex(t => t.id === overId);
       if (oldIndex === -1 || newIndex === -1) return;
@@ -402,15 +412,16 @@ export function DailyPlanView({
       return;
     }
 
-    // 3b. active 在 span，over 在缓存区：移出
-    if (activeLocation.type === 'span' && overLocation.type === 'backlog') {
-      onMoveTaskOutOfSpan(activeId, selectedDate);
+    // 4b. active 在 span，over 在单日任务栏：从 active 所在 span 中移除
+    if (activeLocation.spanIds.length > 0 && overLocation.spanIds.length === 0) {
+      // 当任务同时在多个 span 时，简单起见只移除其第一个 span
+      onMoveTaskOutOfSpan(activeId, selectedDate, activeLocation.spanIds[0]);
       return;
     }
 
-    // 3c. active 在缓存区，over 在 span：移入
-    if (activeLocation.type === 'backlog' && overLocation.type === 'span' && overLocation.spanId) {
-      const targetSpanId = overLocation.spanId;
+    // 4c. active 在单日任务栏，over 在 span：移入该 span
+    if (activeLocation.spanIds.length === 0 && overLocation.spanIds.length > 0) {
+      const targetSpanId = overLocation.spanIds[0];
       const spanTasks = getTaskListForReorder(targetSpanId);
       const newIndex = spanTasks.findIndex(t => t.id === overId);
       const order = newIndex >= 0 ? newIndex + 1 : spanTasks.length + 1;
@@ -418,34 +429,26 @@ export function DailyPlanView({
       return;
     }
 
-    // 3d. 都在同一个 span：内部排序
-    if (
-      activeLocation.type === 'span' &&
-      overLocation.type === 'span' &&
-      activeLocation.spanId === overLocation.spanId
-    ) {
-      const spanId = activeLocation.spanId!;
-      const spanTasks = getTaskListForReorder(spanId);
+    // 4d. 都在同一个 span：内部排序
+    const sharedSpanId = activeLocation.spanIds.find(id => overLocation.spanIds.includes(id));
+    if (sharedSpanId) {
+      const spanTasks = getTaskListForReorder(sharedSpanId);
       const oldIndex = spanTasks.findIndex(t => t.id === activeId);
       const newIndex = spanTasks.findIndex(t => t.id === overId);
       if (oldIndex === -1 || newIndex === -1) return;
       const reordered = arrayMove(spanTasks, oldIndex, newIndex);
       reordered.forEach((task, index) => {
         const order = index + 1;
-        if (task.dailyPlanSpanOrder?.[spanId] !== order) {
-          onSetDailyPlanSpanOrder(task.id, spanId, order);
+        if (task.dailyPlanSpanOrder?.[selectedDate]?.[sharedSpanId] !== order) {
+          onSetDailyPlanSpanOrder(task.id, selectedDate, sharedSpanId, order);
         }
       });
       return;
     }
 
-    // 3e. active 在 span A，over 在 span B：移入 B 并排序
-    if (
-      activeLocation.type === 'span' &&
-      overLocation.type === 'span' &&
-      activeLocation.spanId !== overLocation.spanId
-    ) {
-      const targetSpanId = overLocation.spanId!;
+    // 4e. active 在 span A，over 在 span B：移入 B 并排序
+    if (activeLocation.spanIds.length > 0 && overLocation.spanIds.length > 0) {
+      const targetSpanId = overLocation.spanIds[0];
       const spanTasks = getTaskListForReorder(targetSpanId);
       const newIndex = spanTasks.findIndex(t => t.id === overId);
       const order = newIndex >= 0 ? newIndex + 1 : spanTasks.length + 1;
@@ -458,9 +461,14 @@ export function DailyPlanView({
     setShowSpanDialog(true);
   };
 
-  const handleCreateSpan = (startHour: number, endHour: number) => {
-    onCreateSpan(selectedDate, startHour, endHour);
+  const handleCreateSpan = (startHour: number, endHour: number, description?: string) => {
+    onCreateSpan(selectedDate, startHour, endHour, description);
   };
+
+  const focusedSpan = useMemo(
+    () => dateSpans.find(s => s.id === focusedSpanId) || null,
+    [dateSpans, focusedSpanId]
+  );
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
@@ -554,22 +562,38 @@ export function DailyPlanView({
               />
             )}
 
-            <DailyPlanSchedule
-              date={selectedDate}
-              spans={dateSpans}
-              tasks={dailyTasks}
-              zones={zones}
-              expanded={scheduleExpanded}
-              style={{ height: panelHeights.schedule }}
-              onToggleExpanded={handleToggleSchedule}
-              hourHeight={hourHeight}
-              onHourHeightChange={setHourHeight}
-              onToggleTask={onToggleTask}
-              onNavigateToZone={onNavigateToZone}
-              onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
-              onDeleteSpan={onDeleteSpan}
-              onOpenSpanDialog={handleOpenSpanDialog}
-            />
+            {focusedSpan ? (
+              <DailyPlanSpanFocus
+                span={focusedSpan}
+                tasks={dailyTasks}
+                zones={zones}
+                onBack={() => setFocusedSpanId(null)}
+                onToggleTask={onToggleTask}
+                onNavigateToZone={onNavigateToZone}
+                onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
+                onMoveTaskOutOfSpan={onMoveTaskOutOfSpan}
+                onUpdateSpan={onUpdateSpan}
+                onDeleteSpan={(spanId) => {
+                  onDeleteSpan(spanId);
+                  setFocusedSpanId(null);
+                }}
+              />
+            ) : (
+              <DailyPlanSchedule
+                date={selectedDate}
+                spans={dateSpans}
+                tasks={dailyTasks}
+                expanded={scheduleExpanded}
+                style={{ height: panelHeights.schedule }}
+                onToggleExpanded={handleToggleSchedule}
+                hourHeight={hourHeight}
+                onHourHeightChange={setHourHeight}
+                onDeleteSpan={onDeleteSpan}
+                onUpdateSpan={onUpdateSpan}
+                onEnterFocus={setFocusedSpanId}
+                onOpenSpanDialog={handleOpenSpanDialog}
+              />
+            )}
           </div>
         </DndContext>
       )}

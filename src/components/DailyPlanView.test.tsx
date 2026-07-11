@@ -61,6 +61,7 @@ function renderDailyPlanView(props: Partial<React.ComponentProps<typeof DailyPla
       onMoveTaskOutOfSpan={noop}
       onSetDailyPlanSpanOrder={noop}
       onCreateSpan={noop}
+      onUpdateSpan={noop}
       onDeleteSpan={noop}
       spans={[]}
       {...props}
@@ -118,20 +119,20 @@ describe('DailyPlanView', () => {
     expect(items[1]).toHaveTextContent('t1');
   });
 
-  it('属于 span 的任务不显示在缓存区', () => {
+  it('属于 span 的任务仍显示在单日任务栏', () => {
     renderDailyPlanView({
       tasks: [
         makeTask('t1', 'z1', {
           plannedDates: ['2026-07-12'],
-          dailyPlanSpanIds: { '2026-07-12': 's1' },
+          dailyPlanSpanIds: { '2026-07-12': ['s1'] },
         }),
         makeTask('t2', 'z1', { plannedDates: ['2026-07-12'] }),
       ],
       spans: [makeSpan('s1', '2026-07-12', 9, 11)],
     });
-    expect(screen.getByText((content) => content.includes('view.backlog'))).toBeInTheDocument();
+    expect(screen.getByText((content) => content.includes('view.dailyTasks'))).toBeInTheDocument();
+    expect(screen.getByText('t1')).toBeInTheDocument();
     expect(screen.getByText('t2')).toBeInTheDocument();
-    expect(screen.queryAllByText('t1').length).toBeGreaterThan(0);
   });
 
   it('点击创建时间块按钮打开弹窗', async () => {
@@ -146,28 +147,32 @@ describe('DailyPlanView', () => {
     expect(screen.getByRole('heading', { name: /view\.createSpan/i })).toBeInTheDocument();
   });
 
-  it('可收起和展开缓存区与日程区域', async () => {
+  it('可收起和展开单日任务栏与日程区域，日程默认收起', async () => {
     const user = userEvent.setup();
     renderDailyPlanView({
       tasks: [makeTask('t1', 'z1', { plannedDates: ['2026-07-12'] })],
     });
 
-    // 默认展开：缓存区任务和日程刻度都存在
+    // 默认：单日任务栏展开，日程收起
     expect(screen.getByText('t1')).toBeInTheDocument();
+    expect(screen.queryByText('00:00')).not.toBeInTheDocument();
+
+    // 展开日程
+    const expandSchedule = screen.getAllByTitle('common.expand')[0];
+    await user.click(expandSchedule);
     expect(screen.getByText('00:00')).toBeInTheDocument();
 
-    // 收起缓存区
+    // 收起日程（此时有两个 collapse 按钮，取最后一个即日程的）
+    const collapseSchedule = screen.getAllByTitle('common.collapse').at(-1);
+    await user.click(collapseSchedule!);
+    expect(screen.queryByText('00:00')).not.toBeInTheDocument();
+
+    // 收起单日任务栏
     const collapseBacklog = screen.getAllByTitle('common.collapse')[0];
     await user.click(collapseBacklog);
     expect(screen.queryByText('t1')).not.toBeInTheDocument();
-    expect(screen.getByText('00:00')).toBeInTheDocument();
 
-    // 收起日程
-    const collapseSchedule = screen.getAllByTitle('common.collapse')[0];
-    await user.click(collapseSchedule);
-    expect(screen.queryByText('00:00')).not.toBeInTheDocument();
-
-    // 展开缓存区
+    // 展开单日任务栏
     const expandBacklog = screen.getAllByTitle('common.expand')[0];
     await user.click(expandBacklog);
     expect(screen.getByText('t1')).toBeInTheDocument();

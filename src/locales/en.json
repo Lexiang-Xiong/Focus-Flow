@@ -184,6 +184,7 @@
     "plannedDates": "Planned Dates",
     "planGroups": "Plan Groups",
     "removeFromPlan": "Remove from Plan",
+    "removeFromSpan": "Remove from this span",
     "dragToSort": "Drag to sort"
   },
   "zone": {
@@ -278,6 +279,8 @@
     "noPlanGroups": "No plan groups",
     "noTasksForDate": "No tasks for this date",
     "backlog": "Backlog",
+    "dailyTasks": "Daily Tasks",
+    "noDailyTasks": "No daily tasks",
     "noBacklogTasks": "No unscheduled tasks",
     "schedule": "Schedule",
     "createSpan": "Create Time Span",
@@ -285,6 +288,11 @@
     "startTime": "Start Time",
     "endTime": "End Time",
     "spanStartBeforeEnd": "End time must be after start time",
+    "spanDescription": "Span Note",
+    "spanDescriptionPlaceholder": "Enter a note or goal for this span...",
+    "spanTasks": "Span Tasks",
+    "spanTaskCount": "{{count}} tasks",
+    "dragTasksHere": "Drag tasks here to add to this span",
     "overlappingSpan": "Overlaps with an existing time span",
     "planGroupName": "Plan Group Name",
     "startDate": "Start Date",

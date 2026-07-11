@@ -41,8 +41,8 @@ export interface Task {
   plannedDates?: string[]; // 被分配到的单日计划日期（YYYY-MM-DD）
   planGroupIds?: string[]; // 所属计划组 id 列表
   dailyPlanOrder?: Record<string, number>; // 各日期在执行计划缓存区中的排序（仅影响执行计划视图）
-  dailyPlanSpanIds?: Record<string, string>; // date -> spanId，任务被拖入的时间块
-  dailyPlanSpanOrder?: Record<string, number>; // spanId -> order，时间块内部排序
+  dailyPlanSpanIds?: Record<string, string[]>; // date -> spanId[]，任务被拖入的时间块（可同时属于多个 span）
+  dailyPlanSpanOrder?: Record<string, Record<string, number>>; // date -> { spanId: order }，时间块内部排序
 }
 
 // 定时任务模板
@@ -94,6 +94,7 @@ export interface DailyPlanSpan {
   date: string;        // ISO 日期 YYYY-MM-DD
   startHour: number;   // 0.0 - 24.0，支持 0.5 粒度
   endHour: number;     // > startHour，最大 24.0
+  description?: string; // 时间块描述/备注
   createdAt: number;
 }
 

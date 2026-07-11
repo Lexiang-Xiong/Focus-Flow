@@ -15,6 +15,54 @@ import { DEFAULT_SETTINGS } from '@/types';
 
 export type AppStore = UISlice & ZoneSlice & TaskSlice & HistorySlice & SettingsSlice & UndoSlice & ExecutionPlanSlice;
 
+// 迁移旧版任务的 dailyPlanSpanIds / dailyPlanSpanOrder 字段
+// v1: dailyPlanSpanIds: Record<date, string>; dailyPlanSpanOrder: Record<spanId, number>
+// v2: dailyPlanSpanIds: Record<date, string[]>; dailyPlanSpanOrder: Record<date, Record<spanId, number>>
+function migrateTaskSpanFields(task: Record<string, unknown>): Record<string, unknown> {
+  if (!task.dailyPlanSpanIds && !task.dailyPlanSpanOrder) return task;
+
+  const newTask = { ...task };
+  const spanIdsValues = Object.values(task.dailyPlanSpanIds || {});
+
+  // 旧版是 string -> 新版是 string[]
+  if (
+    task.dailyPlanSpanIds &&
+    spanIdsValues.length > 0 &&
+    typeof spanIdsValues[0] === 'string'
+  ) {
+    const oldSpanIds = task.dailyPlanSpanIds as Record<string, string>;
+    const newSpanIds: Record<string, string[]> = {};
+    for (const [date, spanId] of Object.entries(oldSpanIds)) {
+      newSpanIds[date] = [spanId];
+    }
+    newTask.dailyPlanSpanIds = newSpanIds;
+  }
+
+  const spanOrderValues = Object.values(task.dailyPlanSpanOrder || {});
+  // 旧版是 number -> 新版是 Record<string, number>
+  if (
+    task.dailyPlanSpanOrder &&
+    spanOrderValues.length > 0 &&
+    typeof spanOrderValues[0] === 'number'
+  ) {
+    const oldSpanOrder = task.dailyPlanSpanOrder as Record<string, number>;
+    const newSpanOrder: Record<string, Record<string, number>> = {};
+    const migratedSpanIds = (newTask.dailyPlanSpanIds || task.dailyPlanSpanIds) as Record<string, string[]> | undefined;
+    if (migratedSpanIds) {
+      for (const [date, spanIds] of Object.entries(migratedSpanIds)) {
+        for (const spanId of spanIds) {
+          if (oldSpanOrder[spanId] !== undefined) {
+            newSpanOrder[date] = { ...(newSpanOrder[date] || {}), [spanId]: oldSpanOrder[spanId] };
+          }
+        }
+      }
+    }
+    newTask.dailyPlanSpanOrder = newSpanOrder;
+  }
+
+  return newTask;
+}
+
 // 合并函数：确保新添加的设置字段使用默认值
 // 关键：将 persistedState 定义为 unknown 匹配 Zustand 内部签名
 const mergeSettings = (persistedState: unknown, currentState: AppStore): AppStore => {
@@ -35,7 +83,7 @@ const mergeSettings = (persistedState: unknown, currentState: AppStore): AppStor
   const planGroups = persisted.planGroups || stateNested?.planGroups;
   const dailyPlanSpans = persisted.dailyPlanSpans || stateNested?.dailyPlanSpans;
 
-  const tasksArr = (tasks as unknown[]) ||[];
+  const tasksArr = ((tasks as unknown[]) || []).map(t => migrateTaskSpanFields(t as Record<string, unknown>));
   const zonesArr = (zones as unknown[]) || [];
   const planGroupsArr = (planGroups as unknown[]) || [];
   const dailyPlanSpansArr = (dailyPlanSpans as unknown[]) || [];

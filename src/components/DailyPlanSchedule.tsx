@@ -5,22 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { TimeRuler } from './TimeRuler';
 import { TimeSpan } from './TimeSpan';
-import type { DailyPlanSpan, Task, Zone } from '@/types';
+import type { DailyPlanSpan, Task } from '@/types';
 
 interface DailyPlanScheduleProps {
   date: string;
   spans: DailyPlanSpan[];
   tasks: Task[];
-  zones: Zone[];
   expanded: boolean;
   style?: React.CSSProperties;
   onToggleExpanded: () => void;
   hourHeight?: number;
   onHourHeightChange?: (value: number) => void;
-  onToggleTask: (taskId: string) => void;
-  onNavigateToZone: (zoneId: string, taskId?: string) => void;
-  onRemoveTaskFromDailyPlan: (taskId: string, date: string) => void;
   onDeleteSpan: (spanId: string) => void;
+  onUpdateSpan: (spanId: string, updates: Partial<Omit<DailyPlanSpan, 'id'>>) => boolean;
+  onEnterFocus: (spanId: string) => void;
   onOpenSpanDialog: (startHour?: number, endHour?: number) => void;
 }
 
@@ -28,16 +26,14 @@ export function DailyPlanSchedule({
   date,
   spans,
   tasks,
-  zones,
   expanded,
   style,
   onToggleExpanded,
   hourHeight = 48,
   onHourHeightChange,
-  onToggleTask,
-  onNavigateToZone,
-  onRemoveTaskFromDailyPlan,
   onDeleteSpan,
+  onUpdateSpan,
+  onEnterFocus,
   onOpenSpanDialog,
 }: DailyPlanScheduleProps) {
   const { t } = useTranslation();
@@ -45,6 +41,7 @@ export function DailyPlanSchedule({
   const [isDraggingTime, setIsDraggingTime] = useState(false);
   const [dragStartY, setDragStartY] = useState<number | null>(null);
   const [dragCurrentY, setDragCurrentY] = useState<number | null>(null);
+  const [highlightedHours, setHighlightedHours] = useState<number[]>([]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).closest('[data-span-area]')) return;
@@ -156,20 +153,26 @@ export function DailyPlanSchedule({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
-          <TimeRuler hourHeight={hourHeight} className="absolute left-0 right-0 top-0" />
+          <TimeRuler
+            hourHeight={hourHeight}
+            highlightedHours={highlightedHours}
+            className="absolute left-0 right-0 top-0"
+          />
 
           <div className="absolute left-12 right-2 top-0" style={{ height: `${24 * hourHeight}px` }}>
             {spans.map(span => (
               <div key={span.id} data-span-area>
                 <TimeSpan
                   span={span}
-                  tasks={tasks.filter(t => t.dailyPlanSpanIds?.[date] === span.id)}
-                  zones={zones}
+                  spans={spans}
+                  tasks={tasks.filter(t => t.dailyPlanSpanIds?.[date]?.includes(span.id))}
                   hourHeight={hourHeight}
-                  onToggleTask={onToggleTask}
-                  onNavigateToZone={onNavigateToZone}
-                  onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
+                  containerRef={containerRef}
+                  highlightedHours={highlightedHours}
+                  onHighlightHoursChange={setHighlightedHours}
                   onDeleteSpan={onDeleteSpan}
+                  onUpdateSpan={onUpdateSpan}
+                  onEnterFocus={onEnterFocus}
                 />
               </div>
             ))}

@@ -1,0 +1,154 @@
+import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ArrowLeft, X, Clock, FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableTaskItem } from './SortableTaskItem';
+import type { DailyPlanSpan, Task, Zone } from '@/types';
+
+interface DailyPlanSpanFocusProps {
+  span: DailyPlanSpan;
+  tasks: Task[];
+  zones: Zone[];
+  onBack: () => void;
+  onToggleTask: (taskId: string) => void;
+  onNavigateToZone: (zoneId: string, taskId?: string) => void;
+  onRemoveTaskFromDailyPlan: (taskId: string, date: string) => void;
+  onMoveTaskOutOfSpan: (taskId: string, date: string, spanId: string) => void;
+  onUpdateSpan: (spanId: string, updates: Partial<Omit<DailyPlanSpan, 'id'>>) => boolean;
+  onDeleteSpan: (spanId: string) => void;
+}
+
+function formatHour(hour: number): string {
+  const h = Math.floor(hour);
+  const m = Math.round((hour - h) * 60);
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+function getZoneById(zones: Zone[], zoneId: string): Zone | undefined {
+  return zones.find(z => z.id === zoneId);
+}
+
+export function DailyPlanSpanFocus({
+  span,
+  tasks,
+  zones,
+  onBack,
+  onToggleTask,
+  onNavigateToZone,
+  onRemoveTaskFromDailyPlan,
+  onMoveTaskOutOfSpan,
+  onUpdateSpan,
+  onDeleteSpan,
+}: DailyPlanSpanFocusProps) {
+  const { t } = useTranslation();
+  const [description, setDescription] = useState(span.description || '');
+  const { setNodeRef, isOver } = useDroppable({ id: `span-focus-${span.id}` });
+
+  const spanTasks = useMemo(() => {
+    return tasks
+      .filter(t => t.dailyPlanSpanIds?.[span.date]?.includes(span.id))
+      .sort((a, b) => (a.dailyPlanSpanOrder?.[span.date]?.[span.id] ?? Infinity) - (b.dailyPlanSpanOrder?.[span.date]?.[span.id] ?? Infinity));
+  }, [tasks, span.id, span.date]);
+
+  const handleDescriptionBlur = () => {
+    if (description !== (span.description || '')) {
+      onUpdateSpan(span.id, { description: description.trim() || undefined });
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-[#13131a]">
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
+        <div className="flex items-center gap-2 min-w-0">
+          <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={onBack}>
+            <ArrowLeft size={16} />
+          </Button>
+          <div className="flex items-center gap-2 text-sm text-white/80 min-w-0">
+            <Clock size={14} className="shrink-0" />
+            <span className="font-medium truncate">
+              {formatHour(span.startHour)} - {formatHour(span.endHour)}
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              onDeleteSpan(span.id);
+              onBack();
+            }}
+          >
+            <X size={14} className="mr-1" />
+            {t('view.deleteSpan')}
+          </Button>
+        </div>
+      </div>
+
+      {/* Description */}
+      <div className="px-3 py-3 border-b border-white/10">
+        <div className="flex items-center gap-2 text-xs text-white/50 mb-1.5">
+          <FileText size={12} />
+          <span>{t('view.spanDescription')}</span>
+        </div>
+        <Textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          onBlur={handleDescriptionBlur}
+          placeholder={t('view.spanDescriptionPlaceholder')}
+          className="min-h-[72px] bg-black/20 border-white/10 text-white/90 placeholder:text-white/30 resize-none"
+        />
+      </div>
+
+      {/* Task list */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
+          <span className="text-sm font-medium text-white/80">
+            {t('view.spanTasks')} ({spanTasks.length})
+          </span>
+        </div>
+        <div className="flex-1 overflow-y-auto p-3">
+          <SortableContext
+            items={spanTasks.map(t => t.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-1">
+              {spanTasks.map(task => {
+                const zone = getZoneById(zones, task.zoneId);
+                return (
+                  <SortableTaskItem
+                    key={task.id}
+                    task={task}
+                    zone={zone}
+                    selectedDate={span.date}
+                    dragHandleTitle={t('task.dragToSort')}
+                    onToggleTask={onToggleTask}
+                    onNavigateToZone={onNavigateToZone}
+                    onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
+                    onRemoveFromSpan={(taskId) => onMoveTaskOutOfSpan(taskId, span.date, span.id)}
+                  />
+                );
+              })}
+            </div>
+          </SortableContext>
+
+          {/* Drop area for tasks from backlog */}
+          <div
+            ref={setNodeRef}
+            className={`mt-3 px-3 py-4 rounded border border-dashed text-center text-sm transition-colors ${
+              isOver
+                ? 'bg-white/10 border-white/30 text-white/80'
+                : 'border-white/10 text-white/40 hover:bg-white/5 hover:text-white/60'
+            }`}
+          >
+            {t('view.dragTasksHere')}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

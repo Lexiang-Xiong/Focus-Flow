@@ -82,6 +82,7 @@ function App() {
     moveTaskOutOfDailyPlanSpan,
     setDailyPlanSpanOrder,
     createDailyPlanSpan,
+    updateDailyPlanSpan,
     deleteDailyPlanSpan,
     dailyPlanSpans,
     undo,
@@ -853,6 +854,7 @@ function App() {
                     onMoveTaskOutOfSpan={moveTaskOutOfDailyPlanSpan}
                     onSetDailyPlanSpanOrder={setDailyPlanSpanOrder}
                     onCreateSpan={createDailyPlanSpan}
+                    onUpdateSpan={updateDailyPlanSpan}
                     onDeleteSpan={deleteDailyPlanSpan}
                     spans={dailyPlanSpans}
                   />

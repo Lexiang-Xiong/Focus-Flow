@@ -25,9 +25,10 @@ interface ExecutionPlanViewProps {
   onAddTasksToDailyPlan: (taskIds: string[], date: string) => void;
   onSetDailyPlanOrder: (taskId: string, date: string, order: number) => void;
   onMoveTaskToSpan: (taskId: string, date: string, spanId: string, order?: number) => void;
-  onMoveTaskOutOfSpan: (taskId: string, date: string) => void;
-  onSetDailyPlanSpanOrder: (taskId: string, spanId: string, order: number) => void;
-  onCreateSpan: (date: string, startHour: number, endHour: number) => string | null;
+  onMoveTaskOutOfSpan: (taskId: string, date: string, spanId: string) => void;
+  onSetDailyPlanSpanOrder: (taskId: string, date: string, spanId: string, order: number) => void;
+  onCreateSpan: (date: string, startHour: number, endHour: number, description?: string) => string | null;
+  onUpdateSpan: (spanId: string, updates: Partial<Omit<DailyPlanSpan, 'id'>>) => boolean;
   onDeleteSpan: (spanId: string) => void;
   spans: DailyPlanSpan[];
 }
@@ -52,6 +53,7 @@ export function ExecutionPlanView({
   onMoveTaskOutOfSpan,
   onSetDailyPlanSpanOrder,
   onCreateSpan,
+  onUpdateSpan,
   onDeleteSpan,
   spans,
 }: ExecutionPlanViewProps) {
@@ -135,6 +137,7 @@ export function ExecutionPlanView({
             onMoveTaskOutOfSpan={onMoveTaskOutOfSpan}
             onSetDailyPlanSpanOrder={onSetDailyPlanSpanOrder}
             onCreateSpan={onCreateSpan}
+            onUpdateSpan={onUpdateSpan}
             onDeleteSpan={onDeleteSpan}
             spans={spans}
           />

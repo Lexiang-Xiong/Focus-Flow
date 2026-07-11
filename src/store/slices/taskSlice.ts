@@ -39,8 +39,8 @@ export interface TaskActions {
   removeTaskFromDailyPlan: (taskId: string, date: string) => void;
   setDailyPlanOrder: (taskId: string, date: string, order: number) => void;
   moveTaskToDailyPlanSpan: (taskId: string, date: string, spanId: string, order?: number) => void;
-  moveTaskOutOfDailyPlanSpan: (taskId: string, date: string) => void;
-  setDailyPlanSpanOrder: (taskId: string, spanId: string, order: number) => void;
+  moveTaskOutOfDailyPlanSpan: (taskId: string, date: string, spanId: string) => void;
+  setDailyPlanSpanOrder: (taskId: string, date: string, spanId: string, order: number) => void;
   addTaskToPlanGroup: (taskId: string, groupId: string) => void;
   removeTaskFromPlanGroup: (taskId: string, groupId: string) => void;
   // 定时任务相关
@@ -545,16 +545,15 @@ export const createTaskSlice: StateCreator<TaskSlice & UndoSlice & ExecutionPlan
         if (!t.plannedDates?.includes(date)) return t;
         const remainingOrder = Object.fromEntries(Object.entries(t.dailyPlanOrder || {}).filter(([key]) => key !== date));
         const remainingSpanIds = Object.fromEntries(Object.entries(t.dailyPlanSpanIds || {}).filter(([key]) => key !== date));
-        const spanId = t.dailyPlanSpanIds?.[date];
-        const remainingSpanOrder = spanId
-          ? Object.fromEntries(Object.entries(t.dailyPlanSpanOrder || {}).filter(([key]) => key !== spanId))
-          : (t.dailyPlanSpanOrder || {});
+        const remainingSpanOrderByDate = Object.fromEntries(
+          Object.entries(t.dailyPlanSpanOrder || {}).filter(([key]) => key !== date)
+        );
         return {
           ...t,
           plannedDates: t.plannedDates.filter(d => d !== date),
           dailyPlanOrder: remainingOrder,
           dailyPlanSpanIds: remainingSpanIds,
-          dailyPlanSpanOrder: remainingSpanOrder,
+          dailyPlanSpanOrder: remainingSpanOrderByDate,
         };
       });
       return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
@@ -581,56 +580,68 @@ export const createTaskSlice: StateCreator<TaskSlice & UndoSlice & ExecutionPlan
       // 计算新顺序：默认放到该 span 已有任务末尾
       const targetOrder = order ?? (
         state.tasks
-          .filter(t => t.dailyPlanSpanIds?.[date] === spanId)
-          .reduce((max, t) => Math.max(max, t.dailyPlanSpanOrder?.[spanId] ?? 0), 0) + 1
+          .filter(t => t.dailyPlanSpanIds?.[date]?.includes(spanId))
+          .reduce((max, t) => Math.max(max, t.dailyPlanSpanOrder?.[date]?.[spanId] ?? 0), 0) + 1
       );
 
       const tasks = state.tasks.map(t => {
         if (t.id !== taskId) return t;
         if (!t.plannedDates?.includes(date)) return t;
-        const remainingOrder = Object.fromEntries(Object.entries(t.dailyPlanOrder || {}).filter(([key]) => key !== date));
-        const oldSpanId = t.dailyPlanSpanIds?.[date];
-        const remainingSpanOrder = oldSpanId
-          ? Object.fromEntries(Object.entries(t.dailyPlanSpanOrder || {}).filter(([key]) => key !== oldSpanId))
-          : (t.dailyPlanSpanOrder || {});
+        const currentSpanIds = t.dailyPlanSpanIds?.[date] || [];
+        const currentSpanOrderForDate = t.dailyPlanSpanOrder?.[date] || {};
         return {
           ...t,
-          dailyPlanOrder: remainingOrder,
-          dailyPlanSpanIds: { ...(t.dailyPlanSpanIds || {}), [date]: spanId },
-          dailyPlanSpanOrder: { ...remainingSpanOrder, [spanId]: targetOrder },
+          dailyPlanSpanIds: {
+            ...(t.dailyPlanSpanIds || {}),
+            [date]: currentSpanIds.includes(spanId) ? currentSpanIds : [...currentSpanIds, spanId],
+          },
+          dailyPlanSpanOrder: {
+            ...(t.dailyPlanSpanOrder || {}),
+            [date]: { ...currentSpanOrderForDate, [spanId]: targetOrder },
+          },
         };
       });
       return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
     });
   },
 
-  moveTaskOutOfDailyPlanSpan: (taskId, date) => {
+  moveTaskOutOfDailyPlanSpan: (taskId, date, spanId) => {
     get().saveSnapshot?.();
     set((state) => {
-      const nextOrder = getNextDailyPlanOrder(state.tasks, date);
       const tasks = state.tasks.map(t => {
         if (t.id !== taskId) return t;
-        const spanId = t.dailyPlanSpanIds?.[date];
-        if (!spanId) return t;
-        const remainingSpanIds = Object.fromEntries(Object.entries(t.dailyPlanSpanIds || {}).filter(([key]) => key !== date));
-        const remainingSpanOrder = Object.fromEntries(Object.entries(t.dailyPlanSpanOrder || {}).filter(([key]) => key !== spanId));
+        const spanIds = t.dailyPlanSpanIds?.[date];
+        if (!spanIds?.includes(spanId)) return t;
+        const remainingSpanIdsForDate = spanIds.filter(id => id !== spanId);
+        const remainingSpanIds = remainingSpanIdsForDate.length > 0
+          ? { ...(t.dailyPlanSpanIds || {}), [date]: remainingSpanIdsForDate }
+          : Object.fromEntries(Object.entries(t.dailyPlanSpanIds || {}).filter(([key]) => key !== date));
+        const currentSpanOrderForDate = t.dailyPlanSpanOrder?.[date] || {};
+        const remainingSpanOrderForDate = Object.fromEntries(
+          Object.entries(currentSpanOrderForDate).filter(([key]) => key !== spanId)
+        );
+        const remainingSpanOrder = Object.keys(remainingSpanOrderForDate).length > 0
+          ? { ...(t.dailyPlanSpanOrder || {}), [date]: remainingSpanOrderForDate }
+          : Object.fromEntries(Object.entries(t.dailyPlanSpanOrder || {}).filter(([key]) => key !== date));
         return {
           ...t,
           dailyPlanSpanIds: remainingSpanIds,
           dailyPlanSpanOrder: remainingSpanOrder,
-          dailyPlanOrder: { ...(t.dailyPlanOrder || {}), [date]: nextOrder },
         };
       });
       return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
     });
   },
 
-  setDailyPlanSpanOrder: (taskId, spanId, order) => {
+  setDailyPlanSpanOrder: (taskId, date, spanId, order) => {
     get().saveSnapshot?.();
     set((state) => {
       const tasks = state.tasks.map(t => t.id !== taskId ? t : {
         ...t,
-        dailyPlanSpanOrder: { ...(t.dailyPlanSpanOrder || {}), [spanId]: order },
+        dailyPlanSpanOrder: {
+          ...(t.dailyPlanSpanOrder || {}),
+          [date]: { ...(t.dailyPlanSpanOrder?.[date] || {}), [spanId]: order },
+        },
       });
       return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
     });

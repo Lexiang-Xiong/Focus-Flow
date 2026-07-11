@@ -170,7 +170,7 @@ describe('DailyPlanSpan CRUD', () => {
     store.getState().addTaskToDailyPlan(taskId, '2026-07-12');
     store.getState().moveTaskToDailyPlanSpan(taskId, '2026-07-12', spanId);
 
-    expect(store.getState().tasks[0].dailyPlanSpanIds?.['2026-07-12']).toBe(spanId);
+    expect(store.getState().tasks[0].dailyPlanSpanIds?.['2026-07-12']).toEqual([spanId]);
 
     store.getState().deleteDailyPlanSpan(spanId);
 

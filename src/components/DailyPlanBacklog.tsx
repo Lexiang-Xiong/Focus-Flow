@@ -46,7 +46,7 @@ export function DailyPlanBacklog({
     >
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
         <span className="text-sm font-medium text-white/80">
-          {t('view.backlog')} ({tasks.length})
+          {t('view.dailyTasks')} ({tasks.length})
         </span>
         <Button
           size="icon"
@@ -62,7 +62,7 @@ export function DailyPlanBacklog({
       {expanded && (
         <div className="flex-1 overflow-y-auto p-3">
           {tasks.length === 0 ? (
-            <div className="text-sm text-white/40 text-center py-4">{t('view.noBacklogTasks')}</div>
+            <div className="text-sm text-white/40 text-center py-4">{t('view.noDailyTasks')}</div>
           ) : (
             <SortableContext
               items={tasks.map(t => t.id)}

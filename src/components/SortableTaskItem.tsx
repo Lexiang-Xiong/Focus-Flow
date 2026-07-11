@@ -14,6 +14,7 @@ interface SortableTaskItemProps {
   onToggleTask: (taskId: string) => void;
   onNavigateToZone: (zoneId: string, taskId?: string) => void;
   onRemoveTaskFromDailyPlan: (taskId: string, date: string) => void;
+  onRemoveFromSpan?: (taskId: string) => void;
 }
 
 export function SortableTaskItem({
@@ -24,6 +25,7 @@ export function SortableTaskItem({
   onToggleTask,
   onNavigateToZone,
   onRemoveTaskFromDailyPlan,
+  onRemoveFromSpan,
 }: SortableTaskItemProps) {
   const { t } = useTranslation();
   const {
@@ -86,8 +88,8 @@ export function SortableTaskItem({
         size="icon"
         variant="ghost"
         className="h-6 w-6 text-white/40 hover:text-white/80 hover:bg-white/10 shrink-0"
-        onClick={() => onRemoveTaskFromDailyPlan(task.id, selectedDate)}
-        title={t('task.removeFromPlan')}
+        onClick={() => onRemoveFromSpan ? onRemoveFromSpan(task.id) : onRemoveTaskFromDailyPlan(task.id, selectedDate)}
+        title={onRemoveFromSpan ? t('task.removeFromSpan') : t('task.removeFromPlan')}
       >
         <X size={12} />
       </Button>

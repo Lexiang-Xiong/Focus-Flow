@@ -359,7 +359,7 @@ describe('执行计划关联（daily plan / plan group）', () => {
     expect(snap).toHaveBeenCalledTimes(1);
   });
 
-  it('moveTaskToDailyPlanSpan 把任务移入 span，清除 backlog 排序', () => {
+  it('moveTaskToDailyPlanSpan 把任务加入 span，保留 backlog 排序', () => {
     store.setState({
       dailyPlanSpans: [{ id: 'span-1', date: '2026-07-12', startHour: 9, endHour: 12, createdAt: 0 }],
     } as unknown as Partial<TaskSlice>);
@@ -372,9 +372,9 @@ describe('执行计划关联（daily plan / plan group）', () => {
     store.getState().moveTaskToDailyPlanSpan(id, '2026-07-12', 'span-1', 2);
 
     const task = find(id);
-    expect(task.dailyPlanSpanIds?.['2026-07-12']).toBe('span-1');
-    expect(task.dailyPlanSpanOrder?.['span-1']).toBe(2);
-    expect(task.dailyPlanOrder?.['2026-07-12']).toBeUndefined();
+    expect(task.dailyPlanSpanIds?.['2026-07-12']).toEqual(['span-1']);
+    expect(task.dailyPlanSpanOrder?.['2026-07-12']?.['span-1']).toBe(2);
+    expect(task.dailyPlanOrder?.['2026-07-12']).toBe(3);
   });
 
   it('moveTaskToDailyPlanSpan 未加入日计划的任务不生效', () => {
@@ -387,22 +387,26 @@ describe('执行计划关联（daily plan / plan group）', () => {
     expect(task.dailyPlanSpanIds?.['2026-07-12']).toBeUndefined();
   });
 
-  it('moveTaskOutOfDailyPlanSpan 把任务移回 backlog 并分配下一个排序', () => {
+  it('moveTaskOutOfDailyPlanSpan 仅从指定 span 移除任务', () => {
     store.setState({
-      dailyPlanSpans: [{ id: 'span-1', date: '2026-07-12', startHour: 9, endHour: 12, createdAt: 0 }],
+      dailyPlanSpans: [
+        { id: 'span-1', date: '2026-07-12', startHour: 9, endHour: 12, createdAt: 0 },
+        { id: 'span-2', date: '2026-07-12', startHour: 14, endHour: 16, createdAt: 0 },
+      ],
     } as unknown as Partial<TaskSlice>);
 
     store.getState().addTask('z1', '任务', '');
     const id = store.getState().tasks[0].id;
     store.getState().addTaskToDailyPlan(id, '2026-07-12');
     store.getState().moveTaskToDailyPlanSpan(id, '2026-07-12', 'span-1', 1);
+    store.getState().moveTaskToDailyPlanSpan(id, '2026-07-12', 'span-2', 1);
 
-    store.getState().moveTaskOutOfDailyPlanSpan(id, '2026-07-12');
+    store.getState().moveTaskOutOfDailyPlanSpan(id, '2026-07-12', 'span-1');
 
     const task = find(id);
-    expect(task.dailyPlanSpanIds?.['2026-07-12']).toBeUndefined();
-    expect(task.dailyPlanSpanOrder?.['span-1']).toBeUndefined();
-    expect(task.dailyPlanOrder?.['2026-07-12']).toBe(1);
+    expect(task.dailyPlanSpanIds?.['2026-07-12']).toEqual(['span-2']);
+    expect(task.dailyPlanSpanOrder?.['2026-07-12']?.['span-1']).toBeUndefined();
+    expect(task.dailyPlanSpanOrder?.['2026-07-12']?.['span-2']).toBe(1);
   });
 
   it('setDailyPlanSpanOrder 更新 span 内排序', () => {
@@ -411,12 +415,12 @@ describe('执行计划关联（daily plan / plan group）', () => {
     store.getState().addTaskToDailyPlan(id, '2026-07-12');
     store.getState().moveTaskToDailyPlanSpan(id, '2026-07-12', 'span-1');
 
-    store.getState().setDailyPlanSpanOrder(id, 'span-1', 5);
+    store.getState().setDailyPlanSpanOrder(id, '2026-07-12', 'span-1', 5);
 
-    expect(find(id).dailyPlanSpanOrder?.['span-1']).toBe(5);
+    expect(find(id).dailyPlanSpanOrder?.['2026-07-12']?.['span-1']).toBe(5);
   });
 
-  it('moveTaskToDailyPlanSpan 跨 span 移动时清除旧 span 的排序', () => {
+  it('moveTaskToDailyPlanSpan 支持同一任务同时存在于多个 span', () => {
     store.setState({
       dailyPlanSpans: [
         { id: 'span-1', date: '2026-07-12', startHour: 9, endHour: 12, createdAt: 0 },
@@ -432,26 +436,30 @@ describe('执行计划关联（daily plan / plan group）', () => {
     store.getState().moveTaskToDailyPlanSpan(id, '2026-07-12', 'span-2', 1);
 
     const task = find(id);
-    expect(task.dailyPlanSpanIds?.['2026-07-12']).toBe('span-2');
-    expect(task.dailyPlanSpanOrder?.['span-2']).toBe(1);
-    expect(task.dailyPlanSpanOrder?.['span-1']).toBeUndefined();
+    expect(task.dailyPlanSpanIds?.['2026-07-12']).toEqual(['span-1', 'span-2']);
+    expect(task.dailyPlanSpanOrder?.['2026-07-12']?.['span-1']).toBe(3);
+    expect(task.dailyPlanSpanOrder?.['2026-07-12']?.['span-2']).toBe(1);
   });
 
-  it('removeTaskFromDailyPlan 同时清除 span 关联', () => {
+  it('removeTaskFromDailyPlan 同时清除所有 span 关联', () => {
     store.setState({
-      dailyPlanSpans: [{ id: 'span-1', date: '2026-07-12', startHour: 9, endHour: 12, createdAt: 0 }],
+      dailyPlanSpans: [
+        { id: 'span-1', date: '2026-07-12', startHour: 9, endHour: 12, createdAt: 0 },
+        { id: 'span-2', date: '2026-07-12', startHour: 14, endHour: 16, createdAt: 0 },
+      ],
     } as unknown as Partial<TaskSlice>);
 
     store.getState().addTask('z1', '任务', '');
     const id = store.getState().tasks[0].id;
     store.getState().addTaskToDailyPlan(id, '2026-07-12');
     store.getState().moveTaskToDailyPlanSpan(id, '2026-07-12', 'span-1', 1);
+    store.getState().moveTaskToDailyPlanSpan(id, '2026-07-12', 'span-2', 1);
 
     store.getState().removeTaskFromDailyPlan(id, '2026-07-12');
 
     const task = find(id);
     expect(task.plannedDates).not.toContain('2026-07-12');
     expect(task.dailyPlanSpanIds?.['2026-07-12']).toBeUndefined();
-    expect(task.dailyPlanSpanOrder?.['span-1']).toBeUndefined();
+    expect(task.dailyPlanSpanOrder?.['2026-07-12']).toBeUndefined();
   });
 });
