@@ -17,10 +17,10 @@ export function TimeRuler({ hourHeight = 48, highlightedHours = [], className = 
         return (
           <div
             key={hour}
-            className="absolute left-0 right-0 flex items-center text-xs"
-            style={{ top: `${hour * hourHeight}px`, height: `${hourHeight}px` }}
+            className="absolute left-0 right-0 flex items-start text-xs"
+            style={{ top: `${hour * hourHeight}px` }}
           >
-            <span className={`w-10 text-right pr-2 shrink-0 transition-colors ${isHighlighted ? 'text-white font-medium' : 'text-white/40'}`}>
+            <span className={`-translate-y-1/2 w-10 text-right pr-2 shrink-0 transition-colors ${isHighlighted ? 'text-white font-medium' : 'text-white/40'}`}>
               {String(hour).padStart(2, '0')}:00
             </span>
             <div className={`flex-1 border-t transition-colors ${isHighlighted ? 'border-white/40' : 'border-white/10'}`} />

@@ -1,6 +1,7 @@
 import { useMemo, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
+import { useDroppable } from '@dnd-kit/core';
 import { Button } from '@/components/ui/button';
 import type { DailyPlanSpan, Task } from '@/types';
 import { findOverlappingSpan } from '@/store/slices/executionPlanSlice';
@@ -81,6 +82,7 @@ export function TimeSpan({
   const taskCount = tasks.length;
 
   const [preview, setPreview] = useState<{ startHour: number; endHour: number } | null>(null);
+  const previewRef = useRef<{ startHour: number; endHour: number } | null>(null);
   const justDraggedRef = useRef(false);
   const resizeStateRef = useRef<{
     edge: 'top' | 'bottom';
@@ -88,6 +90,7 @@ export function TimeSpan({
     startSpan: DailyPlanSpan;
     scrollTop: number;
   } | null>(null);
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: `span-${span.id}` });
 
   const displaySpan = preview ?? span;
 
@@ -131,22 +134,28 @@ export function TimeSpan({
 
       const overlap = findOverlappingSpan(spans, span.date, nextStart, nextEnd, span.id);
       if (!overlap) {
-        setPreview({ startHour: nextStart, endHour: nextEnd });
+        const nextPreview = { startHour: nextStart, endHour: nextEnd };
+        setPreview(nextPreview);
+        previewRef.current = nextPreview;
         onHighlightHoursChange?.(getHighlightHours(nextStart, nextEnd));
       }
     };
 
     const handleMouseUp = () => {
+      const finalPreview = previewRef.current;
       resizeStateRef.current = null;
+      previewRef.current = null;
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
       onHighlightHoursChange?.([]);
 
-      if (preview) {
-        const ok = onUpdateSpan(span.id, { startHour: preview.startHour, endHour: preview.endHour });
+      if (finalPreview) {
+        const ok = onUpdateSpan(span.id, { startHour: finalPreview.startHour, endHour: finalPreview.endHour });
         if (!ok) {
           setPreview(null);
         }
+      } else {
+        setPreview(null);
       }
       setTimeout(() => {
         setPreview(null);
@@ -167,7 +176,8 @@ export function TimeSpan({
 
   return (
     <div
-      className="absolute inset-x-0 rounded-md flex flex-col overflow-hidden group"
+      ref={setDroppableRef}
+      className={`absolute inset-x-0 rounded-md flex flex-col overflow-hidden group ${isOver ? 'ring-2 ring-white/30' : ''}`}
       style={{
         top: `${displaySpan.startHour * hourHeight}px`,
         height: `${Math.max(displayDuration * hourHeight, 24)}px`,
