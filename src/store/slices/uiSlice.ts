@@ -6,12 +6,14 @@ export interface UIState {
   activeZoneId: string | null;
   focusedTaskId: string | null;
   activeHistoryId: string | null;
+  clipboardTaskId: string | null;
 }
 
 export interface UIActions {
   setCurrentView: (view: AppState['currentView']) => void;
   setActiveZoneId: (id: string | null) => void;
   setFocusedTaskId: (id: string | null) => void;
+  setClipboardTaskId: (id: string | null) => void;
 }
 
 export type UISlice = UIState & UIActions;
@@ -21,8 +23,10 @@ export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set) => ({
   activeZoneId: null,
   focusedTaskId: null,
   activeHistoryId: null,
+  clipboardTaskId: null,
 
   setCurrentView: (view) => set({ currentView: view }),
   setActiveZoneId: (id) => set({ activeZoneId: id, focusedTaskId: null }),
   setFocusedTaskId: (id) => set({ focusedTaskId: id }),
+  setClipboardTaskId: (id) => set({ clipboardTaskId: id }),
 });

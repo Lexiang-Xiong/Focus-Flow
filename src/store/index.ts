@@ -10,9 +10,10 @@ import { createTaskSlice, type TaskSlice } from './slices/taskSlice';
 import { createHistorySlice, type HistorySlice } from './slices/historySlice';
 import { createSettingsSlice, type SettingsSlice } from './slices/settingsSlice';
 import { createUndoSlice, type UndoSlice } from './slices/undoSlice';
+import { createExecutionPlanSlice, type ExecutionPlanSlice } from './slices/executionPlanSlice';
 import { DEFAULT_SETTINGS } from '@/types';
 
-export type AppStore = UISlice & ZoneSlice & TaskSlice & HistorySlice & SettingsSlice & UndoSlice;
+export type AppStore = UISlice & ZoneSlice & TaskSlice & HistorySlice & SettingsSlice & UndoSlice & ExecutionPlanSlice;
 
 // 合并函数：确保新添加的设置字段使用默认值
 // 关键：将 persistedState 定义为 unknown 匹配 Zustand 内部签名
@@ -31,10 +32,12 @@ const mergeSettings = (persistedState: unknown, currentState: AppStore): AppStor
 
   const tasks = persisted.tasks || stateNested?.tasks;
   const zones = persisted.zones || stateNested?.zones;
+  const planGroups = persisted.planGroups || stateNested?.planGroups;
 
   const tasksArr = (tasks as unknown[]) ||[];
   const zonesArr = (zones as unknown[]) || [];
-  console.log('[MERGE] Extracted tasks:', tasksArr.length, 'zones:', zonesArr.length);
+  const planGroupsArr = (planGroups as unknown[]) || [];
+  console.log('[MERGE] Extracted tasks:', tasksArr.length, 'zones:', zonesArr.length, 'planGroups:', planGroupsArr.length);
 
   const mergedSettings = { ...DEFAULT_SETTINGS };
   Object.keys(mergedSettings).forEach((key) => {
@@ -48,6 +51,7 @@ const mergeSettings = (persistedState: unknown, currentState: AppStore): AppStor
     ...persisted,
     tasks: tasksArr as any,
     zones: zonesArr as any,
+    planGroups: planGroupsArr as any,
     settings: mergedSettings as typeof DEFAULT_SETTINGS,
   } as AppStore;
 };
@@ -59,6 +63,7 @@ const storeImpl: StateCreator<AppStore> = (set, get, api) => ({
   ...createTaskSlice(set, get, api),
   ...createHistorySlice(set, get, api),
   ...createSettingsSlice(set, get, api),
+  ...createExecutionPlanSlice(set, get, api),
   ...createUndoSlice(set, get, api),
 });
 
@@ -87,6 +92,7 @@ const persistOptions: PersistOptions<AppStore> = {
     activeHistoryId: state.activeHistoryId,
     zones: state.zones,
     tasks: state.tasks,
+    planGroups: state.planGroups || [],
     currentWorkspace: state.currentWorkspace,
     historyWorkspaces: state.historyWorkspaces,
     customTemplates: state.customTemplates,

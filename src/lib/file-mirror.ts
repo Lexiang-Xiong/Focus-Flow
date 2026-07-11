@@ -20,7 +20,7 @@
 import { appDataDir, join } from '@tauri-apps/api/path';
 import { readTextFile, writeTextFile, exists } from '@tauri-apps/plugin-fs';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import type { Task, Zone } from '@/types';
+import type { Task, Zone, PlanGroup } from '@/types';
 import { useAppStore } from '@/store';
 import { computeAllTaskTimes } from '@/store/slices/taskSlice';
 import { getIsHydrated, getIsSwitching, getIsReloadingForSwitch } from '@/lib/storage-adapter';
@@ -64,10 +64,14 @@ const engine = createMirrorEngine({
   },
   getSnapshot: () => {
     const state = useAppStore.getState();
-    return { zones: (state.zones || []) as Zone[], tasks: (state.tasks || []) as Task[] };
+    return {
+      zones: (state.zones || []) as Zone[],
+      tasks: (state.tasks || []) as Task[],
+      planGroups: (state.planGroups || []) as PlanGroup[],
+    };
   },
-  applySnapshot: (zones, tasks) => {
-    useAppStore.setState({ tasks, zones, taskComputedTimes: computeAllTaskTimes(tasks) });
+  applySnapshot: (zones, tasks, planGroups) => {
+    useAppStore.setState({ tasks, zones, planGroups, taskComputedTimes: computeAllTaskTimes(tasks) });
   },
   now: () => Date.now(),
   log: (level, message, data) => persistentLog('FileMirror', message, level, data),
@@ -98,7 +102,7 @@ export function initFileMirror(): void {
 
   // 导出：监听 tasks / zones 引用变化（防抖）
   useAppStore.subscribe((state, prev) => {
-    if (state.tasks !== prev.tasks || state.zones !== prev.zones) {
+    if (state.tasks !== prev.tasks || state.zones !== prev.zones || state.planGroups !== prev.planGroups) {
       scheduleExport();
     }
   });

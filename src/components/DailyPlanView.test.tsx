@@ -1,0 +1,110 @@
+// @vitest-environment jsdom
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import '@testing-library/jest-dom/vitest';
+import { render, screen, cleanup } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+
+vi.mock('react-i18next', () => ({
+  initReactI18next: { type: '3rdParty', init: () => {} },
+  useTranslation: () => ({ t: (k: string) => k, i18n: { changeLanguage: () => {} } }),
+}));
+
+import { DailyPlanView } from './DailyPlanView';
+import type { Task, Zone, PlanGroup } from '@/types';
+
+class RO { observe() {} unobserve() {} disconnect() {} }
+(globalThis as unknown as { ResizeObserver: typeof RO }).ResizeObserver = RO;
+
+afterEach(cleanup);
+
+function makeTask(id: string, zoneId: string, over: Partial<Task> = {}): Task {
+  return {
+    id, zoneId, parentId: null, title: id, description: '',
+    completed: false, priority: 'medium', urgency: 'low', deadline: null,
+    deadlineType: 'none', order: 0, createdAt: 0, expanded: false,
+    isCollapsed: false, totalWorkTime: 0, ...over,
+  } as Task;
+}
+
+function makeZone(id: string, name: string): Zone {
+  return { id, name, color: '#f00', order: 0, createdAt: 0 };
+}
+
+function makePlanGroup(id: string, name: string, startDate?: string, endDate?: string): PlanGroup {
+  return { id, name, startDate: startDate ?? null, endDate: endDate ?? null, order: 0, createdAt: 0 };
+}
+
+const noop = vi.fn();
+
+function renderDailyPlanView(props: Partial<React.ComponentProps<typeof DailyPlanView>> = {}) {
+  return render(
+    <DailyPlanView
+      planGroups={[makePlanGroup('g1', 'Week Plan', '2026-07-11', '2026-07-15')]}
+      tasks={[
+        makeTask('t1', 'z1', { plannedDates: ['2026-07-12'], planGroupIds: ['g1'] }),
+        makeTask('t2', 'z1', { plannedDates: ['2026-07-13'] }),
+        makeTask('t3', 'z2', { planGroupIds: ['g1'] }),
+      ]}
+      zones={[makeZone('z1', 'Zone 1'), makeZone('z2', 'Zone 2')]}
+      selectedDate="2026-07-12"
+      onDateChange={noop}
+      onToggleTask={noop}
+      onNavigateToZone={noop}
+      onRemoveTaskFromDailyPlan={noop}
+      onAddTasksToDailyPlan={noop}
+      onSetDailyPlanOrder={noop}
+      {...props}
+    />
+  );
+}
+
+describe('DailyPlanView', () => {
+  it('显示选中日期与该日期任务，不显示其他日期任务', () => {
+    renderDailyPlanView();
+    expect(screen.getByText('t1')).toBeInTheDocument();
+    expect(screen.queryByText('t2')).not.toBeInTheDocument();
+    expect(screen.queryByText('t3')).not.toBeInTheDocument();
+  });
+
+  it('点击任务标题触发导航', async () => {
+    const user = userEvent.setup();
+    const onNavigateToZone = vi.fn();
+    renderDailyPlanView({ onNavigateToZone });
+
+    await user.click(screen.getByText('t1'));
+    expect(onNavigateToZone).toHaveBeenCalledWith('z1', 't1');
+  });
+
+  it('点击移除按钮触发 onRemoveTaskFromDailyPlan', async () => {
+    const user = userEvent.setup();
+    const onRemoveTaskFromDailyPlan = vi.fn();
+    renderDailyPlanView({ onRemoveTaskFromDailyPlan });
+
+    const removeBtn = screen.getByTitle('task.removeFromPlan');
+    await user.click(removeBtn);
+    expect(onRemoveTaskFromDailyPlan).toHaveBeenCalledWith('t1', '2026-07-12');
+  });
+
+  it('打开"从计划组添加"对话框', async () => {
+    const user = userEvent.setup();
+    renderDailyPlanView();
+
+    const addBtn = screen.getAllByText('view.addFromPlanGroup').find(el => el.tagName === 'BUTTON');
+    expect(addBtn).toBeTruthy();
+    await user.click(addBtn!);
+    // 对话框中列出覆盖 2026-07-12 的计划组
+    expect(screen.getByText('Week Plan')).toBeInTheDocument();
+  });
+
+  it('按 dailyPlanOrder 排序任务', () => {
+    renderDailyPlanView({
+      tasks: [
+        makeTask('t1', 'z1', { plannedDates: ['2026-07-12'], dailyPlanOrder: { '2026-07-12': 2 } }),
+        makeTask('t2', 'z1', { plannedDates: ['2026-07-12'], dailyPlanOrder: { '2026-07-12': 1 } }),
+      ],
+    });
+    const items = screen.getAllByText(/t[12]/);
+    expect(items[0]).toHaveTextContent('t2');
+    expect(items[1]).toHaveTextContent('t1');
+  });
+});

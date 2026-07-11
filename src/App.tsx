@@ -4,6 +4,7 @@ import { PomodoroTimer } from '@/components/PomodoroTimer';
 import { ZoneManager } from '@/components/ZoneManager';
 import { TaskList } from '@/components/TaskList';
 import { GlobalView } from '@/components/GlobalView';
+import { ExecutionPlanView } from '@/components/ExecutionPlanView';
 import { HistoryManager } from '@/components/HistoryManager';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { CollapseButton } from '@/components/CollapseButton';
@@ -28,9 +29,12 @@ function App() {
     currentView,
     activeZoneId,
     focusedTaskId,
+    clipboardTaskId,
+    setClipboardTaskId,
     historyWorkspaces,
     zones,
     tasks,
+    planGroups,
     setCurrentView,
     setActiveZoneId,
     setFocusedTaskId,
@@ -66,6 +70,14 @@ function App() {
     getEstimatedTime,
     addZone,
     hasUnsavedChanges,
+    addPlanGroup,
+    updatePlanGroup,
+    deletePlanGroup,
+    removeTaskFromPlanGroup,
+    addTaskToDailyPlan,
+    addTasksToDailyPlan,
+    removeTaskFromDailyPlan,
+    setDailyPlanOrder,
     undo,
     redo,
     checkRecurringTasks,
@@ -144,6 +156,7 @@ function App() {
   }, [tasks]);
 
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [executionPlanDate, setExecutionPlanDate] = useState(() => new Date().toISOString().slice(0, 10));
   const collapsedPositionRef = useRef<{x: number, y: number} | null>(null);
 
   // 使用ref存储activeTaskId和tasks，确保计时器回调中能获取最新值
@@ -302,6 +315,13 @@ function App() {
       }
 
       if (e.ctrlKey && e.key === 'c') {
+        if (currentView === 'executionPlan') {
+          if (activeTaskId) {
+            setClipboardTaskId(activeTaskId);
+            toast.success(t('toast.taskCopied'));
+          }
+          return;
+        }
         if (activeTaskId) {
           const task = tasks.find(t => t.id === activeTaskId);
           if (task) {
@@ -320,6 +340,16 @@ function App() {
       }
 
       if (e.ctrlKey && e.key === 'v') {
+        if (currentView === 'executionPlan') {
+          if (clipboardTaskId) {
+            const task = tasks.find(t => t.id === clipboardTaskId);
+            if (task) {
+              addTaskToDailyPlan(clipboardTaskId, executionPlanDate);
+              toast.success(t('toast.taskAddedToDailyPlan'));
+            }
+          }
+          return;
+        }
         if (hasZone && currentZone) {
           const result = pasteZone(zones);
           if (result) {
@@ -387,7 +417,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTaskId, tasks, zones, getZoneById, activeZoneId, focusedTaskId, currentView, copyTask, copyZone, pasteTask, pasteZone, getOriginalParentId, hasTask, hasZone, addZone, deleteTask]);
+  }, [activeTaskId, tasks, zones, getZoneById, activeZoneId, focusedTaskId, currentView, clipboardTaskId, setClipboardTaskId, executionPlanDate, addTaskToDailyPlan, copyTask, copyZone, pasteTask, pasteZone, getOriginalParentId, hasTask, hasZone, addZone, deleteTask]);
 
   const handleStartTimer = useCallback(() => {
     const incompleteTasksList = tasks.filter((t) => !t.completed);
@@ -786,6 +816,33 @@ function App() {
                     getTotalWorkTime={getTotalWorkTime}
                     getEstimatedTime={getEstimatedTime}
                     taskComputedTimes={taskComputedTimes}
+                  />
+                ) : currentView === 'executionPlan' ? (
+                  <ExecutionPlanView
+                    planGroups={planGroups}
+                    tasks={tasks}
+                    zones={zones}
+                    selectedDate={executionPlanDate}
+                    onDateChange={setExecutionPlanDate}
+                    onBack={() => {
+                      setCurrentView('zones');
+                      if (zones.length > 0) {
+                        setActiveZoneId(zones[0].id);
+                      }
+                    }}
+                    onAddGroup={addPlanGroup}
+                    onUpdateGroup={updatePlanGroup}
+                    onDeleteGroup={deletePlanGroup}
+                    onToggleTask={toggleTask}
+                    onNavigateToZone={(zoneId, taskId) => {
+                      setActiveZoneId(zoneId);
+                      if (taskId) setFocusedTaskId(taskId);
+                      setCurrentView('zones');
+                    }}
+                    onRemoveTaskFromGroup={removeTaskFromPlanGroup}
+                    onRemoveTaskFromDailyPlan={removeTaskFromDailyPlan}
+                    onAddTasksToDailyPlan={addTasksToDailyPlan}
+                    onSetDailyPlanOrder={setDailyPlanOrder}
                   />
                 ) : (
                   <TaskList

@@ -58,7 +58,7 @@ export default defineConfig({
   },
   server: {
     port: 8088,
-    strictPort: false,
+    strictPort: true,
     host: '0.0.0.0',
   },
 });

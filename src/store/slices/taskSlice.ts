@@ -32,6 +32,13 @@ export interface TaskActions {
   toggleSubtasksCollapsed: (id: string) => void;
   expandTask: (id: string) => void;
   moveTaskNode: (activeId: string, newParentId: string | null, anchorId: string | null, zoneId: string) => void;
+  // 执行计划相关
+  addTaskToDailyPlan: (taskId: string, date: string) => void;
+  addTasksToDailyPlan: (taskIds: string[], date: string) => void;
+  removeTaskFromDailyPlan: (taskId: string, date: string) => void;
+  setDailyPlanOrder: (taskId: string, date: string, order: number) => void;
+  addTaskToPlanGroup: (taskId: string, groupId: string) => void;
+  removeTaskFromPlanGroup: (taskId: string, groupId: string) => void;
   // 定时任务相关
   addRecurringTemplate: (template: Omit<RecurringTemplate, 'id' | 'lastTriggeredAt'>) => void;
   updateRecurringTemplate: (id: string, updates: Partial<RecurringTemplate>) => void;
@@ -71,6 +78,18 @@ const updateParentWorkTimes = (tasks: Task[], childId: string, addedSeconds: num
   };
 
   updateParentWorkTimes(tasks, parent.id, addedSeconds);
+};
+
+// 辅助函数：获取某日期在执行计划中的下一个排序序号
+const getNextDailyPlanOrder = (tasks: Task[], date: string): number => {
+  let maxOrder = 0;
+  for (const task of tasks) {
+    const order = task.dailyPlanOrder?.[date];
+    if (order != null && order > maxOrder) {
+      maxOrder = order;
+    }
+  }
+  return maxOrder + 1;
 };
 
 // 辅助函数：递归计算任务的 totalWorkTime
@@ -475,6 +494,96 @@ export const createTaskSlice: StateCreator<TaskSlice & UndoSlice, [], [], TaskSl
 
     return { tasks };
   }),
+
+  // 执行计划相关 actions
+  addTaskToDailyPlan: (taskId, date) => {
+    get().saveSnapshot?.();
+    set((state) => {
+      const nextOrder = getNextDailyPlanOrder(state.tasks, date);
+      const tasks = state.tasks.map(t => {
+        if (t.id !== taskId) return t;
+        if (t.plannedDates?.includes(date)) return t;
+        return {
+          ...t,
+          plannedDates: [...(t.plannedDates || []), date],
+          dailyPlanOrder: { ...(t.dailyPlanOrder || {}), [date]: nextOrder },
+        };
+      });
+      return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
+    });
+  },
+
+  addTasksToDailyPlan: (taskIds, date) => {
+    if (taskIds.length === 0) return;
+    get().saveSnapshot?.();
+    set((state) => {
+      const taskIdSet = new Set(taskIds);
+      let nextOrder = getNextDailyPlanOrder(state.tasks, date);
+      const tasks = state.tasks.map(t => {
+        if (!taskIdSet.has(t.id)) return t;
+        if (t.plannedDates?.includes(date)) return t;
+        const order = nextOrder++;
+        return {
+          ...t,
+          plannedDates: [...(t.plannedDates || []), date],
+          dailyPlanOrder: { ...(t.dailyPlanOrder || {}), [date]: order },
+        };
+      });
+      return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
+    });
+  },
+
+  removeTaskFromDailyPlan: (taskId, date) => {
+    get().saveSnapshot?.();
+    set((state) => {
+      const tasks = state.tasks.map(t => {
+        if (t.id !== taskId) return t;
+        if (!t.plannedDates?.includes(date)) return t;
+        const { [date]: _, ...remainingOrder } = (t.dailyPlanOrder || {});
+        return {
+          ...t,
+          plannedDates: t.plannedDates.filter(d => d !== date),
+          dailyPlanOrder: remainingOrder,
+        };
+      });
+      return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
+    });
+  },
+
+  setDailyPlanOrder: (taskId, date, order) => {
+    get().saveSnapshot?.();
+    set((state) => {
+      const tasks = state.tasks.map(t => t.id !== taskId ? t : {
+        ...t,
+        dailyPlanOrder: { ...t.dailyPlanOrder, [date]: order },
+      });
+      return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
+    });
+  },
+
+  addTaskToPlanGroup: (taskId, groupId) => {
+    get().saveSnapshot?.();
+    set((state) => {
+      const tasks = state.tasks.map(t => {
+        if (t.id !== taskId) return t;
+        if (t.planGroupIds?.includes(groupId)) return t;
+        return { ...t, planGroupIds: [...(t.planGroupIds || []), groupId] };
+      });
+      return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
+    });
+  },
+
+  removeTaskFromPlanGroup: (taskId, groupId) => {
+    get().saveSnapshot?.();
+    set((state) => {
+      const tasks = state.tasks.map(t => {
+        if (t.id !== taskId) return t;
+        if (!t.planGroupIds?.includes(groupId)) return t;
+        return { ...t, planGroupIds: t.planGroupIds.filter(id => id !== groupId) };
+      });
+      return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
+    });
+  },
 
   // Computed helpers
   getTasksByZone: (zoneId) => get().tasks.filter(t => t.zoneId === zoneId),

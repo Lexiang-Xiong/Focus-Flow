@@ -203,7 +203,7 @@ export interface ChatRequestBody {
   model: string;
   messages: { role: 'system' | 'user'; content: string }[];
   tools: { type: 'function'; function: typeof EDIT_OPS_FUNCTION }[];
-  tool_choice: { type: 'function'; function: { name: string } };
+  tool_choice?: { type: 'function'; function: { name: string } };
   temperature: number;
 }
 

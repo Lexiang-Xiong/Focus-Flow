@@ -38,6 +38,9 @@ export interface Task {
   estimatedTime?: number; // 预期时间（分钟），创建时可填也可后续编辑
   preventAutoComplete?: boolean; // 开启后即使所有子任务完成也不会自动结束
   isRecurring?: boolean; // 标识是否由定时器生成
+  plannedDates?: string[]; // 被分配到的单日计划日期（YYYY-MM-DD）
+  planGroupIds?: string[]; // 所属计划组 id 列表
+  dailyPlanOrder?: Record<string, number>; // 各日期在执行计划中的排序（仅影响执行计划视图）
 }
 
 // 定时任务模板
@@ -69,6 +72,16 @@ export interface Zone {
   name?: string;
   nameKey?: string;
   color: string;
+  order: number;
+  createdAt: number;
+}
+
+// 执行计划组
+export interface PlanGroup {
+  id: string;
+  name: string;
+  startDate?: string | null; // ISO 日期 YYYY-MM-DD，null/undefined 表示无时间组
+  endDate?: string | null;   // ISO 日期 YYYY-MM-DD
   order: number;
   createdAt: number;
 }
@@ -116,7 +129,7 @@ export interface PomodoroSession {
 }
 
 export interface AppState {
-  currentView: 'zones' | 'global' | 'history' | 'settings';
+  currentView: 'zones' | 'global' | 'executionPlan' | 'history' | 'settings';
   activeZoneId: string | null;
   focusedTaskId: string | null; // 从全局视图导航到分区时聚焦的任务ID
   activeHistoryId: string | null; // 当前查看的历史工作区ID

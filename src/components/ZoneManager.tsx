@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Settings, Trash2, Edit2, Palette, FolderKanban, History, Cog, Save, X, GripVertical } from 'lucide-react';
+import { Plus, Settings, Trash2, Edit2, Palette, FolderKanban, History, Cog, Save, X, GripVertical, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -40,7 +40,7 @@ interface ZoneManagerProps {
   onDeleteZone: (id: string) => void;
   onReorderZones?: (zones: Zone[]) => void;
   onApplyTemplate: (templateId: string) => void;
-  onViewChange: (view: 'zones' | 'global' | 'history') => void;
+  onViewChange: (view: 'zones' | 'global' | 'executionPlan' | 'history') => void;
   onOpenHistory: () => void;
   onOpenSettings: () => void;
   onSaveAsTemplate?: (name: string) => void;
@@ -217,6 +217,15 @@ export function ZoneManager({
             title={t('view.globalView')}
           >
             <Palette size={14} />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="zone-action-btn"
+            onClick={() => onViewChange('executionPlan')}
+            title={t('view.executionPlan')}
+          >
+            <CalendarDays size={14} />
           </Button>
           <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
             <DialogTrigger asChild>

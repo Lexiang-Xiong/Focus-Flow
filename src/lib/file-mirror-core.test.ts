@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Task, Zone } from '@/types';
+import type { Task, Zone, PlanGroup } from '@/types';
 import {
   canonical,
   parseMirror,
@@ -34,15 +34,20 @@ function zone(id: string, over: Partial<Zone> = {}): Zone {
   return { id, color: '#fff', order: 0, createdAt: 0, ...over };
 }
 
-function mirror(zones: Zone[], tasks: Task[], over: Partial<MirrorFile> = {}): MirrorFile {
-  return { version: 1, zones, tasks, ...over };
+function planGroup(id: string, over: Partial<PlanGroup> = {}): PlanGroup {
+  return { id, name: id, order: 0, createdAt: 0, ...over };
+}
+
+function mirror(zones: Zone[], tasks: Task[], planGroups: PlanGroup[] = [], over: Partial<MirrorFile> = {}): MirrorFile {
+  return { version: 1, zones, tasks, planGroups, ...over };
 }
 
 // ============ 回声锁不变量：canonical ============
 describe('canonical（回声锁不变量）', () => {
   it('忽略数组顺序', () => {
     const z = [zone('z1')];
-    expect(canonical(z, [task('a'), task('b')])).toBe(canonical(z, [task('b'), task('a')]));
+    expect(canonical(z, [task('a'), task('b')], [planGroup('g1'), planGroup('g2')]))
+      .toBe(canonical(z, [task('b'), task('a')], [planGroup('g2'), planGroup('g1')]));
   });
 
   it('忽略对象键序', () => {
@@ -60,15 +65,28 @@ describe('canonical（回声锁不变量）', () => {
     expect(canonical([zone('z1')], [task('a')]))
       .not.toBe(canonical([zone('z1')], [task('a'), task('b')]));
   });
+
+  it('planGroups 变化 → canonical 变化', () => {
+    expect(canonical([zone('z1')], [task('a')], [planGroup('g1')]))
+      .not.toBe(canonical([zone('z1')], [task('a')], [planGroup('g1', { name: ' renamed' })]));
+  });
 });
 
 // ============ 解析 / 校验：parseMirror ============
 describe('parseMirror（拒绝损坏数据）', () => {
   it('解析合法文件', () => {
-    const f = parseMirror(JSON.stringify(mirror([zone('z1')], [task('a')])));
+    const f = parseMirror(JSON.stringify(mirror([zone('z1')], [task('a')], [planGroup('g1')])));
     expect(f).not.toBeNull();
     expect(f!.tasks).toHaveLength(1);
     expect(f!.zones).toHaveLength(1);
+    expect(f!.planGroups).toHaveLength(1);
+  });
+
+  it('旧版文件缺 planGroups → 解析为空数组', () => {
+    const raw = JSON.stringify({ version: 1, zones: [zone('z1')], tasks: [task('a')] });
+    const f = parseMirror(raw);
+    expect(f).not.toBeNull();
+    expect(f!.planGroups).toEqual([]);
   });
 
   it('非法 JSON → null', () => {
@@ -84,48 +102,55 @@ describe('parseMirror（拒绝损坏数据）', () => {
   it('序列化→解析往返不丢数据', () => {
     const zones = [zone('z1'), zone('z2')];
     const tasks = [task('a', { title: 'hi', completed: true }), task('b', { parentId: 'a' })];
-    const parsed = parseMirror(JSON.stringify(mirror(zones, tasks)))!;
-    expect(canonical(parsed.zones, parsed.tasks)).toBe(canonical(zones, tasks));
+    const groups = [planGroup('g1', { startDate: '2026-07-11', endDate: '2026-07-15' })];
+    const parsed = parseMirror(JSON.stringify(mirror(zones, tasks, groups)))!;
+    expect(canonical(parsed.zones, parsed.tasks, parsed.planGroups)).toBe(canonical(zones, tasks, groups));
   });
 });
 
 // ============ 启动对账：谁为准（数据完整性核心） ============
 describe('decideBootAction（启动谁为准）', () => {
-  const store = { zones: [zone('z1')], tasks: [task('a')] };
+  const store = { zones: [zone('z1')], tasks: [task('a')], planGroups: [planGroup('g1')] };
 
   it('文件缺失 → export（初始化）', () => {
     expect(decideBootAction(store, null).kind).toBe('export');
   });
 
   it('护栏：空文件 + 非空 store → export（不让空文件覆盖好数据）', () => {
-    expect(decideBootAction(store, mirror([], [])).kind).toBe('export');
+    expect(decideBootAction(store, mirror([], [], [])).kind).toBe('export');
   });
 
   it('文件与 store 不一致 → import（文件为准，含离线编辑）', () => {
-    const action = decideBootAction(store, mirror([zone('z1')], [task('a'), task('b')]));
+    const action = decideBootAction(store, mirror([zone('z1')], [task('a'), task('b')], [planGroup('g1')]));
     expect(action.kind).toBe('import');
     if (action.kind === 'import') expect(action.tasks).toHaveLength(2);
   });
 
+  it('仅 planGroups 不一致 → import', () => {
+    const action = decideBootAction(store, mirror([zone('z1')], [task('a')], [planGroup('g1'), planGroup('g2')]));
+    expect(action.kind).toBe('import');
+    if (action.kind === 'import') expect(action.planGroups).toHaveLength(2);
+  });
+
   it('文件与 store 一致（忽略顺序）→ noop', () => {
-    expect(decideBootAction(store, mirror([zone('z1')], [task('a')])).kind).toBe('noop');
+    expect(decideBootAction(store, mirror([zone('z1')], [task('a')], [planGroup('g1')])).kind).toBe('noop');
   });
 
   it('store 与文件都为空 → noop（合法的全空）', () => {
-    expect(decideBootAction({ zones: [], tasks: [] }, mirror([], [])).kind).toBe('noop');
+    expect(decideBootAction({ zones: [], tasks: [], planGroups: [] }, mirror([], [], [])).kind).toBe('noop');
   });
 });
 
 // ============ 轮询对账 ============
 describe('decidePollAction（轮询是否导入）', () => {
-  const file = mirror([zone('z1')], [task('a')]);
+  const file = mirror([zone('z1')], [task('a')], [planGroup('g1')]);
 
   it('文件为 null → noop', () => {
     expect(decidePollAction(null, 'whatever').kind).toBe('noop');
   });
 
   it('文件 == 基线 → noop（回声锁）', () => {
-    const baseline = canonical(file.zones, file.tasks);
+    const baseline = canonical(file.zones, file.tasks, file.planGroups);
     expect(decidePollAction(file, baseline).kind).toBe('noop');
   });
 

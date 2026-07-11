@@ -13,6 +13,7 @@ import { formatDuration } from '@/types';
 import { getDeadlineStatus, getAbsoluteUrgencyColor, convertDeadlineType, getInheritedDeadline } from '@/lib/urgency-utils';
 import { useAppStore } from '@/store';
 import { useTranslation } from 'react-i18next';
+import { AddToPlanMenu } from './AddToPlanMenu';
 
 interface TaskItemProps {
   task: Task;
@@ -60,6 +61,9 @@ export function TaskItem({
   allTasks = [],
 }: TaskItemProps) {
   const { t, i18n } = useTranslation();
+  const planGroups = useAppStore(state => state.planGroups);
+  const addTaskToDailyPlan = useAppStore(state => state.addTaskToDailyPlan);
+  const addTaskToPlanGroup = useAppStore(state => state.addTaskToPlanGroup);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDescription, setEditDescription] = useState(task.description);
@@ -644,6 +648,12 @@ export function TaskItem({
             <Pin size={12} />
           </button>
         )}
+        <AddToPlanMenu
+          task={task}
+          planGroups={planGroups}
+          onAddToDailyPlan={addTaskToDailyPlan}
+          onAddToPlanGroup={addTaskToPlanGroup}
+        />
         <Button
           size="icon"
           variant="ghost"

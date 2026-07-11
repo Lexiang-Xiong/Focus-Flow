@@ -307,3 +307,53 @@ describe('applyNlpActions（NLP 编辑批量落地）', () => {
     expect(store.getState().taskComputedTimes[byTitle('新').id]).toBeTruthy();
   });
 });
+
+
+// ============ 执行计划相关 ============
+describe('执行计划关联（daily plan / plan group）', () => {
+  it('addTaskToDailyPlan 把日期加入 plannedDates，去重', () => {
+    store.getState().addTask('z1', '任务', '');
+    const id = store.getState().tasks[0].id;
+    store.getState().addTaskToDailyPlan(id, '2026-07-12');
+    store.getState().addTaskToDailyPlan(id, '2026-07-13');
+    store.getState().addTaskToDailyPlan(id, '2026-07-12'); // 重复
+    expect(find(id).plannedDates).toEqual(['2026-07-12', '2026-07-13']);
+  });
+
+  it('removeTaskFromDailyPlan 移除指定日期', () => {
+    store.getState().addTask('z1', '任务', '');
+    const id = store.getState().tasks[0].id;
+    store.getState().addTaskToDailyPlan(id, '2026-07-12');
+    store.getState().addTaskToDailyPlan(id, '2026-07-13');
+    store.getState().removeTaskFromDailyPlan(id, '2026-07-12');
+    expect(find(id).plannedDates).toEqual(['2026-07-13']);
+  });
+
+  it('addTaskToPlanGroup 把 groupId 加入 planGroupIds，去重', () => {
+    store.getState().addTask('z1', '任务', '');
+    const id = store.getState().tasks[0].id;
+    store.getState().addTaskToPlanGroup(id, 'g1');
+    store.getState().addTaskToPlanGroup(id, 'g2');
+    store.getState().addTaskToPlanGroup(id, 'g1'); // 重复
+    expect(find(id).planGroupIds).toEqual(['g1', 'g2']);
+  });
+
+  it('removeTaskFromPlanGroup 移除指定 groupId', () => {
+    store.getState().addTask('z1', '任务', '');
+    const id = store.getState().tasks[0].id;
+    store.getState().addTaskToPlanGroup(id, 'g1');
+    store.getState().addTaskToPlanGroup(id, 'g2');
+    store.getState().removeTaskFromPlanGroup(id, 'g1');
+    expect(find(id).planGroupIds).toEqual(['g2']);
+  });
+
+  it('计划关联变更会触发 saveSnapshot', () => {
+    const snap = vi.fn();
+    store.setState({ saveSnapshot: snap } as unknown as Partial<TaskSlice>);
+    store.getState().addTask('z1', '任务', '');
+    const id = store.getState().tasks[0].id;
+    snap.mockClear();
+    store.getState().addTaskToDailyPlan(id, '2026-07-12');
+    expect(snap).toHaveBeenCalledTimes(1);
+  });
+});
