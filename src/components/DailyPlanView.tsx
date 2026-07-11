@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, CalendarDays, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { DailyPlanSchedule } from './DailyPlanSchedule';
 import { DailyPlanSpanFocus } from './DailyPlanSpanFocus';
 import type { PlanGroup, Task, Zone, DailyPlanSpan } from '@/types';
 import { isDateInPlanGroupRange } from '@/store/slices/executionPlanSlice';
+import { useAppStore } from '@/store';
 import {
   DndContext,
   closestCenter,
@@ -209,18 +210,44 @@ export function DailyPlanView({
   spans,
 }: DailyPlanViewProps) {
   const { t } = useTranslation();
+  const settings = useAppStore(s => s.settings);
+  const updateSettings = useAppStore(s => s.updateSettings);
+  const viewState = settings.dailyPlanViewState;
+
+  const setViewState = useCallback((patch: Partial<typeof viewState>) => {
+    updateSettings({ dailyPlanViewState: { ...viewState, ...patch } });
+  }, [updateSettings, viewState]);
+
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showSpanDialog, setShowSpanDialog] = useState(false);
   const [spanDialogInitial, setSpanDialogInitial] = useState<{ startHour?: number; endHour?: number }>({});
-  const [backlogExpanded, setBacklogExpanded] = useState(true);
-  const [scheduleExpanded, setScheduleExpanded] = useState(false);
-  const [hourHeight, setHourHeight] = useState(48);
   const [focusedSpanId, setFocusedSpanId] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(0);
-  const [splitRatio, setSplitRatio] = useState(0.5);
   const [isDraggingSplitter, setIsDraggingSplitter] = useState(false);
+  const [liveSplitRatio, setLiveSplitRatio] = useState<number | null>(null);
+  const scrollDebounceRef = useRef<number | null>(null);
+  const splitterRatioRef = useRef(viewState.splitRatio ?? 0.5);
+
+  const backlogExpanded = viewState.backlogExpanded ?? true;
+  const scheduleExpanded = viewState.scheduleExpanded ?? false;
+  const hourHeight = viewState.hourHeight ?? 48;
+  const splitRatio = liveSplitRatio ?? (viewState.splitRatio ?? 0.5);
+  const scheduleScrollTop = viewState.scrollTop ?? 0;
+
+  const handleHourHeightChange = (value: number) => {
+    setViewState({ hourHeight: value });
+  };
+
+  const handleScheduleScroll = (scrollTop: number) => {
+    if (scrollDebounceRef.current) {
+      window.clearTimeout(scrollDebounceRef.current);
+    }
+    scrollDebounceRef.current = window.setTimeout(() => {
+      setViewState({ scrollTop });
+    }, 200);
+  };
 
   useEffect(() => {
     const el = containerRef.current;
@@ -231,6 +258,16 @@ export function DailyPlanView({
     observer.observe(el);
     setContainerHeight(el.getBoundingClientRect().height);
     return () => observer.disconnect();
+  }, []);
+
+
+
+  useEffect(() => {
+    return () => {
+      if (scrollDebounceRef.current) {
+        window.clearTimeout(scrollDebounceRef.current);
+      }
+    };
   }, []);
 
   const TITLE_HEIGHT = 40;
@@ -277,19 +314,27 @@ export function DailyPlanView({
   }, [containerHeight, backlogExpanded, scheduleExpanded, splitRatio]);
 
   const handleToggleBacklog = () => {
-    setBacklogExpanded(prev => {
-      if (!prev) return true;
-      if (!scheduleExpanded) setScheduleExpanded(true);
-      return false;
-    });
+    if (backlogExpanded) {
+      if (scheduleExpanded) {
+        setViewState({ backlogExpanded: false });
+      } else {
+        setViewState({ backlogExpanded: false, scheduleExpanded: true });
+      }
+    } else {
+      setViewState({ backlogExpanded: true });
+    }
   };
 
   const handleToggleSchedule = () => {
-    setScheduleExpanded(prev => {
-      if (!prev) return true;
-      if (!backlogExpanded) setBacklogExpanded(true);
-      return false;
-    });
+    if (scheduleExpanded) {
+      if (backlogExpanded) {
+        setViewState({ scheduleExpanded: false });
+      } else {
+        setViewState({ scheduleExpanded: false, backlogExpanded: true });
+      }
+    } else {
+      setViewState({ scheduleExpanded: true });
+    }
   };
 
   const handleSplitterMouseDown = (e: React.MouseEvent) => {
@@ -299,20 +344,25 @@ export function DailyPlanView({
     const container = containerRef.current;
     if (!container) return;
     const startY = e.clientY;
-    const startRatio = splitRatio;
+    const startRatio = viewState.splitRatio ?? 0.5;
+    setLiveSplitRatio(startRatio);
+    splitterRatioRef.current = startRatio;
 
     const handleMouseMove = (ev: MouseEvent) => {
       const rect = container.getBoundingClientRect();
       const available = rect.height - 2 * TITLE_HEIGHT - SPLITTER_HEIGHT;
       const deltaY = ev.clientY - startY;
-      const nextRatio = startRatio + deltaY / available;
-      setSplitRatio(Math.max(0.15, Math.min(0.85, nextRatio)));
+      const nextRatio = Math.max(0.15, Math.min(0.85, startRatio + deltaY / available));
+      splitterRatioRef.current = nextRatio;
+      setLiveSplitRatio(nextRatio);
     };
 
     const handleMouseUp = () => {
       setIsDraggingSplitter(false);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      setLiveSplitRatio(null);
+      setViewState({ splitRatio: splitterRatioRef.current });
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -587,11 +637,13 @@ export function DailyPlanView({
                 style={{ height: panelHeights.schedule }}
                 onToggleExpanded={handleToggleSchedule}
                 hourHeight={hourHeight}
-                onHourHeightChange={setHourHeight}
+                onHourHeightChange={handleHourHeightChange}
                 onDeleteSpan={onDeleteSpan}
                 onUpdateSpan={onUpdateSpan}
                 onEnterFocus={setFocusedSpanId}
                 onOpenSpanDialog={handleOpenSpanDialog}
+                scrollTop={scheduleScrollTop}
+                onScroll={handleScheduleScroll}
               />
             )}
           </div>

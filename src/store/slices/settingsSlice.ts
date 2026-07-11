@@ -21,6 +21,13 @@ export interface SettingsState {
     zoneViewLeafMode: boolean;
     autoSaveEnabled: boolean;
     autoSaveInterval: number;
+    dailyPlanViewState: {
+      backlogExpanded: boolean;
+      scheduleExpanded: boolean;
+      splitRatio: number;
+      hourHeight: number;
+      scrollTop: number;
+    };
   };
   customTemplates: Template[];
   configProfiles: ConfigProfile[];

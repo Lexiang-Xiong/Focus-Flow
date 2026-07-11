@@ -46,12 +46,10 @@ function hexToRgba(hex: string, alpha: number): string {
 
 function snapHour(hour: number): number {
   const clamped = Math.max(0, Math.min(24, hour));
-  // 优先吸附到整点/半点
   const wholeHalf = Math.round(clamped * 2) / 2;
   if (Math.abs(clamped - wholeHalf) < SNAP_THRESHOLD_HOUR) {
     return Math.max(0, Math.min(24, wholeHalf));
   }
-  // 否则按 5 分钟粒度吸附
   const grid = MIN_DURATION_HOUR;
   return Math.max(0, Math.min(24, Math.round(clamped / grid) * grid));
 }
@@ -82,54 +80,56 @@ export function TimeSpan({
   const color = useMemo(() => getSpanColor(span.startHour), [span.startHour]);
   const taskCount = tasks.length;
 
-  const [resizeState, setResizeState] = useState<{
+  const [preview, setPreview] = useState<{ startHour: number; endHour: number } | null>(null);
+  const justDraggedRef = useRef(false);
+  const resizeStateRef = useRef<{
     edge: 'top' | 'bottom';
     startY: number;
     startSpan: DailyPlanSpan;
     scrollTop: number;
   } | null>(null);
-  const [preview, setPreview] = useState<{ startHour: number; endHour: number } | null>(null);
-  const isResizingRef = useRef(false);
 
   const displaySpan = preview ?? span;
 
   const handleEdgeMouseDown = (edge: 'top' | 'bottom', e: React.MouseEvent) => {
-    e.stopPropagation();
     e.preventDefault();
+    e.stopPropagation();
     const container = containerRef?.current;
     if (!container) return;
-    isResizingRef.current = true;
-    setResizeState({
+
+    justDraggedRef.current = false;
+    resizeStateRef.current = {
       edge,
       startY: e.clientY,
       startSpan: { ...span },
       scrollTop: container.scrollTop,
-    });
+    };
     onHighlightHoursChange?.(getHighlightHours(span.startHour, span.endHour));
 
     const handleMouseMove = (ev: MouseEvent) => {
-      const rect = container.getBoundingClientRect();
-      const y = ev.clientY - rect.top + resizeState!.scrollTop;
-      let hour = snapHour(y / hourHeight);
+      const state = resizeStateRef.current;
+      if (!state) return;
 
-      let nextStart = span.startHour;
-      let nextEnd = span.endHour;
-      if (edge === 'top') {
-        nextStart = Math.min(hour, span.endHour - MIN_DURATION_HOUR);
+      const moveDelta = Math.abs(ev.clientY - state.startY);
+      if (moveDelta > 2) {
+        justDraggedRef.current = true;
+      }
+
+      const rect = container.getBoundingClientRect();
+      const y = ev.clientY - rect.top + state.scrollTop;
+      const hour = snapHour(y / hourHeight);
+
+      let nextStart = state.startSpan.startHour;
+      let nextEnd = state.startSpan.endHour;
+      if (state.edge === 'top') {
+        nextStart = Math.min(hour, state.startSpan.endHour - MIN_DURATION_HOUR);
         nextStart = Math.max(0, nextStart);
       } else {
-        nextEnd = Math.max(hour, span.startHour + MIN_DURATION_HOUR);
+        nextEnd = Math.max(hour, state.startSpan.startHour + MIN_DURATION_HOUR);
         nextEnd = Math.min(24, nextEnd);
       }
 
-      // 检测重叠：仅当不重叠时才更新预览
-      const overlap = findOverlappingSpan(
-        spans,
-        span.date,
-        nextStart,
-        nextEnd,
-        span.id
-      );
+      const overlap = findOverlappingSpan(spans, span.date, nextStart, nextEnd, span.id);
       if (!overlap) {
         setPreview({ startHour: nextStart, endHour: nextEnd });
         onHighlightHoursChange?.(getHighlightHours(nextStart, nextEnd));
@@ -137,22 +137,30 @@ export function TimeSpan({
     };
 
     const handleMouseUp = () => {
-      isResizingRef.current = false;
+      resizeStateRef.current = null;
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
       onHighlightHoursChange?.([]);
+
       if (preview) {
         const ok = onUpdateSpan(span.id, { startHour: preview.startHour, endHour: preview.endHour });
         if (!ok) {
           setPreview(null);
         }
       }
-      setResizeState(null);
-      setPreview(null);
+      setTimeout(() => {
+        setPreview(null);
+        justDraggedRef.current = false;
+      }, 0);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleClick = () => {
+    if (justDraggedRef.current) return;
+    onEnterFocus(span.id);
   };
 
   const displayDuration = displaySpan.endHour - displaySpan.startHour;
@@ -169,14 +177,15 @@ export function TimeSpan({
         borderLeftColor: color,
         boxShadow: highlightedHours && highlightedHours.length > 0 ? `0 0 0 1px ${hexToRgba(color, 0.3)}` : undefined,
       }}
-      onClick={() => !isResizingRef.current && onEnterFocus(span.id)}
+      onClick={handleClick}
     >
       {/* 上边缘拖拽手柄 */}
       <div
-        className="absolute left-0 right-0 top-0 h-1.5 cursor-row-resize opacity-0 group-hover:opacity-100 transition-opacity z-10"
-        style={{ backgroundColor: hexToRgba(color, 0.6) }}
+        className="absolute left-0 right-0 top-0 h-2 cursor-row-resize z-20 flex items-start justify-center opacity-0 group-hover:opacity-100 transition-opacity"
         onMouseDown={(e) => handleEdgeMouseDown('top', e)}
-      />
+      >
+        <div className="w-10 h-1 rounded-full mt-0.5" style={{ backgroundColor: hexToRgba(color, 0.8) }} />
+      </div>
 
       {/* 内容 */}
       <div className="flex-1 flex flex-col px-2 py-1 min-h-0 cursor-pointer">
@@ -217,10 +226,11 @@ export function TimeSpan({
 
       {/* 下边缘拖拽手柄 */}
       <div
-        className="absolute left-0 right-0 bottom-0 h-1.5 cursor-row-resize opacity-0 group-hover:opacity-100 transition-opacity z-10"
-        style={{ backgroundColor: hexToRgba(color, 0.6) }}
+        className="absolute left-0 right-0 bottom-0 h-2 cursor-row-resize z-20 flex items-end justify-center opacity-0 group-hover:opacity-100 transition-opacity"
         onMouseDown={(e) => handleEdgeMouseDown('bottom', e)}
-      />
+      >
+        <div className="w-10 h-1 rounded-full mb-0.5" style={{ backgroundColor: hexToRgba(color, 0.8) }} />
+      </div>
     </div>
   );
 }

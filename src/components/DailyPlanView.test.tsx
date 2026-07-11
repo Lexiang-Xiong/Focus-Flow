@@ -9,6 +9,51 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k: string) => k, i18n: { changeLanguage: () => {} } }),
 }));
 
+import { create } from 'zustand';
+
+const mockStore = create<{
+  settings: {
+    dailyPlanViewState: {
+      backlogExpanded: boolean;
+      scheduleExpanded: boolean;
+      splitRatio: number;
+      hourHeight: number;
+      scrollTop: number;
+    };
+  };
+  updateSettings: (patch: { dailyPlanViewState?: Partial<{
+    backlogExpanded: boolean;
+    scheduleExpanded: boolean;
+    splitRatio: number;
+    hourHeight: number;
+    scrollTop: number;
+  }> }) => void;
+}>((set, get) => ({
+  settings: {
+    dailyPlanViewState: {
+      backlogExpanded: true,
+      scheduleExpanded: false,
+      splitRatio: 0.5,
+      hourHeight: 48,
+      scrollTop: 0,
+    },
+  },
+  updateSettings: (patch) => {
+    const current = get().settings.dailyPlanViewState;
+    set({
+      settings: {
+        dailyPlanViewState: { ...current, ...(patch.dailyPlanViewState || {}) },
+      },
+    });
+  },
+}));
+
+vi.mock('@/store', () => ({
+  useAppStore: (selector?: (state: typeof mockStore extends (...args: unknown[]) => infer R ? R : never) => unknown) => {
+    return selector ? mockStore(selector) : mockStore();
+  },
+}));
+
 import { DailyPlanView } from './DailyPlanView';
 import type { Task, Zone, PlanGroup, DailyPlanSpan } from '@/types';
 

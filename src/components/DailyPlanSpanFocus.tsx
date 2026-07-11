@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, X, Clock, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableTaskItem } from './SortableTaskItem';
@@ -27,6 +28,10 @@ function formatHour(hour: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
+function hourToValue(hour: number): string {
+  return hour.toFixed(2);
+}
+
 function getZoneById(zones: Zone[], zoneId: string): Zone | undefined {
   return zones.find(z => z.id === zoneId);
 }
@@ -45,6 +50,7 @@ export function DailyPlanSpanFocus({
 }: DailyPlanSpanFocusProps) {
   const { t } = useTranslation();
   const [description, setDescription] = useState(span.description || '');
+  const [timeError, setTimeError] = useState<string | null>(null);
   const { setNodeRef, isOver } = useDroppable({ id: `span-focus-${span.id}` });
 
   const spanTasks = useMemo(() => {
@@ -53,9 +59,36 @@ export function DailyPlanSpanFocus({
       .sort((a, b) => (a.dailyPlanSpanOrder?.[span.date]?.[span.id] ?? Infinity) - (b.dailyPlanSpanOrder?.[span.date]?.[span.id] ?? Infinity));
   }, [tasks, span.id, span.date]);
 
+  const timeOptions = useMemo(() => {
+    const options: { value: string; label: string }[] = [];
+    for (let h = 0; h <= 24; h += 0.5) {
+      options.push({ value: h.toFixed(2), label: formatHour(h) });
+    }
+    return options;
+  }, []);
+
   const handleDescriptionBlur = () => {
     if (description !== (span.description || '')) {
       onUpdateSpan(span.id, { description: description.trim() || undefined });
+    }
+  };
+
+  const applyTimeChange = (key: 'start' | 'end', value: string) => {
+    const start = parseFloat(key === 'start' ? value : hourToValue(span.startHour));
+    const end = parseFloat(key === 'end' ? value : hourToValue(span.endHour));
+    if (Number.isNaN(start) || Number.isNaN(end)) {
+      setTimeError(t('view.spanInvalidTime'));
+      return;
+    }
+    if (end - start < 5 / 60) {
+      setTimeError(t('view.spanDurationTooShort'));
+      return;
+    }
+    const ok = onUpdateSpan(span.id, { startHour: start, endHour: end });
+    if (ok) {
+      setTimeError(null);
+    } else {
+      setTimeError(t('view.spanTimeOverlap'));
     }
   };
 
@@ -87,6 +120,44 @@ export function DailyPlanSpanFocus({
             {t('view.deleteSpan')}
           </Button>
         </div>
+      </div>
+
+      {/* Time range editor */}
+      <div className="px-3 py-3 border-b border-white/10 space-y-2">
+        <div className="flex items-center gap-2 text-xs text-white/50 mb-1.5">
+          <Clock size={12} />
+          <span>{t('view.spanTimeRange')}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <label className="text-[10px] text-white/40 mb-1 block">{t('view.spanStartTime')}</label>
+            <Select value={hourToValue(span.startHour)} onValueChange={(v) => applyTimeChange('start', v)}>
+              <SelectTrigger className="h-8 bg-black/20 border-white/10 text-white/90">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {timeOptions.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <span className="text-white/40 text-sm mt-5">-</span>
+          <div className="flex-1">
+            <label className="text-[10px] text-white/40 mb-1 block">{t('view.spanEndTime')}</label>
+            <Select value={hourToValue(span.endHour)} onValueChange={(v) => applyTimeChange('end', v)}>
+              <SelectTrigger className="h-8 bg-black/20 border-white/10 text-white/90">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {timeOptions.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {timeError && <div className="text-xs text-red-400">{timeError}</div>}
       </div>
 
       {/* Description */}

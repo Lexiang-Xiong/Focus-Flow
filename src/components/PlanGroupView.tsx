@@ -191,6 +191,7 @@ export function PlanGroupView({
           planGroups={planGroups}
           tasks={tasks}
           onDeleteGroup={onDeleteGroup}
+          onEditGroup={setEditingGroup}
         />
       </div>
 

@@ -272,6 +272,13 @@ export const DEFAULT_SETTINGS = {
   autoSaveEnabled: true, // 默认开启自动保存
   autoSaveInterval: 120, // 自动保存间隔（秒），默认120秒
   recurringTemplates: [], // 定时任务模板列表
+  dailyPlanViewState: {
+    backlogExpanded: true,
+    scheduleExpanded: false,
+    splitRatio: 0.5,
+    hourHeight: 48,
+    scrollTop: 0,
+  },
 };
 
 // 格式化时间为可读字符串

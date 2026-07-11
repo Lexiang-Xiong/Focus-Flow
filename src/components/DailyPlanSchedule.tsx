@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, ChevronDown, ChevronUp, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ interface DailyPlanScheduleProps {
   onUpdateSpan: (spanId: string, updates: Partial<Omit<DailyPlanSpan, 'id'>>) => boolean;
   onEnterFocus: (spanId: string) => void;
   onOpenSpanDialog: (startHour?: number, endHour?: number) => void;
+  scrollTop?: number;
+  onScroll?: (scrollTop: number) => void;
 }
 
 export function DailyPlanSchedule({
@@ -35,6 +37,8 @@ export function DailyPlanSchedule({
   onUpdateSpan,
   onEnterFocus,
   onOpenSpanDialog,
+  scrollTop = 0,
+  onScroll,
 }: DailyPlanScheduleProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -42,6 +46,26 @@ export function DailyPlanSchedule({
   const [dragStartY, setDragStartY] = useState<number | null>(null);
   const [dragCurrentY, setDragCurrentY] = useState<number | null>(null);
   const [highlightedHours, setHighlightedHours] = useState<number[]>([]);
+  const isRestoringRef = useRef(false);
+
+  // 恢复持久化的滚动位置
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || !expanded) return;
+    if (Math.abs(el.scrollTop - scrollTop) > 1) {
+      isRestoringRef.current = true;
+      el.scrollTop = scrollTop;
+      requestAnimationFrame(() => {
+        isRestoringRef.current = false;
+      });
+    }
+  }, [expanded, scrollTop]);
+
+  const handleScroll = () => {
+    const el = containerRef.current;
+    if (!el || isRestoringRef.current) return;
+    onScroll?.(el.scrollTop);
+  };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).closest('[data-span-area]')) return;
@@ -152,6 +176,7 @@ export function DailyPlanSchedule({
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onScroll={handleScroll}
         >
           <TimeRuler
             hourHeight={hourHeight}

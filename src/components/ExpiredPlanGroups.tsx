@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronUp, Trash2, Calendar } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2, Edit2, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { PlanGroup, Task } from '@/types';
 import { isPlanGroupExpired } from '@/store/slices/executionPlanSlice';
@@ -9,9 +9,10 @@ interface ExpiredPlanGroupsProps {
   planGroups: PlanGroup[];
   tasks: Task[];
   onDeleteGroup: (id: string) => void;
+  onEditGroup?: (group: PlanGroup) => void;
 }
 
-export function ExpiredPlanGroups({ planGroups, tasks, onDeleteGroup }: ExpiredPlanGroupsProps) {
+export function ExpiredPlanGroups({ planGroups, tasks, onDeleteGroup, onEditGroup }: ExpiredPlanGroupsProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
@@ -60,15 +61,26 @@ export function ExpiredPlanGroups({ planGroups, tasks, onDeleteGroup }: ExpiredP
                     {t('view.pendingTasksCount', { count: pendingCount })}
                   </span>
                 </div>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7 text-white/60 hover:text-red-400 hover:bg-red-500/10 shrink-0"
-                  onClick={() => onDeleteGroup(group.id)}
-                  title={t('common.delete')}
-                >
-                  <Trash2 size={12} />
-                </Button>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 text-white/60 hover:text-white hover:bg-white/10"
+                    onClick={() => onEditGroup?.(group)}
+                    title={t('common.edit')}
+                  >
+                    <Edit2 size={12} />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 text-white/60 hover:text-red-400 hover:bg-red-500/10"
+                    onClick={() => onDeleteGroup(group.id)}
+                    title={t('common.delete')}
+                  >
+                    <Trash2 size={12} />
+                  </Button>
+                </div>
               </div>
             );
           })}
