@@ -4,7 +4,7 @@ import { ArrowLeft, CalendarDays, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PlanGroupView } from './PlanGroupView';
 import { DailyPlanView } from './DailyPlanView';
-import type { PlanGroup, Task, Zone } from '@/types';
+import type { PlanGroup, Task, Zone, DailyPlanSpan } from '@/types';
 
 type ExecutionPlanTab = 'daily' | 'groups';
 
@@ -24,6 +24,12 @@ interface ExecutionPlanViewProps {
   onRemoveTaskFromDailyPlan: (taskId: string, date: string) => void;
   onAddTasksToDailyPlan: (taskIds: string[], date: string) => void;
   onSetDailyPlanOrder: (taskId: string, date: string, order: number) => void;
+  onMoveTaskToSpan: (taskId: string, date: string, spanId: string, order?: number) => void;
+  onMoveTaskOutOfSpan: (taskId: string, date: string) => void;
+  onSetDailyPlanSpanOrder: (taskId: string, spanId: string, order: number) => void;
+  onCreateSpan: (date: string, startHour: number, endHour: number) => string | null;
+  onDeleteSpan: (spanId: string) => void;
+  spans: DailyPlanSpan[];
 }
 
 export function ExecutionPlanView({
@@ -42,6 +48,12 @@ export function ExecutionPlanView({
   onRemoveTaskFromDailyPlan,
   onAddTasksToDailyPlan,
   onSetDailyPlanOrder,
+  onMoveTaskToSpan,
+  onMoveTaskOutOfSpan,
+  onSetDailyPlanSpanOrder,
+  onCreateSpan,
+  onDeleteSpan,
+  spans,
 }: ExecutionPlanViewProps) {
   const { t } = useTranslation();
   const [tab, setTab] = useState<ExecutionPlanTab>('daily');
@@ -119,6 +131,12 @@ export function ExecutionPlanView({
             onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
             onAddTasksToDailyPlan={onAddTasksToDailyPlan}
             onSetDailyPlanOrder={onSetDailyPlanOrder}
+            onMoveTaskToSpan={onMoveTaskToSpan}
+            onMoveTaskOutOfSpan={onMoveTaskOutOfSpan}
+            onSetDailyPlanSpanOrder={onSetDailyPlanSpanOrder}
+            onCreateSpan={onCreateSpan}
+            onDeleteSpan={onDeleteSpan}
+            spans={spans}
           />
         )}
       </div>

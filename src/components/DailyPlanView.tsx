@@ -1,10 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight, CalendarDays, Plus, X, GripVertical } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DatePickerPopover } from './DatePickerPopover';
+import { SpanFormDialog } from './SpanFormDialog';
+import { DailyPlanBacklog } from './DailyPlanBacklog';
+import { DailyPlanSchedule } from './DailyPlanSchedule';
 import type { PlanGroup, Task, Zone } from '@/types';
 import { isDateInPlanGroupRange } from '@/store/slices/executionPlanSlice';
 import {
@@ -16,14 +19,7 @@ import {
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 
 interface DailyPlanViewProps {
   planGroups: PlanGroup[];
@@ -36,97 +32,16 @@ interface DailyPlanViewProps {
   onRemoveTaskFromDailyPlan: (taskId: string, date: string) => void;
   onAddTasksToDailyPlan: (taskIds: string[], date: string) => void;
   onSetDailyPlanOrder: (taskId: string, date: string, order: number) => void;
+  onMoveTaskToSpan: (taskId: string, date: string, spanId: string, order?: number) => void;
+  onMoveTaskOutOfSpan: (taskId: string, date: string) => void;
+  onSetDailyPlanSpanOrder: (taskId: string, spanId: string, order: number) => void;
+  onCreateSpan: (date: string, startHour: number, endHour: number) => string | null;
+  onDeleteSpan: (spanId: string) => void;
+  spans: { id: string; date: string; startHour: number; endHour: number; createdAt: number }[];
 }
 
 function getZoneById(zones: Zone[], zoneId: string): Zone | undefined {
   return zones.find(z => z.id === zoneId);
-}
-
-interface SortableTaskItemProps {
-  task: Task;
-  zone?: Zone;
-  selectedDate: string;
-  onToggleTask: (taskId: string) => void;
-  onNavigateToZone: (zoneId: string, taskId?: string) => void;
-  onRemoveTaskFromDailyPlan: (taskId: string, date: string) => void;
-}
-
-function SortableTaskItem({
-  task,
-  zone,
-  selectedDate,
-  onToggleTask,
-  onNavigateToZone,
-  onRemoveTaskFromDailyPlan,
-}: SortableTaskItemProps) {
-  const { t } = useTranslation();
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: task.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="flex items-center gap-2 px-3 py-2 rounded bg-black/20 hover:bg-white/5 border border-white/5"
-    >
-      <button
-        {...attributes}
-        {...listeners}
-        className="text-white/30 hover:text-white/60 cursor-grab active:cursor-grabbing shrink-0"
-        title={t('task.dragToSort')}
-      >
-        <GripVertical size={14} />
-      </button>
-      <Checkbox
-        checked={task.completed}
-        onCheckedChange={() => onToggleTask(task.id)}
-        className="border-white/30"
-      />
-      <button
-        onClick={() => onNavigateToZone(task.zoneId, task.id)}
-        className="flex-1 text-left min-w-0"
-      >
-        <div className={`text-sm truncate hover:underline ${
-          task.completed ? 'line-through text-white/40' : 'text-white/90'
-        }`}>
-          {task.title}
-        </div>
-        {task.description && (
-          <div className="text-xs text-white/50 truncate mt-0.5">
-            {task.description}
-          </div>
-        )}
-      </button>
-      {zone && (
-        <span
-          className="w-2 h-2 rounded-full shrink-0"
-          style={{ backgroundColor: zone.color }}
-          title={zone.name}
-        />
-      )}
-      <Button
-        size="icon"
-        variant="ghost"
-        className="h-6 w-6 text-white/40 hover:text-white/80 hover:bg-white/10 shrink-0"
-        onClick={() => onRemoveTaskFromDailyPlan(task.id, selectedDate)}
-        title={t('task.removeFromPlan')}
-      >
-        <X size={12} />
-      </Button>
-    </div>
-  );
 }
 
 function addDays(dateStr: string, days: number): string {
@@ -283,9 +198,17 @@ export function DailyPlanView({
   onRemoveTaskFromDailyPlan,
   onAddTasksToDailyPlan,
   onSetDailyPlanOrder,
+  onMoveTaskToSpan,
+  onMoveTaskOutOfSpan,
+  onSetDailyPlanSpanOrder,
+  onCreateSpan,
+  onDeleteSpan,
+  spans,
 }: DailyPlanViewProps) {
   const { t } = useTranslation();
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showSpanDialog, setShowSpanDialog] = useState(false);
+  const [spanDialogInitial, setSpanDialogInitial] = useState<{ startHour?: number; endHour?: number }>({});
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -297,25 +220,141 @@ export function DailyPlanView({
   );
 
   const dailyTasks = useMemo(
-    () => tasks
-      .filter(t => t.plannedDates?.includes(selectedDate))
-      .sort((a, b) => (a.dailyPlanOrder?.[selectedDate] ?? Infinity) - (b.dailyPlanOrder?.[selectedDate] ?? Infinity)),
+    () => tasks.filter(t => t.plannedDates?.includes(selectedDate)),
     [tasks, selectedDate]
   );
+
+  const backlogTasks = useMemo(
+    () => dailyTasks
+      .filter(t => !t.dailyPlanSpanIds?.[selectedDate])
+      .sort((a, b) => (a.dailyPlanOrder?.[selectedDate] ?? Infinity) - (b.dailyPlanOrder?.[selectedDate] ?? Infinity)),
+    [dailyTasks, selectedDate]
+  );
+
+  const dateSpans = useMemo(
+    () => spans
+      .filter(s => s.date === selectedDate)
+      .sort((a, b) => a.startHour - b.startHour),
+    [spans, selectedDate]
+  );
+
+  const getTaskLocation = (taskId: string): { type: 'backlog' | 'span'; spanId?: string } => {
+    const task = dailyTasks.find(t => t.id === taskId);
+    if (!task) return { type: 'backlog' };
+    const spanId = task.dailyPlanSpanIds?.[selectedDate];
+    return spanId ? { type: 'span', spanId } : { type: 'backlog' };
+  };
+
+  const getTaskListForReorder = (spanId?: string): Task[] => {
+    if (!spanId) return backlogTasks;
+    return dailyTasks
+      .filter(t => t.dailyPlanSpanIds?.[selectedDate] === spanId)
+      .sort((a, b) => (a.dailyPlanSpanOrder?.[spanId] ?? Infinity) - (b.dailyPlanSpanOrder?.[spanId] ?? Infinity));
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const oldIndex = dailyTasks.findIndex(t => t.id === active.id);
-    const newIndex = dailyTasks.findIndex(t => t.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-    const reordered = arrayMove(dailyTasks, oldIndex, newIndex);
-    reordered.forEach((task, index) => {
-      const order = index + 1;
-      if (task.dailyPlanOrder?.[selectedDate] !== order) {
-        onSetDailyPlanOrder(task.id, selectedDate, order);
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    const activeLocation = getTaskLocation(activeId);
+
+    // 1. 拖到缓存区 drop target
+    if (overId === 'daily-plan-backlog') {
+      if (activeLocation.type === 'span' && activeLocation.spanId) {
+        onMoveTaskOutOfSpan(activeId, selectedDate);
       }
-    });
+      return;
+    }
+
+    // 2. 拖到 span drop target
+    if (overId.startsWith('span-')) {
+      const spanId = overId.replace('span-', '');
+      if (activeLocation.type === 'backlog') {
+        onMoveTaskToSpan(activeId, selectedDate, spanId);
+      } else if (activeLocation.type === 'span' && activeLocation.spanId !== spanId) {
+        onMoveTaskToSpan(activeId, selectedDate, spanId);
+      }
+      return;
+    }
+
+    // 3. over 是某个任务
+    const overLocation = getTaskLocation(overId);
+
+    // 3a. 都在缓存区：排序
+    if (activeLocation.type === 'backlog' && overLocation.type === 'backlog') {
+      const oldIndex = backlogTasks.findIndex(t => t.id === activeId);
+      const newIndex = backlogTasks.findIndex(t => t.id === overId);
+      if (oldIndex === -1 || newIndex === -1) return;
+      const reordered = arrayMove(backlogTasks, oldIndex, newIndex);
+      reordered.forEach((task, index) => {
+        const order = index + 1;
+        if (task.dailyPlanOrder?.[selectedDate] !== order) {
+          onSetDailyPlanOrder(task.id, selectedDate, order);
+        }
+      });
+      return;
+    }
+
+    // 3b. active 在 span，over 在缓存区：移出
+    if (activeLocation.type === 'span' && overLocation.type === 'backlog') {
+      onMoveTaskOutOfSpan(activeId, selectedDate);
+      return;
+    }
+
+    // 3c. active 在缓存区，over 在 span：移入
+    if (activeLocation.type === 'backlog' && overLocation.type === 'span' && overLocation.spanId) {
+      const targetSpanId = overLocation.spanId;
+      const spanTasks = getTaskListForReorder(targetSpanId);
+      const newIndex = spanTasks.findIndex(t => t.id === overId);
+      const order = newIndex >= 0 ? newIndex + 1 : spanTasks.length + 1;
+      onMoveTaskToSpan(activeId, selectedDate, targetSpanId, order);
+      return;
+    }
+
+    // 3d. 都在同一个 span：内部排序
+    if (
+      activeLocation.type === 'span' &&
+      overLocation.type === 'span' &&
+      activeLocation.spanId === overLocation.spanId
+    ) {
+      const spanId = activeLocation.spanId!;
+      const spanTasks = getTaskListForReorder(spanId);
+      const oldIndex = spanTasks.findIndex(t => t.id === activeId);
+      const newIndex = spanTasks.findIndex(t => t.id === overId);
+      if (oldIndex === -1 || newIndex === -1) return;
+      const reordered = arrayMove(spanTasks, oldIndex, newIndex);
+      reordered.forEach((task, index) => {
+        const order = index + 1;
+        if (task.dailyPlanSpanOrder?.[spanId] !== order) {
+          onSetDailyPlanSpanOrder(task.id, spanId, order);
+        }
+      });
+      return;
+    }
+
+    // 3e. active 在 span A，over 在 span B：移入 B 并排序
+    if (
+      activeLocation.type === 'span' &&
+      overLocation.type === 'span' &&
+      activeLocation.spanId !== overLocation.spanId
+    ) {
+      const targetSpanId = overLocation.spanId!;
+      const spanTasks = getTaskListForReorder(targetSpanId);
+      const newIndex = spanTasks.findIndex(t => t.id === overId);
+      const order = newIndex >= 0 ? newIndex + 1 : spanTasks.length + 1;
+      onMoveTaskToSpan(activeId, selectedDate, targetSpanId, order);
+    }
+  };
+
+  const handleOpenSpanDialog = (startHour?: number, endHour?: number) => {
+    setSpanDialogInitial({ startHour, endHour });
+    setShowSpanDialog(true);
+  };
+
+  const handleCreateSpan = (startHour: number, endHour: number) => {
+    onCreateSpan(selectedDate, startHour, endHour);
   };
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
@@ -370,47 +409,45 @@ export function DailyPlanView({
         </Button>
       </div>
 
-      {/* Task list */}
-      <div className="flex-1 overflow-y-auto p-3">
-        {dailyTasks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-white/40 gap-2">
-            <CalendarDays size={32} opacity={0.5} />
-            <span className="text-sm">{t('view.noTasksForDate')}</span>
-            <Button size="sm" variant="outline" onClick={() => setShowAddDialog(true)}>
-              {t('view.addFromPlanGroup')}
-            </Button>
+      {/* Backlog + Schedule */}
+      {dailyTasks.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-white/40 gap-2">
+          <CalendarDays size={32} opacity={0.5} />
+          <span className="text-sm">{t('view.noTasksForDate')}</span>
+          <Button size="sm" variant="outline" onClick={() => setShowAddDialog(true)}>
+            {t('view.addFromPlanGroup')}
+          </Button>
+        </div>
+      ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex flex-col flex-1 min-h-0">
+            <DailyPlanBacklog
+              date={selectedDate}
+              tasks={backlogTasks}
+              zones={zones}
+              onToggleTask={onToggleTask}
+              onNavigateToZone={onNavigateToZone}
+              onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
+            />
+
+            <DailyPlanSchedule
+              date={selectedDate}
+              spans={dateSpans}
+              tasks={dailyTasks}
+              zones={zones}
+              onToggleTask={onToggleTask}
+              onNavigateToZone={onNavigateToZone}
+              onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
+              onDeleteSpan={onDeleteSpan}
+              onOpenSpanDialog={handleOpenSpanDialog}
+            />
           </div>
-        ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              key={selectedDate}
-              items={dailyTasks.map(t => t.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="space-y-1">
-                {dailyTasks.map(task => {
-                  const zone = getZoneById(zones, task.zoneId);
-                  return (
-                    <SortableTaskItem
-                      key={task.id}
-                      task={task}
-                      zone={zone}
-                      selectedDate={selectedDate}
-                      onToggleTask={onToggleTask}
-                      onNavigateToZone={onNavigateToZone}
-                      onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
-                    />
-                  );
-                })}
-              </div>
-            </SortableContext>
-          </DndContext>
-        )}
-      </div>
+        </DndContext>
+      )}
 
       <AddFromPlanGroupDialog
         open={showAddDialog}
@@ -420,6 +457,14 @@ export function DailyPlanView({
         zones={zones}
         selectedDate={selectedDate}
         onAdd={(taskIds) => onAddTasksToDailyPlan(taskIds, selectedDate)}
+      />
+
+      <SpanFormDialog
+        open={showSpanDialog}
+        onOpenChange={setShowSpanDialog}
+        initialStartHour={spanDialogInitial.startHour}
+        initialEndHour={spanDialogInitial.endHour}
+        onSubmit={handleCreateSpan}
       />
     </div>
   );

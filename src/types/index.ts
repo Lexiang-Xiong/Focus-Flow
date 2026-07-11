@@ -40,7 +40,9 @@ export interface Task {
   isRecurring?: boolean; // 标识是否由定时器生成
   plannedDates?: string[]; // 被分配到的单日计划日期（YYYY-MM-DD）
   planGroupIds?: string[]; // 所属计划组 id 列表
-  dailyPlanOrder?: Record<string, number>; // 各日期在执行计划中的排序（仅影响执行计划视图）
+  dailyPlanOrder?: Record<string, number>; // 各日期在执行计划缓存区中的排序（仅影响执行计划视图）
+  dailyPlanSpanIds?: Record<string, string>; // date -> spanId，任务被拖入的时间块
+  dailyPlanSpanOrder?: Record<string, number>; // spanId -> order，时间块内部排序
 }
 
 // 定时任务模板
@@ -83,6 +85,15 @@ export interface PlanGroup {
   startDate?: string | null; // ISO 日期 YYYY-MM-DD，null/undefined 表示无时间组
   endDate?: string | null;   // ISO 日期 YYYY-MM-DD
   order: number;
+  createdAt: number;
+}
+
+// 单日计划时间块（Time Span）
+export interface DailyPlanSpan {
+  id: string;
+  date: string;        // ISO 日期 YYYY-MM-DD
+  startHour: number;   // 0.0 - 24.0，支持 0.5 粒度
+  endHour: number;     // > startHour，最大 24.0
   createdAt: number;
 }
 

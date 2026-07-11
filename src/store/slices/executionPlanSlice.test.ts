@@ -6,7 +6,7 @@ vi.mock('@/lib/i18n', () => ({
   default: { t: (key: string) => key, changeLanguage: () => {} },
 }));
 
-import { createExecutionPlanSlice, type ExecutionPlanSlice, isPlanGroupExpired, isDateInPlanGroupRange } from './executionPlanSlice';
+import { createExecutionPlanSlice, type ExecutionPlanSlice, isPlanGroupExpired, isDateInPlanGroupRange, findOverlappingSpan } from './executionPlanSlice';
 import { createTaskSlice, type TaskSlice } from './taskSlice';
 import { createUndoSlice, type UndoSlice } from './undoSlice';
 
@@ -114,5 +114,97 @@ describe('isPlanGroupExpired / isDateInPlanGroupRange', () => {
     expect(isDateInPlanGroupRange(group, '2026-07-12')).toBe(true);
     expect(isDateInPlanGroupRange(group, '2026-07-10')).toBe(false);
     expect(isDateInPlanGroupRange(group, '2026-07-16')).toBe(false);
+  });
+});
+
+// ============ DailyPlanSpan ============
+const makeSpan = (id: string, date: string, startHour: number, endHour: number) => ({
+  id, date, startHour, endHour, createdAt: 0,
+});
+
+describe('DailyPlanSpan CRUD', () => {
+  it('createDailyPlanSpan 创建时间块并返回 id', () => {
+    const id = store.getState().createDailyPlanSpan('2026-07-12', 9, 12);
+    expect(id).toBeTruthy();
+    const span = store.getState().dailyPlanSpans.find(s => s.id === id);
+    expect(span).toMatchObject({ date: '2026-07-12', startHour: 9, endHour: 12 });
+  });
+
+  it('开始时间必须严格小于结束时间', () => {
+    expect(store.getState().createDailyPlanSpan('2026-07-12', 12, 12)).toBeNull();
+    expect(store.getState().createDailyPlanSpan('2026-07-12', 13, 12)).toBeNull();
+  });
+
+  it('时间范围限制在 0–24 小时', () => {
+    expect(store.getState().createDailyPlanSpan('2026-07-12', -1, 12)).toBeNull();
+    expect(store.getState().createDailyPlanSpan('2026-07-12', 9, 25)).toBeNull();
+  });
+
+  it('重叠时间块不能创建', () => {
+    store.getState().createDailyPlanSpan('2026-07-12', 9, 12);
+    expect(store.getState().createDailyPlanSpan('2026-07-12', 11, 13)).toBeNull();
+    expect(store.getState().createDailyPlanSpan('2026-07-12', 8, 10)).toBeNull();
+  });
+
+  it('不同日期的重叠时间允许', () => {
+    store.getState().createDailyPlanSpan('2026-07-12', 9, 12);
+    expect(store.getState().createDailyPlanSpan('2026-07-13', 10, 11)).toBeTruthy();
+  });
+
+  it('updateDailyPlanSpan 更新时间并检测重叠', () => {
+    const id = store.getState().createDailyPlanSpan('2026-07-12', 9, 12)!;
+    store.getState().createDailyPlanSpan('2026-07-12', 14, 16);
+
+    expect(store.getState().updateDailyPlanSpan(id, { startHour: 13, endHour: 15 })).toBe(false);
+    expect(store.getState().updateDailyPlanSpan(id, { startHour: 12, endHour: 14 })).toBe(true);
+
+    const span = store.getState().dailyPlanSpans.find(s => s.id === id);
+    expect(span).toMatchObject({ startHour: 12, endHour: 14 });
+  });
+
+  it('deleteDailyPlanSpan 删除时间块并清理任务引用', () => {
+    store.getState().addTask('z1', '任务', '');
+    const taskId = store.getState().tasks[0].id;
+
+    const spanId = store.getState().createDailyPlanSpan('2026-07-12', 9, 12)!;
+    store.getState().addTaskToDailyPlan(taskId, '2026-07-12');
+    store.getState().moveTaskToDailyPlanSpan(taskId, '2026-07-12', spanId);
+
+    expect(store.getState().tasks[0].dailyPlanSpanIds?.['2026-07-12']).toBe(spanId);
+
+    store.getState().deleteDailyPlanSpan(spanId);
+
+    expect(store.getState().dailyPlanSpans).toHaveLength(0);
+    expect(store.getState().tasks[0].dailyPlanSpanIds?.['2026-07-12']).toBeUndefined();
+  });
+
+  it('getDailyPlanSpansByDate 返回按开始时间排序的列表', () => {
+    store.getState().createDailyPlanSpan('2026-07-12', 14, 16);
+    store.getState().createDailyPlanSpan('2026-07-12', 9, 12);
+    store.getState().createDailyPlanSpan('2026-07-13', 10, 11);
+
+    const result = store.getState().getDailyPlanSpansByDate('2026-07-12');
+    expect(result.map(s => s.startHour)).toEqual([9, 14]);
+  });
+});
+
+describe('findOverlappingSpan', () => {
+  const spans = [
+    makeSpan('s1', '2026-07-12', 9, 12),
+    makeSpan('s2', '2026-07-12', 14, 16),
+  ];
+
+  it('检测时间交叉', () => {
+    expect(findOverlappingSpan(spans, '2026-07-12', 11, 15)).toBe(spans[0]);
+    expect(findOverlappingSpan(spans, '2026-07-12', 8, 10)).toBe(spans[0]);
+    expect(findOverlappingSpan(spans, '2026-07-12', 12, 14)).toBeUndefined();
+  });
+
+  it('excludeId 排除自身', () => {
+    expect(findOverlappingSpan(spans, '2026-07-12', 9, 12, 's1')).toBeUndefined();
+  });
+
+  it('不同日期不重叠', () => {
+    expect(findOverlappingSpan(spans, '2026-07-13', 10, 15)).toBeUndefined();
   });
 });

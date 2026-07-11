@@ -1,6 +1,7 @@
 import type { StateCreator } from 'zustand';
 import type { Task, TaskPriority, TaskUrgency, DeadlineType, RecurringTemplate } from '@/types';
 import type { UndoSlice } from './undoSlice';
+import type { ExecutionPlanState } from './executionPlanSlice';
 import type { PlannedAction } from '@/lib/nlp-edit/apply-core';
 import i18n from '@/lib/i18n';
 
@@ -37,6 +38,9 @@ export interface TaskActions {
   addTasksToDailyPlan: (taskIds: string[], date: string) => void;
   removeTaskFromDailyPlan: (taskId: string, date: string) => void;
   setDailyPlanOrder: (taskId: string, date: string, order: number) => void;
+  moveTaskToDailyPlanSpan: (taskId: string, date: string, spanId: string, order?: number) => void;
+  moveTaskOutOfDailyPlanSpan: (taskId: string, date: string) => void;
+  setDailyPlanSpanOrder: (taskId: string, spanId: string, order: number) => void;
   addTaskToPlanGroup: (taskId: string, groupId: string) => void;
   removeTaskFromPlanGroup: (taskId: string, groupId: string) => void;
   // 定时任务相关
@@ -198,7 +202,7 @@ export const computeAllTaskTimes = (tasks: Task[]): Record<string, TaskComputedT
   return computed;
 };
 
-export const createTaskSlice: StateCreator<TaskSlice & UndoSlice, [], [], TaskSlice> = (set, get) => ({
+export const createTaskSlice: StateCreator<TaskSlice & UndoSlice & ExecutionPlanState, [], [], TaskSlice> = (set, get) => ({
   tasks: [],
   taskComputedTimes: {},
   recurringTemplates: [],
@@ -539,11 +543,18 @@ export const createTaskSlice: StateCreator<TaskSlice & UndoSlice, [], [], TaskSl
       const tasks = state.tasks.map(t => {
         if (t.id !== taskId) return t;
         if (!t.plannedDates?.includes(date)) return t;
-        const { [date]: _, ...remainingOrder } = (t.dailyPlanOrder || {});
+        const remainingOrder = Object.fromEntries(Object.entries(t.dailyPlanOrder || {}).filter(([key]) => key !== date));
+        const remainingSpanIds = Object.fromEntries(Object.entries(t.dailyPlanSpanIds || {}).filter(([key]) => key !== date));
+        const spanId = t.dailyPlanSpanIds?.[date];
+        const remainingSpanOrder = spanId
+          ? Object.fromEntries(Object.entries(t.dailyPlanSpanOrder || {}).filter(([key]) => key !== spanId))
+          : (t.dailyPlanSpanOrder || {});
         return {
           ...t,
           plannedDates: t.plannedDates.filter(d => d !== date),
           dailyPlanOrder: remainingOrder,
+          dailyPlanSpanIds: remainingSpanIds,
+          dailyPlanSpanOrder: remainingSpanOrder,
         };
       });
       return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
@@ -556,6 +567,70 @@ export const createTaskSlice: StateCreator<TaskSlice & UndoSlice, [], [], TaskSl
       const tasks = state.tasks.map(t => t.id !== taskId ? t : {
         ...t,
         dailyPlanOrder: { ...t.dailyPlanOrder, [date]: order },
+      });
+      return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
+    });
+  },
+
+  moveTaskToDailyPlanSpan: (taskId, date, spanId, order) => {
+    get().saveSnapshot?.();
+    set((state) => {
+      const span = get().dailyPlanSpans?.find(s => s.id === spanId && s.date === date);
+      if (!span) return state;
+
+      // 计算新顺序：默认放到该 span 已有任务末尾
+      const targetOrder = order ?? (
+        state.tasks
+          .filter(t => t.dailyPlanSpanIds?.[date] === spanId)
+          .reduce((max, t) => Math.max(max, t.dailyPlanSpanOrder?.[spanId] ?? 0), 0) + 1
+      );
+
+      const tasks = state.tasks.map(t => {
+        if (t.id !== taskId) return t;
+        if (!t.plannedDates?.includes(date)) return t;
+        const remainingOrder = Object.fromEntries(Object.entries(t.dailyPlanOrder || {}).filter(([key]) => key !== date));
+        const oldSpanId = t.dailyPlanSpanIds?.[date];
+        const remainingSpanOrder = oldSpanId
+          ? Object.fromEntries(Object.entries(t.dailyPlanSpanOrder || {}).filter(([key]) => key !== oldSpanId))
+          : (t.dailyPlanSpanOrder || {});
+        return {
+          ...t,
+          dailyPlanOrder: remainingOrder,
+          dailyPlanSpanIds: { ...(t.dailyPlanSpanIds || {}), [date]: spanId },
+          dailyPlanSpanOrder: { ...remainingSpanOrder, [spanId]: targetOrder },
+        };
+      });
+      return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
+    });
+  },
+
+  moveTaskOutOfDailyPlanSpan: (taskId, date) => {
+    get().saveSnapshot?.();
+    set((state) => {
+      const nextOrder = getNextDailyPlanOrder(state.tasks, date);
+      const tasks = state.tasks.map(t => {
+        if (t.id !== taskId) return t;
+        const spanId = t.dailyPlanSpanIds?.[date];
+        if (!spanId) return t;
+        const remainingSpanIds = Object.fromEntries(Object.entries(t.dailyPlanSpanIds || {}).filter(([key]) => key !== date));
+        const remainingSpanOrder = Object.fromEntries(Object.entries(t.dailyPlanSpanOrder || {}).filter(([key]) => key !== spanId));
+        return {
+          ...t,
+          dailyPlanSpanIds: remainingSpanIds,
+          dailyPlanSpanOrder: remainingSpanOrder,
+          dailyPlanOrder: { ...(t.dailyPlanOrder || {}), [date]: nextOrder },
+        };
+      });
+      return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
+    });
+  },
+
+  setDailyPlanSpanOrder: (taskId, spanId, order) => {
+    get().saveSnapshot?.();
+    set((state) => {
+      const tasks = state.tasks.map(t => t.id !== taskId ? t : {
+        ...t,
+        dailyPlanSpanOrder: { ...(t.dailyPlanSpanOrder || {}), [spanId]: order },
       });
       return { tasks, taskComputedTimes: computeAllTaskTimes(tasks) };
     });
@@ -677,7 +752,7 @@ export const createTaskSlice: StateCreator<TaskSlice & UndoSlice, [], [], TaskSl
     const now = Date.now();
     const templates = state.recurringTemplates || [];
     let hasChanges = false;
-    let newTasks = [...state.tasks];
+    const newTasks = [...state.tasks];
     const newTemplates = [...templates];
 
     templates.forEach((tpl, index) => {

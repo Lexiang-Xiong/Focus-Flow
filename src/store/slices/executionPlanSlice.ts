@@ -1,9 +1,10 @@
 import type { StateCreator } from 'zustand';
-import type { PlanGroup } from '@/types';
+import type { PlanGroup, DailyPlanSpan } from '@/types';
 import type { TaskSlice } from './taskSlice';
 
 export interface ExecutionPlanState {
   planGroups: PlanGroup[];
+  dailyPlanSpans: DailyPlanSpan[];
 }
 
 export interface ExecutionPlanActions {
@@ -12,6 +13,11 @@ export interface ExecutionPlanActions {
   deletePlanGroup: (id: string) => void;
   reorderPlanGroups: (newOrder: PlanGroup[]) => void;
   getPlanGroupById: (id: string) => PlanGroup | undefined;
+  // 单日计划时间块
+  createDailyPlanSpan: (date: string, startHour: number, endHour: number) => string | null;
+  updateDailyPlanSpan: (id: string, updates: Partial<Omit<DailyPlanSpan, 'id'>>) => boolean;
+  deleteDailyPlanSpan: (id: string) => void;
+  getDailyPlanSpansByDate: (date: string) => DailyPlanSpan[];
 }
 
 export type ExecutionPlanSlice = ExecutionPlanState & ExecutionPlanActions;
@@ -49,6 +55,33 @@ const createPlanGroup = (
   createdAt: Date.now(),
 });
 
+// 辅助函数：检查时间块是否重叠
+export function findOverlappingSpan(
+  spans: DailyPlanSpan[],
+  date: string,
+  startHour: number,
+  endHour: number,
+  excludeId?: string
+): DailyPlanSpan | undefined {
+  return spans.find(span => {
+    if (span.date !== date) return false;
+    if (excludeId && span.id === excludeId) return false;
+    return startHour < span.endHour && endHour > span.startHour;
+  });
+}
+
+const createDailyPlanSpanEntity = (
+  date: string,
+  startHour: number,
+  endHour: number
+): DailyPlanSpan => ({
+  id: `daily-plan-span-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+  date,
+  startHour,
+  endHour,
+  createdAt: Date.now(),
+});
+
 export const createExecutionPlanSlice: StateCreator<
   ExecutionPlanSlice & TaskSlice & { saveSnapshot?: () => void },
   [],
@@ -56,6 +89,7 @@ export const createExecutionPlanSlice: StateCreator<
   ExecutionPlanSlice
 > = (set, get) => ({
   planGroups: [],
+  dailyPlanSpans: [],
 
   addPlanGroup: (name, startDate, endDate) => {
     get().saveSnapshot?.();
@@ -84,7 +118,7 @@ export const createExecutionPlanSlice: StateCreator<
       const existing = state.planGroups.find(g => g.id === id);
       if (!existing) return state;
 
-      let merged = { ...existing, ...updates };
+      const merged = { ...existing, ...updates };
       // 保证 startDate <= endDate
       if (merged.startDate && merged.endDate && merged.startDate > merged.endDate) {
         const tmp = merged.startDate;
@@ -121,4 +155,77 @@ export const createExecutionPlanSlice: StateCreator<
   reorderPlanGroups: (newOrder) => set({ planGroups: newOrder }),
 
   getPlanGroupById: (id) => get().planGroups.find(g => g.id === id),
+
+  createDailyPlanSpan: (date, startHour, endHour) => {
+    if (startHour >= endHour) return null;
+    if (startHour < 0 || endHour > 24) return null;
+
+    const overlapping = findOverlappingSpan(get().dailyPlanSpans, date, startHour, endHour);
+    if (overlapping) return null;
+
+    get().saveSnapshot?.();
+    const newSpan = createDailyPlanSpanEntity(date, startHour, endHour);
+    set((state) => ({
+      dailyPlanSpans: [...state.dailyPlanSpans, newSpan],
+    }));
+    return newSpan.id;
+  },
+
+  updateDailyPlanSpan: (id, updates) => {
+    const existing = get().dailyPlanSpans.find(s => s.id === id);
+    if (!existing) return false;
+
+    const merged: DailyPlanSpan = { ...existing, ...updates };
+    if (merged.startHour >= merged.endHour) return false;
+    if (merged.startHour < 0 || merged.endHour > 24) return false;
+
+    const overlapping = findOverlappingSpan(
+      get().dailyPlanSpans,
+      merged.date,
+      merged.startHour,
+      merged.endHour,
+      id
+    );
+    if (overlapping) return false;
+
+    get().saveSnapshot?.();
+    set((state) => ({
+      dailyPlanSpans: state.dailyPlanSpans.map(s => s.id === id ? merged : s),
+    }));
+    return true;
+  },
+
+  deleteDailyPlanSpan: (id) => {
+    get().saveSnapshot?.();
+    set((state) => {
+      const span = state.dailyPlanSpans.find(s => s.id === id);
+      const date = span?.date;
+      // 清理任务对该 span 的引用
+      const tasks = date
+        ? state.tasks.map(t => {
+            if (t.dailyPlanSpanIds?.[date] !== id) return t;
+            const remainingSpanIds = Object.fromEntries(
+              Object.entries(t.dailyPlanSpanIds || {}).filter(([key]) => key !== date)
+            );
+            const remainingSpanOrders = Object.fromEntries(
+              Object.entries(t.dailyPlanSpanOrder || {}).filter(([key]) => key !== id)
+            );
+            return {
+              ...t,
+              dailyPlanSpanIds: remainingSpanIds,
+              dailyPlanSpanOrder: remainingSpanOrders,
+            };
+          })
+        : state.tasks;
+      return {
+        dailyPlanSpans: state.dailyPlanSpans.filter(s => s.id !== id),
+        tasks,
+      };
+    });
+  },
+
+  getDailyPlanSpansByDate: (date) =>
+    get().dailyPlanSpans
+      .filter(s => s.date === date)
+      .sort((a, b) => a.startHour - b.startHour),
 });

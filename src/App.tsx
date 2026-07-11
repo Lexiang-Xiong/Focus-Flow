@@ -78,6 +78,12 @@ function App() {
     addTasksToDailyPlan,
     removeTaskFromDailyPlan,
     setDailyPlanOrder,
+    moveTaskToDailyPlanSpan,
+    moveTaskOutOfDailyPlanSpan,
+    setDailyPlanSpanOrder,
+    createDailyPlanSpan,
+    deleteDailyPlanSpan,
+    dailyPlanSpans,
     undo,
     redo,
     checkRecurringTasks,
@@ -843,6 +849,12 @@ function App() {
                     onRemoveTaskFromDailyPlan={removeTaskFromDailyPlan}
                     onAddTasksToDailyPlan={addTasksToDailyPlan}
                     onSetDailyPlanOrder={setDailyPlanOrder}
+                    onMoveTaskToSpan={moveTaskToDailyPlanSpan}
+                    onMoveTaskOutOfSpan={moveTaskOutOfDailyPlanSpan}
+                    onSetDailyPlanSpanOrder={setDailyPlanSpanOrder}
+                    onCreateSpan={createDailyPlanSpan}
+                    onDeleteSpan={deleteDailyPlanSpan}
+                    spans={dailyPlanSpans}
                   />
                 ) : (
                   <TaskList

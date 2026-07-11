@@ -33,11 +33,13 @@ const mergeSettings = (persistedState: unknown, currentState: AppStore): AppStor
   const tasks = persisted.tasks || stateNested?.tasks;
   const zones = persisted.zones || stateNested?.zones;
   const planGroups = persisted.planGroups || stateNested?.planGroups;
+  const dailyPlanSpans = persisted.dailyPlanSpans || stateNested?.dailyPlanSpans;
 
   const tasksArr = (tasks as unknown[]) ||[];
   const zonesArr = (zones as unknown[]) || [];
   const planGroupsArr = (planGroups as unknown[]) || [];
-  console.log('[MERGE] Extracted tasks:', tasksArr.length, 'zones:', zonesArr.length, 'planGroups:', planGroupsArr.length);
+  const dailyPlanSpansArr = (dailyPlanSpans as unknown[]) || [];
+  console.log('[MERGE] Extracted tasks:', tasksArr.length, 'zones:', zonesArr.length, 'planGroups:', planGroupsArr.length, 'dailyPlanSpans:', dailyPlanSpansArr.length);
 
   const mergedSettings = { ...DEFAULT_SETTINGS };
   Object.keys(mergedSettings).forEach((key) => {
@@ -52,6 +54,7 @@ const mergeSettings = (persistedState: unknown, currentState: AppStore): AppStor
     tasks: tasksArr as any,
     zones: zonesArr as any,
     planGroups: planGroupsArr as any,
+    dailyPlanSpans: dailyPlanSpansArr as any,
     settings: mergedSettings as typeof DEFAULT_SETTINGS,
   } as AppStore;
 };
@@ -93,6 +96,7 @@ const persistOptions: PersistOptions<AppStore> = {
     zones: state.zones,
     tasks: state.tasks,
     planGroups: state.planGroups || [],
+    dailyPlanSpans: state.dailyPlanSpans || [],
     currentWorkspace: state.currentWorkspace,
     historyWorkspaces: state.historyWorkspaces,
     customTemplates: state.customTemplates,

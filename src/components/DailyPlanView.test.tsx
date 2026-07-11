@@ -10,7 +10,7 @@ vi.mock('react-i18next', () => ({
 }));
 
 import { DailyPlanView } from './DailyPlanView';
-import type { Task, Zone, PlanGroup } from '@/types';
+import type { Task, Zone, PlanGroup, DailyPlanSpan } from '@/types';
 
 class RO { observe() {} unobserve() {} disconnect() {} }
 (globalThis as unknown as { ResizeObserver: typeof RO }).ResizeObserver = RO;
@@ -34,6 +34,10 @@ function makePlanGroup(id: string, name: string, startDate?: string, endDate?: s
   return { id, name, startDate: startDate ?? null, endDate: endDate ?? null, order: 0, createdAt: 0 };
 }
 
+function makeSpan(id: string, date: string, startHour: number, endHour: number): DailyPlanSpan {
+  return { id, date, startHour, endHour, createdAt: 0 };
+}
+
 const noop = vi.fn();
 
 function renderDailyPlanView(props: Partial<React.ComponentProps<typeof DailyPlanView>> = {}) {
@@ -53,6 +57,12 @@ function renderDailyPlanView(props: Partial<React.ComponentProps<typeof DailyPla
       onRemoveTaskFromDailyPlan={noop}
       onAddTasksToDailyPlan={noop}
       onSetDailyPlanOrder={noop}
+      onMoveTaskToSpan={noop}
+      onMoveTaskOutOfSpan={noop}
+      onSetDailyPlanSpanOrder={noop}
+      onCreateSpan={noop}
+      onDeleteSpan={noop}
+      spans={[]}
       {...props}
     />
   );
@@ -106,5 +116,33 @@ describe('DailyPlanView', () => {
     const items = screen.getAllByText(/t[12]/);
     expect(items[0]).toHaveTextContent('t2');
     expect(items[1]).toHaveTextContent('t1');
+  });
+
+  it('属于 span 的任务不显示在缓存区', () => {
+    renderDailyPlanView({
+      tasks: [
+        makeTask('t1', 'z1', {
+          plannedDates: ['2026-07-12'],
+          dailyPlanSpanIds: { '2026-07-12': 's1' },
+        }),
+        makeTask('t2', 'z1', { plannedDates: ['2026-07-12'] }),
+      ],
+      spans: [makeSpan('s1', '2026-07-12', 9, 11)],
+    });
+    expect(screen.getByText((content) => content.includes('view.backlog'))).toBeInTheDocument();
+    expect(screen.getByText('t2')).toBeInTheDocument();
+    expect(screen.queryAllByText('t1').length).toBeGreaterThan(0);
+  });
+
+  it('点击创建时间块按钮打开弹窗', async () => {
+    const user = userEvent.setup();
+    renderDailyPlanView({
+      tasks: [makeTask('t1', 'z1', { plannedDates: ['2026-07-12'] })],
+    });
+
+    const createBtn = screen.getByRole('button', { name: /view\.createSpan/i });
+    expect(createBtn).toBeInTheDocument();
+    await user.click(createBtn);
+    expect(screen.getByRole('heading', { name: /view\.createSpan/i })).toBeInTheDocument();
   });
 });

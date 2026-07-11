@@ -54,6 +54,12 @@ function renderExecutionPlanView(props: Partial<React.ComponentProps<typeof Exec
       onRemoveTaskFromDailyPlan={noop}
       onAddTasksToDailyPlan={noop}
       onSetDailyPlanOrder={noop}
+      onMoveTaskToSpan={noop}
+      onMoveTaskOutOfSpan={noop}
+      onSetDailyPlanSpanOrder={noop}
+      onCreateSpan={noop}
+      onDeleteSpan={noop}
+      spans={[]}
       {...props}
     />
   );
