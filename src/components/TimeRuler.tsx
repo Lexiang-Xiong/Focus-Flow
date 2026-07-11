@@ -9,7 +9,7 @@ export function TimeRuler({ hourHeight = 48, className = '' }: TimeRulerProps) {
   const hours = useMemo(() => Array.from({ length: 25 }, (_, i) => i), []);
 
   return (
-    <div className={`relative select-none ${className}`} style={{ height: `${24 * hourHeight}px` }}>
+    <div className={`relative select-none ${className}`} style={{ height: `${24 * hourHeight}px`, position: className?.includes('absolute') ? 'absolute' : undefined }}>
       {hours.map(hour => (
         <div
           key={hour}

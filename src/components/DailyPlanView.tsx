@@ -427,7 +427,7 @@ export function DailyPlanView({
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex flex-col flex-1 min-h-0">
+          <div className="flex flex-col h-full">
             <DailyPlanBacklog
               date={selectedDate}
               tasks={backlogTasks}

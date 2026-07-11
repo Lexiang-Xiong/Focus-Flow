@@ -92,7 +92,7 @@ export function DailyPlanSchedule({
   };
 
   return (
-    <div className={`flex flex-col ${expanded ? 'flex-1 min-h-0' : 'shrink-0'}`}>
+    <div className={`flex flex-col ${expanded ? 'flex-1 min-h-0' : 'shrink-0 mt-auto'}`}>
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-white/80">{t('view.schedule')}</span>
@@ -154,9 +154,9 @@ export function DailyPlanSchedule({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
-          <TimeRuler hourHeight={hourHeight} className="absolute inset-0" />
+          <TimeRuler hourHeight={hourHeight} className="absolute left-0 right-0 top-0" />
 
-          <div className="absolute left-14 right-2" style={{ height: `${24 * hourHeight}px` }}>
+          <div className="absolute left-14 right-2 top-0" style={{ height: `${24 * hourHeight}px` }}>
             {spans.map(span => (
               <div key={span.id} data-span-area>
                 <TimeSpan

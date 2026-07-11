@@ -37,9 +37,9 @@ export function DailyPlanBacklog({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col border-b border-white/10 bg-black/10 transition-all ${
+      className={`shrink-0 border-b border-white/10 bg-black/10 transition-all ${
         isOver ? 'bg-white/5' : ''
-      } ${expanded ? 'min-h-[120px] max-h-[45%]' : 'shrink-0'}`}
+      } ${expanded ? 'flex-grow min-h-[120px] max-h-[70%]' : ''}`}
     >
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
         <span className="text-sm font-medium text-white/80">
