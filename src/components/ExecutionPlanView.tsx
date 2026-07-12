@@ -74,7 +74,7 @@ export function ExecutionPlanView({
           >
             <ArrowLeft size={16} />
           </Button>
-          <span className="text-xs font-medium text-white/90">{t('view.executionPlan')}</span>
+          <span className="text-sm font-medium text-white/90">{t('view.executionPlan')}</span>
         </div>
 
         <div className="flex items-center gap-1 bg-black/30 rounded-md p-0.5 border border-white/10">
@@ -82,7 +82,7 @@ export function ExecutionPlanView({
             size="sm"
             variant={tab === 'daily' ? 'secondary' : 'ghost'}
             onClick={() => setTab('daily')}
-            className={`h-7 text-[11px] ${
+            className={`h-7 text-xs ${
               tab === 'daily'
                 ? 'bg-white/15 text-white'
                 : 'text-white/60 hover:text-white hover:bg-white/10'
@@ -95,7 +95,7 @@ export function ExecutionPlanView({
             size="sm"
             variant={tab === 'groups' ? 'secondary' : 'ghost'}
             onClick={() => setTab('groups')}
-            className={`h-7 text-[11px] ${
+            className={`h-7 text-xs ${
               tab === 'groups'
                 ? 'bg-white/15 text-white'
                 : 'text-white/60 hover:text-white hover:bg-white/10'

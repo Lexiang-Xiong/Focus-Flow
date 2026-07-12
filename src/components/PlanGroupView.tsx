@@ -67,8 +67,8 @@ export function PlanGroupView({
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
-        <h2 className="text-[11px] font-medium text-white/90">{t('view.planGroups')}</h2>
-        <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => setShowForm(true)}>
+        <h2 className="text-sm font-medium text-white/90">{t('view.planGroups')}</h2>
+        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowForm(true)}>
           <Plus size={14} className="mr-1" />
           {t('view.createPlanGroup')}
         </Button>
@@ -76,7 +76,7 @@ export function PlanGroupView({
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {activeGroups.length === 0 && (
-          <div className="text-[10px] text-white/50 text-center py-8">{t('view.noPlanGroups')}</div>
+          <div className="text-xs text-white/50 text-center py-8">{t('view.noPlanGroups')}</div>
         )}
 
         {activeGroups.map(group => {
@@ -99,8 +99,8 @@ export function PlanGroupView({
                   className="flex-1 flex items-center gap-2 text-left min-w-0"
                 >
                   {isExpanded ? <ChevronUp size={14} className="text-white/70" /> : <ChevronDown size={14} className="text-white/70" />}
-                  <span className="font-medium truncate text-[11px]">{group.name}</span>
-                  <span className="text-[10px] text-white/50 whitespace-nowrap">
+                  <span className="font-medium truncate text-xs">{group.name}</span>
+                  <span className="text-xs text-white/50 whitespace-nowrap">
                     {t('view.tasksCount', { count: groupTasks.length })} ·{' '}
                     {t('view.pendingTasksCount', { count: pendingCount })}
                   </span>
@@ -127,7 +127,7 @@ export function PlanGroupView({
                 </div>
               </div>
 
-              <div className="px-3 pb-2 text-[10px] text-white/50 flex items-center gap-1">
+              <div className="px-3 pb-2 text-xs text-white/50 flex items-center gap-1">
                 <Calendar size={10} />
                 {dateRange}
               </div>
@@ -135,7 +135,7 @@ export function PlanGroupView({
               {isExpanded && (
                 <div className="border-t border-white/10">
                   {groupTasks.length === 0 ? (
-                    <div className="px-3 py-4 text-[10px] text-white/40 text-center">
+                    <div className="px-3 py-4 text-xs text-white/40 text-center">
                       {t('task.noTasks')}
                     </div>
                   ) : (
@@ -154,7 +154,7 @@ export function PlanGroupView({
                             />
                             <button
                               onClick={() => onNavigateToZone(task.zoneId, task.id)}
-                              className={`flex-1 text-left text-[11px] truncate hover:underline ${
+                              className={`flex-1 text-left text-xs truncate hover:underline ${
                                 task.completed ? 'line-through text-white/40' : 'text-white/90'
                               }`}
                             >

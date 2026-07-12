@@ -29,7 +29,7 @@ export function ExpiredPlanGroups({ planGroups, tasks, onDeleteGroup, onEditGrou
     <div className="mt-6">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-3 py-2 text-[11px] text-white/70 hover:text-white border-t border-white/10 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 text-xs text-white/70 hover:text-white border-t border-white/10 transition-colors"
       >
         <span className="flex items-center gap-2">
           {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -53,8 +53,8 @@ export function ExpiredPlanGroups({ planGroups, tasks, onDeleteGroup, onEditGrou
                 className="flex items-center justify-between px-3 py-2 rounded bg-red-900/30 border border-red-500/30 text-white/90"
               >
                 <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="font-medium truncate text-[11px]">{group.name}</span>
-                  <span className="text-[10px] text-white/50 flex items-center gap-1">
+                  <span className="font-medium truncate text-xs">{group.name}</span>
+                  <span className="text-xs text-white/50 flex items-center gap-1">
                     <Calendar size={10} />
                     {dateRange}
                     {' · '}

@@ -93,7 +93,7 @@ export function DailyPlanSchedule({
           <ChevronLeft size={16} />
         </Button>
         <span
-          className="text-[10px] font-medium text-white/70"
+          className="text-xs font-medium text-white/70"
           style={{ writingMode: 'vertical-rl' }}
         >
           {t('view.schedule')}
@@ -159,7 +159,7 @@ export function DailyPlanSchedule({
     <div className="shrink-0 flex flex-col" style={style}>
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-medium text-white/80">{t('view.schedule')}</span>
+          <span className="text-sm font-medium text-white/80">{t('view.schedule')}</span>
           {expanded && containerWidth > 0 && (
             <div className="flex items-center gap-1 ml-2">
               <Button
@@ -193,7 +193,7 @@ export function DailyPlanSchedule({
         </div>
 
         <div className="flex items-center gap-1">
-          <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => onOpenSpanDialog()}>
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onOpenSpanDialog()}>
             <Plus size={14} className="mr-1" />
             {t('view.createSpan')}
           </Button>

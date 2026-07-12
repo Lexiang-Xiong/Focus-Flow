@@ -72,9 +72,9 @@ export function AddToPlanMenu({
       </Button>
 
       <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
-        <DialogContent className="sm:max-w-md p-4 bg-[#1a1a24] border-white/10 text-white text-[11px]">
+        <DialogContent className="sm:max-w-md p-4 bg-[#1a1a24] border-white/10 text-white text-xs">
           <DialogHeader>
-            <DialogTitle className="text-[12px]">
+            <DialogTitle className="text-[14px]">
               {step === 'menu' && t('task.addToPlanGroup')}
               {step === 'daily' && t('task.addToDailyPlan')}
               {step === 'group' && t('task.addToPlanGroup')}
@@ -91,14 +91,14 @@ export function AddToPlanMenu({
                 className="flex flex-col items-center gap-2 p-3 rounded-lg bg-black/20 border border-white/10 hover:bg-white/10 transition-colors"
               >
                 <CalendarPlus size={20} className="text-green-400" />
-                <span className="text-[11px]">{t('task.addToDailyPlan')}</span>
+                <span className="text-xs">{t('task.addToDailyPlan')}</span>
               </button>
               <button
                 onClick={() => setStep('group')}
                 className="flex flex-col items-center gap-2 p-3 rounded-lg bg-black/20 border border-white/10 hover:bg-white/10 transition-colors"
               >
                 <FolderPlus size={20} className="text-blue-400" />
-                <span className="text-[11px]">{t('task.addToPlanGroup')}</span>
+                <span className="text-xs">{t('task.addToPlanGroup')}</span>
               </button>
             </div>
           )}
@@ -111,10 +111,10 @@ export function AddToPlanMenu({
                 placeholder={t('view.startDate')}
               />
               <div className="flex justify-end gap-2">
-                <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => setStep('menu')}>
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setStep('menu')}>
                   {t('common.back')}
                 </Button>
-                <Button size="sm" className="h-7 text-[11px]" disabled={!selectedDate} onClick={handleAddToDaily}>
+                <Button size="sm" className="h-7 text-xs" disabled={!selectedDate} onClick={handleAddToDaily}>
                   {t('common.add')}
                 </Button>
               </div>
@@ -124,7 +124,7 @@ export function AddToPlanMenu({
           {step === 'group' && (
             <div className="space-y-2 py-2 max-h-[50vh] overflow-y-auto">
               {activeGroups.length === 0 ? (
-                <div className="text-[10px] text-white/50 text-center py-4">{t('view.noPlanGroups')}</div>
+                <div className="text-xs text-white/50 text-center py-4">{t('view.noPlanGroups')}</div>
               ) : (
                 activeGroups.map(group => {
                   const alreadyIn = task.planGroupIds?.includes(group.id);
@@ -139,8 +139,8 @@ export function AddToPlanMenu({
                           : 'bg-black/20 border-white/10 hover:bg-white/10 text-white/90'
                       }`}
                     >
-                      <div className="font-medium text-[11px]">{group.name}</div>
-                      <div className="text-[10px] text-white/50">
+                      <div className="font-medium text-xs">{group.name}</div>
+                      <div className="text-xs text-white/50">
                         {group.startDate || group.endDate
                           ? `${group.startDate ?? ''} ~ ${group.endDate ?? ''}`
                           : t('view.noDate')}
@@ -150,7 +150,7 @@ export function AddToPlanMenu({
                 })
               )}
               <div className="flex justify-end pt-2">
-                <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => setStep('menu')}>
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setStep('menu')}>
                   {t('common.back')}
                 </Button>
               </div>
