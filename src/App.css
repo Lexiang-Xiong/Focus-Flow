@@ -127,6 +127,47 @@ input[type="number"] {
   overflow: hidden;
 }
 
+/* Top Header Row - calendar left, timer right (calendar : timer = 2 : 1) */
+.top-header-row {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+  min-height: 80px;
+}
+
+.top-header-left {
+  flex: 1 1 66.6667%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.top-header-right {
+  flex: 1 1 33.3333%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.top-header-full {
+  flex: 1 1 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.top-header-left .weekly-plan-bar {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.1);
+}
+
 /* Section Divider */
 .section-divider {
   height: 1px;
@@ -375,16 +416,20 @@ input[type="number"] {
 /* Timer Collapsed View */
 .timer-collapsed-wrapper {
   display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 6px;
+  position: relative;
+  padding-bottom: 3px;
 }
 
 .timer-collapsed-progress {
-  width: 100%;
-  padding: 0 2px;
-  margin-top: 2px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   height: 2px;
+  padding: 0 2px;
+  margin: 0;
 }
 
 .timer-bottom-line {
@@ -397,34 +442,38 @@ input[type="number"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 8px;
-  border-radius: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  min-height: 32px;
-  flex: 1;
+  min-height: 72px;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .timer-collapsed-controls {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 6px;
-  border-radius: 8px;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 72px;
+  flex: 0 0 auto;
 }
 
 .timer-collapse-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.1);
   border: none;
   color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .timer-collapse-btn:hover {
@@ -460,7 +509,7 @@ input[type="number"] {
 }
 
 .timer-collapsed-time {
-  font-size: 16px;
+  font-size: 22px;
   font-weight: 700;
   color: white;
   font-variant-numeric: tabular-nums;
@@ -470,14 +519,15 @@ input[type="number"] {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.1);
   border: none;
   color: white;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .timer-collapsed-btn:hover {

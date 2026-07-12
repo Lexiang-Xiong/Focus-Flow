@@ -24,6 +24,7 @@ interface PomodoroTimerProps {
   onUpdateTime?: (seconds: number, mode: TimerMode) => void;
   onSetMode?: (mode: TimerMode) => void;
   onCollapsedChange?: (isCollapsed: boolean) => void;
+  collapsed?: boolean;
 }
 
 export function PomodoroTimer({
@@ -44,16 +45,21 @@ export function PomodoroTimer({
   onUpdateTime,
   onSetMode,
   onCollapsedChange,
+  collapsed: collapsedProp,
 }: PomodoroTimerProps) {
   const { t } = useTranslation();
   // 编辑状态
   const [isEditing, setIsEditing] = useState(false);
   const [editMinutes, setEditMinutes] = useState('');
-  // 默认收起状态
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  // 默认收起状态（非受控时使用）
+  const [internalCollapsed, setInternalCollapsed] = useState(true);
+  const isControlled = collapsedProp !== undefined;
+  const isCollapsed = isControlled ? collapsedProp! : internalCollapsed;
 
   const setCollapsed = (next: boolean) => {
-    setIsCollapsed(next);
+    if (!isControlled) {
+      setInternalCollapsed(next);
+    }
     onCollapsedChange?.(next);
   };
   const inputRef = useRef<HTMLInputElement>(null);

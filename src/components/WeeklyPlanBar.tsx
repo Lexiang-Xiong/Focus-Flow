@@ -2,12 +2,14 @@ import { useMemo, useRef, useEffect, useState, useLayoutEffect, useCallback } fr
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import type { Task } from '@/types';
 
 interface WeeklyPlanBarProps {
   tasks: Task[];
   selectedDate?: string;
   onDayClick: (date: string) => void;
+  className?: string;
 }
 
 function addDays(date: Date, days: number): Date {
@@ -42,7 +44,7 @@ const LOAD_MORE_DAYS = 15;
 const MAX_TOTAL_DAYS = 75;
 const SCROLL_THRESHOLD_DAYS = 5;
 
-export function WeeklyPlanBar({ tasks, selectedDate, onDayClick }: WeeklyPlanBarProps) {
+export function WeeklyPlanBar({ tasks, selectedDate, onDayClick, className }: WeeklyPlanBarProps) {
   const { t, i18n } = useTranslation();
   const today = useMemo(() => new Date(), []);
 
@@ -200,7 +202,7 @@ export function WeeklyPlanBar({ tasks, selectedDate, onDayClick }: WeeklyPlanBar
   };
 
   return (
-    <div className="relative shrink-0 h-10 bg-black/10 border-y border-white/5">
+    <div className={cn('weekly-plan-bar relative shrink-0 h-10 bg-black/10 border-y border-white/5', className)}>
       {canScrollLeft && (
         <Button
           type="button"
@@ -240,7 +242,7 @@ export function WeeklyPlanBar({ tasks, selectedDate, onDayClick }: WeeklyPlanBar
             key={d.date}
             type="button"
             onClick={() => onDayClick(d.date)}
-            className={`shrink-0 w-10 flex flex-col items-center justify-center gap-px text-[10px] transition-colors hover:bg-white/5 ${
+            className={`shrink-0 w-12 flex flex-col items-center justify-center gap-1 text-[11px] transition-colors hover:bg-white/5 ${
               d.isSelected
                 ? 'bg-white/15 text-white'
                 : d.isToday
@@ -250,9 +252,9 @@ export function WeeklyPlanBar({ tasks, selectedDate, onDayClick }: WeeklyPlanBar
           >
             <span>{d.label}</span>
             <span className="flex items-center justify-center gap-1">
-              <span className="text-[11px] font-medium leading-none">{d.dayNum}</span>
+              <span className="text-[13px] font-medium leading-none">{d.dayNum}</span>
               {d.count > 0 && (
-                <span className="inline-flex items-center justify-center min-w-[13px] h-[13px] px-0.5 rounded-full bg-red-500 text-white text-[8px] font-medium leading-none">
+                <span className="inline-flex items-center justify-center min-w-[15px] h-[15px] px-0.5 rounded-full bg-red-500 text-white text-[9px] font-medium leading-none">
                   {d.count > 99 ? '99+' : d.count}
                 </span>
               )}

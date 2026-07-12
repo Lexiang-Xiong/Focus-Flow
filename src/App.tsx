@@ -679,46 +679,71 @@ function App() {
   const activeZone = getZoneById(activeZoneId || '') || null;
   const currentZoneTasks = activeZone ? getTasksByZone(activeZone.id) : [];
 
+  const timerElement = (
+    <PomodoroTimer
+      mode={timer.mode}
+      formattedTime={timer.formattedTime}
+      timeRemaining={timer.timeRemaining}
+      isRunning={timer.isRunning}
+      progress={timer.progress}
+      completedSessions={timer.completedSessions}
+      workDuration={settings.workDuration}
+      breakDuration={settings.breakDuration}
+      longBreakDuration={settings.longBreakDuration}
+      onStart={handleStartTimer}
+      onPause={timer.pause}
+      onResume={timer.resume}
+      onStop={timer.stop}
+      onSkip={timer.skip}
+      onUpdateTime={(seconds, mode) => {
+        if (mode === 'work') {
+          updateSettings({ workDuration: seconds });
+        } else if (mode === 'break') {
+          updateSettings({ breakDuration: seconds });
+        } else if (mode === 'longBreak') {
+          updateSettings({ longBreakDuration: seconds });
+        }
+        timer.updateTime(seconds);
+      }}
+      onSetMode={(newMode) => {
+        timer.setMode(newMode);
+      }}
+      collapsed={!timerExpanded}
+      onCollapsedChange={(collapsed) => setTimerExpanded(!collapsed)}
+    />
+  );
+
   return (
     <>
       <FloatWindow onCollapse={handleToggleCollapse}>
         <div className="app-container">
-          {/* Timer Section - 执行计划模式下隐藏 */}
-          {currentView !== 'executionPlan' && (
-            <PomodoroTimer
-              mode={timer.mode}
-              formattedTime={timer.formattedTime}
-              timeRemaining={timer.timeRemaining}
-              isRunning={timer.isRunning}
-              progress={timer.progress}
-              completedSessions={timer.completedSessions}
-              workDuration={settings.workDuration}
-              breakDuration={settings.breakDuration}
-              longBreakDuration={settings.longBreakDuration}
-              onStart={handleStartTimer}
-              onPause={timer.pause}
-              onResume={timer.resume}
-              onStop={timer.stop}
-              onSkip={timer.skip}
-              onUpdateTime={(seconds, mode) => {
-                if (mode === 'work') {
-                  updateSettings({ workDuration: seconds });
-                } else if (mode === 'break') {
-                  updateSettings({ breakDuration: seconds });
-                } else if (mode === 'longBreak') {
-                  updateSettings({ longBreakDuration: seconds });
-                }
-                timer.updateTime(seconds);
-              }}
-              onSetMode={(newMode) => {
-                timer.setMode(newMode);
-              }}
-              onCollapsedChange={(collapsed) => setTimerExpanded(!collapsed)}
-            />
-          )}
-
-          {/* Weekly plan bar - 番茄钟收起或在执行计划模式下显示 */}
-          {(currentView === 'executionPlan' || !timerExpanded) && (
+          {/* Top header: expanded timer hides calendar */}
+          {currentView !== 'executionPlan' ? (
+            timerExpanded ? (
+              <div className="top-header-row">
+                <div className="top-header-full">
+                  {timerElement}
+                </div>
+              </div>
+            ) : (
+              <div className="top-header-row">
+                <div className="top-header-left">
+                  <WeeklyPlanBar
+                    className="h-full"
+                    tasks={tasks}
+                    selectedDate={executionPlanDate}
+                    onDayClick={(date) => {
+                      setExecutionPlanDate(date);
+                      setCurrentView('executionPlan');
+                    }}
+                  />
+                </div>
+                <div className="top-header-right">
+                  {timerElement}
+                </div>
+              </div>
+            )
+          ) : (
             <WeeklyPlanBar
               tasks={tasks}
               selectedDate={executionPlanDate}
