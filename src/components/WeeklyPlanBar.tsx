@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, useState } from 'react';
+import { useMemo, useRef, useEffect, useState, useLayoutEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,13 +31,27 @@ function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
+function diffDays(start: Date, end: Date): number {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.round((end.getTime() - start.getTime()) / msPerDay);
+}
+
 const VISIBLE_DAYS = 7;
-const TOTAL_DAYS = 21;
+const INITIAL_BUFFER_DAYS = 15;
+const LOAD_MORE_DAYS = 15;
+const MAX_TOTAL_DAYS = 75;
+const SCROLL_THRESHOLD_DAYS = 5;
 
 export function WeeklyPlanBar({ tasks, selectedDate, onDayClick }: WeeklyPlanBarProps) {
   const { t, i18n } = useTranslation();
   const today = useMemo(() => new Date(), []);
-  const startDate = useMemo(() => addDays(today, -Math.floor(TOTAL_DAYS / 2)), [today]);
+
+  const [startDate, setStartDate] = useState(() =>
+    addDays(today, -INITIAL_BUFFER_DAYS)
+  );
+  const [endDate, setEndDate] = useState(() =>
+    addDays(today, INITIAL_BUFFER_DAYS)
+  );
 
   const weekdayFormatter = useMemo(() => {
     const locale = i18n.language?.startsWith('zh') ? 'zh-CN' : 'en-US';
@@ -45,7 +59,8 @@ export function WeeklyPlanBar({ tasks, selectedDate, onDayClick }: WeeklyPlanBar
   }, [i18n.language]);
 
   const days = useMemo(() => {
-    return Array.from({ length: TOTAL_DAYS }, (_, i) => {
+    const total = diffDays(startDate, endDate) + 1;
+    return Array.from({ length: total }, (_, i) => {
       const date = addDays(startDate, i);
       const dateStr = toDateString(date);
       const count = tasks.filter((t) => t.plannedDates?.includes(dateStr)).length;
@@ -58,11 +73,16 @@ export function WeeklyPlanBar({ tasks, selectedDate, onDayClick }: WeeklyPlanBar
         count,
       };
     });
-  }, [startDate, tasks, today, selectedDate, weekdayFormatter]);
+  }, [startDate, endDate, tasks, today, selectedDate, weekdayFormatter]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const isLoadingRef = useRef(false);
+  const pendingScrollAdjustRef = useRef(0);
+  const hasInitialScrolledRef = useRef(false);
+
+  const totalDays = days.length;
 
   const checkScroll = () => {
     const el = scrollRef.current;
@@ -71,30 +91,98 @@ export function WeeklyPlanBar({ tasks, selectedDate, onDayClick }: WeeklyPlanBar
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
   };
 
+  const loadMore = useCallback(
+    (direction: 'left' | 'right') => {
+      const el = scrollRef.current;
+      const totalBefore = diffDays(startDate, endDate) + 1;
+      const dayWidth = el && totalBefore > 0 ? el.scrollWidth / totalBefore : 40;
+
+      if (direction === 'left') {
+        const newStart = addDays(startDate, -LOAD_MORE_DAYS);
+        let newEnd = endDate;
+        if (totalBefore + LOAD_MORE_DAYS > MAX_TOTAL_DAYS) {
+          newEnd = addDays(endDate, -LOAD_MORE_DAYS);
+        }
+        setStartDate(newStart);
+        setEndDate(newEnd);
+        // 在左侧插入新日期后，需要把滚动位置右移，保持可视区域不变
+        pendingScrollAdjustRef.current = dayWidth * LOAD_MORE_DAYS;
+      } else {
+        const newEnd = addDays(endDate, LOAD_MORE_DAYS);
+        let newStart = startDate;
+        let adjust = 0;
+        if (totalBefore + LOAD_MORE_DAYS > MAX_TOTAL_DAYS) {
+          newStart = addDays(startDate, LOAD_MORE_DAYS);
+          adjust = -dayWidth * LOAD_MORE_DAYS;
+        }
+        setStartDate(newStart);
+        setEndDate(newEnd);
+        pendingScrollAdjustRef.current = adjust;
+      }
+    },
+    [startDate, endDate]
+  );
+
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+
+    const handleScroll = () => {
+      checkScroll();
+      if (isLoadingRef.current || totalDays === 0) return;
+      const dayWidth = el.scrollWidth / totalDays;
+      const threshold = dayWidth * SCROLL_THRESHOLD_DAYS;
+      if (el.scrollLeft < threshold) {
+        isLoadingRef.current = true;
+        loadMore('left');
+      } else if (el.scrollLeft + el.clientWidth > el.scrollWidth - threshold) {
+        isLoadingRef.current = true;
+        loadMore('right');
+      }
+    };
+
     checkScroll();
-    el.addEventListener('scroll', checkScroll, { passive: true });
+    el.addEventListener('scroll', handleScroll, { passive: true });
     const observer = new ResizeObserver(checkScroll);
     observer.observe(el);
     return () => {
-      el.removeEventListener('scroll', checkScroll);
+      el.removeEventListener('scroll', handleScroll);
       observer.disconnect();
     };
-  }, []);
+  }, [totalDays, loadMore]);
 
-  // 初始滚动到“今天”所在位置，使其大致居中
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const todayIndex = days.findIndex((d) => d.isToday);
-    if (todayIndex < 0) return;
-    const dayWidth = el.scrollWidth / TOTAL_DAYS;
-    const target = todayIndex * dayWidth - el.clientWidth / 2 + dayWidth / 2;
-    el.scrollLeft = Math.max(0, Math.min(el.scrollWidth - el.clientWidth, target));
+
+    if (pendingScrollAdjustRef.current !== 0) {
+      const prevBehavior = el.style.scrollBehavior;
+      el.style.scrollBehavior = 'auto';
+      el.scrollLeft += pendingScrollAdjustRef.current;
+      el.style.scrollBehavior = prevBehavior;
+      pendingScrollAdjustRef.current = 0;
+    }
+
+    if (!hasInitialScrolledRef.current) {
+      const todayIndex = days.findIndex((d) => d.isToday);
+      if (todayIndex >= 0) {
+        const dayWidth = el.scrollWidth / totalDays;
+        const target =
+          todayIndex * dayWidth - el.clientWidth / 2 + dayWidth / 2;
+        const prevBehavior = el.style.scrollBehavior;
+        el.style.scrollBehavior = 'auto';
+        el.scrollLeft = Math.max(
+          0,
+          Math.min(el.scrollWidth - el.clientWidth, target)
+        );
+        el.style.scrollBehavior = prevBehavior;
+        hasInitialScrolledRef.current = true;
+      }
+    }
+
+    isLoadingRef.current = false;
     checkScroll();
-  }, [days]);
+  }, [days, totalDays]);
 
   const scrollByDays = (daysDelta: number) => {
     const el = scrollRef.current;

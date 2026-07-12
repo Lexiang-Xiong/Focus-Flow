@@ -98,13 +98,13 @@ export function PomodoroTimer({
   const getModeIcon = () => {
     switch (mode) {
       case 'work':
-        return <Brain size={16} className="text-blue-400" />;
+        return <Brain size={14} className="text-blue-400" />;
       case 'break':
-        return <Coffee size={16} className="text-green-400" />;
+        return <Coffee size={14} className="text-green-400" />;
       case 'longBreak':
-        return <Coffee size={16} className="text-purple-400" />;
+        return <Coffee size={14} className="text-purple-400" />;
       default:
-        return <Timer size={16} className="text-gray-400" />;
+        return <Timer size={14} className="text-gray-400" />;
     }
   };
 
@@ -161,7 +161,7 @@ export function PomodoroTimer({
             onClick={() => setCollapsed(false)}
             title={t('view.expand') || 'Expand'}
           >
-            <ChevronUp size={14} />
+            <ChevronUp size={12} />
           </button>
           {/* 时间显示区域 - 支持点击修改时间 */}
           <div className="timer-collapsed-content" onClick={handleTimeClick}>
@@ -174,7 +174,7 @@ export function PomodoroTimer({
                   onChange={(e) => setEditMinutes(e.target.value)}
                   onBlur={handleTimeSubmit}
                   onKeyDown={(e) => e.key === 'Enter' && handleTimeSubmit()}
-                  className="w-14 h-6 text-sm font-bold text-center bg-black/20 border-white/20 text-white"
+                  className="w-16 h-5 text-xs font-bold text-center bg-black/20 border-white/20 text-white appearance-none"
                   min={1}
                   max={120}
                   onClick={(e) => e.stopPropagation()}
@@ -199,24 +199,24 @@ export function PomodoroTimer({
         <div className={`timer-collapsed-controls bg-gradient-to-r ${getModeColor()}`}>
           {isRunning ? (
             <button className="timer-collapsed-btn primary" onClick={onPause} title={t('timer.pause')}>
-              <Pause size={20} />
+              <Pause size={14} />
             </button>
           ) : mode !== 'idle' ? (
             <button className="timer-collapsed-btn primary" onClick={onResume} title={t('timer.resume')}>
-              <Play size={20} />
+              <Play size={14} />
             </button>
           ) : (
             <button className="timer-collapsed-btn primary" onClick={onStart} title={t('timer.startFocus')}>
-              <Play size={20} />
+              <Play size={14} />
             </button>
           )}
           <button className="timer-collapsed-btn" onClick={onStop} title={t('common.reset')}>
-            <Square size={20} />
+            <Square size={14} />
           </button>
         </div>
         {/* 进度条 */}
         <div className="timer-collapsed-progress">
-          <Progress value={progress} className="timer-progress" style={{ backgroundColor: getProgressColor() }} />
+          <Progress value={progress} className="timer-progress h-0.5" style={{ backgroundColor: getProgressColor() }} />
         </div>
       </div>
     );

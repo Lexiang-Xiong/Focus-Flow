@@ -66,7 +66,7 @@ export function SortableTaskItem({
         onClick={() => onNavigateToZone(task.zoneId, task.id)}
         className="flex-1 text-left min-w-0"
       >
-        <div className={`text-sm truncate hover:underline ${
+        <div className={`text-[11px] truncate hover:underline ${
           task.completed ? 'line-through text-white/40' : 'text-white/90'
         }`}>
           {task.title}

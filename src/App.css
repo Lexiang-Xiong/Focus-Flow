@@ -8,6 +8,17 @@
   padding: 0;
 }
 
+/* Hide number input spinners globally */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 /* Float Window - 正常状态完全不透明 */
 .float-window {
   width: 100%;
@@ -365,14 +376,14 @@
 .timer-collapsed-wrapper {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   flex-wrap: wrap;
 }
 
 .timer-collapsed-progress {
   width: 100%;
-  padding: 0 4px;
-  margin-top: 4px;
+  padding: 0 2px;
+  margin-top: 2px;
   height: 2px;
 }
 
@@ -386,19 +397,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  border-radius: 12px;
+  padding: 4px 8px;
+  border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  min-height: 52px;
+  min-height: 32px;
   flex: 1;
 }
 
 .timer-collapsed-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 12px;
+  gap: 4px;
+  padding: 4px 6px;
+  border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -406,9 +417,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
   background: rgba(255, 255, 255, 0.1);
   border: none;
   color: rgba(255, 255, 255, 0.6);
@@ -443,13 +454,13 @@
 .timer-collapsed-content {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   flex: 1;
   justify-content: center;
 }
 
 .timer-collapsed-time {
-  font-size: 24px;
+  font-size: 16px;
   font-weight: 700;
   color: white;
   font-variant-numeric: tabular-nums;
@@ -459,9 +470,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.1);
   border: none;
   color: white;
@@ -498,7 +509,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 8px;
+  padding: 8px 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   gap: 4px;
 }
@@ -507,7 +518,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.7);
   flex: 1; /* 新增 */
@@ -541,16 +552,16 @@
 }
 
 .zone-list {
-  padding: 6px;
+  padding: 4px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .zone-item {
   display: flex;
   align-items: center;
-  padding: 8px 6px;
+  padding: 5px 5px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid transparent;
@@ -620,7 +631,7 @@
 }
 
 .zone-name {
-  font-size: 12px;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.85);
   white-space: nowrap;
   overflow: hidden;
@@ -740,7 +751,7 @@
   flex: 1;
   font-size: 11px;
   color: rgba(255, 255, 255, 0.5);
-  padding: 6px 8px;
+  padding: 5px 6px;
   height: auto;
 }
 
@@ -863,7 +874,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 10px;
+  padding-bottom: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   gap: 8px;
 }
@@ -872,7 +883,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
   flex: 1; /* 新增 */
@@ -980,7 +991,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.9);
   transition: all 0.2s ease;
 }
@@ -998,7 +1009,7 @@
 }
 
 .add-task-desc-input {
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .add-task-btn {
@@ -1053,15 +1064,16 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
-  margin: 8px;
+  padding: 6px 10px;
+  margin: 6px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px dashed rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   transition: all 0.2s ease;
-  width: calc(100% - 16px);
+  width: calc(100% - 12px);
+  font-size: 11px;
 }
 
 .add-task-collapsed:hover {
@@ -1079,7 +1091,7 @@
 .tasks-container {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 /* Empty State */
@@ -1121,7 +1133,7 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 10px 8px;
+  padding: 6px 8px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid transparent;
@@ -1344,7 +1356,7 @@
 }
 
 .task-title {
-  font-size: 13px;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.85);
   word-break: break-word;
   line-height: 1.4;
@@ -1372,7 +1384,7 @@
 }
 
 .task-description {
-  font-size: 12px;
+  font-size: 10px;
   color: rgba(255, 255, 255, 0.5);
   line-height: 1.4;
   padding: 4px 0;
@@ -1386,7 +1398,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: 9px;
   color: rgba(255, 255, 255, 0.4);
   margin-top: 4px;
 }
@@ -1397,7 +1409,7 @@
 
 .task-work-time .own-time {
   color: rgba(255, 255, 255, 0.25);
-  font-size: 10px;
+  font-size: 9px;
 }
 
 .task-work-time svg {
@@ -1474,12 +1486,12 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px;
+  padding: 3px 6px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 500;
   transition: all 0.2s ease;
 }
@@ -1683,7 +1695,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
   flex: 1;           /* 核心：占据剩余空间并允许吸收被挤压的空间 */
