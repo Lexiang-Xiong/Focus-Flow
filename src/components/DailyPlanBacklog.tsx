@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableTaskItem } from './SortableTaskItem';
@@ -11,6 +11,8 @@ interface DailyPlanBacklogProps {
   tasks: Task[];
   zones: Zone[];
   expanded: boolean;
+  collapsed?: boolean;
+  layout?: 'vertical' | 'horizontal';
   style?: React.CSSProperties;
   onToggleExpanded: () => void;
   onToggleTask: (taskId: string) => void;
@@ -27,6 +29,8 @@ export function DailyPlanBacklog({
   tasks,
   zones,
   expanded,
+  collapsed,
+  layout = 'vertical',
   style,
   onToggleExpanded,
   onToggleTask,
@@ -35,6 +39,31 @@ export function DailyPlanBacklog({
 }: DailyPlanBacklogProps) {
   const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({ id: 'daily-plan-backlog' });
+
+  if (collapsed) {
+    return (
+      <div
+        style={style}
+        className="h-full flex flex-col items-center justify-between py-2 bg-black/10 border-r border-white/10"
+      >
+        <span
+          className="text-xs font-medium text-white/70"
+          style={{ writingMode: 'vertical-rl' }}
+        >
+          {t('view.dailyTasks')}
+        </span>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-6 w-6 text-white/50 hover:text-white/80 hover:bg-white/10"
+          onClick={onToggleExpanded}
+          title={t('common.expand')}
+        >
+          <ChevronRight size={16} />
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -55,7 +84,13 @@ export function DailyPlanBacklog({
           onClick={onToggleExpanded}
           title={expanded ? t('common.collapse') : t('common.expand')}
         >
-          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {layout === 'horizontal' ? (
+            <ChevronLeft size={16} />
+          ) : expanded ? (
+            <ChevronUp size={16} />
+          ) : (
+            <ChevronDown size={16} />
+          )}
         </Button>
       </div>
 

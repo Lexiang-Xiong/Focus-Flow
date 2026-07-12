@@ -112,7 +112,7 @@ export function WeeklyPlanBar({ tasks, selectedDate, onDayClick }: WeeklyPlanBar
   };
 
   return (
-    <div className="relative shrink-0 h-9 bg-black/10 border-y border-white/5">
+    <div className="relative shrink-0 h-10 bg-black/10 border-y border-white/5">
       {canScrollLeft && (
         <Button
           type="button"
@@ -152,7 +152,7 @@ export function WeeklyPlanBar({ tasks, selectedDate, onDayClick }: WeeklyPlanBar
             key={d.date}
             type="button"
             onClick={() => onDayClick(d.date)}
-            className={`shrink-0 w-[calc(100%/7)] flex flex-col items-center justify-center gap-px text-[10px] transition-colors hover:bg-white/5 ${
+            className={`shrink-0 w-10 flex flex-col items-center justify-center gap-px text-[10px] transition-colors hover:bg-white/5 ${
               d.isSelected
                 ? 'bg-white/15 text-white'
                 : d.isToday

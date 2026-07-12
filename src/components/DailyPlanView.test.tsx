@@ -17,6 +17,7 @@ const mockStore = create<{
       backlogExpanded: boolean;
       scheduleExpanded: boolean;
       splitRatio: number;
+      executionSplitRatio: number;
       hourHeight: number;
       scrollTop: number;
     };
@@ -25,6 +26,7 @@ const mockStore = create<{
     backlogExpanded: boolean;
     scheduleExpanded: boolean;
     splitRatio: number;
+    executionSplitRatio: number;
     hourHeight: number;
     scrollTop: number;
   }> }) => void;
@@ -34,6 +36,7 @@ const mockStore = create<{
       backlogExpanded: true,
       scheduleExpanded: false,
       splitRatio: 0.5,
+      executionSplitRatio: 0.4,
       hourHeight: 48,
       scrollTop: 0,
     },

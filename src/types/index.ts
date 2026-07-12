@@ -276,6 +276,7 @@ export const DEFAULT_SETTINGS = {
     backlogExpanded: true,
     scheduleExpanded: false,
     splitRatio: 0.5,
+    executionSplitRatio: 0.4,
     hourHeight: 48,
     scrollTop: 0,
   },

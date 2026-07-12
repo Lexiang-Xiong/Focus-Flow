@@ -61,7 +61,7 @@ export function ExecutionPlanView({
   const [tab, setTab] = useState<ExecutionPlanTab>('daily');
 
   return (
-    <div className="flex flex-col h-full bg-[#13131a]">
+    <div className="flex flex-col h-full w-full bg-[#13131a]">
       {/* Toolbar */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
         <div className="flex items-center gap-2">
@@ -124,6 +124,7 @@ export function ExecutionPlanView({
         ) : (
           <DailyPlanView
             key={selectedDate}
+            layout="horizontal"
             planGroups={planGroups}
             tasks={tasks}
             zones={zones}

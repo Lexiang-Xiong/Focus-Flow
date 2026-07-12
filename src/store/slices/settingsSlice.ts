@@ -25,6 +25,7 @@ export interface SettingsState {
       backlogExpanded: boolean;
       scheduleExpanded: boolean;
       splitRatio: number;
+      executionSplitRatio: number;
       hourHeight: number;
       scrollTop: number;
     };

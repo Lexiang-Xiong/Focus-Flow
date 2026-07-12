@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, ChevronDown, ChevronUp, ZoomIn, ZoomOut } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { TimeRuler } from './TimeRuler';
@@ -12,6 +12,8 @@ interface DailyPlanScheduleProps {
   spans: DailyPlanSpan[];
   tasks: Task[];
   expanded: boolean;
+  collapsed?: boolean;
+  layout?: 'vertical' | 'horizontal';
   style?: React.CSSProperties;
   onToggleExpanded: () => void;
   hourHeight?: number;
@@ -29,6 +31,8 @@ export function DailyPlanSchedule({
   spans,
   tasks,
   expanded,
+  collapsed,
+  layout = 'vertical',
   style,
   onToggleExpanded,
   hourHeight = 48,
@@ -42,6 +46,7 @@ export function DailyPlanSchedule({
 }: DailyPlanScheduleProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
   const [isDraggingTime, setIsDraggingTime] = useState(false);
   const [dragStartY, setDragStartY] = useState<number | null>(null);
   const [dragCurrentY, setDragCurrentY] = useState<number | null>(null);
@@ -60,6 +65,42 @@ export function DailyPlanSchedule({
       });
     }
   }, [expanded, scrollTop]);
+
+  // 容器宽度变化时更新，避免在零宽环境（如测试）中渲染 Slider 导致死循环
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || !expanded) return;
+    const update = () => setContainerWidth(el.clientWidth);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [expanded]);
+
+  if (collapsed) {
+    return (
+      <div
+        style={style}
+        className="h-full flex flex-col items-center justify-between py-2 bg-black/10 border-l border-white/10"
+      >
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-6 w-6 text-white/50 hover:text-white/80 hover:bg-white/10"
+          onClick={onToggleExpanded}
+          title={t('common.expand')}
+        >
+          <ChevronLeft size={16} />
+        </Button>
+        <span
+          className="text-xs font-medium text-white/70"
+          style={{ writingMode: 'vertical-rl' }}
+        >
+          {t('view.schedule')}
+        </span>
+      </div>
+    );
+  }
 
   const handleScroll = () => {
     const el = containerRef.current;
@@ -119,7 +160,7 @@ export function DailyPlanSchedule({
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-white/80">{t('view.schedule')}</span>
-          {expanded && (
+          {expanded && containerWidth > 0 && (
             <div className="flex items-center gap-1 ml-2">
               <Button
                 size="icon"
@@ -163,7 +204,13 @@ export function DailyPlanSchedule({
             onClick={onToggleExpanded}
             title={expanded ? t('common.collapse') : t('common.expand')}
           >
-            {expanded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+            {layout === 'horizontal' ? (
+              <ChevronRight size={16} />
+            ) : expanded ? (
+              <ChevronDown size={16} />
+            ) : (
+              <ChevronUp size={16} />
+            )}
           </Button>
         </div>
       </div>

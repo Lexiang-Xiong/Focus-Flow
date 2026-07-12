@@ -21,6 +21,8 @@ import {
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core';
+
+import { GripVertical } from 'lucide-react';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 
 interface DailyPlanViewProps {
@@ -41,6 +43,7 @@ interface DailyPlanViewProps {
   onUpdateSpan: (spanId: string, updates: Partial<Omit<DailyPlanSpan, 'id'>>) => boolean;
   onDeleteSpan: (spanId: string) => void;
   spans: DailyPlanSpan[];
+  layout?: 'vertical' | 'horizontal';
 }
 
 function getZoneById(zones: Zone[], zoneId: string): Zone | undefined {
@@ -208,6 +211,7 @@ export function DailyPlanView({
   onUpdateSpan,
   onDeleteSpan,
   spans,
+  layout = 'vertical',
 }: DailyPlanViewProps) {
   const { t } = useTranslation();
   const settings = useAppStore(s => s.settings);
@@ -224,6 +228,12 @@ export function DailyPlanView({
   const [focusedSpanId, setFocusedSpanId] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const horizontalContainerRef = useRef<HTMLDivElement>(null);
+  const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const [rightCollapsed, setRightCollapsed] = useState(false);
+  const [lastLeftWidth, setLastLeftWidth] = useState(() => (viewState.executionSplitRatio ?? 0.4) * 100);
+  const pendingRatioRef = useRef(viewState.executionSplitRatio ?? 0.4);
+
   const [containerHeight, setContainerHeight] = useState(0);
   const [isDraggingSplitter, setIsDraggingSplitter] = useState(false);
   const [liveSplitRatio, setLiveSplitRatio] = useState<number | null>(null);
@@ -235,6 +245,12 @@ export function DailyPlanView({
   const hourHeight = viewState.hourHeight ?? 48;
   const splitRatio = liveSplitRatio ?? (viewState.splitRatio ?? 0.5);
   const scheduleScrollTop = viewState.scrollTop ?? 0;
+
+  const leftWidth = useMemo(() => {
+    if (leftCollapsed) return 5;
+    if (rightCollapsed) return 95;
+    return Math.max(20, Math.min(80, lastLeftWidth));
+  }, [leftCollapsed, rightCollapsed, lastLeftWidth]);
 
   const handleHourHeightChange = (value: number) => {
     setViewState({ hourHeight: value });
@@ -249,6 +265,35 @@ export function DailyPlanView({
     }, 200);
   };
 
+  const handleDividerMouseDown = (e: React.MouseEvent) => {
+    if (leftCollapsed || rightCollapsed) return;
+    e.preventDefault();
+    const container = horizontalContainerRef.current;
+    if (!container) return;
+    const containerWidth = container.clientWidth;
+    if (containerWidth <= 0) return;
+
+    const startX = e.clientX;
+    const startWidth = lastLeftWidth;
+    pendingRatioRef.current = startWidth / 100;
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      const deltaPercent = ((ev.clientX - startX) / containerWidth) * 100;
+      const next = Math.max(20, Math.min(80, startWidth + deltaPercent));
+      pendingRatioRef.current = next / 100;
+      setLastLeftWidth(next);
+    };
+
+    const handleMouseUp = () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      setViewState({ executionSplitRatio: pendingRatioRef.current });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -261,6 +306,18 @@ export function DailyPlanView({
   }, []);
 
 
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (layout === 'horizontal') {
+      setLeftCollapsed(false);
+      setRightCollapsed(false);
+      if (!backlogExpanded || !scheduleExpanded) {
+        setViewState({ backlogExpanded: true, scheduleExpanded: true });
+      }
+    }
+  }, [layout, backlogExpanded, scheduleExpanded, setViewState]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     return () => {
@@ -314,6 +371,17 @@ export function DailyPlanView({
   }, [containerHeight, backlogExpanded, scheduleExpanded, splitRatio]);
 
   const handleToggleBacklog = () => {
+    if (layout === 'horizontal') {
+      if (leftCollapsed) {
+        setLeftCollapsed(false);
+      } else {
+        setRightCollapsed(false);
+        setLeftCollapsed(true);
+        setLastLeftWidth(leftWidth);
+      }
+      return;
+    }
+
     if (backlogExpanded) {
       if (scheduleExpanded) {
         setViewState({ backlogExpanded: false });
@@ -326,6 +394,17 @@ export function DailyPlanView({
   };
 
   const handleToggleSchedule = () => {
+    if (layout === 'horizontal') {
+      if (rightCollapsed) {
+        setRightCollapsed(false);
+      } else {
+        setLeftCollapsed(false);
+        setRightCollapsed(true);
+        setLastLeftWidth(leftWidth);
+      }
+      return;
+    }
+
     if (scheduleExpanded) {
       if (backlogExpanded) {
         setViewState({ scheduleExpanded: false });
@@ -578,66 +657,134 @@ export function DailyPlanView({
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <div ref={containerRef} className="flex flex-col h-full overflow-hidden">
-          <DailyPlanBacklog
-            date={selectedDate}
-            tasks={backlogTasks}
-            zones={zones}
-            expanded={backlogExpanded}
-            style={{ height: panelHeights.backlog }}
-            onToggleExpanded={handleToggleBacklog}
-            onToggleTask={onToggleTask}
-            onNavigateToZone={onNavigateToZone}
-            onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
-          />
+        {layout === 'horizontal' ? (
+          <div ref={horizontalContainerRef} className="flex-1 min-h-0 min-w-0 flex overflow-hidden">
+            <div className="h-full overflow-hidden" style={{ width: `${leftWidth}%` }}>
+              <DailyPlanBacklog
+                date={selectedDate}
+                tasks={backlogTasks}
+                zones={zones}
+                expanded={!leftCollapsed}
+                collapsed={leftCollapsed}
+                layout={layout}
+                style={{ height: '100%' }}
+                onToggleExpanded={handleToggleBacklog}
+                onToggleTask={onToggleTask}
+                onNavigateToZone={onNavigateToZone}
+                onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
+              />
+            </div>
 
-          {backlogExpanded && scheduleExpanded && (
             <div
-              role="separator"
-              aria-orientation="horizontal"
-              onMouseDown={handleSplitterMouseDown}
-              className={`shrink-0 w-full bg-white/10 hover:bg-white/30 transition-colors ${
-                isDraggingSplitter ? 'bg-white/40' : ''
-              }`}
-              style={{ height: SPLITTER_HEIGHT, cursor: 'row-resize' }}
-            />
-          )}
+              className="relative z-10 h-full w-2 cursor-col-resize bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center transition-colors select-none"
+              onMouseDown={handleDividerMouseDown}
+            >
+              <div className="flex h-4 w-3 items-center justify-center rounded border bg-border">
+                <GripVertical size={10} className="text-white/40" />
+              </div>
+            </div>
 
-          {focusedSpan ? (
-            <DailyPlanSpanFocus
-              span={focusedSpan}
-              tasks={dailyTasks}
+            <div className="h-full flex-1 min-w-0 overflow-hidden">
+              {focusedSpan ? (
+                <DailyPlanSpanFocus
+                  span={focusedSpan}
+                  tasks={dailyTasks}
+                  zones={zones}
+                  onBack={() => setFocusedSpanId(null)}
+                  onToggleTask={onToggleTask}
+                  onNavigateToZone={onNavigateToZone}
+                  onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
+                  onMoveTaskOutOfSpan={onMoveTaskOutOfSpan}
+                  onUpdateSpan={onUpdateSpan}
+                  onDeleteSpan={(spanId) => {
+                    onDeleteSpan(spanId);
+                    setFocusedSpanId(null);
+                  }}
+                />
+              ) : (
+                <DailyPlanSchedule
+                  date={selectedDate}
+                  spans={dateSpans}
+                  tasks={dailyTasks}
+                  expanded={!rightCollapsed}
+                  collapsed={rightCollapsed}
+                  layout={layout}
+                  style={{ height: '100%' }}
+                  onToggleExpanded={handleToggleSchedule}
+                  hourHeight={hourHeight}
+                  onHourHeightChange={handleHourHeightChange}
+                  onDeleteSpan={onDeleteSpan}
+                  onUpdateSpan={onUpdateSpan}
+                  onEnterFocus={setFocusedSpanId}
+                  onOpenSpanDialog={handleOpenSpanDialog}
+                  scrollTop={scheduleScrollTop}
+                  onScroll={handleScheduleScroll}
+                />
+              )}
+            </div>
+          </div>
+        ) : (
+          <div ref={containerRef} className="flex flex-col h-full overflow-hidden">
+            <DailyPlanBacklog
+              date={selectedDate}
+              tasks={backlogTasks}
               zones={zones}
-              onBack={() => setFocusedSpanId(null)}
+              expanded={backlogExpanded}
+              style={{ height: panelHeights.backlog }}
+              onToggleExpanded={handleToggleBacklog}
               onToggleTask={onToggleTask}
               onNavigateToZone={onNavigateToZone}
               onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
-              onMoveTaskOutOfSpan={onMoveTaskOutOfSpan}
-              onUpdateSpan={onUpdateSpan}
-              onDeleteSpan={(spanId) => {
-                onDeleteSpan(spanId);
-                setFocusedSpanId(null);
-              }}
             />
-          ) : (
-            <DailyPlanSchedule
-              date={selectedDate}
-              spans={dateSpans}
-              tasks={dailyTasks}
-              expanded={scheduleExpanded}
-              style={{ height: panelHeights.schedule }}
-              onToggleExpanded={handleToggleSchedule}
-              hourHeight={hourHeight}
-              onHourHeightChange={handleHourHeightChange}
-              onDeleteSpan={onDeleteSpan}
-              onUpdateSpan={onUpdateSpan}
-              onEnterFocus={setFocusedSpanId}
-              onOpenSpanDialog={handleOpenSpanDialog}
-              scrollTop={scheduleScrollTop}
-              onScroll={handleScheduleScroll}
-            />
-          )}
-        </div>
+
+            {backlogExpanded && scheduleExpanded && (
+              <div
+                role="separator"
+                aria-orientation="horizontal"
+                onMouseDown={handleSplitterMouseDown}
+                className={`shrink-0 w-full bg-white/10 hover:bg-white/30 transition-colors ${
+                  isDraggingSplitter ? 'bg-white/40' : ''
+                }`}
+                style={{ height: SPLITTER_HEIGHT, cursor: 'row-resize' }}
+              />
+            )}
+
+            {focusedSpan ? (
+              <DailyPlanSpanFocus
+                span={focusedSpan}
+                tasks={dailyTasks}
+                zones={zones}
+                onBack={() => setFocusedSpanId(null)}
+                onToggleTask={onToggleTask}
+                onNavigateToZone={onNavigateToZone}
+                onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
+                onMoveTaskOutOfSpan={onMoveTaskOutOfSpan}
+                onUpdateSpan={onUpdateSpan}
+                onDeleteSpan={(spanId) => {
+                  onDeleteSpan(spanId);
+                  setFocusedSpanId(null);
+                }}
+              />
+            ) : (
+              <DailyPlanSchedule
+                date={selectedDate}
+                spans={dateSpans}
+                tasks={dailyTasks}
+                expanded={scheduleExpanded}
+                style={{ height: panelHeights.schedule }}
+                onToggleExpanded={handleToggleSchedule}
+                hourHeight={hourHeight}
+                onHourHeightChange={handleHourHeightChange}
+                onDeleteSpan={onDeleteSpan}
+                onUpdateSpan={onUpdateSpan}
+                onEnterFocus={setFocusedSpanId}
+                onOpenSpanDialog={handleOpenSpanDialog}
+                scrollTop={scheduleScrollTop}
+                onScroll={handleScheduleScroll}
+              />
+            )}
+          </div>
+        )}
       </DndContext>
 
       <AddFromPlanGroupDialog

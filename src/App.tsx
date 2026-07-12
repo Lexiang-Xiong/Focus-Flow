@@ -683,224 +683,225 @@ function App() {
     <>
       <FloatWindow onCollapse={handleToggleCollapse}>
         <div className="app-container">
-          {/* Timer + Weekly plan bar - 执行计划模式下隐藏 */}
+          {/* Timer Section - 执行计划模式下隐藏 */}
           {currentView !== 'executionPlan' && (
-            <>
-              {/* Timer Section */}
-              <PomodoroTimer
-                mode={timer.mode}
-                formattedTime={timer.formattedTime}
-                timeRemaining={timer.timeRemaining}
-                isRunning={timer.isRunning}
-                progress={timer.progress}
-                completedSessions={timer.completedSessions}
-                workDuration={settings.workDuration}
-                breakDuration={settings.breakDuration}
-                longBreakDuration={settings.longBreakDuration}
-                onStart={handleStartTimer}
-                onPause={timer.pause}
-                onResume={timer.resume}
-                onStop={timer.stop}
-                onSkip={timer.skip}
-                onUpdateTime={(seconds, mode) => {
-                  if (mode === 'work') {
-                    updateSettings({ workDuration: seconds });
-                  } else if (mode === 'break') {
-                    updateSettings({ breakDuration: seconds });
-                  } else if (mode === 'longBreak') {
-                    updateSettings({ longBreakDuration: seconds });
-                  }
-                  timer.updateTime(seconds);
-                }}
-                onSetMode={(newMode) => {
-                  timer.setMode(newMode);
-                }}
-                onCollapsedChange={(collapsed) => setTimerExpanded(!collapsed)}
-              />
+            <PomodoroTimer
+              mode={timer.mode}
+              formattedTime={timer.formattedTime}
+              timeRemaining={timer.timeRemaining}
+              isRunning={timer.isRunning}
+              progress={timer.progress}
+              completedSessions={timer.completedSessions}
+              workDuration={settings.workDuration}
+              breakDuration={settings.breakDuration}
+              longBreakDuration={settings.longBreakDuration}
+              onStart={handleStartTimer}
+              onPause={timer.pause}
+              onResume={timer.resume}
+              onStop={timer.stop}
+              onSkip={timer.skip}
+              onUpdateTime={(seconds, mode) => {
+                if (mode === 'work') {
+                  updateSettings({ workDuration: seconds });
+                } else if (mode === 'break') {
+                  updateSettings({ breakDuration: seconds });
+                } else if (mode === 'longBreak') {
+                  updateSettings({ longBreakDuration: seconds });
+                }
+                timer.updateTime(seconds);
+              }}
+              onSetMode={(newMode) => {
+                timer.setMode(newMode);
+              }}
+              onCollapsedChange={(collapsed) => setTimerExpanded(!collapsed)}
+            />
+          )}
 
-              {/* Weekly plan bar - 仅在番茄钟收起时显示 */}
-              {!timerExpanded && (
-                <WeeklyPlanBar
-                  tasks={tasks}
-                  selectedDate={executionPlanDate}
-                  onDayClick={(date) => {
-                    setExecutionPlanDate(date);
-                    setCurrentView('executionPlan');
-                  }}
-                />
-              )}
-            </>
+          {/* Weekly plan bar - 番茄钟收起或在执行计划模式下显示 */}
+          {(currentView === 'executionPlan' || !timerExpanded) && (
+            <WeeklyPlanBar
+              tasks={tasks}
+              selectedDate={executionPlanDate}
+              onDayClick={(date) => {
+                setExecutionPlanDate(date);
+                setCurrentView('executionPlan');
+              }}
+            />
           )}
 
           {/* Divider */}
-          {currentView !== 'executionPlan' && <div className="section-divider" />}
+          <div className="section-divider" />
 
           {/* Main Content */}
-          <ResizablePanelGroup direction="horizontal" className="main-content">
-            <ResizablePanel defaultSize="40%" minSize="5%" maxSize="95%">
-              <ZoneManager
-                zones={zones}
+          {currentView === 'executionPlan' ? (
+            <div className="main-content">
+              <ExecutionPlanView
+                planGroups={planGroups}
                 tasks={tasks}
-                activeZoneId={activeZoneId}
-                templates={PREDEFINED_TEMPLATES}
-                customTemplates={customTemplates}
-                onNlpApply={useAppStore.getState().applyNlpActions}
-                onSelectZone={(zoneId) => {
-                  setActiveZoneId(zoneId);
-                  setCurrentView(zoneId === null ? 'global' : 'zones');
-                }}
-                onAddZone={addZone}
-                onUpdateZone={useAppStore.getState().updateZone}
-                onDeleteZone={useAppStore.getState().deleteZone}
-                onReorderZones={useAppStore.getState().reorderZones}
-                onApplyTemplate={(templateId) => {
-                  // 应用模板前先自动保存当前工作区
-                  if (currentWorkspace.tasks.length > 0) {
-                    archiveCurrentWorkspace();
+                zones={zones}
+                selectedDate={executionPlanDate}
+                onDateChange={setExecutionPlanDate}
+                onBack={() => {
+                  setCurrentView('zones');
+                  if (zones.length > 0) {
+                    setActiveZoneId(zones[0].id);
                   }
-                  useAppStore.getState().applyTemplate(templateId);
                 }}
-                onViewChange={(view) => {
-                  setCurrentView(view);
-                  if (view === 'global') setActiveZoneId(null);
+                onAddGroup={addPlanGroup}
+                onUpdateGroup={updatePlanGroup}
+                onDeleteGroup={deletePlanGroup}
+                onToggleTask={toggleTask}
+                onNavigateToZone={(zoneId, taskId) => {
+                  setActiveZoneId(zoneId);
+                  if (taskId) setFocusedTaskId(taskId);
+                  setCurrentView('zones');
                 }}
-                onOpenHistory={() => setCurrentView('history')}
-                onOpenSettings={() => setCurrentView('settings')}
-                onSaveAsTemplate={saveCustomTemplate}
-                onDeleteCustomTemplate={deleteCustomTemplate}
+                onRemoveTaskFromGroup={removeTaskFromPlanGroup}
+                onRemoveTaskFromDailyPlan={removeTaskFromDailyPlan}
+                onAddTasksToDailyPlan={addTasksToDailyPlan}
+                onSetDailyPlanOrder={setDailyPlanOrder}
+                onMoveTaskToSpan={moveTaskToDailyPlanSpan}
+                onMoveTaskOutOfSpan={moveTaskOutOfDailyPlanSpan}
+                onSetDailyPlanSpanOrder={setDailyPlanSpanOrder}
+                onCreateSpan={createDailyPlanSpan}
+                onUpdateSpan={updateDailyPlanSpan}
+                onDeleteSpan={deleteDailyPlanSpan}
+                spans={dailyPlanSpans}
               />
-            </ResizablePanel>
+            </div>
+          ) : (
+            <ResizablePanelGroup direction="horizontal" className="main-content">
+              <ResizablePanel defaultSize="40%" minSize="5%" maxSize="95%">
+                <ZoneManager
+                  zones={zones}
+                  tasks={tasks}
+                  activeZoneId={activeZoneId}
+                  templates={PREDEFINED_TEMPLATES}
+                  customTemplates={customTemplates}
+                  onNlpApply={useAppStore.getState().applyNlpActions}
+                  onSelectZone={(zoneId) => {
+                    setActiveZoneId(zoneId);
+                    setCurrentView(zoneId === null ? 'global' : 'zones');
+                  }}
+                  onAddZone={addZone}
+                  onUpdateZone={useAppStore.getState().updateZone}
+                  onDeleteZone={useAppStore.getState().deleteZone}
+                  onReorderZones={useAppStore.getState().reorderZones}
+                  onApplyTemplate={(templateId) => {
+                    // 应用模板前先自动保存当前工作区
+                    if (currentWorkspace.tasks.length > 0) {
+                      archiveCurrentWorkspace();
+                    }
+                    useAppStore.getState().applyTemplate(templateId);
+                  }}
+                  onViewChange={(view) => {
+                    setCurrentView(view);
+                    if (view === 'global') setActiveZoneId(null);
+                  }}
+                  onOpenHistory={() => setCurrentView('history')}
+                  onOpenSettings={() => setCurrentView('settings')}
+                  onSaveAsTemplate={saveCustomTemplate}
+                  onDeleteCustomTemplate={deleteCustomTemplate}
+                />
+              </ResizablePanel>
 
-            <ResizableHandle className="resize-handle" withHandle />
+              <ResizableHandle className="resize-handle" withHandle />
 
-            <ResizablePanel defaultSize="60%" minSize="5%">
-              <div className="content-area">
-                {currentView === 'history' ? (
-                  <HistoryManager
-                    historyWorkspaces={historyWorkspaces}
-                    templates={PREDEFINED_TEMPLATES}
-                    currentSourceHistoryId={currentWorkspace.sourceHistoryId}
-                    hasUnsavedChanges={hasUnsavedChanges}
-                    onBack={() => setCurrentView('zones')}
-                    onRestore={handleRestoreFromHistory}
-                    onDelete={deleteHistoryWorkspace}
-                    onRename={renameHistoryWorkspace}
-                    onUpdateSummary={updateHistorySummary}
-                    onCreateNewWorkspace={handleCreateNewWorkspace}
-                    onArchiveCurrent={handleArchiveCurrent}
-                    onQuickArchive={quickArchiveCurrentWorkspace}
-                    onOverwriteHistory={overwriteHistoryWorkspace}
-                    onExportHistory={exportHistoryToJson}
-                    onExportAllHistory={exportAllHistoryToJson}
-                    onImportHistory={importHistoryFromJson}
-                    onImportAllHistory={importAllHistoryFromJson}
-                    customTemplates={customTemplates}
-                    onSaveCustomTemplate={saveCustomTemplate}
-                    onDeleteCustomTemplate={deleteCustomTemplate}
-                  />
-                ) : currentView === 'settings' ? (
-                  <SettingsPanel
-                    settings={settings}
-                    zones={zones}
-                    recurringTemplates={recurringTemplates}
-                    onAddRecurringTemplate={addRecurringTemplate}
-                    onUpdateRecurringTemplate={updateRecurringTemplate}
-                    onDeleteRecurringTemplate={deleteRecurringTemplate}
-                    onBack={() => setCurrentView('zones')}
-                    onUpdateSettings={updateSettings}
-                    onPreviewMode={timer.setMode}
-                  />
-                ) : currentView === 'global' ? (
-                  <GlobalView
-                    zones={zones}
-                    tasks={tasks}
-                    activeTaskId={activeTaskId}
-                    isTimerRunning={timer.isRunning}
-                    sortConfig={settings.globalViewSort}
-                    isLeafMode={settings.globalViewLeafMode}
-                    onLeafModeChange={(isLeaf) => updateSettings({ globalViewLeafMode: isLeaf })}
-                    isGroupByZone={settings.globalViewGroupByZone}
-                    onGroupByZoneChange={(isGroup) => updateSettings({ globalViewGroupByZone: isGroup })}
-                    onBack={() => {
-                      setCurrentView('zones');
-                      if (zones.length > 0) {
-                        setActiveZoneId(zones[0].id);
-                      }
-                    }}
-                    onToggleTask={toggleTask}
-                    onDeleteTask={deleteTask}
-                    onUpdateTask={updateTask}
-                    onToggleExpanded={toggleExpanded}
-                    onToggleSubtasksCollapsed={toggleSubtasksCollapsed}
-                    onReorderTasks={reorderTasks}
-                    onSelectTask={handleSelectTask}
-                    onSortConfigChange={(config) => updateSettings({ globalViewSort: config })}
-                    onNavigateToZone={(zoneId, taskId) => {
-                      setActiveZoneId(zoneId);
-                      setFocusedTaskId(taskId);
-                      setCurrentView('zones');
-                    }}
-                    getTotalWorkTime={getTotalWorkTime}
-                    getEstimatedTime={getEstimatedTime}
-                    taskComputedTimes={taskComputedTimes}
-                  />
-                ) : currentView === 'executionPlan' ? (
-                  <ExecutionPlanView
-                    planGroups={planGroups}
-                    tasks={tasks}
-                    zones={zones}
-                    selectedDate={executionPlanDate}
-                    onDateChange={setExecutionPlanDate}
-                    onBack={() => {
-                      setCurrentView('zones');
-                      if (zones.length > 0) {
-                        setActiveZoneId(zones[0].id);
-                      }
-                    }}
-                    onAddGroup={addPlanGroup}
-                    onUpdateGroup={updatePlanGroup}
-                    onDeleteGroup={deletePlanGroup}
-                    onToggleTask={toggleTask}
-                    onNavigateToZone={(zoneId, taskId) => {
-                      setActiveZoneId(zoneId);
-                      if (taskId) setFocusedTaskId(taskId);
-                      setCurrentView('zones');
-                    }}
-                    onRemoveTaskFromGroup={removeTaskFromPlanGroup}
-                    onRemoveTaskFromDailyPlan={removeTaskFromDailyPlan}
-                    onAddTasksToDailyPlan={addTasksToDailyPlan}
-                    onSetDailyPlanOrder={setDailyPlanOrder}
-                    onMoveTaskToSpan={moveTaskToDailyPlanSpan}
-                    onMoveTaskOutOfSpan={moveTaskOutOfDailyPlanSpan}
-                    onSetDailyPlanSpanOrder={setDailyPlanSpanOrder}
-                    onCreateSpan={createDailyPlanSpan}
-                    onUpdateSpan={updateDailyPlanSpan}
-                    onDeleteSpan={deleteDailyPlanSpan}
-                    spans={dailyPlanSpans}
-                  />
-                ) : (
-                  <TaskList
-                    zone={activeZone}
-                    zones={zones}
-                    tasks={currentZoneTasks}
-                    activeTaskId={activeTaskId}
-                    isTimerRunning={timer.isRunning}
-                    focusedTaskId={focusedTaskId}
-                    onSetFocusedTaskId={setFocusedTaskId}
-                    onAddTask={useAppStore.getState().addTask}
-                    onToggleTask={toggleTask}
-                    onDeleteTask={deleteTask}
-                    onUpdateTask={updateTask}
-                    onToggleExpanded={toggleExpanded}
-                    onToggleSubtasksCollapsed={toggleSubtasksCollapsed}
-                    onReorderTasks={reorderTasks}
-                    onSelectTask={handleSelectTask}
-                    onClearCompleted={clearCompleted}
-                  />
-                )}
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
+              <ResizablePanel defaultSize="60%" minSize="5%">
+                <div className="content-area">
+                  {currentView === 'history' ? (
+                    <HistoryManager
+                      historyWorkspaces={historyWorkspaces}
+                      templates={PREDEFINED_TEMPLATES}
+                      currentSourceHistoryId={currentWorkspace.sourceHistoryId}
+                      hasUnsavedChanges={hasUnsavedChanges}
+                      onBack={() => setCurrentView('zones')}
+                      onRestore={handleRestoreFromHistory}
+                      onDelete={deleteHistoryWorkspace}
+                      onRename={renameHistoryWorkspace}
+                      onUpdateSummary={updateHistorySummary}
+                      onCreateNewWorkspace={handleCreateNewWorkspace}
+                      onArchiveCurrent={handleArchiveCurrent}
+                      onQuickArchive={quickArchiveCurrentWorkspace}
+                      onOverwriteHistory={overwriteHistoryWorkspace}
+                      onExportHistory={exportHistoryToJson}
+                      onExportAllHistory={exportAllHistoryToJson}
+                      onImportHistory={importHistoryFromJson}
+                      onImportAllHistory={importAllHistoryFromJson}
+                      customTemplates={customTemplates}
+                      onSaveCustomTemplate={saveCustomTemplate}
+                      onDeleteCustomTemplate={deleteCustomTemplate}
+                    />
+                  ) : currentView === 'settings' ? (
+                    <SettingsPanel
+                      settings={settings}
+                      zones={zones}
+                      recurringTemplates={recurringTemplates}
+                      onAddRecurringTemplate={addRecurringTemplate}
+                      onUpdateRecurringTemplate={updateRecurringTemplate}
+                      onDeleteRecurringTemplate={deleteRecurringTemplate}
+                      onBack={() => setCurrentView('zones')}
+                      onUpdateSettings={updateSettings}
+                      onPreviewMode={timer.setMode}
+                    />
+                  ) : currentView === 'global' ? (
+                    <GlobalView
+                      zones={zones}
+                      tasks={tasks}
+                      activeTaskId={activeTaskId}
+                      isTimerRunning={timer.isRunning}
+                      sortConfig={settings.globalViewSort}
+                      isLeafMode={settings.globalViewLeafMode}
+                      onLeafModeChange={(isLeaf) => updateSettings({ globalViewLeafMode: isLeaf })}
+                      isGroupByZone={settings.globalViewGroupByZone}
+                      onGroupByZoneChange={(isGroup) => updateSettings({ globalViewGroupByZone: isGroup })}
+                      onBack={() => {
+                        setCurrentView('zones');
+                        if (zones.length > 0) {
+                          setActiveZoneId(zones[0].id);
+                        }
+                      }}
+                      onToggleTask={toggleTask}
+                      onDeleteTask={deleteTask}
+                      onUpdateTask={updateTask}
+                      onToggleExpanded={toggleExpanded}
+                      onToggleSubtasksCollapsed={toggleSubtasksCollapsed}
+                      onReorderTasks={reorderTasks}
+                      onSelectTask={handleSelectTask}
+                      onSortConfigChange={(config) => updateSettings({ globalViewSort: config })}
+                      onNavigateToZone={(zoneId, taskId) => {
+                        setActiveZoneId(zoneId);
+                        setFocusedTaskId(taskId);
+                        setCurrentView('zones');
+                      }}
+                      getTotalWorkTime={getTotalWorkTime}
+                      getEstimatedTime={getEstimatedTime}
+                      taskComputedTimes={taskComputedTimes}
+                    />
+                  ) : (
+                    <TaskList
+                      zone={activeZone}
+                      zones={zones}
+                      tasks={currentZoneTasks}
+                      activeTaskId={activeTaskId}
+                      isTimerRunning={timer.isRunning}
+                      focusedTaskId={focusedTaskId}
+                      onSetFocusedTaskId={setFocusedTaskId}
+                      onAddTask={useAppStore.getState().addTask}
+                      onToggleTask={toggleTask}
+                      onDeleteTask={deleteTask}
+                      onUpdateTask={updateTask}
+                      onToggleExpanded={toggleExpanded}
+                      onToggleSubtasksCollapsed={toggleSubtasksCollapsed}
+                      onReorderTasks={reorderTasks}
+                      onSelectTask={handleSelectTask}
+                      onClearCompleted={clearCompleted}
+                    />
+                  )}
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          )}
         </div>
       </FloatWindow>
       <Toaster
