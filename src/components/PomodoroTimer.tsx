@@ -240,7 +240,7 @@ export function PomodoroTimer({
             onClick={() => setCollapsed(true)}
             title={t('view.collapse') || 'Collapse'}
           >
-            <ChevronDown size={14} />
+            <ChevronDown size={12} />
           </button>
           <div className="session-count">
             {[...Array(4)].map((_, i) => (
@@ -264,11 +264,11 @@ export function PomodoroTimer({
               onChange={(e) => setEditMinutes(e.target.value)}
               onBlur={handleTimeSubmit}
               onKeyDown={(e) => e.key === 'Enter' && handleTimeSubmit()}
-              className="w-24 h-12 text-3xl font-bold text-center bg-black/20 border-white/20 text-white"
+              className="w-20 h-10 text-2xl font-bold text-center bg-black/20 border-white/20 text-white"
               min={1}
               max={120}
             />
-            <span className="text-xl text-white/50">min</span>
+            <span className="text-sm text-white/50">min</span>
           </div>
         ) : (
           <span
@@ -290,7 +290,7 @@ export function PomodoroTimer({
             onClick={() => onSetMode('work')}
             title={`${t('timer.work')} ${Math.floor(workDuration / 60)} ${t('settings.workDurationMinutes')}`}
           >
-            <Brain size={14} />
+            <Brain size={12} />
             <span>{t('timer.work')}</span>
           </button>
           <button
@@ -298,7 +298,7 @@ export function PomodoroTimer({
             onClick={() => onSetMode('break')}
             title={`${t('timer.break')} ${Math.floor(breakDuration / 60)} ${t('settings.workDurationMinutes')}`}
           >
-            <Coffee size={14} />
+            <Coffee size={12} />
             <span>{t('timer.break')}</span>
           </button>
           <button
@@ -306,7 +306,7 @@ export function PomodoroTimer({
             onClick={() => onSetMode('longBreak')}
             title={`${t('timer.longBreak')} ${Math.floor(longBreakDuration / 60)} ${t('settings.workDurationMinutes')}`}
           >
-            <Coffee size={14} />
+            <Coffee size={12} />
             <span>{t('timer.longBreak')}</span>
           </button>
         </div>
@@ -329,7 +329,7 @@ export function PomodoroTimer({
             className="control-btn-primary"
             onClick={onStart}
           >
-            <Play size={16} className="mr-1" />
+            <Play size={14} className="mr-1" />
             {t('timer.startFocus')}
           </Button>
         ) : (
@@ -341,7 +341,7 @@ export function PomodoroTimer({
                 className="control-btn"
                 onClick={onPause}
               >
-                <Pause size={16} />
+                <Pause size={14} />
               </Button>
             ) : (
               <Button
@@ -350,7 +350,7 @@ export function PomodoroTimer({
                 className="control-btn"
                 onClick={onResume}
               >
-                <Play size={16} />
+                <Play size={14} />
               </Button>
             )}
             <Button
@@ -359,7 +359,7 @@ export function PomodoroTimer({
               className="control-btn"
               onClick={onStop}
             >
-              <Square size={16} />
+              <Square size={14} />
             </Button>
             <Button
               size="sm"
@@ -367,7 +367,7 @@ export function PomodoroTimer({
               className="control-btn"
               onClick={onSkip}
             >
-              <SkipForward size={16} />
+              <SkipForward size={14} />
             </Button>
           </>
         )}

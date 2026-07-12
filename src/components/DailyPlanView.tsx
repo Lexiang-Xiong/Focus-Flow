@@ -116,13 +116,13 @@ function AddFromPlanGroupDialog({
       }
       onOpenChange(open);
     }}>
-      <DialogContent className="sm:max-w-md bg-[#1a1a24] border-white/10 text-white">
+      <DialogContent className="sm:max-w-md p-4 bg-[#1a1a24] border-white/10 text-white text-[11px]">
         <DialogHeader>
-          <DialogTitle>{t('view.addFromPlanGroup')}</DialogTitle>
+          <DialogTitle className="text-[12px]">{t('view.addFromPlanGroup')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2 max-h-[60vh] overflow-y-auto">
           {availableGroups.length === 0 ? (
-            <div className="text-xs text-white/50 text-center py-4">{t('view.noPlanGroups')}</div>
+            <div className="text-[10px] text-white/50 text-center py-4">{t('view.noPlanGroups')}</div>
           ) : (
             availableGroups.map(group => (
               <button
@@ -137,7 +137,7 @@ function AddFromPlanGroupDialog({
                     : 'bg-black/20 border-white/10 hover:bg-white/10'
                 }`}
               >
-                <div className="font-medium text-xs">{group.name}</div>
+                <div className="font-medium text-[11px]">{group.name}</div>
                 <div className="text-[10px] text-white/50">
                   {group.startDate || group.endDate
                     ? `${group.startDate ?? ''} ~ ${group.endDate ?? ''}`
@@ -163,7 +163,7 @@ function AddFromPlanGroupDialog({
                       onCheckedChange={() => toggleTask(task.id)}
                       className="border-white/30"
                     />
-                    <span className={`flex-1 text-xs truncate ${task.completed ? 'line-through text-white/40' : 'text-white/90'}`}>
+                    <span className={`flex-1 text-[11px] truncate ${task.completed ? 'line-through text-white/40' : 'text-white/90'}`}>
                       {task.title}
                     </span>
                     {zone && (
@@ -181,10 +181,10 @@ function AddFromPlanGroupDialog({
         </div>
 
         <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => onOpenChange(false)}>
             {t('common.cancel')}
           </Button>
-          <Button size="sm" disabled={selectedTaskIds.size === 0} onClick={handleAdd}>
+          <Button size="sm" className="h-7 text-[11px]" disabled={selectedTaskIds.size === 0} onClick={handleAdd}>
             {t('common.add')} ({selectedTaskIds.size})
           </Button>
         </div>
@@ -617,7 +617,7 @@ export function DailyPlanView({
                 onDateChange(addDays(selectedDate, -1));
               }}
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={14} />
             </Button>
             <DatePickerPopover
               selected={selectedDate}
@@ -634,18 +634,18 @@ export function DailyPlanView({
                 onDateChange(addDays(selectedDate, 1));
               }}
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={14} />
             </Button>
           </div>
 
           {selectedDate === today && (
-            <span className="text-xs px-2 py-0.5 rounded bg-green-500/20 text-green-400 border border-green-500/30 shrink-0">
+            <span className="text-[10px] px-1.5 py-0 rounded bg-green-500/20 text-green-400 border border-green-500/30 shrink-0">
               {t('task.deadlineToday')}
             </span>
           )}
         </div>
 
-        <Button size="sm" variant="outline" onClick={() => setShowAddDialog(true)} className="shrink-0">
+        <Button size="sm" variant="outline" onClick={() => setShowAddDialog(true)} className="h-7 text-[11px] shrink-0">
           <Plus size={14} className="mr-1" />
           {t('view.addFromPlanGroup')}
         </Button>

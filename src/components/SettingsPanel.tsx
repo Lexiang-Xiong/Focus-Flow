@@ -367,10 +367,10 @@ export function SettingsPanel({
           className="back-btn"
           onClick={onBack}
         >
-          <ArrowLeft size={18} />
+          <ArrowLeft size={16} />
         </Button>
         <div className="settings-panel-title">
-          <Settings size={18} className="text-blue-400" />
+          <Settings size={16} className="text-blue-400" />
           <span>{t('settings.title')}</span>
         </div>
       </div>
@@ -380,7 +380,7 @@ export function SettingsPanel({
         {/* Language Settings */}
         <div className="settings-section">
           <h3 className="settings-section-title">
-            <Settings size={14} className="mr-2" />
+            <Settings size={12} className="mr-1.5" />
             {t('settings.language')}
           </h3>
           <div className="setting-item">
@@ -393,7 +393,7 @@ export function SettingsPanel({
                   i18n.changeLanguage(val);
                 }}
               >
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-32 h-7 text-[11px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -411,7 +411,7 @@ export function SettingsPanel({
         {/* Timer Settings */}
         <div className="settings-section">
           <h3 className="settings-section-title">
-            <Clock size={14} className="mr-2" />
+            <Clock size={12} className="mr-1.5" />
             {t('settings.timerSettings')}
           </h3>
 
@@ -427,7 +427,7 @@ export function SettingsPanel({
                   setWorkMinutes(val);
                   onUpdateSettings({ workDuration: val * 60 });
                 }}
-                className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+                className="w-20 h-7 text-[11px] text-right font-mono bg-black/30 border-white/20 text-white"
                 min={1}
               />
             </div>
@@ -454,7 +454,7 @@ export function SettingsPanel({
                   setBreakMinutes(val);
                   onUpdateSettings({ breakDuration: val * 60 });
                 }}
-                className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+                className="w-20 h-7 text-[11px] text-right font-mono bg-black/30 border-white/20 text-white"
                 min={1}
               />
             </div>
@@ -481,7 +481,7 @@ export function SettingsPanel({
                   setLongBreakMinutes(val);
                   onUpdateSettings({ longBreakDuration: val * 60 });
                 }}
-                className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+                className="w-20 h-7 text-[11px] text-right font-mono bg-black/30 border-white/20 text-white"
                 min={1}
               />
             </div>
@@ -500,7 +500,7 @@ export function SettingsPanel({
         {/* Weighted Sort Settings */}
         <div className="settings-section">
           <h3 className="settings-section-title">
-            <Flag size={14} className="mr-2" />
+            <Flag size={12} className="mr-1.5" />
             {t('settings.weightedSort')}
           </h3>
           <p className="settings-section-desc">
@@ -510,7 +510,7 @@ export function SettingsPanel({
           {/* Priority Weight */}
           <div className="setting-item">
             <div className="setting-label">
-              <Flag size={14} className="mr-2 text-red-400" />
+              <Flag size={12} className="mr-1.5 text-red-400" />
               <span>{t('settings.priorityWeight')}</span>
               <span className="setting-value">{priorityWeight}%</span>
             </div>
@@ -527,7 +527,7 @@ export function SettingsPanel({
           {/* Urgency Weight */}
           <div className="setting-item">
             <div className="setting-label">
-              <Zap size={14} className="mr-2 text-orange-400" />
+              <Zap size={12} className="mr-1.5 text-orange-400" />
               <span>{t('settings.deadlineWeight')}</span>
               <span className="setting-value">{deadlineWeight}%</span>
             </div>
@@ -545,7 +545,7 @@ export function SettingsPanel({
         {/* Other Settings */}
         <div className="settings-section">
           <h3 className="settings-section-title">
-            <Volume2 size={14} className="mr-2" />
+            <Volume2 size={12} className="mr-1.5" />
             {t('settings.otherSettings')}
           </h3>
 
@@ -598,7 +598,7 @@ export function SettingsPanel({
                     setAutoSaveInterval(val);
                     onUpdateSettings({ autoSaveInterval: val });
                   }}
-                  className="w-20 h-8 text-right font-mono bg-black/30 border-white/20 text-white"
+                  className="w-20 h-7 text-[11px] text-right font-mono bg-black/30 border-white/20 text-white"
                   min={10}
                 />
               </div>
@@ -622,7 +622,7 @@ export function SettingsPanel({
         {/* Data Storage Settings */}
         <div className="settings-section">
           <h3 className="settings-section-title">
-            <Database size={14} className="mr-2 text-emerald-400" />
+            <Database size={12} className="mr-1.5 text-emerald-400" />
             {t('settings.dataStorage') || 'Data Storage'}
           </h3>
           <p className="settings-section-desc">
@@ -636,10 +636,10 @@ export function SettingsPanel({
             <Button
               variant="outline"
               size="sm"
-              className="w-fit"
+              className="w-fit h-7 text-[11px]"
               onClick={handleChangeDbPath}
             >
-              <FolderOpen size={14} className="mr-2" />
+              <FolderOpen size={12} className="mr-1.5" />
               {t('settings.changeLocation') || 'Change Location'}
             </Button>
           </div>
@@ -648,11 +648,11 @@ export function SettingsPanel({
         {/* Recurring Tasks Settings */}
         <div className="settings-section">
           <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
-            <h3 className="flex items-center text-xs font-semibold text-white/70">
-              <Repeat size={14} className="mr-2 text-green-400" />
+            <h3 className="flex items-center text-[10px] font-semibold text-white/70">
+              <Repeat size={12} className="mr-1.5 text-green-400" />
               {t('settings.recurringTasks')}
             </h3>
-            <Button size="sm" className="h-6 text-xs px-2 bg-blue-600 hover:bg-blue-500 text-white" onClick={() => setShowRecurringDialog(true)}>
+            <Button size="sm" className="h-7 text-[11px] px-2 bg-blue-600 hover:bg-blue-500 text-white" onClick={() => setShowRecurringDialog(true)}>
               <Plus size={12} className="mr-1" />
               {t('settings.newRule')}
             </Button>
@@ -663,14 +663,14 @@ export function SettingsPanel({
 
           <div className="flex flex-col gap-2">
             {!recurringTemplates || recurringTemplates.length === 0 ? (
-              <div className="text-center py-4 text-xs text-white/30 bg-black/10 rounded-md border border-dashed border-white/10">
+              <div className="text-center py-4 text-[10px] text-white/30 bg-black/10 rounded-md border border-dashed border-white/10">
                 {t('recurring.noRules')}
               </div>
             ) : (
               recurringTemplates.map(tpl => (
                 <div key={tpl.id} className="flex flex-col gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-white/90">{tpl.title}</span>
+                    <span className="text-[11px] font-medium text-white/90">{tpl.title}</span>
                     <div className="flex items-center gap-2">
                       <Switch
                         checked={tpl.isActive}
@@ -684,7 +684,7 @@ export function SettingsPanel({
                       </Button>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/50">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-white/50">
                     <span className="flex items-center">
                       <Repeat size={10} className="mr-1" />
                       {t('recurring.every')} {tpl.intervalMinutes >= 1440 ? `${tpl.intervalMinutes / 1440} ${t('recurring.days')}` : tpl.intervalMinutes >= 60 ? `${tpl.intervalMinutes / 60} ${t('recurring.hours')}` : `${tpl.intervalMinutes} ${t('recurring.minutes')}`}
@@ -706,24 +706,24 @@ export function SettingsPanel({
 
         {/* 新建定时任务的弹窗 */}
         <Dialog open={showRecurringDialog} onOpenChange={setShowRecurringDialog}>
-          <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
+          <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px] p-4 text-[11px]">
             <DialogHeader>
-              <DialogTitle>{editingTemplate ? t('recurring.editRule') : t('recurring.addRule')}</DialogTitle>
+              <DialogTitle className="text-[12px]">{editingTemplate ? t('recurring.editRule') : t('recurring.addRule')}</DialogTitle>
             </DialogHeader>
-            <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-3 py-2">
               <div className="flex flex-col gap-2">
-                <label className="text-xs text-white/60">{t('recurring.ruleTitle')}</label>
-                <Input value={recTitle} onChange={e => setRecTitle(e.target.value)} className="bg-black/30 border-white/20" placeholder={t('recurring.ruleTitlePlaceholder')} />
+                <label className="text-[11px] text-white/60">{t('recurring.ruleTitle')}</label>
+                <Input value={recTitle} onChange={e => setRecTitle(e.target.value)} className="h-7 text-[11px] bg-black/30 border-white/20" placeholder={t('recurring.ruleTitlePlaceholder')} />
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-xs text-white/60">{t('recurring.ruleDescription')}</label>
-                <Input value={recDesc} onChange={e => setRecDesc(e.target.value)} className="bg-black/30 border-white/20" placeholder={t('recurring.ruleDescriptionPlaceholder')} />
+                <label className="text-[11px] text-white/60">{t('recurring.ruleDescription')}</label>
+                <Input value={recDesc} onChange={e => setRecDesc(e.target.value)} className="h-7 text-[11px] bg-black/30 border-white/20" placeholder={t('recurring.ruleDescriptionPlaceholder')} />
               </div>
 
               <div className="flex gap-4">
                 <div className="flex flex-col gap-2 flex-1">
-                  <label className="text-xs text-white/60">{t('recurring.triggerInterval')} <span className="text-white/30 text-[10px]">{t('recurring.minInterval')}</span></label>
+                  <label className="text-[11px] text-white/60">{t('recurring.triggerInterval')} <span className="text-white/30 text-[10px]">{t('recurring.minInterval')}</span></label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
@@ -738,7 +738,7 @@ export function SettingsPanel({
                           setRecIntervalValue(val);
                         }
                       }}
-                      className="bg-black/30 border-white/20"
+                      className="h-7 text-[11px] bg-black/30 border-white/20"
                     />
                     <Select value={recIntervalUnit} onValueChange={(v: 'minutes' | 'hours' | 'days') => {
                       setRecIntervalUnit(v);
@@ -746,15 +746,15 @@ export function SettingsPanel({
                         setRecIntervalValue(5);
                       }
                     }}>
-                      <SelectTrigger className="w-[80px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-[80px] h-7 text-[11px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
                       <SelectContent><SelectItem value="minutes">{t('recurring.minutes')}</SelectItem><SelectItem value="hours">{t('recurring.hours')}</SelectItem><SelectItem value="days">{t('recurring.days')}</SelectItem></SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 flex-1">
-                  <label className="text-xs text-white/60">{t('recurring.targetZone')}</label>
+                  <label className="text-[11px] text-white/60">{t('recurring.targetZone')}</label>
                   <Select value={recZoneId} onValueChange={setRecZoneId}>
-                    <SelectTrigger className="bg-black/30 border-white/20"><SelectValue placeholder={t('recurring.selectZone')} /></SelectTrigger>
+                    <SelectTrigger className="h-7 text-[11px] bg-black/30 border-white/20"><SelectValue placeholder={t('recurring.selectZone')} /></SelectTrigger>
                     <SelectContent>
                       {zones.map(z => <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>)}
                     </SelectContent>
@@ -764,19 +764,19 @@ export function SettingsPanel({
 
               <div className="flex gap-4">
                 <div className="flex flex-col gap-2 flex-1">
-                  <label className="text-xs text-white/60">{t('recurring.autoDeadline')} {t('recurring.afterGeneration')}</label>
+                  <label className="text-[11px] text-white/60">{t('recurring.autoDeadline')} {t('recurring.afterGeneration')}</label>
                   <div className="flex items-center gap-2">
-                    <Input type="number" min={0} value={recDeadlineValue} onChange={e => setRecDeadlineValue(Number(e.target.value))} className="bg-black/30 border-white/20" />
+                    <Input type="number" min={0} value={recDeadlineValue} onChange={e => setRecDeadlineValue(Number(e.target.value))} className="h-7 text-[11px] bg-black/30 border-white/20" />
                     <Select value={recDeadlineUnit} onValueChange={(v: 'hours' | 'days') => setRecDeadlineUnit(v)}>
-                      <SelectTrigger className="w-[80px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-[80px] h-7 text-[11px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
                       <SelectContent><SelectItem value="hours">{t('recurring.hours')}</SelectItem><SelectItem value="days">{t('recurring.days')}</SelectItem></SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 flex-1">
-                  <label className="text-xs text-white/60">{t('recurring.priority')}</label>
+                  <label className="text-[11px] text-white/60">{t('recurring.priority')}</label>
                   <Select value={recPriority} onValueChange={(v: TaskPriority) => setRecPriority(v)}>
-                    <SelectTrigger className="bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-7 text-[11px] bg-black/30 border-white/20"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="high">{t('task.priorityHigh')}</SelectItem>
                       <SelectItem value="medium">{t('task.priorityMedium')}</SelectItem>
@@ -787,8 +787,8 @@ export function SettingsPanel({
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-4">
-              <Button variant="ghost" onClick={() => setShowRecurringDialog(false)}>{t('common.cancel')}</Button>
-              <Button className="bg-blue-600 hover:bg-blue-500 text-white" onClick={handleSaveRecurring} disabled={!recTitle.trim()}>
+              <Button variant="ghost" className="h-7 text-[11px]" onClick={() => setShowRecurringDialog(false)}>{t('common.cancel')}</Button>
+              <Button className="h-7 text-[11px] bg-blue-600 hover:bg-blue-500 text-white" onClick={handleSaveRecurring} disabled={!recTitle.trim()}>
                 {t('recurring.saveRule')}
               </Button>
             </div>
@@ -798,15 +798,15 @@ export function SettingsPanel({
         {/* Environment Profiles Section */}
         <div className="settings-section mt-6">
           <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/5">
-            <h3 className="flex items-center text-xs font-semibold text-white/70">
-              <Bookmark size={14} className="mr-2 text-indigo-400" />
+            <h3 className="flex items-center text-[10px] font-semibold text-white/70">
+              <Bookmark size={12} className="mr-1.5 text-indigo-400" />
               {t('settings.environmentProfiles')}
             </h3>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleImportConfig}>
+              <Button size="sm" variant="outline" className="h-7 text-[11px] px-2" onClick={handleImportConfig}>
                 <Upload size={12} className="mr-1" /> {t('common.import')}
               </Button>
-              <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleExportConfig}>
+              <Button size="sm" variant="outline" className="h-7 text-[11px] px-2" onClick={handleExportConfig}>
                 <Download size={12} className="mr-1" /> {t('common.export')}
               </Button>
             </div>
@@ -817,24 +817,24 @@ export function SettingsPanel({
 
           <Button
             variant="outline"
-            className="w-full mb-3 border-dashed border-indigo-500/50 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
+            className="w-full h-7 text-[11px] mb-3 border-dashed border-indigo-500/50 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
             onClick={() => setShowSaveProfileDialog(true)}
           >
-            <Save size={14} className="mr-2" /> {t('settings.saveAsSnapshot')}
+            <Save size={12} className="mr-1.5" /> {t('settings.saveAsSnapshot')}
           </Button>
 
           <div className="flex flex-col gap-2">
             {(!configProfiles || configProfiles.length === 0) && (
-              <div className="text-center py-4 text-xs text-white/30 bg-black/10 rounded-md border border-white/5">
+              <div className="text-center py-4 text-[10px] text-white/30 bg-black/10 rounded-md border border-white/5">
                 {t('profile.noProfiles')}
               </div>
             )}
             {(configProfiles || []).map(profile => (
               <div key={profile.id} className="flex flex-col gap-2 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-indigo-500/30 transition-colors">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-white/90">{profile.name}</span>
+                  <span className="text-[11px] font-medium text-white/90">{profile.name}</span>
                   <div className="flex items-center gap-2">
-                    <Button size="sm" className="h-6 text-xs px-2 bg-indigo-600 hover:bg-indigo-500 text-white" onClick={() => {
+                    <Button size="sm" className="h-7 text-[11px] px-2 bg-indigo-600 hover:bg-indigo-500 text-white" onClick={() => {
                       applyConfigProfile(profile.id);
                       toast.success(`${t('profile.profileApplied')}: ${profile.name}`);
                     }}>
@@ -851,7 +851,7 @@ export function SettingsPanel({
                     </Button>
                   </div>
                 </div>
-                <div className="text-[9px] text-white/40">
+                <div className="text-[10px] text-white/40">
                   {t('profile.createdAt')}: {new Date(profile.createdAt).toLocaleString()} · {t('profile.containsRules', { count: profile.recurringTemplates.length })}
                 </div>
               </div>
@@ -861,22 +861,22 @@ export function SettingsPanel({
 
         {/* Save Profile Dialog */}
         <Dialog open={showSaveProfileDialog} onOpenChange={setShowSaveProfileDialog}>
-          <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
+          <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px] p-4 text-[11px]">
             <DialogHeader>
-              <DialogTitle>{t('profile.saveProfile')}</DialogTitle>
+              <DialogTitle className="text-[12px]">{t('profile.saveProfile')}</DialogTitle>
             </DialogHeader>
-            <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-3 py-2">
               <Input
                 value={profileName}
                 onChange={e => setProfileName(e.target.value)}
                 placeholder={t('profile.exampleMode')}
-                className="bg-black/30 border-white/20"
+                className="h-7 text-[11px] bg-black/30 border-white/20"
                 autoFocus
               />
             </div>
             <div className="flex justify-end gap-2 mt-2">
-              <Button variant="ghost" onClick={() => setShowSaveProfileDialog(false)}>{t('common.cancel')}</Button>
-              <Button className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!profileName.trim()} onClick={() => {
+              <Button variant="ghost" className="h-7 text-[11px]" onClick={() => setShowSaveProfileDialog(false)}>{t('common.cancel')}</Button>
+              <Button className="h-7 text-[11px] bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!profileName.trim()} onClick={() => {
                 saveConfigProfile(profileName.trim(), recurringTemplates.filter((r: RecurringTemplate) => r.scope === 'global' || !r.scope));
                 setProfileName('');
                 setShowSaveProfileDialog(false);
@@ -890,22 +890,22 @@ export function SettingsPanel({
 
         {/* Edit Profile Dialog */}
         <Dialog open={!!editingProfile} onOpenChange={(open) => !open && setEditingProfile(null)}>
-          <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px]">
+          <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[400px] p-4 text-[11px]">
             <DialogHeader>
-              <DialogTitle>{t('profile.editProfile') || 'Edit Profile'}</DialogTitle>
+              <DialogTitle className="text-[12px]">{t('profile.editProfile') || 'Edit Profile'}</DialogTitle>
             </DialogHeader>
-            <div className="flex flex-col gap-4 py-2">
+            <div className="flex flex-col gap-3 py-2">
               <Input
                 value={editingProfileName}
                 onChange={e => setEditingProfileName(e.target.value)}
                 placeholder={t('profile.snapshotName')}
-                className="bg-black/30 border-white/20"
+                className="h-7 text-[11px] bg-black/30 border-white/20"
                 autoFocus
               />
             </div>
             <div className="flex justify-end gap-2 mt-2">
-              <Button variant="ghost" onClick={() => setEditingProfile(null)}>{t('common.cancel')}</Button>
-              <Button className="bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!editingProfileName.trim()} onClick={() => {
+              <Button variant="ghost" className="h-7 text-[11px]" onClick={() => setEditingProfile(null)}>{t('common.cancel')}</Button>
+              <Button className="h-7 text-[11px] bg-indigo-600 hover:bg-indigo-500 text-white" disabled={!editingProfileName.trim()} onClick={() => {
                 if (editingProfile) {
                   updateConfigProfile(editingProfile.id, { name: editingProfileName.trim() });
                   toast.success(t('profile.profileSaved'));
@@ -924,10 +924,10 @@ export function SettingsPanel({
           <Button
             variant="outline"
             size="sm"
-            className="reset-btn"
+            className="reset-btn h-7 text-[11px]"
             onClick={handleReset}
           >
-            <RotateCcw size={14} className="mr-1" />
+            <RotateCcw size={12} className="mr-1" />
             {t('settings.resetSettings')}
           </Button>
         </div>

@@ -59,15 +59,15 @@ export function PlanGroupFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-[#1a1a24] border-white/10 text-white">
+      <DialogContent className="sm:max-w-md p-4 bg-[#1a1a24] border-white/10 text-white text-[11px]">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-[12px]">
             {isEdit ? t('view.editPlanGroup') : t('view.createPlanGroup')}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="plan-group-name" className="text-white/80">
+            <Label htmlFor="plan-group-name" className="text-[11px] text-white/80">
               {t('view.planGroupName')}
             </Label>
             <Input
@@ -86,7 +86,7 @@ export function PlanGroupFormDialog({
               checked={noDateRange}
               onCheckedChange={(checked) => setNoDateRange(checked === true)}
             />
-            <Label htmlFor="no-date-range" className="text-white/80 cursor-pointer">
+            <Label htmlFor="no-date-range" className="text-[11px] text-white/80 cursor-pointer">
               {t('view.noDate')}
             </Label>
           </div>
@@ -94,7 +94,7 @@ export function PlanGroupFormDialog({
           {!noDateRange && (
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label className="text-white/80">{t('view.startDate')}</Label>
+                <Label className="text-[11px] text-white/80">{t('view.startDate')}</Label>
                 <DatePickerPopover
                   selected={startDate}
                   onSelect={setStartDate}
@@ -102,7 +102,7 @@ export function PlanGroupFormDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-white/80">{t('view.endDate')}</Label>
+                <Label className="text-[11px] text-white/80">{t('view.endDate')}</Label>
                 <DatePickerPopover
                   selected={endDate}
                   onSelect={setEndDate}
@@ -113,10 +113,10 @@ export function PlanGroupFormDialog({
           )}
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => onOpenChange(false)}>
               {t('common.cancel')}
             </Button>
-            <Button onClick={handleSubmit} disabled={!name.trim()}>
+            <Button size="sm" className="h-7 text-[11px]" onClick={handleSubmit} disabled={!name.trim()}>
               {t('common.save')}
             </Button>
           </div>

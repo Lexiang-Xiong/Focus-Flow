@@ -17,7 +17,7 @@ export function TimeRuler({ hourHeight = 48, highlightedHours = [], className = 
         return (
           <div
             key={hour}
-            className="absolute left-0 right-0 flex items-start text-xs"
+            className="absolute left-0 right-0 flex items-start text-[10px]"
             style={{ top: `${hour * hourHeight}px` }}
           >
             <span className={`-translate-y-1/2 w-10 text-right pr-2 shrink-0 transition-colors ${isHighlighted ? 'text-white font-medium' : 'text-white/40'}`}>

@@ -169,9 +169,9 @@ export function NlpEditDialog({
           <Wand2 size={14} />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg p-4 text-[11px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-[12px]">
             <Wand2 size={16} /> {t('nlp.title')}
             {config?.ok && !showConfig && (
               <Button
@@ -194,28 +194,28 @@ export function NlpEditDialog({
         {/* BYOK 配置表单（未配置 / 点改配置时） */}
         {showConfig && (
           <div className="flex flex-col gap-3" data-testid="nlp-config">
-            <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-50/60 p-2 text-xs text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+            <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-50/60 p-2 text-[10px] text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
               <span>{t('nlp.plaintextWarn')}</span>
             </div>
-            <label className="flex flex-col gap-1 text-sm">
+            <label className="flex flex-col gap-1 text-[11px]">
               {t('nlp.cfgBase')}
-              <Input data-testid="cfg-base" value={cfgBase} onChange={(e) => setCfgBase(e.target.value)} placeholder="https://.../v1" />
+              <Input data-testid="cfg-base" value={cfgBase} onChange={(e) => setCfgBase(e.target.value)} placeholder="https://.../v1" className="h-7 text-[11px]" />
             </label>
-            <label className="flex flex-col gap-1 text-sm">
+            <label className="flex flex-col gap-1 text-[11px]">
               {t('nlp.cfgKey')}
-              <Input data-testid="cfg-key" type="password" value={cfgKey} onChange={(e) => setCfgKey(e.target.value)} placeholder="sk-… / tp-…" />
+              <Input data-testid="cfg-key" type="password" value={cfgKey} onChange={(e) => setCfgKey(e.target.value)} placeholder="sk-… / tp-…" className="h-7 text-[11px]" />
             </label>
-            <label className="flex flex-col gap-1 text-sm">
+            <label className="flex flex-col gap-1 text-[11px]">
               {t('nlp.cfgModel')}
-              <Input data-testid="cfg-model" value={cfgModel} onChange={(e) => setCfgModel(e.target.value)} placeholder="model" />
+              <Input data-testid="cfg-model" value={cfgModel} onChange={(e) => setCfgModel(e.target.value)} placeholder="model" className="h-7 text-[11px]" />
             </label>
-            <label className="flex flex-col gap-1 text-sm">
+            <label className="flex flex-col gap-1 text-[11px]">
               {t('nlp.cfgProvider')}
-              <Input data-testid="cfg-provider" value={cfgProvider} onChange={(e) => setCfgProvider(e.target.value)} placeholder="(optional)" />
+              <Input data-testid="cfg-provider" value={cfgProvider} onChange={(e) => setCfgProvider(e.target.value)} placeholder="(optional)" className="h-7 text-[11px]" />
             </label>
             {error && (
-              <p data-testid="nlp-error" className="text-sm text-destructive">
+              <p data-testid="nlp-error" className="text-[11px] text-destructive">
                 {error}
               </p>
             )}
@@ -241,14 +241,15 @@ export function NlpEditDialog({
               placeholder={t('nlp.placeholder')}
               rows={4}
               autoFocus
+              className="text-[11px]"
             />
             {error && (
-              <p data-testid="nlp-error" className="text-sm text-destructive">
+              <p data-testid="nlp-error" className="text-[11px] text-destructive">
                 {error}
               </p>
             )}
             <div className="flex justify-end">
-              <Button data-testid="nlp-generate" onClick={handleGenerate} disabled={loading}>
+              <Button data-testid="nlp-generate" className="h-7 text-[11px]" onClick={handleGenerate} disabled={loading}>
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
                 {loading ? t('nlp.generating') : t('nlp.generate')}
               </Button>
@@ -259,7 +260,7 @@ export function NlpEditDialog({
         {!showConfig && step === 'preview' && plan && (
           <div className="flex flex-col gap-3">
             <ScrollArea className="max-h-[46vh] pr-3">
-              <div className="flex flex-col gap-3 text-sm">
+              <div className="flex flex-col gap-3 text-[11px]">
                 {/* 新增（含父任务名 = TP8 防静默错挂） */}
                 {plan.diff.added.length > 0 && (
                   <section className="flex flex-col gap-1">
@@ -335,7 +336,7 @@ export function NlpEditDialog({
             </ScrollArea>
 
             {plan.hasDeletes && (
-              <label className="flex items-center gap-2 text-sm text-destructive">
+              <label className="flex items-center gap-2 text-[11px] text-destructive">
                 <Checkbox
                   data-testid="nlp-delete-confirm"
                   checked={deleteConfirmed}
@@ -346,10 +347,10 @@ export function NlpEditDialog({
             )}
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setStep('input')}>
+              <Button variant="outline" className="h-7 text-[11px]" onClick={() => setStep('input')}>
                 {t('nlp.back')}
               </Button>
-              <Button data-testid="nlp-apply" onClick={handleApply} disabled={applyDisabled}>
+              <Button data-testid="nlp-apply" className="h-7 text-[11px]" onClick={handleApply} disabled={applyDisabled}>
                 {t('nlp.apply')}
               </Button>
             </div>

@@ -100,7 +100,7 @@ export function DailyPlanSpanFocus({
           <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={onBack}>
             <ArrowLeft size={16} />
           </Button>
-          <div className="flex items-center gap-2 text-sm text-white/80 min-w-0">
+          <div className="flex items-center gap-2 text-[11px] text-white/80 min-w-0">
             <Clock size={14} className="shrink-0" />
             <span className="font-medium truncate">
               {formatHour(span.startHour)} - {formatHour(span.endHour)}
@@ -111,6 +111,7 @@ export function DailyPlanSpanFocus({
           <Button
             size="sm"
             variant="outline"
+            className="h-7 text-[11px]"
             onClick={() => {
               onDeleteSpan(span.id);
               onBack();
@@ -124,7 +125,7 @@ export function DailyPlanSpanFocus({
 
       {/* Time range editor */}
       <div className="px-3 py-3 border-b border-white/10 space-y-2">
-        <div className="flex items-center gap-2 text-xs text-white/50 mb-1.5">
+        <div className="flex items-center gap-2 text-[10px] text-white/50 mb-1.5">
           <Clock size={12} />
           <span>{t('view.spanTimeRange')}</span>
         </div>
@@ -132,7 +133,7 @@ export function DailyPlanSpanFocus({
           <div className="flex-1">
             <label className="text-[10px] text-white/40 mb-1 block">{t('view.spanStartTime')}</label>
             <Select value={hourToValue(span.startHour)} onValueChange={(v) => applyTimeChange('start', v)}>
-              <SelectTrigger className="h-8 bg-black/20 border-white/10 text-white/90">
+              <SelectTrigger className="h-7 text-[11px] bg-black/20 border-white/10 text-white/90">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="max-h-60">
@@ -142,11 +143,11 @@ export function DailyPlanSpanFocus({
               </SelectContent>
             </Select>
           </div>
-          <span className="text-white/40 text-sm mt-5">-</span>
+          <span className="text-white/40 text-[11px] mt-5">-</span>
           <div className="flex-1">
             <label className="text-[10px] text-white/40 mb-1 block">{t('view.spanEndTime')}</label>
             <Select value={hourToValue(span.endHour)} onValueChange={(v) => applyTimeChange('end', v)}>
-              <SelectTrigger className="h-8 bg-black/20 border-white/10 text-white/90">
+              <SelectTrigger className="h-7 text-[11px] bg-black/20 border-white/10 text-white/90">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="max-h-60">
@@ -157,12 +158,12 @@ export function DailyPlanSpanFocus({
             </Select>
           </div>
         </div>
-        {timeError && <div className="text-xs text-red-400">{timeError}</div>}
+        {timeError && <div className="text-[10px] text-red-400">{timeError}</div>}
       </div>
 
       {/* Description */}
       <div className="px-3 py-3 border-b border-white/10">
-        <div className="flex items-center gap-2 text-xs text-white/50 mb-1.5">
+        <div className="flex items-center gap-2 text-[10px] text-white/50 mb-1.5">
           <FileText size={12} />
           <span>{t('view.spanDescription')}</span>
         </div>
@@ -171,14 +172,14 @@ export function DailyPlanSpanFocus({
           onChange={(e) => setDescription(e.target.value)}
           onBlur={handleDescriptionBlur}
           placeholder={t('view.spanDescriptionPlaceholder')}
-          className="min-h-[72px] bg-black/20 border-white/10 text-white/90 placeholder:text-white/30 resize-none"
+          className="min-h-[60px] text-[11px] bg-black/20 border-white/10 text-white/90 placeholder:text-white/30 resize-none"
         />
       </div>
 
       {/* Task list */}
       <div className="flex flex-col">
         <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
-          <span className="text-sm font-medium text-white/80">
+          <span className="text-[11px] font-medium text-white/80">
             {t('view.spanTasks')} ({spanTasks.length})
           </span>
         </div>
@@ -210,7 +211,7 @@ export function DailyPlanSpanFocus({
           {/* Drop area for tasks from backlog */}
           <div
             ref={setNodeRef}
-            className={`mt-3 px-3 py-4 rounded border border-dashed text-center text-sm transition-colors ${
+            className={`mt-3 px-3 py-4 rounded border border-dashed text-center text-[11px] transition-colors ${
               isOver
                 ? 'bg-white/10 border-white/30 text-white/80'
                 : 'border-white/10 text-white/40 hover:bg-white/5 hover:text-white/60'

@@ -51,14 +51,14 @@ export function ByokSettingsSection() {
     opts: { type?: string; placeholder?: string } = {},
   ) => (
     <div className="flex flex-col gap-1">
-      <label className="text-xs text-white/60">{label}</label>
+      <label className="text-[11px] text-white/60">{label}</label>
       <Input
         data-testid={testid}
         type={opts.type ?? 'text'}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={opts.placeholder}
-        className="bg-black/30 border-white/20 text-white placeholder:text-white/50"
+        className="h-7 text-[11px] bg-black/30 border-white/20 text-white placeholder:text-white/50"
       />
     </div>
   );
@@ -66,7 +66,7 @@ export function ByokSettingsSection() {
   return (
     <div className="settings-section" data-testid="byok-settings">
       <h3 className="settings-section-title">
-        <Wand2 size={14} className="mr-2 text-violet-400" />
+        <Wand2 size={12} className="mr-1.5 text-violet-400" />
         {t('nlp.settingsTitle')}
       </h3>
       <p className="settings-section-desc">
@@ -74,7 +74,7 @@ export function ByokSettingsSection() {
       </p>
 
       <div className="setting-item flex flex-col gap-3">
-        <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-950/30 p-2 text-xs text-amber-300">
+        <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-950/30 p-2 text-[10px] text-amber-300">
           <AlertTriangle size={14} className="mt-0.5 shrink-0" />
           <span>{t('nlp.plaintextWarn')}</span>
         </div>
@@ -83,11 +83,11 @@ export function ByokSettingsSection() {
         {field(t('nlp.cfgModel'), model, setModel, 'byok-set-model', { placeholder: 'model' })}
         {field(t('nlp.cfgProvider'), provider, setProvider, 'byok-set-provider', { placeholder: '(optional)' })}
         <div className="flex gap-2">
-          <Button data-testid="byok-save" className="bg-violet-600 hover:bg-violet-500 text-white" onClick={save}>
+          <Button data-testid="byok-save" className="h-7 text-[11px] bg-violet-600 hover:bg-violet-500 text-white" onClick={save}>
             {t('nlp.save')}
           </Button>
           {configured && (
-            <Button data-testid="byok-clear" variant="outline" onClick={clear}>
+            <Button data-testid="byok-clear" variant="outline" className="h-7 text-[11px] text-red-400 border-red-400/50 hover:bg-red-500/10 hover:text-red-300" onClick={clear}>
               <Trash2 size={14} className="mr-1" />
               {t('nlp.clear')}
             </Button>

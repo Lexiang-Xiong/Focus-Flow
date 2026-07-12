@@ -427,17 +427,17 @@ export function TaskItem({
                         months: "flex flex-col gap-1 relative",
                         month: "flex flex-col",
                         caption: "flex justify-center items-center py-1 relative",
-                        caption_label: "text-sm font-medium text-white",
+                        caption_label: "text-[11px] font-medium text-white",
                         nav: "absolute inset-x-0 top-1 flex items-center justify-between w-full z-10 px-1",
-                        nav_button: "h-6 w-6 bg-black p-0 text-white hover:bg-white hover:text-black rounded flex items-center justify-center transition-colors text-xs border border-white/20",
+                        nav_button: "h-5 w-5 bg-black p-0 text-white hover:bg-white hover:text-black rounded flex items-center justify-center transition-colors text-[10px] border border-white/20",
                         nav_button_previous: "",
                         nav_button_next: "",
                         table: "w-full border-collapse space-y-1",
                         head_row: "flex",
-                        head_cell: "text-white/50 rounded-md w-9 font-normal text-[0.8rem]",
+                        head_cell: "text-white/50 rounded-md w-8 font-normal text-[10px]",
                         row: "flex w-full mt-1",
-                        cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-                        day: "h-9 w-9 p-0 font-normal text-white bg-black hover:bg-white hover:text-black rounded-md transition-colors",
+                        cell: "h-8 w-8 text-center text-[11px] p-0 relative focus-within:relative focus-within:z-20",
+                        day: "h-8 w-8 p-0 font-normal text-white bg-black hover:bg-white hover:text-black rounded-md transition-colors",
                         day_selected: "bg-white text-black hover:bg-white hover:text-black",
                         day_today: "border border-green-500 text-green-400",
                         day_outside: "text-white/30 opacity-50",
@@ -609,7 +609,7 @@ export function TaskItem({
             setShowPriorityMenu(!showPriorityMenu);
           }}
         >
-          <Flag size={12} />
+          <Flag size={10} />
           <span>{getPriorityLabel(task.priority)}</span>
         </button>
         {showPriorityMenu && (
@@ -626,7 +626,7 @@ export function TaskItem({
                 }}
               >
                 <Flag size={10} />
-                <span>{getPriorityLabel(p)}</span>
+                <span className="text-[10px]">{getPriorityLabel(p)}</span>
               </button>
             ))}
           </div>

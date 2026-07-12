@@ -728,7 +728,7 @@ export function GlobalView({
           <Button
             variant="outline"
             size="sm"
-            className={`h-8 w-8 p-0 border flex-shrink-0 ${isLeafMode ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-gray-800 text-gray-200 border-gray-600'}`}
+            className={`h-7 w-7 p-0 border flex-shrink-0 ${isLeafMode ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-gray-800 text-gray-200 border-gray-600'}`}
             onClick={() => setIsLeafMode(!isLeafMode)}
             title={isLeafMode ? t('view.leafMode') : t('view.treeView')}
           >
@@ -739,7 +739,7 @@ export function GlobalView({
           <Button
             variant="outline"
             size="sm"
-            className={`h-8 w-8 p-0 border flex-shrink-0 ${isGroupByZone ? 'bg-purple-500/20 text-purple-400 border-purple-500/50' : 'bg-gray-800 text-gray-200 border-gray-600'}`}
+            className={`h-7 w-7 p-0 border flex-shrink-0 ${isGroupByZone ? 'bg-purple-500/20 text-purple-400 border-purple-500/50' : 'bg-gray-800 text-gray-200 border-gray-600'}`}
             onClick={() => setIsGroupByZone(!isGroupByZone)}
             title={t('view.groupByZone')}
           >
@@ -754,51 +754,51 @@ export function GlobalView({
               // 保留用户之前的展开层级习惯
             }}
           >
-            <SelectTrigger className="sort-select-trigger min-w-[100px] flex-shrink-0">
-              <ArrowUpDown size={14} />
+            <SelectTrigger className="sort-select-trigger min-w-[100px] flex-shrink-0 h-7 text-[11px]">
+              <ArrowUpDown size={12} />
               <SelectValue placeholder={t('view.sortMode')} />
             </SelectTrigger>
-            <SelectContent position="popper">
+            <SelectContent position="popper" className="text-[11px]">
               <SelectItem value="zone">
                 <div className="sort-option">
-                  <Globe size={14} />
+                  <Globe size={12} />
                   <span>{t('view.sortByZone')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="priority">
                 <div className="sort-option">
-                  <Flag size={14} />
+                  <Flag size={12} />
                   <span>{t('view.sortByPriority')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="urgency">
                 <div className="sort-option">
-                  <Zap size={14} />
+                  <Zap size={12} />
                   <span>{t('view.sortByUrgency')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="weighted">
                 <div className="sort-option">
-                  <Flag size={14} />
-                  <Zap size={14} />
+                  <Flag size={12} />
+                  <Zap size={12} />
                   <span>{t('settings.weightedSort')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="workTime">
                 <div className="sort-option">
-                  <Clock size={14} />
+                  <Clock size={12} />
                   <span>{t('view.sortByWorkTime')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="estimatedTime">
                 <div className="sort-option">
-                  <Clock size={14} />
+                  <Clock size={12} />
                   <span>{t('view.sortByEstimatedTime')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="timeDiff">
                 <div className="sort-option">
-                  <Clock size={14} />
+                  <Clock size={12} />
                   <span>{t('view.sortByTimeDiff')}</span>
                 </div>
               </SelectItem>
@@ -816,7 +816,7 @@ export function GlobalView({
             size="sm"
             variant="ghost"
             onClick={() => setViewDepth(0)}
-            className={viewDepth === 0 ? 'active' : ''}
+            className={`h-7 w-7 ${viewDepth === 0 ? 'active' : ''}`}
             title={t('view.collapseAll')}
           >
             <CircleX size={14} />
@@ -825,7 +825,7 @@ export function GlobalView({
             size="sm"
             variant="ghost"
             onClick={() => setViewDepth(1)}
-            className={viewDepth === 1 ? 'active' : ''}
+            className={`h-7 w-7 ${viewDepth === 1 ? 'active' : ''}`}
             title={t('view.topLevelOnly')}
           >
             <ArrowUp size={14} />
@@ -834,7 +834,7 @@ export function GlobalView({
             size="sm"
             variant="ghost"
             onClick={() => setViewDepth(Math.max(0, viewDepth - 1))}
-            disabled={viewDepth <= 0}
+            className="h-7 w-7" disabled={viewDepth <= 0}
             title={t('view.collapseOneLevel')}
           >
             <ChevronUp size={14} />
@@ -844,7 +844,7 @@ export function GlobalView({
             size="sm"
             variant="ghost"
             onClick={() => setViewDepth(Math.min(maxTreeDepth, viewDepth + 1))}
-            disabled={viewDepth >= maxTreeDepth}
+            className="h-7 w-7" disabled={viewDepth >= maxTreeDepth}
             title={t('view.expandOneLevel')}
           >
             <ChevronDown size={14} />
@@ -853,7 +853,7 @@ export function GlobalView({
             size="sm"
             variant="ghost"
             onClick={() => setViewDepth(maxTreeDepth)}
-            className={viewDepth >= maxTreeDepth ? 'active' : ''}
+            className={`h-7 w-7 ${viewDepth >= maxTreeDepth ? 'active' : ''}`}
             title={t('view.expandAll')}
           >
             <Layers size={14} />

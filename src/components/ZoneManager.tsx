@@ -450,7 +450,7 @@ export function ZoneManager({
         <Button
           variant="ghost"
           size="sm"
-          className="footer-btn"
+          className="footer-btn h-7 text-[11px]"
           onClick={onOpenHistory}
         >
           <History size={14} className="mr-1" />
@@ -459,7 +459,7 @@ export function ZoneManager({
         <Button
           variant="ghost"
           size="sm"
-          className="footer-btn"
+          className="footer-btn h-7 text-[11px]"
           onClick={onOpenSettings}
         >
           <Cog size={14} className="mr-1" />
@@ -476,6 +476,7 @@ export function ZoneManager({
             placeholder={t('zone.zoneName')}
             onKeyDown={(e) => e.key === 'Enter' && handleAddZone()}
             autoFocus
+            className="h-7 text-[11px]"
           />
           <div className="color-picker">
             <div className="color-grid">
@@ -490,10 +491,10 @@ export function ZoneManager({
             </div>
           </div>
           <div className="zone-add-actions">
-            <Button variant="outline" size="sm" onClick={() => setIsAdding(false)}>
+            <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => setIsAdding(false)}>
               {t('common.cancel')}
             </Button>
-            <Button size="sm" onClick={handleAddZone} disabled={!newZoneName.trim()}>
+            <Button size="sm" className="h-7 text-[11px]" onClick={handleAddZone} disabled={!newZoneName.trim()}>
               {t('common.add')}
             </Button>
           </div>

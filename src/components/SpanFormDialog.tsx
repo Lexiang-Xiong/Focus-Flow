@@ -61,18 +61,18 @@ export function SpanFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent key={`${open}-${initialStartHour}-${initialEndHour}`} className="sm:max-w-md bg-[#1a1a24] border-white/10 text-white">
+      <DialogContent key={`${open}-${initialStartHour}-${initialEndHour}`} className="sm:max-w-md p-4 bg-[#1a1a24] border-white/10 text-white text-[11px]">
         <DialogHeader>
-          <DialogTitle>{t('view.createSpan')}</DialogTitle>
+          <DialogTitle className="text-[12px]">{t('view.createSpan')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label className="text-white/70">{t('view.startTime')}</Label>
+            <Label className="text-[11px] text-white/70">{t('view.startTime')}</Label>
             <Select
               value={String(startMinutes)}
               onValueChange={(value) => setStartMinutes(Number(value))}
             >
-              <SelectTrigger className="bg-black/30 border-white/20 text-white">
+              <SelectTrigger className="h-7 text-[11px] bg-black/30 border-white/20 text-white">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-black border-white/20 text-white max-h-[240px]">
@@ -84,12 +84,12 @@ export function SpanFormDialog({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-white/70">{t('view.endTime')}</Label>
+            <Label className="text-[11px] text-white/70">{t('view.endTime')}</Label>
             <Select
               value={String(endMinutes)}
               onValueChange={(value) => setEndMinutes(Number(value))}
             >
-              <SelectTrigger className="bg-black/30 border-white/20 text-white">
+              <SelectTrigger className="h-7 text-[11px] bg-black/30 border-white/20 text-white">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-black border-white/20 text-white max-h-[240px]">
@@ -101,23 +101,23 @@ export function SpanFormDialog({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-white/70">{t('view.spanDescription')}</Label>
+            <Label className="text-[11px] text-white/70">{t('view.spanDescription')}</Label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t('view.spanDescriptionPlaceholder')}
-              className="bg-black/30 border-white/20 text-white placeholder:text-white/30 resize-none min-h-[72px]"
+              className="bg-black/30 border-white/20 text-white placeholder:text-white/30 resize-none min-h-[60px] text-[11px]"
             />
           </div>
 
-          {error && <div className="text-sm text-red-400">{error}</div>}
+          {error && <div className="text-[11px] text-red-400">{error}</div>}
         </div>
 
         <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => onOpenChange(false)}>
             {t('common.cancel')}
           </Button>
-          <Button size="sm" disabled={!!error} onClick={handleSubmit}>
+          <Button size="sm" className="h-7 text-[11px]" disabled={!!error} onClick={handleSubmit}>
             {t('common.create')}
           </Button>
         </div>

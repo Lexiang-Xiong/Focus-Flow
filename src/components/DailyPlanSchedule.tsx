@@ -193,7 +193,7 @@ export function DailyPlanSchedule({
         </div>
 
         <div className="flex items-center gap-1">
-          <Button size="sm" variant="outline" onClick={() => onOpenSpanDialog()}>
+          <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => onOpenSpanDialog()}>
             <Plus size={14} className="mr-1" />
             {t('view.createSpan')}
           </Button>

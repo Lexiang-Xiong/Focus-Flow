@@ -200,13 +200,13 @@ export function TimeSpan({
       {/* 内容 */}
       <div className="flex-1 flex flex-col px-2 py-1 min-h-0 cursor-pointer">
         <div className="flex items-start justify-between gap-2">
-          <span className="text-xs font-medium truncate" style={{ color }}>
+          <span className="text-[11px] font-medium truncate" style={{ color }}>
             {formatHour(displaySpan.startHour)} - {formatHour(displaySpan.endHour)}
           </span>
           <div className="flex items-center gap-1 shrink-0">
             {taskCount > 0 && (
               <span
-                className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-medium bg-red-500 text-white"
+                className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full text-[10px] font-medium bg-red-500 text-white"
                 title={t('view.spanTaskCount', { count: taskCount })}
               >
                 {taskCount}
@@ -228,7 +228,7 @@ export function TimeSpan({
         </div>
 
         {span.description && (
-          <div className="text-xs text-white/50 truncate mt-0.5" title={span.description}>
+          <div className="text-[10px] text-white/50 truncate mt-0.5" title={span.description}>
             {span.description}
           </div>
         )}

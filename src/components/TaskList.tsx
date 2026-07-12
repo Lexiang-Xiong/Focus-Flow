@@ -398,48 +398,48 @@ export function TaskList({
             }
             setSortMode(val);
           }}>
-            <SelectTrigger className="h-7 px-2 min-w-[32px] border border-white/10 bg-black/40 text-white/60 hover:text-white text-xs">
-              {sortMode === 'manual' ? <ArrowUpDown size={14} /> :
-               sortMode === 'priority' ? <Flag size={14} className="text-red-400"/> :
-               sortMode === 'urgency' ? <Zap size={14} className="text-orange-400" /> :
-               sortMode === 'weighted' ? <><Flag size={14} className="text-red-400"/><Zap size={14} className="text-orange-400"/></> :
-               <Clock size={14} className="text-blue-400" />}
+            <SelectTrigger className="h-7 px-2 min-w-[32px] border border-white/10 bg-black/40 text-white/60 hover:text-white text-[11px]">
+              {sortMode === 'manual' ? <ArrowUpDown size={12} /> :
+               sortMode === 'priority' ? <Flag size={12} className="text-red-400"/> :
+               sortMode === 'urgency' ? <Zap size={12} className="text-orange-400" /> :
+               sortMode === 'weighted' ? <><Flag size={12} className="text-red-400"/><Zap size={12} className="text-orange-400"/></> :
+               <Clock size={12} className="text-blue-400" />}
             </SelectTrigger>
-            <SelectContent position="popper" className="text-xs">
+            <SelectContent position="popper" className="text-[11px]">
               <SelectItem value="manual">
                 <div className="sort-option flex items-center gap-2">
-                  <ArrowUpDown size={14} />
+                  <ArrowUpDown size={12} />
                   <span>{t('view.sortManual')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="priority">
                 <div className="sort-option flex items-center gap-2">
-                  <Flag size={14} className="text-red-400" />
+                  <Flag size={12} className="text-red-400" />
                   <span>{t('view.sortByPriority')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="urgency">
                 <div className="sort-option flex items-center gap-2">
-                  <Zap size={14} className="text-orange-400" />
+                  <Zap size={12} className="text-orange-400" />
                   <span>{t('view.sortByUrgency')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="weighted">
                 <div className="sort-option flex items-center gap-2">
-                  <Flag size={14} className="text-red-400" />
-                  <Zap size={14} className="text-orange-400" />
+                  <Flag size={12} className="text-red-400" />
+                  <Zap size={12} className="text-orange-400" />
                   <span>{t('settings.weightedSort')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="workTime">
                 <div className="sort-option flex items-center gap-2">
-                  <Clock size={14} className="text-blue-400" />
+                  <Clock size={12} className="text-blue-400" />
                   <span>{t('view.sortByWorkTime')}</span>
                 </div>
               </SelectItem>
               <SelectItem value="estimatedTime">
                 <div className="sort-option flex items-center gap-2">
-                  <Clock size={14} className="text-purple-400" />
+                  <Clock size={12} className="text-purple-400" />
                   <span>{t('view.sortByEstimatedTime')}</span>
                 </div>
               </SelectItem>
@@ -493,7 +493,7 @@ export function TaskList({
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`h-7 text-xs border-dashed ${selectedDeadlineType !== 'none' ? 'border-blue-500 text-blue-400' : ''}`}
+                    className={`h-6 text-[11px] border-dashed ${selectedDeadlineType !== 'none' ? 'border-blue-500 text-blue-400' : ''}`}
                   >
                     <Calendar size={12} className="mr-1" />
                     {selectedDeadlineType === 'none' ? t('task.deadline') :
@@ -569,17 +569,17 @@ export function TaskList({
                       months: "flex flex-col gap-1 relative",
                       month: "flex flex-col",
                       caption: "flex justify-center items-center py-1 relative",
-                      caption_label: "text-sm font-medium text-white",
+                      caption_label: "text-[11px] font-medium text-white",
                       nav: "absolute inset-x-0 top-1 flex items-center justify-between w-full z-10 px-1",
-                      nav_button: "h-6 w-6 bg-black p-0 text-white hover:bg-white hover:text-black rounded flex items-center justify-center transition-colors text-xs border border-white/20",
+                      nav_button: "h-5 w-5 bg-black p-0 text-white hover:bg-white hover:text-black rounded flex items-center justify-center transition-colors text-[10px] border border-white/20",
                       nav_button_previous: "",
                       nav_button_next: "",
                       table: "w-full border-collapse space-y-1",
                       head_row: "flex",
-                      head_cell: "text-white/50 rounded-md w-9 font-normal text-[0.8rem]",
+                      head_cell: "text-white/50 rounded-md w-8 font-normal text-[10px]",
                       row: "flex w-full mt-1",
-                      cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-                      day: "h-9 w-9 p-0 font-normal text-white bg-black hover:bg-white hover:text-black rounded-md transition-colors",
+                      cell: "h-8 w-8 text-center text-[11px] p-0 relative focus-within:relative focus-within:z-20",
+                      day: "h-8 w-8 p-0 font-normal text-white bg-black hover:bg-white hover:text-black rounded-md transition-colors",
                       day_selected: "bg-white text-black hover:bg-white hover:text-black",
                       day_today: "border border-green-500 text-green-400",
                       day_outside: "text-white/30 opacity-50",
@@ -658,7 +658,7 @@ export function TaskList({
               }}
               disabled={!newTaskTitle.trim()}
             >
-              <Plus size={18} />
+              <Plus size={16} />
             </Button>
             <Button
               size="icon"
@@ -672,7 +672,7 @@ export function TaskList({
                 setSelectedDeadlineType('none');
               }}
             >
-              <ChevronDown size={18} />
+              <ChevronDown size={16} />
             </Button>
           </div>
         </div>
@@ -691,7 +691,7 @@ export function TaskList({
         <div className="tasks-container">
           {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
             <div className="empty-state">
-              <Circle size={48} className="empty-icon" />
+              <Circle size={40} className="empty-icon" />
               <p>{t('task.noTasks')}</p>
               <p className="empty-hint">{t('task.doubleClickHint')}</p>
             </div>
@@ -780,7 +780,7 @@ export function TaskList({
                           className="relative mt-1 mb-2 pr-2"
                           style={{ paddingLeft: `${((task as FlattenedTask).depth + 1) * 24 + 8}px` }}
                         >
-                          <div className="flex flex-col gap-2 p-3 rounded-lg border border-white/10 bg-white/5 shadow-inner">
+                          <div className="flex flex-col gap-1.5 p-2 rounded-md border border-white/10 bg-white/5 shadow-inner">
                             <div className="flex items-center gap-2">
                               <div className="flex-1">
                                 <Input
@@ -789,17 +789,17 @@ export function TaskList({
                                   onChange={(e) => setNewSubtaskTitle(e.target.value)}
                                   onKeyDown={handleSubtaskKeyDown}
                                   placeholder={t('task.subtaskTitle')}
-                                  className="h-8 text-sm text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30"
+                                  className="h-7 text-xs text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30"
                                   autoFocus
                                 />
                               </div>
                               <Button
                                 size="icon"
-                                className="h-7 w-7 bg-blue-600 hover:bg-blue-500 text-white rounded-md shrink-0"
+                                className="h-6 w-6 bg-blue-600 hover:bg-blue-500 text-white rounded-md shrink-0"
                                 onClick={handleAddSubtask}
                                 disabled={!newSubtaskTitle.trim()}
                               >
-                                <Plus size={14} />
+                                <Plus size={12} />
                               </Button>
                             </div>
                             {/* 描述输入框 */}
@@ -808,7 +808,7 @@ export function TaskList({
                               onChange={(e) => setNewSubtaskDescription(e.target.value)}
                               onKeyDown={handleSubtaskKeyDown}
                               placeholder={t('task.descriptionOptional')}
-                              className="min-h-[28px] text-sm text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30 resize-none py-1"
+                              className="min-h-[24px] text-xs text-white bg-transparent border-none focus-visible:ring-0 px-0 placeholder:text-white/30 resize-none py-0.5"
                               rows={1}
                             />
                             {/* 子任务支持优先级和截止日期设置 */}
@@ -831,7 +831,7 @@ export function TaskList({
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className={`h-6 text-xs border-dashed ${subtaskDeadlineType !== 'none' ? 'border-blue-500 text-blue-400' : ''}`}
+                                      className={`h-5 text-[10px] border-dashed ${subtaskDeadlineType !== 'none' ? 'border-blue-500 text-blue-400' : ''}`}
                                     >
                                       <Calendar size={10} className="mr-1" />
                                       {subtaskDeadlineType === 'none' ? t('recurring.ddl') :

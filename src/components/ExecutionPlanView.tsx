@@ -70,7 +70,7 @@ export function ExecutionPlanView({
             variant="ghost"
             onClick={onBack}
             title={t('common.back')}
-            className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
+            className="h-7 w-7 text-white/70 hover:text-white hover:bg-white/10"
           >
             <ArrowLeft size={16} />
           </Button>

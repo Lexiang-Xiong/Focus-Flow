@@ -72,7 +72,7 @@ export function SortableTaskItem({
           {task.title}
         </div>
         {task.description && (
-          <div className="text-xs text-white/50 truncate mt-0.5">
+          <div className="text-[10px] text-white/50 truncate mt-0.5">
             {task.description}
           </div>
         )}

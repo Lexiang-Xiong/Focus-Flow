@@ -97,7 +97,7 @@ export function DailyPlanBacklog({
       {expanded && (
         <div className="flex-1 overflow-y-auto p-3">
           {tasks.length === 0 ? (
-            <div className="text-xs text-white/40 text-center py-4">{t('view.noDailyTasks')}</div>
+            <div className="text-[10px] text-white/40 text-center py-4">{t('view.noDailyTasks')}</div>
           ) : (
             <SortableContext
               items={tasks.map(t => t.id)}
