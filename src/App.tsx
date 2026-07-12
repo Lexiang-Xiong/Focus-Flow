@@ -683,52 +683,57 @@ function App() {
     <>
       <FloatWindow onCollapse={handleToggleCollapse}>
         <div className="app-container">
-          {/* Timer Section */}
-          <PomodoroTimer
-            mode={timer.mode}
-            formattedTime={timer.formattedTime}
-            timeRemaining={timer.timeRemaining}
-            isRunning={timer.isRunning}
-            progress={timer.progress}
-            completedSessions={timer.completedSessions}
-            workDuration={settings.workDuration}
-            breakDuration={settings.breakDuration}
-            longBreakDuration={settings.longBreakDuration}
-            onStart={handleStartTimer}
-            onPause={timer.pause}
-            onResume={timer.resume}
-            onStop={timer.stop}
-            onSkip={timer.skip}
-            onUpdateTime={(seconds, mode) => {
-              if (mode === 'work') {
-                updateSettings({ workDuration: seconds });
-              } else if (mode === 'break') {
-                updateSettings({ breakDuration: seconds });
-              } else if (mode === 'longBreak') {
-                updateSettings({ longBreakDuration: seconds });
-              }
-              timer.updateTime(seconds);
-            }}
-            onSetMode={(newMode) => {
-              timer.setMode(newMode);
-            }}
-            onCollapsedChange={(collapsed) => setTimerExpanded(!collapsed)}
-          />
+          {/* Timer + Weekly plan bar - 执行计划模式下隐藏 */}
+          {currentView !== 'executionPlan' && (
+            <>
+              {/* Timer Section */}
+              <PomodoroTimer
+                mode={timer.mode}
+                formattedTime={timer.formattedTime}
+                timeRemaining={timer.timeRemaining}
+                isRunning={timer.isRunning}
+                progress={timer.progress}
+                completedSessions={timer.completedSessions}
+                workDuration={settings.workDuration}
+                breakDuration={settings.breakDuration}
+                longBreakDuration={settings.longBreakDuration}
+                onStart={handleStartTimer}
+                onPause={timer.pause}
+                onResume={timer.resume}
+                onStop={timer.stop}
+                onSkip={timer.skip}
+                onUpdateTime={(seconds, mode) => {
+                  if (mode === 'work') {
+                    updateSettings({ workDuration: seconds });
+                  } else if (mode === 'break') {
+                    updateSettings({ breakDuration: seconds });
+                  } else if (mode === 'longBreak') {
+                    updateSettings({ longBreakDuration: seconds });
+                  }
+                  timer.updateTime(seconds);
+                }}
+                onSetMode={(newMode) => {
+                  timer.setMode(newMode);
+                }}
+                onCollapsedChange={(collapsed) => setTimerExpanded(!collapsed)}
+              />
 
-          {/* Weekly plan bar - 仅在番茄钟收起时显示 */}
-          {!timerExpanded && (
-            <WeeklyPlanBar
-              tasks={tasks}
-              selectedDate={executionPlanDate}
-              onDayClick={(date) => {
-                setExecutionPlanDate(date);
-                setCurrentView('executionPlan');
-              }}
-            />
+              {/* Weekly plan bar - 仅在番茄钟收起时显示 */}
+              {!timerExpanded && (
+                <WeeklyPlanBar
+                  tasks={tasks}
+                  selectedDate={executionPlanDate}
+                  onDayClick={(date) => {
+                    setExecutionPlanDate(date);
+                    setCurrentView('executionPlan');
+                  }}
+                />
+              )}
+            </>
           )}
 
           {/* Divider */}
-          <div className="section-divider" />
+          {currentView !== 'executionPlan' && <div className="section-divider" />}
 
           {/* Main Content */}
           <ResizablePanelGroup direction="horizontal" className="main-content">

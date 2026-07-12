@@ -59,6 +59,8 @@
     "export": "导出",
     "import": "导入",
     "back": "返回",
+    "previous": "上一个",
+    "next": "下一个",
     "yes": "是",
     "no": "否",
     "all": "全部",

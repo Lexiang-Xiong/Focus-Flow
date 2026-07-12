@@ -59,6 +59,8 @@
     "export": "Export",
     "import": "Import",
     "back": "Back",
+    "previous": "Previous",
+    "next": "Next",
     "yes": "Yes",
     "no": "No",
     "all": "All",

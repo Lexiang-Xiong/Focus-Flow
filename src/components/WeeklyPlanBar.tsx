@@ -1,4 +1,5 @@
 import { useMemo, useRef, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Task } from '@/types';
@@ -34,8 +35,14 @@ const VISIBLE_DAYS = 7;
 const TOTAL_DAYS = 21;
 
 export function WeeklyPlanBar({ tasks, selectedDate, onDayClick }: WeeklyPlanBarProps) {
+  const { t, i18n } = useTranslation();
   const today = useMemo(() => new Date(), []);
   const startDate = useMemo(() => addDays(today, -Math.floor(TOTAL_DAYS / 2)), [today]);
+
+  const weekdayFormatter = useMemo(() => {
+    const locale = i18n.language?.startsWith('zh') ? 'zh-CN' : 'en-US';
+    return new Intl.DateTimeFormat(locale, { weekday: 'short' });
+  }, [i18n.language]);
 
   const days = useMemo(() => {
     return Array.from({ length: TOTAL_DAYS }, (_, i) => {
@@ -44,14 +51,14 @@ export function WeeklyPlanBar({ tasks, selectedDate, onDayClick }: WeeklyPlanBar
       const count = tasks.filter((t) => t.plannedDates?.includes(dateStr)).length;
       return {
         date: dateStr,
-        label: new Intl.DateTimeFormat('zh-CN', { weekday: 'short' }).format(date),
+        label: weekdayFormatter.format(date),
         dayNum: date.getDate(),
         isToday: isSameDay(date, today),
         isSelected: dateStr === selectedDate,
         count,
       };
     });
-  }, [startDate, tasks, today, selectedDate]);
+  }, [startDate, tasks, today, selectedDate, weekdayFormatter]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -112,6 +119,7 @@ export function WeeklyPlanBar({ tasks, selectedDate, onDayClick }: WeeklyPlanBar
           size="icon"
           variant="ghost"
           className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-7 w-5 rounded-none rounded-r bg-[#13131a]/90 hover:bg-[#1a1a24] text-white/60 hover:text-white"
+          title={t('common.previous')}
           onClick={() => scrollByDays(-1)}
         >
           <ChevronLeft size={14} />
@@ -123,6 +131,7 @@ export function WeeklyPlanBar({ tasks, selectedDate, onDayClick }: WeeklyPlanBar
           size="icon"
           variant="ghost"
           className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-7 w-5 rounded-none rounded-l bg-[#13131a]/90 hover:bg-[#1a1a24] text-white/60 hover:text-white"
+          title={t('common.next')}
           onClick={() => scrollByDays(1)}
         >
           <ChevronRight size={14} />
