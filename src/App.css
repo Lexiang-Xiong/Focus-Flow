@@ -132,7 +132,7 @@ input[type="number"] {
   display: flex;
   gap: 12px;
   flex-shrink: 0;
-  min-height: 80px;
+  min-height: 64px;
 }
 
 .top-header-left {
@@ -445,7 +445,7 @@ input[type="number"] {
   padding: 6px 10px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  min-height: 72px;
+  min-height: 56px;
   flex: 1 1 0;
   min-width: 0;
 }
@@ -457,7 +457,7 @@ input[type="number"] {
   padding: 6px 8px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  min-height: 72px;
+  min-height: 56px;
   flex: 0 0 auto;
 }
 
