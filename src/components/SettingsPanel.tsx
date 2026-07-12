@@ -670,7 +670,7 @@ export function SettingsPanel({
               recurringTemplates.map(tpl => (
                 <div key={tpl.id} className="flex flex-col gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-white/90">{tpl.title}</span>
+                    <span className="text-xs font-medium text-white/90">{tpl.title}</span>
                     <div className="flex items-center gap-2">
                       <Switch
                         checked={tpl.isActive}
@@ -851,7 +851,7 @@ export function SettingsPanel({
                     </Button>
                   </div>
                 </div>
-                <div className="text-[10px] text-white/40">
+                <div className="text-[9px] text-white/40">
                   {t('profile.createdAt')}: {new Date(profile.createdAt).toLocaleString()} · {t('profile.containsRules', { count: profile.recurringTemplates.length })}
                 </div>
               </div>

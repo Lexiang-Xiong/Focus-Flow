@@ -796,13 +796,13 @@ input[type="number"] {
 }
 
 .template-name {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.9);
 }
 
 .template-desc {
-  font-size: 11px;
+  font-size: 9px;
   color: rgba(255, 255, 255, 0.5);
 }
 
@@ -2232,7 +2232,7 @@ input[type="number"] {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
 }
@@ -2250,7 +2250,7 @@ input[type="number"] {
 .settings-section-title {
   display: flex;
   align-items: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.7);
   margin-bottom: 12px;
@@ -2282,18 +2282,18 @@ input[type="number"] {
 }
 
 .setting-label span:first-child {
-  font-size: 13px;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.85);
 }
 
 .setting-value {
-  font-size: 12px;
+  font-size: 10px;
   color: #60a5fa;
   font-weight: 500;
 }
 
 .setting-desc {
-  font-size: 11px;
+  font-size: 9px;
   color: rgba(255, 255, 255, 0.4);
   margin-top: 2px;
 }
@@ -2341,7 +2341,7 @@ input[type="number"] {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.95);
 }
@@ -2363,6 +2363,7 @@ input[type="number"] {
   align-items: center;
   gap: 4px;
   padding: 6px 12px;
+  font-size: 10px;
   font-size: 12px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
@@ -2438,7 +2439,7 @@ input[type="number"] {
 }
 
 .history-name {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.95);
   flex: 1;
@@ -2448,13 +2449,13 @@ input[type="number"] {
 }
 
 .history-time {
-  font-size: 11px;
+  font-size: 9px;
   color: rgba(255, 255, 255, 0.45);
   flex-shrink: 0;
 }
 
 .history-summary {
-  font-size: 12px;
+  font-size: 10px;
   color: rgba(255, 255, 255, 0.55);
   line-height: 1.4;
 }
@@ -2475,7 +2476,7 @@ input[type="number"] {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 9px;
   color: rgba(255, 255, 255, 0.4);
 }
 
@@ -2489,7 +2490,7 @@ input[type="number"] {
 /* 历史记录项内的按钮 */
 .history-item .history-action-btn {
   padding: 4px 8px;
-  font-size: 11px;
+  font-size: 9px;
 }
 
 .history-item .history-action-btn.restore:hover {
@@ -2513,7 +2514,7 @@ input[type="number"] {
 /* 编辑输入框 */
 .history-edit-input,
 .history-summary-edit-input {
-  font-size: 14px;
+  font-size: 11px;
   padding: 4px 8px;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(139, 92, 246, 0.5);
@@ -2656,7 +2657,7 @@ input[type="number"] {
 }
 
 .template-label {
-  font-size: 12px;
+  font-size: 10px;
   color: rgba(255, 255, 255, 0.5);
   margin-bottom: 8px;
 }
@@ -2694,13 +2695,13 @@ input[type="number"] {
 }
 
 .template-name {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.9);
 }
 
 .template-desc {
-  font-size: 11px;
+  font-size: 9px;
   color: rgba(255, 255, 255, 0.5);
 }
 
@@ -2892,14 +2893,22 @@ input[type="number"] {
 
 /* ===== Settings Section Description ===== */
 .settings-section-desc {
-  font-size: 11px;
+  font-size: 9px;
   color: rgba(255, 255, 255, 0.5);
   margin-bottom: 12px;
 }
 
 .setting-value {
   margin-left: auto;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.7);
+}
+
+/* Scale down inputs/selects inside settings to match main content */
+.settings-panel-container input,
+.settings-panel-container textarea,
+.settings-panel-container select,
+.settings-panel-container [data-slot="select-trigger"] {
+  font-size: 12px;
 }

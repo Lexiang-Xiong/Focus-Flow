@@ -398,14 +398,14 @@ export function TaskList({
             }
             setSortMode(val);
           }}>
-            <SelectTrigger className="h-7 px-2 min-w-[32px] border border-white/10 bg-black/40 text-white/60 hover:text-white">
+            <SelectTrigger className="h-7 px-2 min-w-[32px] border border-white/10 bg-black/40 text-white/60 hover:text-white text-xs">
               {sortMode === 'manual' ? <ArrowUpDown size={14} /> :
                sortMode === 'priority' ? <Flag size={14} className="text-red-400"/> :
                sortMode === 'urgency' ? <Zap size={14} className="text-orange-400" /> :
                sortMode === 'weighted' ? <><Flag size={14} className="text-red-400"/><Zap size={14} className="text-orange-400"/></> :
                <Clock size={14} className="text-blue-400" />}
             </SelectTrigger>
-            <SelectContent position="popper">
+            <SelectContent position="popper" className="text-xs">
               <SelectItem value="manual">
                 <div className="sort-option flex items-center gap-2">
                   <ArrowUpDown size={14} />
