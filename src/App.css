@@ -568,7 +568,7 @@ input[type="number"] {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.7);
   flex: 1; /* 新增 */
@@ -674,14 +674,14 @@ input[type="number"] {
 }
 
 .zone-color-indicator {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .zone-name {
-  font-size: 14px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.85);
   white-space: nowrap;
   overflow: hidden;
@@ -689,7 +689,7 @@ input[type="number"] {
 }
 
 .zone-count {
-  font-size: 12px;
+  font-size: 10px;
   color: rgba(255, 255, 255, 0.4);
   margin-left: auto;
 }
