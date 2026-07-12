@@ -29,7 +29,7 @@ function formatHour(hour: number): string {
 }
 
 function hourToValue(hour: number): string {
-  return hour.toFixed(2);
+  return String(Math.round(hour * 60));
 }
 
 function getZoneById(zones: Zone[], zoneId: string): Zone | undefined {
@@ -61,8 +61,8 @@ export function DailyPlanSpanFocus({
 
   const timeOptions = useMemo(() => {
     const options: { value: string; label: string }[] = [];
-    for (let h = 0; h <= 24; h += 0.5) {
-      options.push({ value: h.toFixed(2), label: formatHour(h) });
+    for (let minutes = 0; minutes <= 24 * 60; minutes += 5) {
+      options.push({ value: String(minutes), label: formatHour(minutes / 60) });
     }
     return options;
   }, []);
@@ -74,8 +74,8 @@ export function DailyPlanSpanFocus({
   };
 
   const applyTimeChange = (key: 'start' | 'end', value: string) => {
-    const start = parseFloat(key === 'start' ? value : hourToValue(span.startHour));
-    const end = parseFloat(key === 'end' ? value : hourToValue(span.endHour));
+    const start = (key === 'start' ? Number(value) : Number(hourToValue(span.startHour))) / 60;
+    const end = (key === 'end' ? Number(value) : Number(hourToValue(span.endHour))) / 60;
     if (Number.isNaN(start) || Number.isNaN(end)) {
       setTimeError(t('view.spanInvalidTime'));
       return;

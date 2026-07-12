@@ -123,6 +123,7 @@ export function ExecutionPlanView({
           />
         ) : (
           <DailyPlanView
+            key={selectedDate}
             planGroups={planGroups}
             tasks={tasks}
             zones={zones}

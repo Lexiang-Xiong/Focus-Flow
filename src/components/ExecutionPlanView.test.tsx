@@ -70,7 +70,8 @@ describe('ExecutionPlanView', () => {
   it('默认显示单日计划视图', () => {
     renderExecutionPlanView();
     expect(screen.getByText('view.dailyPlan')).toBeInTheDocument();
-    expect(screen.getByText('view.noTasksForDate')).toBeInTheDocument();
+    expect(screen.getByText(/view\.dailyTasks/)).toBeInTheDocument();
+    expect(screen.getByText('view.schedule')).toBeInTheDocument();
   });
 
   it('切换到计划组视图显示计划组列表', async () => {

@@ -23,6 +23,7 @@ interface PomodoroTimerProps {
   onSkip: () => void;
   onUpdateTime?: (seconds: number, mode: TimerMode) => void;
   onSetMode?: (mode: TimerMode) => void;
+  onCollapsedChange?: (isCollapsed: boolean) => void;
 }
 
 export function PomodoroTimer({
@@ -42,6 +43,7 @@ export function PomodoroTimer({
   onSkip,
   onUpdateTime,
   onSetMode,
+  onCollapsedChange,
 }: PomodoroTimerProps) {
   const { t } = useTranslation();
   // 编辑状态
@@ -49,6 +51,11 @@ export function PomodoroTimer({
   const [editMinutes, setEditMinutes] = useState('');
   // 默认收起状态
   const [isCollapsed, setIsCollapsed] = useState(true);
+
+  const setCollapsed = (next: boolean) => {
+    setIsCollapsed(next);
+    onCollapsedChange?.(next);
+  };
   const inputRef = useRef<HTMLInputElement>(null);
 
   // 鼠标进入时不做任何操作（取消自动展开）
@@ -151,7 +158,7 @@ export function PomodoroTimer({
         >
           <button
             className="timer-collapse-btn"
-            onClick={() => setIsCollapsed(false)}
+            onClick={() => setCollapsed(false)}
             title={t('view.expand') || 'Expand'}
           >
             <ChevronUp size={14} />
@@ -230,7 +237,7 @@ export function PomodoroTimer({
         <div className="timer-header-actions">
           <button
             className="timer-collapse-toggle"
-            onClick={() => setIsCollapsed(true)}
+            onClick={() => setCollapsed(true)}
             title={t('view.collapse') || 'Collapse'}
           >
             <ChevronDown size={14} />

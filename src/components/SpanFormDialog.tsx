@@ -20,11 +20,12 @@ interface SpanFormDialogProps {
   onSubmit: (startHour: number, endHour: number, description?: string) => void;
 }
 
-const HOUR_OPTIONS = Array.from({ length: 49 }, (_, i) => i * 0.5);
+const STEP_MINUTES = 5;
+const TOTAL_MINUTES = 24 * 60;
 
-function formatHour(hour: number): string {
-  const h = Math.floor(hour);
-  const m = Math.round((hour - h) * 60);
+function formatHour(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
@@ -36,18 +37,24 @@ export function SpanFormDialog({
   onSubmit,
 }: SpanFormDialogProps) {
   const { t } = useTranslation();
-  const [startHour, setStartHour] = useState<number>(initialStartHour ?? 9);
-  const [endHour, setEndHour] = useState<number>(initialEndHour ?? 10);
+  const [startMinutes, setStartMinutes] = useState<number>(() => {
+    const m = Math.round((initialStartHour ?? 9) * 60);
+    return Math.round(m / STEP_MINUTES) * STEP_MINUTES;
+  });
+  const [endMinutes, setEndMinutes] = useState<number>(() => {
+    const m = Math.round((initialEndHour ?? 10) * 60);
+    return Math.round(m / STEP_MINUTES) * STEP_MINUTES;
+  });
   const [description, setDescription] = useState('');
 
   const error = useMemo(() => {
-    if (startHour >= endHour) return t('view.spanStartBeforeEnd');
+    if (startMinutes >= endMinutes) return t('view.spanStartBeforeEnd');
     return null;
-  }, [startHour, endHour, t]);
+  }, [startMinutes, endMinutes, t]);
 
   const handleSubmit = () => {
     if (error) return;
-    onSubmit(startHour, endHour, description.trim() || undefined);
+    onSubmit(startMinutes / 60, endMinutes / 60, description.trim() || undefined);
     setDescription('');
     onOpenChange(false);
   };
@@ -62,15 +69,15 @@ export function SpanFormDialog({
           <div className="space-y-2">
             <Label className="text-white/70">{t('view.startTime')}</Label>
             <Select
-              value={String(startHour)}
-              onValueChange={(value) => setStartHour(Number(value))}
+              value={String(startMinutes)}
+              onValueChange={(value) => setStartMinutes(Number(value))}
             >
               <SelectTrigger className="bg-black/30 border-white/20 text-white">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-black border-white/20 text-white max-h-[240px]">
-                {HOUR_OPTIONS.map(h => (
-                  <SelectItem key={h} value={String(h)}>{formatHour(h)}</SelectItem>
+                {Array.from({ length: TOTAL_MINUTES / STEP_MINUTES + 1 }, (_, i) => i * STEP_MINUTES).map((m) => (
+                  <SelectItem key={m} value={String(m)}>{formatHour(m)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -79,15 +86,15 @@ export function SpanFormDialog({
           <div className="space-y-2">
             <Label className="text-white/70">{t('view.endTime')}</Label>
             <Select
-              value={String(endHour)}
-              onValueChange={(value) => setEndHour(Number(value))}
+              value={String(endMinutes)}
+              onValueChange={(value) => setEndMinutes(Number(value))}
             >
               <SelectTrigger className="bg-black/30 border-white/20 text-white">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-black border-white/20 text-white max-h-[240px]">
-                {HOUR_OPTIONS.map(h => (
-                  <SelectItem key={h} value={String(h)}>{formatHour(h)}</SelectItem>
+                {Array.from({ length: TOTAL_MINUTES / STEP_MINUTES + 1 }, (_, i) => i * STEP_MINUTES).map((m) => (
+                  <SelectItem key={m} value={String(m)}>{formatHour(m)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

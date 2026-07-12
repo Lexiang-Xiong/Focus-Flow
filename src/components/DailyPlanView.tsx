@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight, CalendarDays, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -573,82 +573,72 @@ export function DailyPlanView({
       </div>
 
       {/* Backlog + Schedule */}
-      {dailyTasks.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-white/40 gap-2">
-          <CalendarDays size={32} opacity={0.5} />
-          <span className="text-sm">{t('view.noTasksForDate')}</span>
-          <Button size="sm" variant="outline" onClick={() => setShowAddDialog(true)}>
-            {t('view.addFromPlanGroup')}
-          </Button>
-        </div>
-      ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <div ref={containerRef} className="flex flex-col h-full overflow-hidden">
-            <DailyPlanBacklog
-              date={selectedDate}
-              tasks={backlogTasks}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <div ref={containerRef} className="flex flex-col h-full overflow-hidden">
+          <DailyPlanBacklog
+            date={selectedDate}
+            tasks={backlogTasks}
+            zones={zones}
+            expanded={backlogExpanded}
+            style={{ height: panelHeights.backlog }}
+            onToggleExpanded={handleToggleBacklog}
+            onToggleTask={onToggleTask}
+            onNavigateToZone={onNavigateToZone}
+            onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
+          />
+
+          {backlogExpanded && scheduleExpanded && (
+            <div
+              role="separator"
+              aria-orientation="horizontal"
+              onMouseDown={handleSplitterMouseDown}
+              className={`shrink-0 w-full bg-white/10 hover:bg-white/30 transition-colors ${
+                isDraggingSplitter ? 'bg-white/40' : ''
+              }`}
+              style={{ height: SPLITTER_HEIGHT, cursor: 'row-resize' }}
+            />
+          )}
+
+          {focusedSpan ? (
+            <DailyPlanSpanFocus
+              span={focusedSpan}
+              tasks={dailyTasks}
               zones={zones}
-              expanded={backlogExpanded}
-              style={{ height: panelHeights.backlog }}
-              onToggleExpanded={handleToggleBacklog}
+              onBack={() => setFocusedSpanId(null)}
               onToggleTask={onToggleTask}
               onNavigateToZone={onNavigateToZone}
               onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
+              onMoveTaskOutOfSpan={onMoveTaskOutOfSpan}
+              onUpdateSpan={onUpdateSpan}
+              onDeleteSpan={(spanId) => {
+                onDeleteSpan(spanId);
+                setFocusedSpanId(null);
+              }}
             />
-
-            {backlogExpanded && scheduleExpanded && (
-              <div
-                role="separator"
-                aria-orientation="horizontal"
-                onMouseDown={handleSplitterMouseDown}
-                className={`shrink-0 w-full bg-white/10 hover:bg-white/30 transition-colors ${
-                  isDraggingSplitter ? 'bg-white/40' : ''
-                }`}
-                style={{ height: SPLITTER_HEIGHT, cursor: 'row-resize' }}
-              />
-            )}
-
-            {focusedSpan ? (
-              <DailyPlanSpanFocus
-                span={focusedSpan}
-                tasks={dailyTasks}
-                zones={zones}
-                onBack={() => setFocusedSpanId(null)}
-                onToggleTask={onToggleTask}
-                onNavigateToZone={onNavigateToZone}
-                onRemoveTaskFromDailyPlan={onRemoveTaskFromDailyPlan}
-                onMoveTaskOutOfSpan={onMoveTaskOutOfSpan}
-                onUpdateSpan={onUpdateSpan}
-                onDeleteSpan={(spanId) => {
-                  onDeleteSpan(spanId);
-                  setFocusedSpanId(null);
-                }}
-              />
-            ) : (
-              <DailyPlanSchedule
-                date={selectedDate}
-                spans={dateSpans}
-                tasks={dailyTasks}
-                expanded={scheduleExpanded}
-                style={{ height: panelHeights.schedule }}
-                onToggleExpanded={handleToggleSchedule}
-                hourHeight={hourHeight}
-                onHourHeightChange={handleHourHeightChange}
-                onDeleteSpan={onDeleteSpan}
-                onUpdateSpan={onUpdateSpan}
-                onEnterFocus={setFocusedSpanId}
-                onOpenSpanDialog={handleOpenSpanDialog}
-                scrollTop={scheduleScrollTop}
-                onScroll={handleScheduleScroll}
-              />
-            )}
-          </div>
-        </DndContext>
-      )}
+          ) : (
+            <DailyPlanSchedule
+              date={selectedDate}
+              spans={dateSpans}
+              tasks={dailyTasks}
+              expanded={scheduleExpanded}
+              style={{ height: panelHeights.schedule }}
+              onToggleExpanded={handleToggleSchedule}
+              hourHeight={hourHeight}
+              onHourHeightChange={handleHourHeightChange}
+              onDeleteSpan={onDeleteSpan}
+              onUpdateSpan={onUpdateSpan}
+              onEnterFocus={setFocusedSpanId}
+              onOpenSpanDialog={handleOpenSpanDialog}
+              scrollTop={scheduleScrollTop}
+              onScroll={handleScheduleScroll}
+            />
+          )}
+        </div>
+      </DndContext>
 
       <AddFromPlanGroupDialog
         open={showAddDialog}

@@ -8,6 +8,7 @@ import { ExecutionPlanView } from '@/components/ExecutionPlanView';
 import { HistoryManager } from '@/components/HistoryManager';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { CollapseButton } from '@/components/CollapseButton';
+import { WeeklyPlanBar } from '@/components/WeeklyPlanBar';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useAppStore } from '@/store';
 import { useTimer } from '@/hooks/useTimer';
@@ -164,6 +165,7 @@ function App() {
 
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [executionPlanDate, setExecutionPlanDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [timerExpanded, setTimerExpanded] = useState(false);
   const collapsedPositionRef = useRef<{x: number, y: number} | null>(null);
 
   // 使用ref存储activeTaskId和tasks，确保计时器回调中能获取最新值
@@ -710,7 +712,20 @@ function App() {
             onSetMode={(newMode) => {
               timer.setMode(newMode);
             }}
+            onCollapsedChange={(collapsed) => setTimerExpanded(!collapsed)}
           />
+
+          {/* Weekly plan bar - 仅在番茄钟收起时显示 */}
+          {!timerExpanded && (
+            <WeeklyPlanBar
+              tasks={tasks}
+              selectedDate={executionPlanDate}
+              onDayClick={(date) => {
+                setExecutionPlanDate(date);
+                setCurrentView('executionPlan');
+              }}
+            />
+          )}
 
           {/* Divider */}
           <div className="section-divider" />
@@ -743,10 +758,6 @@ function App() {
                 onViewChange={(view) => {
                   setCurrentView(view);
                   if (view === 'global') setActiveZoneId(null);
-                }}
-                onOpenExecutionPlan={(date) => {
-                  setExecutionPlanDate(date);
-                  setCurrentView('executionPlan');
                 }}
                 onOpenHistory={() => setCurrentView('history')}
                 onOpenSettings={() => setCurrentView('settings')}
