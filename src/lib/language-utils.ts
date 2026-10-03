@@ -2,33 +2,12 @@
 // 支持 Tauri 桌面环境和浏览器环境
 
 /**
- * 从 Tauri API 获取系统语言
- * 仅在 Tauri 桌面环境中可用
- */
-async function getTauriSystemLocale(): Promise<string | null> {
-  // 检测是否在 Tauri 环境中
-  if (typeof window.__TAURI__ === 'undefined') {
-    return null;
-  }
-
-  try {
-    // 动态导入 Tauri OS API
-    const { locale } = await import('@tauri-apps/api/os');
-    const systemLocale = await locale();
-    console.log('[Language] Tauri system locale:', systemLocale);
-    return systemLocale;
-  } catch (e) {
-    console.warn('[Language] Failed to get Tauri locale:', e);
-    return null;
-  }
-}
-
-/**
  * 从浏览器 API 获取系统语言
+ * 在 Tauri WebView 中，navigator.language 会返回系统语言
  */
 function getBrowserLanguage(): string {
   const systemLang = navigator.language || navigator.languages?.[0] || 'en';
-  console.log('[Language] Browser language:', systemLang);
+  console.log('[Language] System language:', systemLang);
   return systemLang;
 }
 
@@ -48,47 +27,34 @@ function normalizeLanguage(lang: string): string {
 }
 
 /**
- * 同步版本：检测系统语言（用于初始化）
- * 优先使用 Tauri API，备选浏览器 API
+ * 检测系统语言（同步版本）
+ * 使用 navigator.language，在 Tauri WebView 中会返回系统语言
  */
 export const getSystemLanguage = (): string => {
-  // 在 Tauri 环境中，优先使用 Tauri API（但这个是异步的，所以先用浏览器 API）
-  // 在浏览器环境中，直接使用 navigator.language
   const systemLang = getBrowserLanguage();
   return normalizeLanguage(systemLang);
 };
 
 /**
- * 异步版本：检测系统语言（更准确，推荐使用）
- * 在 Tauri 环境中使用 Tauri API，在浏览器中使用 navigator.language
+ * 检测系统语言（异步版本，与同步版本相同）
+ * 保留此函数以保持 API 一致性
  */
 export const getSystemLanguageAsync = async (): Promise<string> => {
-  // 优先尝试 Tauri API
-  const tauriLocale = await getTauriSystemLocale();
-  if (tauriLocale) {
-    return normalizeLanguage(tauriLocale);
-  }
-
-  // 备选浏览器 API
-  const browserLang = getBrowserLanguage();
-  return normalizeLanguage(browserLang);
+  return getSystemLanguage();
 };
 
 /**
  * 获取详细的语言信息（用于调试）
  */
 export const getLanguageInfo = async () => {
-  const tauriLocale = await getTauriSystemLocale();
   const browserLang = getBrowserLanguage();
   const detected = getSystemLanguage();
-  const detectedAsync = await getSystemLanguageAsync();
 
   return {
-    tauriLocale,
     browserLanguage: browserLang,
     browserLanguages: navigator.languages,
-    detectedSync: detected,
-    detectedAsync,
+    detected,
     isTauriEnv: typeof window.__TAURI__ !== 'undefined',
+    userAgent: navigator.userAgent,
   };
 };
