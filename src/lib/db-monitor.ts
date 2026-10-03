@@ -33,8 +33,14 @@ function parseDataCounts(value: string): { tasks: number; zones: number } {
 
 /**
  * 获取数据库当前状态
+ * 仅在 Tauri 环境中可用
  */
 async function getDbState(): Promise<{ path: string; tasks: number; zones: number } | null> {
+  // 检测是否在 Tauri 环境中
+  if (typeof window.__TAURI__ === 'undefined') {
+    return null;
+  }
+
   try {
     const dbPath = await getDbPath();
     const db = await getDb();
@@ -57,8 +63,15 @@ async function getDbState(): Promise<{ path: string; tasks: number; zones: numbe
 
 /**
  * 启动数据监控
+ * 仅在 Tauri 环境中启动（浏览器开发模式下 Tauri API 不可用）
  */
 export function startDataMonitor(): void {
+  // 检测是否在 Tauri 环境中
+  if (typeof window.__TAURI__ === 'undefined') {
+    console.log('[MONITOR] Skipped - Not in Tauri environment (browser dev mode)');
+    return;
+  }
+
   if (_dbMonitorInterval) {
     console.log('[MONITOR] Already running');
     return;

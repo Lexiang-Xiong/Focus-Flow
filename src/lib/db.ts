@@ -34,6 +34,11 @@ export function clearDbCache(): void {
  * 从磁盘配置文件读取数据库路径（不依赖 localStorage）
  */
 async function readDbPathFromFile(): Promise<string | null> {
+  // 检测是否在 Tauri 环境中
+  if (typeof window.__TAURI__ === 'undefined') {
+    return null;
+  }
+
   try {
     const appDataDirPath = await appDataDir();
     const pathFile = await join(appDataDirPath, PATH_FILE_NAME);
@@ -62,8 +67,15 @@ async function writeDbPathToFile(path: string): Promise<void> {
 
 /**
  * 获取当前的数据库绝对路径（高容错版）
+ * 在非 Tauri 环境（浏览器开发模式）返回相对路径
  */
 export async function getDbPath(): Promise<string> {
+  // 检测是否在 Tauri 环境中
+  if (typeof window.__TAURI__ === 'undefined') {
+    // 浏览器开发模式，返回相对路径
+    return DB_FILENAME;
+  }
+
   // 1. 优先从磁盘文件读取（最稳定，不受 WebView localStorage 影响）
   const filePath = await readDbPathFromFile();
   if (filePath) {
@@ -218,6 +230,11 @@ export async function changeDbPath(newFolder: string): Promise<void> {
  * 获取数据库实例
  */
 export async function getDb(): Promise<Database> {
+  // 检测是否在 Tauri 环境中
+  if (typeof window.__TAURI__ === 'undefined') {
+    throw new Error('Database not available in browser environment');
+  }
+
   // 详细日志：追踪路径变化
   const dbPath = await getDbPath();
   // [DEBUG] console.log('[DB] getDb - getDbPath():', dbPath);
