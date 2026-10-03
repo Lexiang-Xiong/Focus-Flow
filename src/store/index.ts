@@ -98,9 +98,17 @@ const mergeSettings = (persistedState: unknown, currentState: AppStore): AppStor
   
   // 🌍 国际化：如果用户没有设置过语言偏好，根据系统语言自动设置
   if (persistedSettings.language === undefined) {
+    // 使用异步版本以支持 Tauri API
+    import('@/lib/language-utils').then(({ getSystemLanguageAsync }) => {
+      getSystemLanguageAsync().then((lang) => {
+        console.log('[MERGE] No language preference, using system language:', lang);
+        // 使用 set 更新语言设置
+        useAppStore.getState().updateSettings({ language: lang });
+      });
+    });
+    // 先使用同步版本作为初始值
     const { getSystemLanguage } = require('@/lib/language-utils');
     mergedSettings.language = getSystemLanguage();
-    console.log('[MERGE] No language preference, using system language:', mergedSettings.language);
   }
 
   return {

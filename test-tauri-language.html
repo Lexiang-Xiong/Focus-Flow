@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus Flow - Tauri Language Test</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    .test-section {
+      background: #2a2a2a;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      border-left: 4px solid #3b82f6;
+    }
+    .success { color: #4ade80; }
+    .warning { color: #fbbf24; }
+    .error { color: #f87171; }
+    code {
+      background: #1a1a1a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+    }
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 5px;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+    #output {
+      background: #0a0a0a;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #444;
+    }
+    th {
+      background: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌍 Focus Flow - Tauri 语言检测测试</h1>
+  
+  <div class="test-section">
+    <h2>📋 环境信息</h2>
+    <div id="env-info"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>🧪 语言检测对比</h2>
+    <button onclick="runAllTests()">运行所有测试</button>
+    <button onclick="clearOutput()">清空输出</button>
+    <div id="output"></div>
+  </div>
+
+  <script type="module">
+    const output = document.getElementById('output');
+    const envInfo = document.getElementById('env-info');
+    
+    function log(message, type = 'info') {
+      const color = type === 'success' ? '#4ade80' : type === 'error' ? '#f87171' : type === 'warning' ? '#fbbf24' : '#fff';
+      output.innerHTML += `<span style="color: ${color}">${message}</span>\n`;
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function clearOutput() {
+      output.innerHTML = '';
+    }
+    window.clearOutput = clearOutput;
+
+    // 显示环境信息
+    const isTauri = typeof window.__TAURI__ !== 'undefined';
+    envInfo.innerHTML = `
+      <p><strong>运行环境:</strong> <code>${isTauri ? 'Tauri 桌面应用 ✅' : '浏览器 ❌'}</code></p>
+      <p><strong>浏览器语言:</strong> <code>${navigator.language}</code></p>
+      <p><strong>所有语言:</strong> <code>${navigator.languages?.join(', ')}</code></p>
+      <p><strong>User Agent:</strong> <code style="font-size: 10px">${navigator.userAgent}</code></p>
+    `;
+
+    window.runAllTests = async () => {
+      clearOutput();
+      log('🚀 开始测试...\n', 'info');
+
+      // 测试 1: 环境检测
+      log('=== 测试 1: 环境检测 ===', 'info');
+      log(`运行环境: ${isTauri ? 'Tauri 桌面应用' : '浏览器'}`, isTauri ? 'success' : 'warning');
+      log(`window.__TAURI__: ${typeof window.__TAURI__}`, 'info');
+      log('', 'info');
+
+      // 测试 2: 语言工具函数
+      log('=== 测试 2: 语言工具函数 ===', 'info');
+      try {
+        const langUtils = await import('/src/lib/language-utils.ts');
+        
+        // 同步版本
+        const syncLang = langUtils.getSystemLanguage();
+        log(`getSystemLanguage() (同步): ${syncLang}`, 'success');
+        
+        // 异步版本
+        const asyncLang = await langUtils.getSystemLanguageAsync();
+        log(`getSystemLanguageAsync() (异步): ${asyncLang}`, 'success');
+        
+        // 详细信息
+        const info = await langUtils.getLanguageInfo();
+        log('\n详细语言信息:', 'info');
+        log(`  Tauri Locale: ${info.tauriLocale || 'N/A'}`, info.tauriLocale ? 'success' : 'warning');
+        log(`  Browser Language: ${info.browserLanguage}`, 'info');
+        log(`  Browser Languages: ${info.browserLanguages?.join(', ')}`, 'info');
+        log(`  检测结果 (同步): ${info.detectedSync}`, 'success');
+        log(`  检测结果 (异步): ${info.detectedAsync}`, 'success');
+        log(`  是否 Tauri 环境: ${info.isTauriEnv}`, info.isTauriEnv ? 'success' : 'warning');
+        
+        // 对比结果
+        if (syncLang === asyncLang) {
+          log('\n✅ 同步和异步检测结果一致', 'success');
+        } else {
+          log(`\n⚠️ 同步和异步检测结果不一致: ${syncLang} vs ${asyncLang}`, 'warning');
+        }
+      } catch (e) {
+        log(`错误: ${e.message}`, 'error');
+        console.error(e);
+      }
+      log('', 'info');
+
+      // 测试 3: i18n 初始化
+      log('=== 测试 3: i18n 初始化 ===', 'info');
+      try {
+        const { default: i18n } = await import('/src/lib/i18n.ts');
+        log(`i18n 当前语言: ${i18n.language}`, 'success');
+        log(`i18n 可用语言: ${i18n.languages?.join(', ')}`, 'info');
+        log(`i18n 已加载语言: ${Object.keys(i18n.store.data).join(', ')}`, 'info');
+        
+        // 测试翻译
+        const testKeys = ['settings.language', 'task.addTask', 'common.save'];
+        log('\n翻译测试:', 'info');
+        testKeys.forEach(key => {
+          const translation = i18n.t(key);
+          log(`  ${key}: ${translation}`, translation === key ? 'warning' : 'success');
+        });
+      } catch (e) {
+        log(`错误: ${e.message}`, 'error');
+        console.error(e);
+      }
+      log('', 'info');
+
+      // 测试 4: Store 语言设置
+      log('=== 测试 4: Store 语言设置 ===', 'info');
+      try {
+        const { useAppStore } = await import('/src/store/index.ts');
+        const storeLang = useAppStore.getState().settings.language;
+        log(`Store 语言: ${storeLang}`, 'success');
+        
+        // 对比
+        const { default: i18n } = await import('/src/lib/i18n.ts');
+        if (storeLang === i18n.language) {
+          log('✅ Store 和 i18n 语言一致', 'success');
+        } else {
+          log(`⚠️ Store 和 i18n 语言不一致: ${storeLang} vs ${i18n.language}`, 'warning');
+        }
+      } catch (e) {
+        log(`错误: ${e.message}`, 'error');
+        console.error(e);
+      }
+      log('', 'info');
+
+      // 测试 5: Tauri API（仅在 Tauri 环境）
+      if (isTauri) {
+        log('=== 测试 5: Tauri OS API ===', 'info');
+        try {
+          const { locale, platform, version } = await import('@tauri-apps/api/os');
+          const sysLocale = await locale();
+          const sysPlatform = await platform();
+          const sysVersion = await version();
+          
+          log(`Tauri 系统语言: ${sysLocale}`, 'success');
+          log(`Tauri 平台: ${sysPlatform}`, 'info');
+          log(`Tauri 系统版本: ${sysVersion}`, 'info');
+          
+          // 对比
+          const browserLang = navigator.language;
+          if (sysLocale && sysLocale.toLowerCase().startsWith(browserLang.toLowerCase().substring(0, 2))) {
+            log('✅ Tauri 和浏览器语言一致', 'success');
+          } else {
+            log(`⚠️ Tauri 和浏览器语言不一致: ${sysLocale} vs ${browserLang}`, 'warning');
+          }
+        } catch (e) {
+          log(`Tauri API 错误: ${e.message}`, 'error');
+        }
+      } else {
+        log('=== 测试 5: Tauri OS API ===', 'warning');
+        log('跳过 - 不在 Tauri 环境中', 'warning');
+      }
+
+      log('\n✅ 所有测试完成！', 'success');
+    };
+
+    // 自动运行测试
+    if (isTauri) {
+      log('检测到 Tauri 环境，建议运行测试', 'success');
+    } else {
+      log('当前在浏览器环境，某些功能不可用', 'warning');
+    }
+  </script>
+</body>
+</html>
