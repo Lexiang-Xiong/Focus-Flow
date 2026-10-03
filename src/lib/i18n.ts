@@ -4,6 +4,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 
 import en from '../locales/en.json';
 import zh from '../locales/zh.json';
+import { getSystemLanguage } from './language-utils';
 
 i18n
   .use(LanguageDetector)
@@ -18,7 +19,10 @@ i18n
       order: ['navigator'],
       caches: []
     },
-    fallbackLng: 'zh',
+    // 初始语言：根据系统语言自动选择
+    lng: getSystemLanguage(),
+    // 非中文环境回退到英文
+    fallbackLng: 'en',
     interpolation: {
       escapeValue: false
     }

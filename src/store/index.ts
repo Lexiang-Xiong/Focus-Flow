@@ -95,6 +95,13 @@ const mergeSettings = (persistedState: unknown, currentState: AppStore): AppStor
       (mergedSettings as Record<string, unknown>)[key] = persistedSettings[key];
     }
   });
+  
+  // 🌍 国际化：如果用户没有设置过语言偏好，根据系统语言自动设置
+  if (persistedSettings.language === undefined) {
+    const { getSystemLanguage } = require('@/lib/language-utils');
+    mergedSettings.language = getSystemLanguage();
+    console.log('[MERGE] No language preference, using system language:', mergedSettings.language);
+  }
 
   return {
     ...currentState,
