@@ -31,7 +31,7 @@ i18n
 
 // 异步更新语言（使用 Tauri API，更准确）
 // 在 Tauri 环境中，这会在初始化后立即执行
-if (typeof window.__TAURI__ !== 'undefined') {
+if (typeof (window as any).__TAURI__ !== 'undefined') {
   getSystemLanguageAsync().then((lang) => {
     if (lang !== i18n.language) {
       console.log('[i18n] Updating language from Tauri API:', lang);

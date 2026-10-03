@@ -35,7 +35,7 @@ export function clearDbCache(): void {
  */
 async function readDbPathFromFile(): Promise<string | null> {
   // 检测是否在 Tauri 环境中
-  if (typeof window.__TAURI__ === 'undefined') {
+  if (typeof (window as any).__TAURI__ === 'undefined') {
     return null;
   }
 
@@ -71,7 +71,7 @@ async function writeDbPathToFile(path: string): Promise<void> {
  */
 export async function getDbPath(): Promise<string> {
   // 检测是否在 Tauri 环境中
-  if (typeof window.__TAURI__ === 'undefined') {
+  if (typeof (window as any).__TAURI__ === 'undefined') {
     // 浏览器开发模式，返回相对路径
     return DB_FILENAME;
   }
@@ -231,7 +231,7 @@ export async function changeDbPath(newFolder: string): Promise<void> {
  */
 export async function getDb(): Promise<Database> {
   // 检测是否在 Tauri 环境中
-  if (typeof window.__TAURI__ === 'undefined') {
+  if (typeof (window as any).__TAURI__ === 'undefined') {
     throw new Error('Database not available in browser environment');
   }
 

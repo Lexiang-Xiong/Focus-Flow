@@ -37,7 +37,7 @@ function parseDataCounts(value: string): { tasks: number; zones: number } {
  */
 async function getDbState(): Promise<{ path: string; tasks: number; zones: number } | null> {
   // 检测是否在 Tauri 环境中
-  if (typeof window.__TAURI__ === 'undefined') {
+  if (typeof (window as any).__TAURI__ === 'undefined') {
     return null;
   }
 
@@ -67,7 +67,7 @@ async function getDbState(): Promise<{ path: string; tasks: number; zones: numbe
  */
 export function startDataMonitor(): void {
   // 检测是否在 Tauri 环境中
-  if (typeof window.__TAURI__ === 'undefined') {
+  if (typeof (window as any).__TAURI__ === 'undefined') {
     console.log('[MONITOR] Skipped - Not in Tauri environment (browser dev mode)');
     return;
   }

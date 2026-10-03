@@ -54,7 +54,7 @@ export const getLanguageInfo = async () => {
     browserLanguage: browserLang,
     browserLanguages: navigator.languages,
     detected,
-    isTauriEnv: typeof window.__TAURI__ !== 'undefined',
+    isTauriEnv: typeof (window as any).__TAURI__ !== 'undefined',
     userAgent: navigator.userAgent,
   };
 };
