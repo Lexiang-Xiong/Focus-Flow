@@ -389,7 +389,8 @@ export function SettingsPanel({
               <Select
                 value={settings.language || 'zh'}
                 onValueChange={(val) => {
-                  onUpdateSettings({ language: val });
+                  // 用户手动切换语言，设置 languageManual 标志
+                  onUpdateSettings({ language: val, languageManual: true });
                   i18n.changeLanguage(val);
                 }}
               >

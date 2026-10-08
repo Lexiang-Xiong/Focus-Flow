@@ -154,6 +154,7 @@ export interface AppState {
   // 设置
   settings: {
     language: string;
+    languageManual?: boolean; // 用户是否手动设置过语言（true=手动设置，false/undefined=自动检测）
     workDuration: number;
     breakDuration: number;
     longBreakDuration: number;

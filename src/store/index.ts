@@ -96,19 +96,19 @@ const mergeSettings = (persistedState: unknown, currentState: AppStore): AppStor
     }
   });
   
-  // 🌍 国际化：如果用户没有设置过语言偏好，根据系统语言自动设置
-  if (persistedSettings.language === undefined) {
-    // 使用异步版本以支持 Tauri API
-    import('@/lib/language-utils').then(({ getSystemLanguageAsync }) => {
-      getSystemLanguageAsync().then((lang) => {
-        console.log('[MERGE] No language preference, using system language:', lang);
-        // 使用 set 更新语言设置
-        useAppStore.getState().updateSettings({ language: lang });
-      });
-    });
-    // 先使用同步版本作为初始值
+  // 🌍 国际化：语言检测策略
+  // - 如果用户手动设置过语言（languageManual === true），使用保存的语言
+  // - 否则，始终根据系统语言自动检测
+  const isLanguageManual = persistedSettings.languageManual === true;
+  
+  if (!isLanguageManual) {
+    // 用户没有手动设置过语言，根据系统语言自动设置
     const { getSystemLanguage } = require('@/lib/language-utils');
-    mergedSettings.language = getSystemLanguage();
+    const systemLang = getSystemLanguage();
+    mergedSettings.language = systemLang;
+    console.log('[MERGE] Auto-detected system language:', systemLang);
+  } else {
+    console.log('[MERGE] Using manual language preference:', mergedSettings.language);
   }
 
   return {
